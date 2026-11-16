@@ -294,7 +294,7 @@ body .nicegui-footer.frame-footer {
 }
 .suite-button.suite-running .q-icon::after {
   content: "●";
-  color: var(--warn);
+  color: var(--info);
 }
 .settings-window {
   width: min(68rem, 94vw);
@@ -655,9 +655,12 @@ body a.tool-link.tool-link-open {
 .state-err {
   color: var(--err);
 }
-.state-warn,
-.state-run {
+.state-warn {
   color: var(--warn);
+}
+/* A building stage is information, not a warning (WB-42). */
+.state-run {
+  color: var(--info);
 }
 .state-none {
   color: var(--muted);
@@ -727,6 +730,14 @@ body a.tool-link.tool-link-open {
 .note-warn {
   color: var(--warn);
 }
+.note-info {
+  color: var(--info);
+}
+.note-card .note-list {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--ink);
+}
 .note-card .note-title {
   font-weight: 600;
 }
@@ -768,6 +779,10 @@ body a.tool-link.tool-link-open {
   width: 100%;
 }
 .field-row > .q-checkbox {
+  grid-column: 3 / -1;
+}
+/* Why a control is held: under the control, across its column and the reset's. */
+.field-row > .field-hint {
   grid-column: 3 / -1;
 }
 .field-row > .mark {
@@ -1116,12 +1131,39 @@ body .parts .parts-row[aria-pressed="true"] {
 .term-on .term-state {
   color: var(--ok);
 }
-.term-equation {
-  font-family: var(--font-num);
-  overflow-wrap: anywhere;
+/* Mathematics, drawn by KaTeX in the ink, left-aligned; a long equation scrolls on its own. */
+.tex .katex {
+  color: var(--ink);
 }
-.term-off .term-name,
-.term-off .term-equation {
+.term-equation,
+.term-define {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.term-equation .katex-display,
+.term-define .katex-display {
+  margin: 0.3em 0;
+  text-align: left;
+}
+.term-equation .katex-display > .katex,
+.term-define .katex-display > .katex {
+  text-align: left;
+}
+.term-define .katex {
+  font-size: 0.95em;
+}
+.term-note,
+.role-words {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.terms-off {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: var(--text-sm);
+}
+.field-hint {
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 .view-table {
@@ -1140,7 +1182,7 @@ body .parts .parts-row[aria-pressed="true"] {
 }
 .corrections-row {
   display: grid;
-  grid-template-columns: 0.8rem 6.25rem minmax(0, 1fr) auto auto auto;
+  grid-template-columns: 0.8rem 5.5rem minmax(0, 1fr) auto auto auto;
   align-items: center;
   column-gap: var(--gap);
   min-height: var(--row);
@@ -1148,6 +1190,20 @@ body .parts .parts-row[aria-pressed="true"] {
 }
 .corrections-head {
   color: var(--muted);
+}
+/* The bulk and wall checkboxes stand under their heads. */
+.corrections-row > :nth-child(4),
+.corrections-row > :nth-child(5) {
+  justify-self: center;
+}
+/* A correction model's whole name shows, in the small face. */
+.corrections-row .q-field__native {
+  font-size: var(--text-xs);
+}
+/* A solid's row: its name, its number, its mark and its reset. */
+.material-row > .q-btn {
+  min-width: var(--target-min);
+  padding: 0;
 }
 .corrections-row > .q-btn {
   min-width: var(--target-min);
@@ -1161,16 +1217,24 @@ body .parts .parts-row[aria-pressed="true"] {
   color: var(--changed);
 }
 .material-name {
-  flex: 0 0 5.5rem;
   font-size: var(--text-sm);
+}
+/* A solid's row: its name, its number, its mark and its reset; the rows take the field's
+   own reset's place, so it is not shown. */
+.tool-pane .material-row {
+  display: grid;
+  grid-template-columns: 4.25rem minmax(4.5rem, 1fr) 0.8rem var(--target-min);
+  align-items: center;
+  column-gap: var(--gap);
+}
+.field-row:has(> .materials) > .q-btn {
+  display: none;
 }
 .note-ok {
   color: var(--ok);
 }
 .role-text {
-  font-family: var(--font-num);
-  font-size: var(--text-xs);
-  color: var(--muted);
+  font-size: var(--text-sm);
 }
 /* An exposed value: the field it exposes on a line of its own, then its name, its range and its
    removal on the next. */
@@ -1191,4 +1255,13 @@ body .parts .parts-row[aria-pressed="true"] {
 .exposed-row > .q-btn {
   min-width: var(--target-min);
   padding: 0;
+}
+.exposed-head {
+  padding-bottom: 0;
+  border-bottom: none;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.exposed-hint {
+  grid-column: 1 / -1;
 }

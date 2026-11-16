@@ -35,8 +35,9 @@ find is refused before anything is written.
 `Project.changes` lists each value of an item away from its default (the schema's, or a switch's
 validated one) and each study override, with its kind, value, default and the model's value;
 `Project.reset` removes the key from the item that sets it. `Project.problems` lists each missing file,
-mismatched name and item refused on loading, with the case path of the refusal and the suite that owns
-the item. The workbench shows both and computes neither (VER-60).
+mismatched name and item refused on loading, and each study whose case does not resolve, as a study
+its own physics model cannot run with (FR-35), with the case path of the refusal and the suite that
+owns it. The workbench shows both and computes neither (VER-60).
 
 NOTE (a project's settings, VER-78; WP5.15; §8.2.34 AJ9; §8.2.38 AN2, AN3): the workbench's settings are
 one declared list (`nanopnp.gui.web.settings.SETTINGS`): each setting has its section, its scope (the

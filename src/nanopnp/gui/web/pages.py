@@ -29,7 +29,7 @@ from nanopnp.gui.web.molview import (
 from nanopnp.gui.web.physics import PhysicsModel
 from nanopnp.gui.web.physics_tools import physics_page
 from nanopnp.gui.web.plane import COLOURINGS as MESH_COLOURINGS
-from nanopnp.gui.web.plane import IMAGES, image_png, physics_plane, plane
+from nanopnp.gui.web.plane import IMAGES, electrolyte_plane, image_png, physics_plane, plane
 from nanopnp.gui.web.screens import SUITES, TOOL_SUITES, VIEWS, Suite, Tool, screen, tool_view
 from nanopnp.gui.web.settings_page import SettingsPage
 from nanopnp.gui.web.shell import Shell
@@ -163,9 +163,9 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         name: str,
         tool: str = "electrolyte",
         within: str = "",
-        against: str = "driver",
         pick: str = "",
         held: str = "",
+        mesh: str = "",
     ) -> JSONResponse:
         """Serve what the view draws of a physics model for one tool, inside the study shown."""
         project = shell.bench.project
@@ -177,15 +177,21 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             case: Case | None = project.physics_case(name, model.within())
         except REFUSED:
             case = None
+        if case is None and tool == "electrolyte":
+            # A model with no salt forms no case, but its own block draws the curves against the
+            # driver, which read no salt.
+            electrolyte = model.own_electrolyte()
+            if electrolyte is not None:
+                return JSONResponse(electrolyte_plane(electrolyte, None).json())
         try:
             with model.keyed_once():
                 drawn = physics_plane(
                     case,
                     project.session().store,
                     tool,
-                    against=against,
                     pick=pick or None,
                     mesh_held=held,
+                    mesh=bool(mesh),
                 )
         except ValueError as error:
             raise HTTPException(422, str(error)) from None
@@ -257,6 +263,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             )
 
     nicegui_app.add_static_files("/vendor/molstar", ASSETS / "molstar")
+    nicegui_app.add_static_files("/vendor/katex", ASSETS / "katex")
     # Our own small files are not cached (max-age 0): NiceGUI's hour of caching would hide an edit
     # that `nanopnp gui --dev` restarted the server for.
     for local, url in (
@@ -416,9 +423,11 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
     def build(panel: str = "", palette: str = "", dialog: str = "") -> None:
         ui.add_head_html(
             '<link rel="stylesheet" href="/vendor/molstar/molstar.css">'
+            + '<link rel="stylesheet" href="/vendor/katex/katex.min.css">'
             + STYLESHEETS
             + '<script src="/vendor/molstar/molstar.js"></script><script src="/bridge.js"></script>'
             + '<script src="/plane.js"></script>'
+            + '<script src="/vendor/katex/katex.min.js"></script>'
         )
         with frame(
             shell,

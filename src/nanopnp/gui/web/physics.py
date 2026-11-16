@@ -8,17 +8,20 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import yaml
+from pydantic import ValidationError
 
 from nanopnp.gui.web.builds import REFUSED, BuiltModel, StageState
+from nanopnp.io import case as schema
 from nanopnp.io.case_paths import schema_default
 from nanopnp.io.models import ModelKind, leaves, owner_of
-from nanopnp.pipeline.case import resolve
+from nanopnp.pipeline.case import block_electrolyte, resolve
 from nanopnp.pipeline.run import keyed_walk
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.api.case import Case
     from nanopnp.io.artefact import Artefact
     from nanopnp.io.resolved import ResolvedCase
+    from nanopnp.materials.electrolyte import Electrolyte
 
 __all__ = ["PhysicsModel"]
 
@@ -55,14 +58,16 @@ class PhysicsModel(BuiltModel):
         studies = self.project.items("study")
         if self.shown_in in studies:
             return self.shown_in
+        own = next((study for study in studies if self.names_this(study)), None)
+        return own if own is not None else (studies[0] if studies else None)
+
+    def names_this(self, study: str) -> bool:
+        """Return whether a study's own physics model is this one, so it runs with it."""
+        location = self.project.path("study", study)
+        named = _read(location).get("models")
+        physics = named.get("physics") if isinstance(named, dict) else None
         target = self.project.path(self.kind, self.name).resolve()
-        for study in studies:
-            location = self.project.path("study", study)
-            named = _read(location).get("models")
-            physics = named.get("physics") if isinstance(named, dict) else None
-            if isinstance(physics, str) and (location.parent / physics).resolve() == target:
-                return study
-        return studies[0] if studies else None
+        return isinstance(physics, str) and (location.parent / physics).resolve() == target
 
     def _built_case(self) -> Case | str:
         study = self.within()
@@ -81,16 +86,32 @@ class PhysicsModel(BuiltModel):
         return case
 
     def resolved(self) -> ResolvedCase | None:
-        """Return the shown case resolved, or None where the study refuses the model."""
+        """Return the shown case resolved, or None where it does not resolve."""
         return self._once("resolved", self._resolved)
 
     def _resolved(self) -> ResolvedCase | None:
-        case = self.case()
-        if case is None:
-            return None
+        # The shown case as it resolves, though a later stage's check, such as the mesh's
+        # solids, refuses it: what it holds is shown beside the refusal.
         try:
+            case = self.project.physics_case(self.name, self.within())
             return resolve(case, base=case.source.base)
         except REFUSED:
+            return None
+
+    def own_electrolyte(self) -> Electrolyte | None:
+        """Return the electrolyte the model's own block gives, its salt aside, or None.
+
+        A model that sets no salt forms no case, yet its corrections are its own: they are
+        resolved at a stand-in salt, which only the curves against the wall's distance read.
+        """
+        block = self._once("body", self.body).get("electrolyte")
+        if not isinstance(block, dict):
+            return None
+        try:
+            given = schema.Electrolyte.model_validate({"concentration_M": 1.0, **block})
+            base = self.project.path(self.kind, self.name).parent
+            return block_electrolyte(given, base)
+        except (*REFUSED, ValidationError):
             return None
 
     def refused_path(self, message: str) -> str | None:

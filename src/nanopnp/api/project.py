@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import re
 import shutil
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -1063,7 +1064,9 @@ class Project:
                 found.append(Problem(item, dotted, f"{resolved} does not exist", where))
         try:
             if kind == "study":
-                self.study(name)
+                # Resolved as well as read, so a study its own models cannot run with is listed.
+                case = self.study(name)
+                resolve(case, base=case.source.base)
             else:
                 read_model_file(kind, location, rebase=False)
         except (CaseValidationError, FileNotFoundError, ValueError, KeyError) as error:
@@ -1363,9 +1366,19 @@ def _comparable(case: Case) -> dict[str, Any]:
 def _error_path(error: Exception) -> str | None:
     errors = getattr(error, "errors", None)
     if errors is None or not hasattr(errors, "errors"):
+        # A refusal in words names its case path first: the first dotted name that is a field.
+        for match in _DOTTED.finditer(str(error)):
+            try:
+                field_at(match.group(0))
+            except (KeyError, ValueError):
+                continue
+            return match.group(0)
         return None
     first = errors.errors()[0]["loc"]
     return ".".join(str(part) for part in first) or None
+
+
+_DOTTED = re.compile(r"\b[a-z_]+(?:\.[A-Za-z0-9_]+)+")
 
 
 def _owner_suite(path: str | None) -> Suite:

@@ -1245,18 +1245,20 @@ def keyed_walk(
     store: Store,
     stages: Mapping[str, FunctionStage] | None = None,
     planned: set[str],
+    upto: str | None = None,
 ) -> dict[str, Identity]:
     """Return each stage's identity for ``resolved``, running none of them.
 
     A stage is built unless the store or an earlier point of the same forecast holds its
-    hash. ``planned`` collects the hashes the forecast builds, across points.
+    hash. ``planned`` collects the hashes the forecast builds, across points. With ``upto``,
+    only that stage and its inputs are keyed, so a later stage's check does not refuse.
     """
     # A forecast reads nothing, so it leaves the order a clean-up removes entries in alone: the
     # stages it builds read through the same unmarked store.
     walk = _keying_walk(resolved, store.unmarked(), stages)
     walk.mark = False
     identities: dict[str, Identity] = {}
-    for name in selected_stages(resolved, None, stages=walk.own):
+    for name in selected_stages(resolved, upto, stages=walk.own):
         description = walk.describe(name)
         stage = walk.keyed(name)
         inputs = walk.inputs(name)

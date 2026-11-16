@@ -25,8 +25,9 @@
 
   /* Semantic colours, each paired with a glyph and a word, never colour alone (WB-20) */
   --ok: #1b7043;            /* built, passed  ✓; 5.1:1 on --sel */
-  --warn: #8a5200;          /* stale, a warning  ● */
-  --err: #b4231a;           /* refused, failed  ✕ */
+  --warn: #8a5200;          /* stale, a warning: what blocks nothing  ● */
+  --err: #b4231a;           /* refused, failed, what blocks a run  ✕ */
+  --info: #1f5fae;          /* information, as a stage building  ● (WB-42) */
   --changed: #0f6b75;       /* a value changed from its default  ◆; an override, outlined ◇ (WB-28) */
 
   /* Canvases (WB-26, WB-30): the 3D molecular view near-black by default, a user setting; (r, z) views and plots follow the theme */
@@ -104,6 +105,7 @@
     --ok: #79d6a0;
     --warn: #f2bd5e;
     --err: #ff8b80;
+    --info: #8cb8ff;
     --changed: #5fd0d9;
     --canvas-plot: #1c2027;
     --canvas-plot-ink: #e8eaef;
@@ -125,6 +127,7 @@
   --ok: #79d6a0;
   --warn: #f2bd5e;
   --err: #ff8b80;
+  --info: #8cb8ff;
   --changed: #5fd0d9;
   --canvas-plot: #1c2027;
   --canvas-plot-ink: #e8eaef;

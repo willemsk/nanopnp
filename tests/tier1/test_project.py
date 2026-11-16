@@ -164,7 +164,7 @@ electrolyte:
     density: {model: willems2020_nacl}
     steric: {model: borukhov}
 boundary_conditions: {bias_V: 0.05, ground: cis}
-physics: {model: epnp-ns, flow: false, inertia: true}
+physics: {model: epnp-ns, flow: false, inertia: true, solid_permittivities: {membrane: 3.2}}
 """
 
 STUDY = """\
@@ -172,6 +172,7 @@ schema: nanopnp/case/v0.6
 name: tube-study
 models: {continuum: ../models/continuum/tube.yaml, physics: ../models/physics/tube.yaml}
 boundary_conditions: {bias_V: 0.3}
+numerics: {continuation: none}
 """
 
 
@@ -186,9 +187,12 @@ def test_fr34_the_changed_list_holds_every_value_away_from_its_default_and_every
     assert project.problems() == ()
 
     found = {change.path: change for change in project.changes("study", "tube-study")}
+    # The permittivity and the single rung make the study one that resolves.
     assert set(found) == {
         "physics.flow",
+        "physics.solid_permittivities",
         "numerics.mesh.size_scale",
+        "numerics.continuation",
         "boundary_conditions.bias_V",
     }
     flow = found["physics.flow"]
@@ -200,7 +204,10 @@ def test_fr34_the_changed_list_holds_every_value_away_from_its_default_and_every
     assert {change.path for change in project.changes("continuum", "tube")} == {
         "numerics.mesh.size_scale",
     }
-    assert {change.path for change in project.changes("physics", "tube")} == {"physics.flow"}
+    assert {change.path for change in project.changes("physics", "tube")} == {
+        "physics.flow",
+        "physics.solid_permittivities",
+    }
 
     remaining = set(found)
     for path in sorted(found):

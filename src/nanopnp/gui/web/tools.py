@@ -35,6 +35,7 @@ from nanopnp.gui.web.screens import (
     CORRECTED,
     STAGE_RUNNING,
     SUITES,
+    Suite,
     Tool,
     field_control,
     tool_for,
@@ -161,7 +162,7 @@ FIELDS: dict[str, Field] = {
     "electrolyte.corrections.steric.a_water_nm": Field(
         "Water diameter", "number", unit="nm", hint="default"
     ),
-    "numerics.wall_distance.sources": Field("Wall boundaries", hint="a pattern of names"),
+    "numerics.wall_distance.sources": Field("Wall boundaries", hint="wall, or names joined by |"),
     "numerics.wall_distance.max_distance_nm": Field("Distance cap", "number", unit="nm"),
     "boundary_conditions.bias_V": Field("Bias", "number", unit="V"),
     "boundary_conditions.ground": Field("Grounded side", "choice"),
@@ -332,6 +333,8 @@ class _Pane(Generic[ModelT]):
 
     kind: ClassVar[str]
     """The suite the pane's tools belong to."""
+    exposes: ClassVar[bool] = True
+    """Whether a number's field offers *Expose*: a suite with a list tool of its own does not."""
 
     def __init__(
         self, shell: Shell, tool: Tool, built: Views, focus: str, model: ModelT | None
@@ -571,18 +574,9 @@ class _Pane(Generic[ModelT]):
                 control.props(f'data-control={control_name} role=group aria-label="{spec.label}"')
                 with control:
                     for solid in self.solids():
-                        with ui.row().classes("material-row items-center no-wrap w-full"):
-                            ui.label(solid).classes("material-name")
-                            ui.number(
-                                value=held.get(solid),
-                                on_change=lambda e, p=path, m=solid: self.write_material(
-                                    p, m, e.value
-                                ),
-                            ).props(
-                                f'dense outlined debounce=500 aria-label="{spec.label}, {solid}"'
-                            ).set_enabled(not self.idle())
+                        self.material_row(path, spec, solid, held)
                     if not self.solids():
-                        ui.label("The shown pore holds no solid.").classes("later")
+                        ui.label("The pore has no solid.").classes("later")
             elif spec.kind == "list":
                 entries = shown if isinstance(shown, list) else []
                 text = f"{len(entries)} edit{'' if len(entries) == 1 else 's'}"
@@ -626,7 +620,7 @@ class _Pane(Generic[ModelT]):
             )
             # A value is exposed to studies once the model sets it; an unset one has nothing to
             # expose.
-            if spec.kind == "number" and (value is not None or exposed):
+            if self.exposes and spec.kind == "number" and (value is not None or exposed):
                 ui.checkbox(
                     "Expose",
                     value=exposed,
@@ -674,6 +668,45 @@ class _Pane(Generic[ModelT]):
         if isinstance(control, ValidationElement):
             control.error = None
         self.after_write(path)
+
+    def material_row(self, path: str, spec: Field, solid: str, held: dict[str, Any]) -> None:
+        """Draw one material's number, with its own mark and reset while the model sets it."""
+        row_path = f"{path}.{solid}"
+        with ui.row().classes("material-row items-center no-wrap w-full"):
+            ui.label(solid).classes("material-name")
+            number = ui.number(
+                value=held.get(solid),
+                on_change=lambda e, p=path, m=solid: self.write_material(p, m, e.value),
+            ).props(
+                f"dense outlined debounce=500 no-error-icon data-control={field_control(row_path)} "
+                f'aria-label="{spec.label}, {solid}"'
+            )
+            number.set_enabled(not self.idle())
+            self.controls[row_path] = number
+            set_here = solid in held
+            ui.label("\u25c6" if set_here else "").classes("changed mark").props("aria-hidden=true")
+            ui.button(
+                icon="sym_o_undo",
+                on_click=lambda _, p=path, m=solid: self.write_material(p, m, None),
+            ).props(f'flat dense aria-label="Reset {spec.label}, {solid}"').set_visibility(set_here)
+
+    def tool_of(self, path: str) -> tuple[Suite, Tool] | None:
+        """Return the suite and tool whose pane sets a path: this suite's first, then any."""
+        ordered = sorted(SUITES, key=lambda suite: suite.id != self.suite.id)
+        for suite in ordered:
+            tool = tool_for(suite.id, path)
+            if tool is not None:
+                return suite, tool
+        return None
+
+    def label_of(self, path: str) -> str:
+        """Return the name a field's path is shown by: its label, or a material's row."""
+        if path in FIELDS:
+            return FIELDS[path].label
+        parent, _, last = path.rpartition(".")
+        if parent in FIELDS and FIELDS[parent].kind == "materials":
+            return f"{FIELDS[parent].label}, {last}"
+        return path
 
     def write_material(self, path: str, material: str, value: object) -> None:
         """Write one material's number of a ``materials`` field; a blank removes it."""
@@ -853,12 +886,26 @@ class _Pane(Generic[ModelT]):
                 self.card("warn", "Warning", text, None, dismiss=key)
             self.own_cards()
 
+    def lead(self, path: str | None) -> str | None:
+        """Return one plain line for a refusal at a field: what to do there, or None."""
+        # A value set elsewhere, in another tool or suite: the card's button says where.
+        if path is None or (path not in self.controls and path not in FIELDS):
+            return None
+        label = self.label_of(path).lower()
+        if _value_of(self.body(), path) is None and _default_of(path) is None:
+            return f"Type the {label}. It has no default."
+        return f"Change the {label}. The case cannot use this value."
+
     def card(
         self, kind: str, title: str, text: str, path: str | None, *, dismiss: str | None = None
     ) -> None:
         glyph = "✕" if kind == "err" else "●"
+        lead = self.lead(path) if kind in ("err", "warn") else None
         short = text
-        if len(text) > CARD_SHORT:
+        if lead is not None:
+            # The plain line leads; the whole message is one click away.
+            short = ""
+        elif len(text) > CARD_SHORT:
             head = text[:CARD_SHORT]
             cut = max(head.rfind(". "), head.rfind("; "), head.rfind(", "), head.rfind(" "))
             short = head[:cut].rstrip(",;.")
@@ -871,7 +918,10 @@ class _Pane(Generic[ModelT]):
             with ui.row().classes("items-center no-wrap note-head"):
                 ui.label(glyph).props("aria-hidden=true")
                 ui.label(title).classes("note-title")
-            ui.label(text if whole else f"{short}…").classes("note-short")
+            if lead is not None:
+                ui.label(lead).classes("note-short")
+            elif short:
+                ui.label(text if whole else f"{short}…").classes("note-short")
             if not whole:
                 with (
                     ui.expansion("The whole message")
@@ -881,15 +931,23 @@ class _Pane(Generic[ModelT]):
                     ui.label(text)
             with ui.row().classes("items-center"):
                 if path in self.controls:
-                    self.flag(path, text)
+                    # The field says what to do there in a few words; the card says why.
+                    unset = _value_of(self.body(), path) is None and _default_of(path) is None
+                    self.flag(path, "Type a value." if unset else "Change this value.")
                     ui.button(
-                        f"Go to {FIELDS[path].label}", on_click=lambda _, p=path: self.go_to(p)
+                        f"Go to {self.label_of(path)}", on_click=lambda _, p=path: self.go_to(p)
                     ).props("outline dense no-caps data-control=note-field")
-                elif path in FIELDS and (tool := tool_for(self.suite.id, path)) is not None:
+                elif path in FIELDS and (found := self.tool_of(path)) is not None:
+                    suite, tool = found
+                    where = (
+                        tool.title
+                        if suite.id == self.suite.id
+                        else f"{suite.title} \u203a {tool.title}"
+                    )
                     ui.button(
-                        f"Go to {FIELDS[path].label}, in {tool.title}",
-                        on_click=lambda _, t=tool, p=path: ui.navigate.to(
-                            f"/{self.kind}/{t.id}?field={p}"
+                        f"Go to {FIELDS[path].label}, in {where}",
+                        on_click=lambda _, s=suite.id, t=tool, p=path: ui.navigate.to(
+                            f"/{s}/{t.id}?field={p}"
                         ),
                     ).props("outline dense no-caps data-control=note-field")
                 if dismiss is not None:
@@ -897,10 +955,10 @@ class _Pane(Generic[ModelT]):
                         "flat dense no-caps"
                     )
 
-    def flag(self, path: str, text: str) -> None:
+    def flag(self, path: str, line: str) -> None:
         control = self.controls[path]
         if isinstance(control, ValidationElement):
-            control.error = "See the message above."
+            control.error = line
             self.flagged = path
 
     async def go_to(self, path: str) -> None:

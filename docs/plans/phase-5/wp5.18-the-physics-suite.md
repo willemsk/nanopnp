@@ -276,6 +276,22 @@ setting the run reads. Case paths, file paths and values stay as they are; `gui/
 so a text that loses a path breaks it. The tests that match a text follow the new words, none loosened. A `raise` that
 no user meets (a wrong argument type in code) stays.
 
+**Item 10.**
+
+> **Outcome — the equations are LaTeX, and the boundaries are drawn on the region.** Each term of `physics/terms.py` is
+> LaTeX, drawn by KaTeX 0.19.1 (vendored, MIT; its digests in its NOTICE, checked as Mol*'s are). A term joins the
+> equation it adds to (`joins`), so `written()` writes each equation whole, with its definitions and a table of its
+> symbols under it. The physics review found the display claiming ϱ(⟨c⟩) with the variable density off: a term out of
+> force now writes its symbol's stand-in (`absent`, ϱ⁰). Conditions draws stage 5's region, each role along the named
+> edges of the region's own shape (`plot/data.py:region_edges`). The walk is keyed up to the mesh (`keyed_walk(...,
+> upto=...)`), so a later stage's check does not hide the pore. *Show mesh* draws the stored mesh in place of the
+> domains. Electrolyte draws two graphs in one plot frame (`Plane.panels`): the driver on a square-root axis, sampled
+> evenly in its root, then the wall distance, the key below a narrow view. A card leads with one plain line; the field
+> says what to do there; a solid's row takes its own mark, reset and refusal; a preview takes the warning colour.
+> `Project.problems` resolves each study and finds a worded refusal's case path (F1). A model with no salt forms no
+> case, so Electrolyte draws its own block's curves against the driver (`pipeline/case.py:block_electrolyte`; F6). *Expose* leaves the Physics panes (`_Pane.exposes`). A switch the model cannot run with stays free, so the
+> refusal's remedy can be made. F13's pick from the boundaries waits for WP5.21.
+
 ### Work items
 
 - [x] 2c22fa2 1. `physics/models.py` (`Term`, the six models' terms, `role_conditions`), §5.4.3's NOTE (D5, D7); done when
@@ -290,9 +306,9 @@ no user meets (a wrong argument type in code) stays.
 - [x] ded489e 6. The four tools drafted on example 01 (D10); `render_shell.py`; `/np-gui render shell`, `review`, `publish`;
   done when the digest is published. **Executor:** main
 - [x] 7. Compaction checkpoint; the author's verdicts. **Executor:** main
-- [ ] 8. `/np-gui collect`; REV-235's and REV-245's points ruled or carried; the design document's rows (D10); done
+- [x] 3ead25a 8. `/np-gui collect`; REV-235's and REV-245's points ruled or carried; the design document's rows (D10); done
   when the code and review say so. **Executor:** main
-- [ ] 9. The refusal texts of `pipeline/`, `io/` and `api/project.py` in ASD-STE100, FR-35's NOTE (D11); done when Tier 1
+- [x] f929c64 9. The refusal texts of `pipeline/`, `io/` and `api/project.py` in ASD-STE100, FR-35's NOTE (D11); done when Tier 1
   passes. **Executor:** general-purpose on Sonnet, high, in its own worktree
 - [ ] 10. The tools finished to the verdicts (D11), with *Modified only* and `?field=`; done when VER-78 and
   `test_physics_model.py` pass. **Executor:** main

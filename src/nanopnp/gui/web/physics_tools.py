@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 from urllib.parse import urlencode
 
 from nicegui import ui
@@ -13,16 +13,21 @@ from nicegui.elements.mixins.text_element import TextElement
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.frame import Views, heading
 from nanopnp.gui.web.physics import PhysicsModel
-from nanopnp.gui.web.plane import ROLE_TITLES, shown_solids
+from nanopnp.gui.web.plane import ROLE_TITLES, ion_text, mesh_stored, shown_solids
 from nanopnp.gui.web.screens import CORRECTED, Tool, field_control
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import FIELDS, _Pane, _value_of, current_name
-from nanopnp.io.models import exposable_paths, read_model_file
+from nanopnp.io.models import exposable_paths, owner_of, read_model_file
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.mesh.ingest import SOLID_MATERIALS
 from nanopnp.mesh.primitives import PERMITTIVITY_EXEMPT
 from nanopnp.physics.models import SWITCHES, Term, case_model, declaration, role_conditions
+from nanopnp.physics.terms import CONDITIONS, Symbol, symbols_in, written
 from nanopnp.pipeline.checks import APPLIED_WALLS, options_at
+
+if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from nanopnp.api.case import Case
+    from nanopnp.io.resolved import ResolvedCase
 
 __all__ = ["current_physics", "physics_page"]
 
@@ -41,10 +46,9 @@ STERIC = (
     "electrolyte.corrections.steric.a_water_nm",
 )
 WALL_DISTANCE = ("numerics.wall_distance.sources", "numerics.wall_distance.max_distance_nm")
-AGAINST = {"driver": "Concentration driver", "distance": "Distance to the wall"}
 COMPOSER = (
-    "Later: the composer, which builds a model from registered terms, comes in its own phase. "
-    "Until then a model is one of those registered."
+    "Later: the composer builds a model from registered terms. It comes in a later phase. Until "
+    "then, choose a registered model."
 )
 
 # The change of model each window last made and the values it changed, by project and model,
@@ -62,10 +66,11 @@ def current_physics(shell: Shell) -> PhysicsModel | None:
 
 class _PhysicsPane(_Pane[PhysicsModel]):
     kind: ClassVar[str] = "physics"
+    exposes: ClassVar[bool] = False
 
     def __init__(self, shell: Shell, tool: Tool, built: Views, focus: str) -> None:
         super().__init__(shell, tool, built, focus, current_physics(shell))
-        self.look: dict[str, str] = {"against": "driver", "pick": ""}
+        self.look: dict[str, str] = {"pick": "", "mesh": ""}
         self.flags: dict[str, bool] = {}
         self.groups: dict[str, tuple[str, ...]] = {}
         self.later_box: ui.element
@@ -122,7 +127,7 @@ class _PhysicsPane(_Pane[PhysicsModel]):
 
     def subject(self) -> str:
         if self.project is not None and self.model is None:
-            return "The project holds no physics model: import a case to add one."
+            return "The project has no physics model. Import a case to add one."
         return super().subject()
 
     def before_fields(self) -> None:
@@ -139,7 +144,7 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                     'aria-label="The study the model is shown in"'
                 )
             else:
-                ui.label("No study: over the project's continuum model").classes("later")
+                ui.label("No study. The model is shown over the continuum model.").classes("later")
         self.chosen_note()
 
     def show_in(self, study: str) -> None:
@@ -153,14 +158,13 @@ class _PhysicsPane(_Pane[PhysicsModel]):
             return
         study = self.model.within()
         if study is None:
-            ui.label(
-                "Shown over the project's continuum model, as it is built alone: the project "
-                "holds no study."
-            )
+            ui.label("The project has no study. The model is shown over its continuum model.")
+        elif self.model.names_this(study):
+            ui.label(f"Shown in study {study}, which runs with this model.")
         else:
             ui.label(
-                f"Shown in study {study}, with this model in place of its own; the study's own "
-                "values of the model's keys are left out."
+                f"Preview in study {study}, in place of its own model. This changes nothing in "
+                "the study."
             )
 
     def show_status(self) -> None:
@@ -176,10 +180,22 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         self.flagged = None
         with self.cards:
             if problem is not None and self.model is not None:
-                # Saved and shown, not refused: the study's own values may be what is wrong.
+                # Saved and shown, not refused: the study's own values may be what is wrong. It
+                # blocks the study's run where the study runs with this model; elsewhere it is
+                # a preview, which blocks nothing.
                 study = self.model.within()
-                title = f"Study {study} cannot run with this model" if study else "No case forms"
-                self.card("err", title, problem, self.model.refused_path(problem))
+                own = study is not None and self.model.names_this(study)
+                path = self.problem_path(problem)
+                kind = "err" if own or study is None else "warn"
+                if path is not None and owner_of(path) == "continuum":
+                    title = f"Study {study} cannot run. Its continuum model has a problem."
+                elif study is None:
+                    title = "No case forms"
+                elif own:
+                    title = f"Study {study} cannot run with this model"
+                else:
+                    title = f"Preview: study {study} cannot run with this model"
+                self.card(kind, title, problem, path)
             for key, text in self.warnings():
                 self.card("warn", "Warning", text, None, dismiss=key)
 
@@ -208,10 +224,14 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 control.set_text(listed or "none set")
         if path == CONCENTRATION and isinstance(control, ui.number):
             fitted = self.fitted()
-            said = "" if control.value is not None else "No default: set the salt. "
+            said = "" if control.value is not None else "Type the salt. It has no default. "
             if fitted is not None:
-                said += f"Fitted from {fitted[0]:g} to {fitted[1]:g} M"
+                said += f"Fitted from {fitted[0]:g} to {fitted[1]:g} M."
             control.props(f'hint="{said.strip()}"')
+        if path in STERIC[1:] and isinstance(control, ui.number) and control.value is None:
+            given = self.set_diameters()
+            if path in given:
+                control.props(f'hint="{given[path]} in the set"')
         if model is None:
             return
         name = str(model.shown(MODEL))
@@ -222,27 +242,86 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         why = None
         if path.startswith("physics.") and path.removeprefix("physics.") in SWITCHES:
             honoured = declared.switches[path.removeprefix("physics.")]
-            if len(honoured) == 1:
-                state = "on" if honoured[0] else "off"
-                why = f"{name} holds {FIELDS[path].label.lower()} {state}: it honours no other"
+            # A switch held at a value the model runs with is disabled; one the model cannot
+            # run with stays free, so the refusal's remedy can be made.
+            state = "on" if honoured[0] else "off"
+            if len(honoured) == 1 and bool(model.shown(path)) == honoured[0]:
+                why = f"{name} keeps {FIELDS[path].label.lower()} {state}. It cannot change."
+            elif len(honoured) == 1:
+                with self.rows[path]:
+                    ui.label(f"{name} needs {FIELDS[path].label.lower()} {state}.").classes(
+                        "field-hint"
+                    )
         elif any(path == leaf or leaf.startswith(f"{path}.") for leaf in declared.unread):
-            why = f"{name} does not read this value"
+            where = "above" if self.tool.id == "equations" else "in Equations"
+            why = f"{name} does not read this value. Choose another model {where}."
         if why is not None and isinstance(control, ui.select | ui.number | ui.input | ui.switch):
             control.disable()
+            # Said where it is seen: a title alone does not reach a keyboard.
             self.rows[path].props(f'title="{why}"')
+            with self.rows[path]:
+                ui.label(why).classes("field-hint")
+
+    def problem_path(self, problem: str) -> str | None:
+        """Return the field a shown case's refusal names, its solid's row or another suite's."""
+        model = self.model
+        if model is None:
+            return None
+        path = model.refused_path(problem)
+        if path is not None and path.startswith(PERMITTIVITIES):
+            # A missing permittivity names its solid: its row takes the mark.
+            # A name in quotes is the one refused; a bare one may be listed as allowed.
+            named = [solid for solid in self.solids() if f"'{solid}'" in problem] or [
+                solid for solid in self.solids() if solid in problem
+            ]
+            return f"{PERMITTIVITIES}.{named[0]}" if named else path
+        if path is not None:
+            return path
+        # A value of the study's continuum model: its field, in the Continuum suite.
+        return next((key for key in sorted(FIELDS, key=len, reverse=True) if key in problem), None)
+
+    def lead(self, path: str | None) -> str | None:
+        switch = None if path is None else path.removeprefix("physics.")
+        if self.model is not None and path is not None and switch in SWITCHES:
+            name = str(self.model.shown(MODEL))
+            try:
+                honoured = declaration(name).switches[switch]
+            except KeyError:
+                return super().lead(path)
+            if len(honoured) == 1:
+                state = "on" if honoured[0] else "off"
+                return f"Turn {FIELDS[path].label.lower()} {state}. {name} cannot run otherwise."
+        if path is not None and path.startswith(f"{PERMITTIVITIES}."):
+            solid = path.rpartition(".")[2]
+            return f"Type the relative permittivity of the {solid}. It has no default."
+        return super().lead(path)
 
     def ions(self) -> str:
         if self.model is None:
             return ""
         resolved = self.model.resolved()
         if resolved is not None:
-            return ", ".join(ion.name for ion in resolved.electrolyte.species)
+            return ", ".join(ion_text(ion.name) for ion in resolved.electrolyte.species)
         held = self.model.shown(SPECIES)
         return (
-            ", ".join(str(ion.get("name")) for ion in held if isinstance(ion, dict))
+            ", ".join(ion_text(str(ion.get("name"))) for ion in held if isinstance(ion, dict))
             if isinstance(held, list)
             else ""
         )
+
+    def set_diameters(self) -> dict[str, str]:
+        """Return the steric diameters the parameter set gives, by the field they fill."""
+        if self.model is None:
+            return {}
+        try:
+            document = load_corrections(str(self.model.shown("electrolyte.parameters")))
+        except (ValueError, OSError, KeyError):
+            return {}
+        ions = sorted({f"{ion.steric_diameter_nm:g}" for ion in document.species.values()})
+        return {
+            STERIC[1]: f"{' or '.join(ions)} nm",
+            STERIC[2]: f"{document.solvent.water_steric_diameter_nm:g} nm",
+        }
 
     def fitted(self) -> tuple[float, float] | None:
         if self.model is None:
@@ -332,11 +411,13 @@ class _PhysicsPane(_Pane[PhysicsModel]):
             with ui.row().classes("items-center no-wrap note-head"):
                 ui.label("✓").props("aria-hidden=true")
                 ui.label(f"Model set to {chosen}").classes("note-title")
-            ui.label(
-                "Changed with it, so the model can run: " + "; ".join(lines) + "."
-                if lines
-                else "Nothing else changed with it."
-            ).classes("note-short")
+            if lines:
+                ui.label("These values changed, so the model can run:").classes("note-short")
+                with ui.element("ul").classes("note-list"):
+                    for line in lines:
+                        TextElement(tag="li", text=line)
+            else:
+                ui.label("No other value changed.").classes("note-short")
             with ui.row().classes("items-center"):
                 ui.button("Undo", on_click=self.undo).props(
                     "outline dense no-caps data-control=physics-undo"
@@ -387,16 +468,6 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         heading("Distance to the wall", 2)
         for path in WALL_DISTANCE:
             self.field(path, body, path in changed, path in self.exposed())
-        heading("Plot", 2)
-        with self.named("Plotted against"):
-            ui.select(
-                AGAINST,
-                value=self.look["against"],
-                on_change=lambda e: self.restyle("against", str(e.value)),
-            ).props(
-                "dense outlined options-dense data-control=physics-against "
-                'aria-label="Plotted against"'
-            )
 
     def correction_row(self, name: str, changed: set[str]) -> None:
         paths = tuple(
@@ -419,10 +490,14 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 value=chosen if chosen in options else None,
                 on_change=lambda e, p=paths[0]: self.write(p, e.value),
             ).props(
-                f"dense outlined options-dense data-control={field_control(paths[0])} "
+                # No arrow and the small face, so the model's whole name shows in the column.
+                f"dense outlined options-dense hide-dropdown-icon "
+                f"data-control={field_control(paths[0])} "
                 f'aria-label="{FIELDS[paths[0]].label} correction"'
             )
             select.set_enabled(not idle)
+            # The column cuts a long name: its whole is the select's tooltip.
+            select.props(f'title="{chosen}"')
             self.controls[paths[0]] = select
             for path, part in zip(paths[1:], ("bulk", "wall"), strict=True):
                 box = ui.checkbox(
@@ -469,6 +544,17 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 WALL_CHARGE in self.exposed(),
             )
         heading("Boundaries", 2)
+        store = model.project.session().store if model is not None else None
+        stored = model is not None and store is not None and mesh_stored(self.shown_case(), store)
+        ui.checkbox(
+            "Show mesh",
+            value=stored and self.look["mesh"] == "1",
+            on_change=lambda e: self.restyle("mesh", "1" if e.value else ""),
+        ).props("dense data-control=physics-show-mesh").set_enabled(stored)
+        if model is not None and not stored:
+            ui.label(
+                "No mesh is stored for the shown study. Build it in Continuum \u203a Mesh."
+            ).classes("field-hint")
         self.roles_box = (
             ui.column()
             .classes("parts w-full gap-0")
@@ -476,20 +562,29 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         )
         self.show_roles()
 
+    def shown_case(self) -> Case | None:
+        """Return the shown case as the view draws it: formed, though the study may refuse it."""
+        if self.model is None:
+            return None
+        try:
+            return self.model.project.physics_case(self.model.name, self.model.within())
+        except REFUSED:
+            return None
+
     def show_roles(self) -> None:
         self.roles_box.clear()
         model = self.model
         resolved = None if model is None else model.resolved()
         with self.roles_box:
             if resolved is None:
-                ui.label("The roles are listed once the shown study runs with the model.").classes(
+                ui.label("The study cannot run with the model, so no role is shown.").classes(
                     "later"
                 )
                 return
             try:
                 roles = role_conditions(case_model(resolved), resolved.ground)
             except (ValueError, KeyError) as error:
-                ui.label(f"The model's roles do not read: {error}").classes("later")
+                ui.label(f"The roles cannot be read: {error}").classes("later")
                 return
             for name, texts in roles.items():
                 picked = self.look["pick"] == name
@@ -506,8 +601,25 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 ):
                     with ui.column().classes("gap-0 w-full"):
                         ui.label(title).classes("parts-name")
+                        # A condition names its field; one written alike for each ion shows once.
+                        written_out: set[tuple[str, str]] = set()
                         for field_name, text in texts.items():
-                            ui.label(f"{field_name}: {text}").classes("role-text")
+                            latex, words = CONDITIONS.get(text, ("", text))
+                            shown_as = (latex or _field_tex(field_name), words)
+                            if shown_as in written_out:
+                                continue
+                            written_out.add(shown_as)
+                            with ui.row().classes("role-text items-baseline no-wrap gap-2"):
+                                _tex(shown_as[0])
+                                _mtext(words, "role-words")
+            used = [_field_tex(name) for texts in roles.values() for name in texts]
+            used += [
+                CONDITIONS.get(text, ("", text))[0]
+                for texts in roles.values()
+                for text in texts.values()
+            ]
+            heading("Symbols", 3)
+            _symbols(symbols_in(used))
 
     async def pick(self, name: str) -> None:
         self.look["pick"] = "" if self.look["pick"] == name else name
@@ -526,43 +638,7 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 return
             listed = self.listed()
             fitted = self.fitted()
-            for entry in listed:
-                with ui.element("div").classes("exposed-row").props(f'data-field="{entry.path}"'):
-                    # The value first, on a line of its own; then its name, range and removal.
-                    label = FIELDS[entry.path].label if entry.path in FIELDS else entry.path
-                    ui.label(f"{label}, {entry.unit}" if entry.unit else label).classes(
-                        "exposed-path"
-                    )
-                    ui.input(
-                        value=entry.name,
-                        on_change=lambda e, v=entry: self.expose_as(
-                            v.path, str(e.value), (v.low, v.high)
-                        ),
-                    ).props(f'dense outlined debounce=800 aria-label="Name of {entry.path}"')
-                    hint = fitted if entry.path == CONCENTRATION else None
-                    low = ui.number(
-                        value=entry.low,
-                        placeholder="any" if hint is None else f"{hint[0]:g}",
-                        on_change=lambda e, v=entry: self.expose_as(
-                            v.path, v.name, (e.value, v.high)
-                        ),
-                    ).props(f'dense outlined debounce=800 aria-label="Lowest {entry.name}"')
-                    high = ui.number(
-                        value=entry.high,
-                        placeholder="any" if hint is None else f"{hint[1]:g}",
-                        on_change=lambda e, v=entry: self.expose_as(
-                            v.path, v.name, (v.low, e.value)
-                        ),
-                    ).props(f'dense outlined debounce=800 aria-label="Highest {entry.name}"')
-                    for control in (low, high):
-                        control.set_enabled(self.usable())
-                    ui.button(
-                        icon="sym_o_close", on_click=lambda _, v=entry: self.unexpose(v.path)
-                    ).props(f'flat dense aria-label="Stop exposing {entry.name}"')
-            if not listed:
-                ui.label("The model exposes no value: its studies list none first.").classes(
-                    "later"
-                )
+            # The value to add first, so it stays in place while the list grows.
             offered = {
                 path: FIELDS[path].label if path in FIELDS else path
                 for path in exposable_paths("physics")
@@ -580,6 +656,68 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                         self.expose_as(str(adding.value), None, None) if adding.value else None
                     ),
                 ).props('flat dense aria-label="Expose the value chosen"')
+            ui.checkbox(
+                "Modified only", value=self.modified_only, on_change=self.on_exposed_modified
+            ).props("dense data-control=tool-modified")
+            shown = [
+                entry for entry in listed if self.entry_changed(entry) or not self.modified_only
+            ]
+            if shown:
+                with (
+                    ui.element("div").classes("exposed-row exposed-head").props("aria-hidden=true")
+                ):
+                    for text in ("Name", "From", "To", ""):
+                        ui.label(text)
+            for entry in shown:
+                self.exposed_row(entry, fitted if entry.path == CONCENTRATION else None)
+            if not listed:
+                ui.label("The model exposes no value.").classes("later")
+
+    def exposed_row(self, entry: Any, fitted: tuple[float, float] | None) -> None:  # noqa: ANN401 - an exposed value
+        label = FIELDS[entry.path].label if entry.path in FIELDS else entry.path
+        unit = _unit(entry.unit)
+        with (
+            ui.element("div")
+            .classes("exposed-row")
+            .props(f'data-field="{entry.path}" data-control={field_control(entry.path)}')
+        ):
+            # The value first, on a line of its own; then its name, range and removal.
+            ui.label(f"{label}, {unit}" if unit else label).classes("exposed-path")
+            ui.input(
+                value=entry.name,
+                on_change=lambda e, v=entry: self.expose_as(v.path, str(e.value), (v.low, v.high)),
+            ).props(f'dense outlined debounce=800 aria-label="Name of {label}"')
+            low = ui.number(
+                value=entry.low,
+                placeholder="any",
+                on_change=lambda e, v=entry: self.expose_as(v.path, v.name, (e.value, v.high)),
+            ).props(f'dense outlined debounce=800 aria-label="Lowest {label}"')
+            high = ui.number(
+                value=entry.high,
+                placeholder="any",
+                on_change=lambda e, v=entry: self.expose_as(v.path, v.name, (v.low, e.value)),
+            ).props(f'dense outlined debounce=800 aria-label="Highest {label}"')
+            for control in (low, high):
+                control.set_enabled(self.usable())
+            ui.button(icon="sym_o_close", on_click=lambda _, v=entry: self.unexpose(v.path)).props(
+                f'flat dense aria-label="Stop exposing {label}"'
+            )
+            if fitted is not None:
+                ui.label(
+                    f"The corrections are fitted from {fitted[0]:g} to {fitted[1]:g} {unit}."
+                ).classes("field-hint exposed-hint")
+
+    @staticmethod
+    def entry_changed(entry: Any) -> bool:  # noqa: ANN401 - an exposed value
+        """Return whether an exposed value has a name or a range of its own."""
+        return entry.name != entry.path.rpartition(".")[2] or (entry.low, entry.high) != (
+            None,
+            None,
+        )
+
+    def on_exposed_modified(self, event: Any) -> None:  # noqa: ANN401 - the checkbox's event
+        self.modified_only = bool(event.value)
+        self.show_exposed()
 
     def listed(self) -> tuple[Any, ...]:
         if self.model is None:
@@ -637,15 +775,15 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 self.draw_exposed()
 
     def term_state(self, term: Term) -> str | None:
-        """Return why a term is off, or None where it is on."""
+        """Return why a term is not in force, or None where it is."""
         if self.model is None:
             return None
         for switch in term.switches:
             path = f"physics.{switch}"
             if not self.model.shown(path):
-                return f"needs {FIELDS[path].label.lower()}"
+                return f"{FIELDS[path].label} is off."
         if term.correction is not None and self.model.shown(term.correction) == "none":
-            return f"{FIELDS[term.correction].label.lower()}: none"
+            return f"{FIELDS[term.correction].label} is none."
         return None
 
     def draw_equations(self) -> None:
@@ -656,23 +794,38 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         try:
             declared = declaration(name)
         except KeyError:
-            ui.label(f"No model is registered as {name}.").classes("later")
+            ui.label(f"No model has the name {name}.").classes("later")
             return
-        heading(f"What {name} solves", 2)
-        with ui.element("ul").classes("terms").props("data-control=equations-terms"):
-            for term in declared.terms:
-                off = self.term_state(term)
-                with ui.element("li").classes(f"term {'term-off' if off else 'term-on'}"):
+        shown = written(declared.terms, lambda term: self.term_state(term) is None)
+        heading("Equations", 2)
+        with ui.element("div").classes("terms").props("data-control=equations-terms"):
+            for item in shown:
+                with ui.element("section").classes("term"):
                     with ui.row().classes("term-head items-baseline no-wrap"):
-                        ui.label(term.name).classes("term-name")
-                        ui.label(term.clause).classes("term-clause")
-                        ui.label("on" if off is None else f"off: {off}").classes("term-state")
-                    ui.label(term.equation).classes("term-equation")
+                        ui.label(item.term.name).classes("term-name")
+                        clauses = dict.fromkeys(term.clause for term in (item.term, *item.joined))
+                        ui.label(", ".join(clauses)).classes("term-clause")
+                    _tex(item.equation, display=True, classes="term-equation")
+                    for each in item.defines:
+                        _tex(each, display=True, classes="term-define")
+                    for note in item.notes:
+                        _mtext(note, "term-note")
+        off = [(term, self.term_state(term)) for term in declared.terms]
+        if any(why for _, why in off):
+            heading("Not in force", 3)
+            with ui.element("ul").classes("terms-off").props("data-control=equations-off"):
+                for term, why in off:
+                    if why:
+                        TextElement(tag="li", text=f"{term.name} ({term.clause}). {why}")
+        heading("Symbols", 3)
+        texts = [item.equation for item in shown]
+        texts += [each for item in shown for each in (*item.defines, *item.notes)]
+        _symbols(symbols_in(texts))
         resolved = model.resolved()
         if resolved is None:
             ui.label(
-                "The shown study does not run with the model, so its fields are not listed; the "
-                "terms follow the model's own switches."
+                "The shown study cannot run with the model, so the fields are not shown. The "
+                "equations follow the model's own switches."
             ).classes("later")
             return
         try:
@@ -683,25 +836,19 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         heading("Fields", 3)
         _table(
             ("Field", "Element", "Order", "Domain"),
-            [(f.name, f.element, f"P{f.order}", f.domain or "every domain") for f in built.fields],
+            [
+                (
+                    _field_tex(field.name),
+                    ELEMENTS.get(field.element, field.element),
+                    f"P{field.order}",
+                    "every domain" if field.domain is None else field.domain.replace("|", ", "),
+                )
+                for field in built.fields
+            ],
+            tex=(0,),
         )
         heading("Corrections in force", 3)
-        corrections = resolved.document.electrolyte.corrections
-        held = []
-        for prop in CORRECTED:
-            choice = getattr(corrections, prop)
-            if choice.model != "none":
-                parts = [
-                    part
-                    for part, on in (("bulk", choice.concentration), ("wall", choice.wall))
-                    if on
-                ]
-                held.append(
-                    f"{prop.capitalize()}: {choice.model} ({' and '.join(parts) or 'no part'})"
-                )
-        if corrections.steric.model != "none":
-            held.append(f"Steric flux: {corrections.steric.model}")
-        ui.label("; ".join(held) + "." if held else "None: every correction is the none model.")
+        _corrections_in_force(resolved)
         heading("Stabilisation", 3)
         ui.label(resolved.stabilisation)
 
@@ -709,15 +856,15 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         heading("As a study lists it", 2)
         listed = self.listed()
         if not listed:
-            ui.label("None: a study lists no value of this model first.").classes("later")
+            ui.label("The model exposes no value.").classes("later")
             return
         _table(
-            ("Name", "Value", "Unit", "Range"),
+            ("Name", "Default", "Unit", "Range"),
             [
                 (
                     entry.name,
                     "unset" if entry.default is None else self.text(entry.default, None),
-                    entry.unit or "none",
+                    _unit(entry.unit) or "none",
                     _range(entry.low, entry.high),
                 )
                 for entry in listed
@@ -733,13 +880,91 @@ class _PhysicsPane(_Pane[PhysicsModel]):
 
     async def show(self) -> None:
         if self.tool.view == "page":
-            await ui.run_javascript("document.body.dataset.screenReady = '1'", timeout=10)
+            # Ready once the equations are drawn in their own faces.
+            await ui.run_javascript(
+                "document.fonts.ready.then(() => { window.frameMath?.draw(document); "
+                "document.body.dataset.screenReady = '1'; })",
+                timeout=10,
+            )
             return
         await self.built.show_plane(self.plane_url(), "" if self.model else self.subject())
 
     async def restyle(self, what: str, value: str) -> None:
         self.look[what] = value
         await self.show()
+
+
+ELEMENTS = {"h1": "Lagrange, scalar", "vector_h1": "Lagrange, vector"}
+"""The words for each finite-element family a field takes."""
+
+
+def _field_tex(name: str) -> str:
+    """Return a field's symbol in LaTeX: an ion's concentration with its charge raised."""
+    if name.startswith("c_"):
+        ion = name.removeprefix("c_")
+        base = ion.rstrip("+-")
+        charge = ion[len(base) :]
+        return rf"c_{{\mathrm{{{base}}}^{{{charge}}}}}" if charge else rf"c_{{\mathrm{{{base}}}}}"
+    return {"potential": r"\phi", "velocity": r"\mathbf{u}", "pressure": "p"}.get(name, name)
+
+
+def _corrections_in_force(resolved: ResolvedCase) -> None:
+    corrections = resolved.document.electrolyte.corrections
+    held = []
+    for prop in CORRECTED:
+        choice = getattr(corrections, prop)
+        if choice.model != "none":
+            parts = [
+                part for part, on in (("bulk", choice.concentration), ("wall", choice.wall)) if on
+            ]
+            held.append(f"{prop.capitalize()}: {choice.model}, {' and '.join(parts) or 'no part'}")
+    if corrections.steric.model != "none":
+        held.append(f"Steric flux: {corrections.steric.model}")
+    if held:
+        with ui.element("ul").classes("terms-off"):
+            for line in held:
+                TextElement(tag="li", text=line)
+    else:
+        ui.label("None. Each correction is the none model.")
+
+
+def _tex(latex: str, *, display: bool = False, classes: str = "") -> ui.element:
+    """Return an element KaTeX draws ``latex`` in, as a block where ``display``."""
+    element = ui.element("div" if display else "span").classes(f"tex {classes}".strip())
+    element.props["data-tex"] = latex
+    if display:
+        element.props["data-display"] = "1"
+    return element
+
+
+def _mtext(text: str, classes: str = "") -> ui.element:
+    """Return a sentence whose mathematics, between ``$`` signs, KaTeX draws."""
+    element = ui.element("div").classes(f"mtext {classes}".strip())
+    element.props["data-mtext"] = text
+    return element
+
+
+def _symbols(symbols: tuple[Symbol, ...]) -> None:
+    with ui.element("table").classes("view-table").props("data-control=equations-symbols"):
+        with ui.element("thead"), ui.element("tr"):
+            for text in ("Symbol", "Meaning", "Unit"):
+                TextElement(tag="th", text=text).props("scope=col")
+        with ui.element("tbody"):
+            for symbol in symbols:
+                with ui.element("tr"):
+                    with ui.element("td"):
+                        _tex(symbol.tex)
+                    with ui.element("td"):
+                        _mtext(symbol.meaning)
+                    TextElement(tag="td", text=symbol.unit)
+
+
+UNITS = {"molar": "M", "volt": "V", "kelvin": "K", "nanometre": "nm", "nanometer": "nm"}
+"""The symbol the panes write for each unit an exposed value names in words."""
+
+
+def _unit(unit: str | None) -> str:
+    return UNITS.get(unit or "", unit or "")
 
 
 def _range(low: float | None, high: float | None) -> str:
@@ -750,7 +975,9 @@ def _range(low: float | None, high: float | None) -> str:
     return f"up to {high:g}" if low is None else f"{low:g} to {high:g}"
 
 
-def _table(head: tuple[str, ...], rows: list[tuple[str, ...]]) -> None:
+def _table(
+    head: tuple[str, ...], rows: list[tuple[str, ...]], *, tex: tuple[int, ...] = ()
+) -> None:
     with ui.element("table").classes("view-table"):
         with ui.element("thead"), ui.element("tr"):
             for text in head:
@@ -758,8 +985,12 @@ def _table(head: tuple[str, ...], rows: list[tuple[str, ...]]) -> None:
         with ui.element("tbody"):
             for row in rows:
                 with ui.element("tr"):
-                    for text in row:
-                        TextElement(tag="td", text=str(text))
+                    for k, text in enumerate(row):
+                        if k in tex:
+                            with ui.element("td"):
+                                _tex(str(text))
+                        else:
+                            TextElement(tag="td", text=str(text))
 
 
 def physics_page(shell: Shell, tool: Tool) -> Callable[..., None]:

@@ -40,6 +40,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from matplotlib.tri import Triangulation
 
     from nanopnp.io.resolved import ResolvedCase
+    from nanopnp.materials.electrolyte import Electrolyte
     from nanopnp.materials.models import CorrectionModel
     from nanopnp.post.export import SolutionFields
 
@@ -64,6 +65,7 @@ __all__ = [
     "axis_label",
     "boundary_edges",
     "case_correction_curves",
+    "case_curves",
     "charge_grids",
     "cis_referenced_bias_V",
     "contour_polygon_m",
@@ -82,6 +84,7 @@ __all__ = [
     "radial_cutline",
     "reduced_map",
     "region_drawing",
+    "region_edges",
     "sampled",
     "structure_atoms",
     "subdivided",
@@ -219,6 +222,46 @@ def region_drawing(artefact: Artefact) -> RegionDrawing | None:
         z_extent_m=(z_low * _NM, z_high * _NM),
         record=record,
     )
+
+
+REGION_EDGE_SAMPLES = 33
+"""How many points a curved boundary of a region is drawn through."""
+
+
+def region_edges(record: Stage5Region) -> dict[str, np.ndarray]:
+    """Return each named boundary of a stage-5 region as ``(k, 2, 2)`` segments in nm.
+
+    The boundaries are the region's own shape's, named as the mesher reads them, so they show
+    before a mesh is built.
+    """
+    import numpy as np
+
+    from nanopnp.geometry.pore import IdealisedRegionRecord
+    from nanopnp.geometry.region import RegionRecord, build_region
+
+    if isinstance(record, IdealisedRegionRecord):
+        shape = record.geometry().shape(name_mouths=True)
+    elif isinstance(record, RegionRecord):
+        shape = build_region(record)
+    else:
+        raise TypeError(f"a region record of type {type(record).__name__} has no shape")
+    found: dict[str, list[np.ndarray]] = {}
+    for edge in shape.edges:
+        if edge.name is None:
+            continue
+        low, high = edge.parameter_interval
+        ends = np.array([[edge.start[0], edge.start[1]], [edge.end[0], edge.end[1]]])
+        # A straight edge is its two ends; a curve, as the reservoir's arc, is sampled.
+        straight = abs(float(edge.mass) - float(np.linalg.norm(ends[1] - ends[0]))) <= 1e-9 * max(
+            float(edge.mass), 1.0
+        )
+        if straight:
+            points = ends
+        else:
+            values = [edge.Value(t) for t in np.linspace(low, high, REGION_EDGE_SAMPLES)]
+            points = np.array([[value[0], value[1]] for value in values])
+        found.setdefault(str(edge.name), []).append(np.stack((points[:-1], points[1:]), axis=1))
+    return {name: np.concatenate(parts) for name, parts in found.items()}
 
 
 # --- stage 6 ---------------------------------------------------------------------------------
@@ -413,7 +456,8 @@ def correction_curves(
             continue
         low, high = getattr(model, "validity_M", validity_M)
         # Past the fitted range the model clamps its driver, and the curve shows it going flat.
-        x = np.linspace(0.0, 1.25 * high, CURVE_POINTS)
+        # Even steps in the square root of the driver, as the corrections go with it.
+        x = 1.25 * high * np.linspace(0.0, 1.0, CURVE_POINTS) ** 2
         d_nm = np.linspace(0.0, DISTANCE_RANGE_NM, CURVE_POINTS)
         curves.append(
             CorrectionCurves(
@@ -435,10 +479,14 @@ def correction_curves(
 
 def case_correction_curves(resolved: ResolvedCase) -> list[CorrectionCurves]:
     """Return a resolved case's correction curves, drawn at the driver its bulk forms."""
-    electrolyte = resolved.electrolyte
-    # Every species sits at the case's concentration in the bulk; the driver is formed from
-    # them as the solve forms it: <c> = (1/n) sum c_i, or I, clamped to the fitted range.
-    bulk_SI = resolved.concentration_M / MOLAR_PER_SI
+    return case_curves(resolved.electrolyte, resolved.concentration_M)
+
+
+def case_curves(electrolyte: Electrolyte, concentration_M: float) -> list[CorrectionCurves]:
+    """Return an electrolyte's correction curves, drawn at the driver a bulk salt forms."""
+    # Every species sits at the concentration in the bulk; the driver is formed from them as
+    # the solve forms it: <c> = (1/n) sum c_i, or I, clamped to the fitted range.
+    bulk_SI = concentration_M / MOLAR_PER_SI
     driver_M = float(electrolyte.average_concentration([bulk_SI] * len(electrolyte.species)))
     return correction_curves(
         electrolyte.corrections,
