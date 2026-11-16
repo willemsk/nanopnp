@@ -96,7 +96,7 @@ class Variable(BaseModel):
     @model_validator(mode="after")
     def _exactly_one(self) -> Variable:
         if (self.value is None) == (self.expression is None):
-            raise ValueError("give exactly one of value: and expression:")
+            raise ValueError("Set exactly one of value: and expression:.")
         return self
 
     def written(self) -> dict[str, Any]:
@@ -215,22 +215,22 @@ def _check_unit(unit: str, where: str) -> None:
         _quantity(Fraction(1), unit).to_root_units()
     except Exception:  # pint raises several types, and AssertionError among them
         raise CaseValidationError(
-            f"{where}: {unit!r} is not a unit the units library knows"
+            f"{where}: {unit!r} is not a unit that the units library knows. Write another unit."
         ) from None
 
 
 def _parse(text: str, where: str) -> ast.Expression:
     if len(text) > MAX_EXPRESSION_LENGTH:
         raise CaseValidationError(
-            f"{where}: an expression is at most {MAX_EXPRESSION_LENGTH} characters, "
-            f"found {len(text)}"
+            f"{where}: an expression can have at most {MAX_EXPRESSION_LENGTH} characters. "
+            f"This one has {len(text)}. Shorten it."
         )
     try:
         tree = ast.parse(text.strip(), mode="eval")
     except (SyntaxError, ValueError, RecursionError, MemoryError):
         raise CaseValidationError(
-            f"{where}: {text!r} is not an expression of numbers, variable names, + - * / **, "
-            f"parentheses and {', '.join(FUNCTIONS)}"
+            f"{where}: {text!r} is not an expression. Use only numbers, variable names, "
+            f"+ - * / **, parentheses and {', '.join(FUNCTIONS)}."
         ) from None
     for node in ast.walk(tree):
         _admit(node, text, where)
@@ -240,8 +240,8 @@ def _parse(text: str, where: str) -> ast.Expression:
 def _admit(node: ast.AST, text: str, where: str) -> None:  # noqa: C901
     def refuse(what: str) -> CaseValidationError:
         return CaseValidationError(
-            f"{where}: {text!r}: {what} is not allowed; an expression holds numbers, variable "
-            f"names, + - * / **, parentheses and {', '.join(FUNCTIONS)}"
+            f"{where}: {text!r}: {what} is not allowed. An expression holds numbers, variable "
+            f"names, + - * / **, parentheses and {', '.join(FUNCTIONS)}."
         )
 
     if isinstance(node, ast.Expression | ast.Load):
@@ -268,7 +268,7 @@ def _admit(node: ast.AST, text: str, where: str) -> None:  # noqa: C901
         return
     if isinstance(node, ast.Call):
         if not isinstance(node.func, ast.Name) or node.func.id not in FUNCTIONS:
-            raise refuse("a call of anything but " + ", ".join(FUNCTIONS))
+            raise refuse("a call of any other function")
         if node.keywords or any(isinstance(arg, ast.Starred) for arg in node.args):
             raise refuse("a keyword or starred argument")
         return
@@ -294,10 +294,10 @@ def _carry(quantity: Quantity, where: str, text: str) -> Quantity:
         try:
             magnitude = float(magnitude)
         except OverflowError:
-            raise CaseValidationError(f"{where}: {text!r} overflows") from None
+            raise CaseValidationError(f"{where}: {text!r} is too large for a float.") from None
         quantity = _quantity(magnitude, _DIMENSIONLESS) * quantity.units
     if isinstance(magnitude, float) and not math.isfinite(magnitude):
-        raise CaseValidationError(f"{where}: {text!r} is not a finite number")
+        raise CaseValidationError(f"{where}: {text!r} is not a finite number.")
     return quantity
 
 
@@ -316,7 +316,9 @@ class _Evaluator:
         return CaseValidationError(f"{self.where}: {self.text!r}: {reason}")
 
     def unlike(self) -> CaseValidationError:
-        return self.fail(f"adds or compares values of different dimensions{self.used()}")
+        return self.fail(
+            f"The expression adds or compares values of different dimensions{self.used()}."
+        )
 
     def used(self) -> str:
         used = sorted(
@@ -344,7 +346,9 @@ class _Evaluator:
         if isinstance(node, ast.Name):
             if node.id not in self.env:
                 known = ", ".join(sorted(self.env)) or "none"
-                raise self.fail(f"{node.id!r} is not a variable of the case (it defines {known})")
+                raise self.fail(
+                    f"{node.id!r} is not a variable of the case. The case defines {known}."
+                )
             return self.env[node.id]
         if isinstance(node, ast.UnaryOp):
             operand = self.visit(node.operand)
@@ -353,7 +357,7 @@ class _Evaluator:
             return self._binary(node)
         if isinstance(node, ast.Call):
             return self._call(node)
-        raise self.fail("is not an expression this evaluator reads")  # pragma: no cover
+        raise self.fail("This evaluator does not read this expression.")  # pragma: no cover
 
     def _binary(self, node: ast.BinOp) -> Quantity:
         left = self.visit(node.left)
@@ -366,19 +370,19 @@ class _Evaluator:
             return left * right
         if isinstance(node.op, ast.Div):
             if right.magnitude == 0:
-                raise self.fail("divides by zero")
+                raise self.fail("The expression divides by zero.")
             return left / right
         return self._power(left, right)
 
     def _dimensionless(self, quantity: Quantity, what: str) -> Number:
         if not quantity.dimensionless:
-            raise self.fail(f"{what} must be dimensionless" + self.used())
+            raise self.fail(f"{what} must be dimensionless{self.used()}.")
         magnitude = quantity.to(_DIMENSIONLESS).magnitude
         assert isinstance(magnitude, Fraction | float)
         return magnitude
 
     def _power(self, base: Quantity, exponent: Quantity) -> Quantity:
-        power = self._dimensionless(exponent, "an exponent")
+        power = self._dimensionless(exponent, "The exponent")
         try:
             if (
                 isinstance(power, Fraction)
@@ -386,16 +390,16 @@ class _Evaluator:
                 and abs(power) <= _EXACT_POWER
             ):
                 if base.magnitude == 0 and power < 0:
-                    raise self.fail("divides by zero")
+                    raise self.fail("The expression divides by zero.")
                 return base ** int(power)
             as_float = float(power)
             raised = float(base.magnitude) ** as_float
         except OverflowError:
-            raise self.fail("overflows") from None
+            raise self.fail("The result is too large for a float.") from None
         except ZeroDivisionError:
-            raise self.fail("divides by zero") from None
+            raise self.fail("The expression divides by zero.") from None
         if isinstance(raised, complex):
-            raise self.fail("takes a real power of a negative number")
+            raise self.fail("The expression raises a negative number to a non-integer power.")
         return _quantity(raised, _DIMENSIONLESS) * base.units**as_float
 
     def _call(self, node: ast.Call) -> Quantity:
@@ -404,12 +408,14 @@ class _Evaluator:
         arguments = [self.visit(argument) for argument in node.args]
         arity = {"sqrt": 1, "exp": 1, "log": 1, "abs": 1}
         if name in arity and len(arguments) != arity[name]:
-            raise self.fail(f"{name} takes {arity[name]} argument")
+            raise self.fail(f"The function {name} takes {arity[name]} argument.")
         if name in ("min", "max"):
             if not arguments:
-                raise self.fail(f"{name} takes at least one argument")
+                raise self.fail(f"The function {name} takes at least one argument.")
             if any(item.dimensionality != arguments[0].dimensionality for item in arguments):
-                raise self.fail(f"{name} compares values of different dimensions" + self.used())
+                raise self.fail(
+                    f"The function {name} compares values of different dimensions{self.used()}."
+                )
             chosen = min if name == "min" else max
             return chosen(arguments, key=lambda item: item.magnitude)
         argument = arguments[0]
@@ -417,20 +423,20 @@ class _Evaluator:
             return abs(argument)
         if name == "sqrt":
             return self._power(argument, _quantity(0.5, _DIMENSIONLESS))
-        magnitude = self._dimensionless(argument, f"the argument of {name}")
+        magnitude = self._dimensionless(argument, f"The argument of {name}")
         try:
             number = float(magnitude)
         except OverflowError:
             # An exact number beyond the range of a float still has a finite logarithm.
             if name == "exp" or magnitude <= 0:
-                raise self.fail(f"{name} of a number beyond the range of a float") from None
+                raise self.fail(f"The argument of {name} is beyond the range of a float.") from None
             assert isinstance(magnitude, Fraction)  # a float cannot overflow on conversion
             logarithm = math.log(magnitude.numerator) - math.log(magnitude.denominator)
             return _quantity(logarithm, _DIMENSIONLESS)
         try:
             result = math.exp(number) if name == "exp" else math.log(number)
         except (ValueError, OverflowError):
-            raise self.fail(f"{name} of {number:g} is not a finite number") from None
+            raise self.fail(f"The function {name} of {number:g} is not a finite number.") from None
         return _quantity(result, _DIMENSIONLESS)
 
 
@@ -439,21 +445,21 @@ def _definitions(raw: FieldValue, source: str) -> dict[str, Variable]:
         return {}
     if not isinstance(raw, Mapping):
         raise CaseValidationError(
-            f"{source}: variables: is a mapping of name to {{value: <number>, unit: <text>}} or "
-            "{expression: <text>, unit: <text>}"
+            f"{source}: variables: must be a mapping of a name to {{value: <number>, unit: "
+            "<text>} or {expression: <text>, unit: <text>}."
         )
     found: dict[str, Variable] = {}
     for name, body in raw.items():
         where = f"{source}: variables.{name}"
         if not isinstance(name, str) or not _NAME.match(name):
             raise CaseValidationError(
-                f"{where}: a variable name is a letter, then letters, digits or underscores"
+                f"{where}: a variable name must be a letter, then letters, digits or underscores."
             )
         if name in FUNCTIONS or name == "auto":
-            raise CaseValidationError(f"{where}: {name!r} is reserved and names no variable")
+            raise CaseValidationError(f"{where}: {name!r} is reserved. It cannot name a variable.")
         if not isinstance(body, Mapping):
             raise CaseValidationError(
-                f"{where}: is a mapping with value: or expression:, and unit:"
+                f"{where}: the variable must be a mapping with value: or expression:, and unit:."
             )
         try:
             found[name] = Variable.model_validate(dict(body))
@@ -477,8 +483,9 @@ def _order(uses: Mapping[str, frozenset[str]], source: str) -> list[str]:
         if state.get(name) == 1:
             cycle = [*trail[trail.index(name) :], name]
             raise CaseValidationError(
-                f"{source}: variables.{name}: variables refer to each other in a cycle: "
+                f"{source}: variables.{name}: the variables refer to each other in a cycle: "
                 + " -> ".join(cycle)
+                + ". Remove one reference of the cycle."
             )
         state[name] = 1
         for used in sorted(uses[name]):
@@ -511,7 +518,7 @@ def _variable_value(
     if result.dimensionality != declared:
         raise CaseValidationError(
             f"{where}: {variable.expression!r}{evaluator.used()} does not have the dimension "
-            f"of its declared unit {variable.unit!r}"
+            f"of its declared unit {variable.unit!r}. Change the expression or the unit."
         )
     return result.to_root_units()
 
@@ -556,8 +563,8 @@ def resolve(raw: FieldValue, source: str) -> tuple[FieldValue, Resolution | None
     if unknown:
         owner = next(name for name, names in uses.items() if unknown[0] in names)
         raise CaseValidationError(
-            f"{source}: variables.{owner}: {unknown[0]!r} is not a variable of the case "
-            f"(it defines {', '.join(definitions) or 'none'})"
+            f"{source}: variables.{owner}: {unknown[0]!r} is not a variable of the case. "
+            f"The case defines {', '.join(definitions) or 'none'}."
         )
 
     env: dict[str, Quantity] = {}
@@ -583,7 +590,8 @@ def resolve(raw: FieldValue, source: str) -> tuple[FieldValue, Resolution | None
         if result.dimensionality != expected:
             raise CaseValidationError(
                 f"{where}: {text!r}{_Evaluator(env, units, where, text).used()} does not have the "
-                f"dimension this field takes: {unit}{_suffix_text(unit)}"
+                f"dimension that this field takes: {unit}{_suffix_text(unit)}. "
+                "Change the expression."
             )
         number = result.to(_registry().parse_units(unit)).magnitude
         _place(resolved, parts, _as_field(number, kind, where, text, unit))
@@ -603,13 +611,13 @@ def _as_field(
     try:
         value = float(number)
     except OverflowError:
-        raise CaseValidationError(f"{where}: {text!r} overflows") from None
+        raise CaseValidationError(f"{where}: {text!r} is too large for a float.") from None
     if not math.isfinite(value):
-        raise CaseValidationError(f"{where}: {text!r} is not a finite number")
+        raise CaseValidationError(f"{where}: {text!r} is not a finite number.")
     if kind == "int":
         if value != int(value):
             raise CaseValidationError(
-                f"{where}: {text!r} is {value:g}, and this field takes a whole number"
+                f"{where}: {text!r} is {value:g}. This field takes a whole number."
             )
         return int(value)
     return value

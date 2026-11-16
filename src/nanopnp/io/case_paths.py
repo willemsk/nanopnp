@@ -65,7 +65,7 @@ class FieldReference:
         except ValidationError as error:
             reasons = "; ".join(problem["msg"] for problem in error.errors())
             raise CaseValidationError(
-                f"{self.path}: {value!r} is not a value this field accepts "
+                f"{self.path}: {value!r} is not a value that this field accepts "
                 f"({_annotation_name(self.annotation)}): {reasons}"
             ) from None
 
@@ -104,7 +104,7 @@ def field_at(path: str) -> FieldReference:
     """Return the schema's declaration of the field a dotted path names."""
     components = [part for part in path.split(".") if part]
     if not components:
-        raise UnknownCasePathError("a case-file path cannot be empty")
+        raise UnknownCasePathError("A case-file path cannot be empty.")
 
     owner: type[BaseModel] | None = CaseDocument
     annotation: FieldType = CaseDocument
@@ -120,8 +120,8 @@ def field_at(path: str) -> FieldReference:
             # an index and fails much later, inside a substitution.
             prefix = ".".join(walked) or "<document>"
             raise UnknownCasePathError(
-                f"{path!r} is not a field of the case schema: {prefix} is a list, and "
-                f"{component!r} is not an index into it"
+                f"{path!r} is not a field of the case schema. {prefix} is a list. "
+                f"{component!r} is not an index into it. Use a whole number as the index."
             )
         if entry is not None:
             annotation, container = entry
@@ -131,18 +131,18 @@ def field_at(path: str) -> FieldReference:
                 accepted = ", ".join(_keys_of(owner))
                 prefix = ".".join(walked) or "<document>"
                 close = difflib.get_close_matches(component, _keys_of(owner), n=1)
-                hint = f"did you mean {close[0]!r}? " if close else ""
+                hint = f"A close name is {close[0]!r}. " if close else ""
                 raise UnknownCasePathError(
-                    f"{path!r} is not a field of the case schema: {prefix} has no "
-                    f"{component!r}. {hint}It accepts {accepted}"
+                    f"{path!r} is not a field of the case schema. {prefix} has no "
+                    f"{component!r}. {hint}It accepts {accepted}."
                 )
             annotation = field.annotation
             container = "model"
         else:
             prefix = ".".join(walked)
             raise UnknownCasePathError(
-                f"{path!r} is not a field of the case schema: {prefix} is a "
-                f"{_annotation_name(annotation)}, which has no {component!r} inside it"
+                f"{path!r} is not a field of the case schema. {prefix} is a "
+                f"{_annotation_name(annotation)}. It has no {component!r} inside it."
             )
         walked.append(component)
         owner = _model_of(annotation)
@@ -349,10 +349,10 @@ def schema_default(path: str) -> tuple[bool, FieldValue]:
         if _is_index(component):
             continue
         if owner is None:
-            raise UnknownCasePathError(f"{path!r} does not end at a declared field of a block")
+            raise UnknownCasePathError(f"{path!r} does not end at a declared field of a block.")
         info = _field_named(owner, component)
         if info is None:
-            raise UnknownCasePathError(f"{path!r} does not end at a declared field of a block")
+            raise UnknownCasePathError(f"{path!r} does not end at a declared field of a block.")
         owner = _model_of(info.annotation)
     if info is None or info.is_required():
         return False, None
@@ -436,13 +436,14 @@ def value_at(document: CaseDocument, path: str) -> FieldValue:
         walked.append(component)
         if value is None:
             raise UnknownCasePathError(
-                f"{path!r} cannot be read from this case: {'.'.join(walked[:-1])} is absent from it"
+                f"{path!r} cannot be read from this case. {'.'.join(walked[:-1])} is absent "
+                "from it."
             )
         if isinstance(value, Mapping):
             if component not in value:
                 raise UnknownCasePathError(
-                    f"{path!r} cannot be read from this case: {'.'.join(walked[:-1])} "
-                    f"has no entry {component!r}"
+                    f"{path!r} cannot be read from this case. {'.'.join(walked[:-1])} "
+                    f"has no entry {component!r}."
                 )
             value = value[component]
         elif isinstance(value, list):
@@ -468,8 +469,8 @@ def _sequence_entry(
         return values[index]
     except (ValueError, IndexError):
         raise UnknownCasePathError(
-            f"{path!r} cannot be read from this case: {'.'.join(walked[:-1])} holds "
-            f"{len(values)} entries, and {component!r} is not an index into them"
+            f"{path!r} cannot be read from this case. {'.'.join(walked[:-1])} holds "
+            f"{len(values)} entries. {component!r} is not an index into them."
         ) from None
 
 
@@ -497,8 +498,8 @@ def substitute(
             # ``models`` is outside the dump, so set into the payload it would validate and be
             # ignored: the document would claim a model it never read.
             raise CaseValidationError(
-                f"<{document.name}>: {', '.join(sorted(named))}: the case names no model; "
-                "write models: in the case file"
+                f"<{document.name}>: {', '.join(sorted(named))}: the case names no model. "
+                "Add models: to the case file."
             )
         moved = _model_assignments(named)
         for path, value in moved.items():
@@ -513,8 +514,8 @@ def substitute(
     )
     if variables is None and named_variables:
         raise CaseValidationError(
-            f"<{document.name}>: {', '.join(named_variables)}: the case defines no variables; "
-            "write variables: in the case file"
+            f"<{document.name}>: {', '.join(named_variables)}: the case defines no variables. "
+            "Add variables: to the case file."
         )
     if variables is not None:
         # Read again as written, so an expression a substitution leaves alone still follows the
@@ -549,8 +550,8 @@ def _model_assignments(named: Mapping[str, FieldValue]) -> dict[str, FieldValue]
         )
         if not isinstance(block, Mapping):
             raise CaseValidationError(
-                f"models: {value!r}: a study cannot drop the models it names; set "
-                "models.molecular, models.continuum or models.physics to swap one"
+                f"models: {value!r}: a study cannot drop the models that it names. Set "
+                "models.molecular, models.continuum or models.physics to swap one."
             )
         moved.update((f"models.{kind}", item) for kind, item in block.items())
     return moved
@@ -598,12 +599,13 @@ def with_section(document: D, name: str) -> D:
     """Return ``document`` with the empty neutral section ``name`` added."""
     if name not in NEUTRAL_SECTIONS:
         raise ValueError(
-            f"section {name!r} cannot be added from a default: only "
-            f"{', '.join(sorted(NEUTRAL_SECTIONS))} resolves empty exactly as its absence, so "
-            "any other would change the run or be refused; write it in the case file"
+            f"Section {name!r} cannot be added from a default. Only "
+            f"{', '.join(sorted(NEUTRAL_SECTIONS))} gives the same run when it is empty as "
+            "when it is absent. Any other section changes the run or is refused. Write "
+            "the section in the case file."
         )
     if getattr(document, name) is not None:
-        raise ValueError(f"case {document.name!r} already carries a {name}: section")
+        raise ValueError(f"Case {document.name!r} already has a {name}: section.")
     payload = document.model_dump(by_alias=True, mode="json")
     payload[name] = {}
     return _revalidated(document, payload, f"<{document.name} with {name}: {{}}>")
@@ -619,8 +621,8 @@ def _set_at(payload: dict[str, FieldValue], path: str, value: FieldValue) -> Non
             continue
         if not isinstance(cursor, dict) or cursor.get(component) is None:
             raise UnknownCasePathError(
-                f"{path!r} cannot be set on this case: {prefix} is absent from it, so there "
-                "is no block to substitute into; give the base case that section first"
+                f"{path!r} cannot be set on this case. {prefix} is absent from it, so there "
+                "is no block to substitute into. Give the base case that section first."
             )
         cursor = cursor[component]
     last = components[-1]
@@ -736,10 +738,10 @@ def field_path(name: str) -> str:
         return matches[0]
     if matches:
         raise UnknownCasePathError(
-            f"{name!r} names more than one field: {', '.join(matches)}. Write the dotted path, "
-            "or pass the block as a mapping"
+            f"{name!r} names more than one field: {', '.join(matches)}. Write the dotted path. "
+            "Or pass the block as a mapping."
         )
     leaves = sorted({reference.path.rsplit(".", 1)[-1] for reference in case_fields()})
     close = difflib.get_close_matches(name, leaves, n=3)
-    hint = f" Did you mean {', '.join(map(repr, close))}?" if close else ""
+    hint = f" Close names are {', '.join(map(repr, close))}." if close else ""
     raise UnknownCasePathError(f"{name!r} is not a field of the case schema.{hint}")

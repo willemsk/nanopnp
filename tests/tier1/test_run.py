@@ -357,7 +357,7 @@ def test_ver32_only_refuses_an_upstream_the_store_does_not_hold(
 def test_ver32_upto_names_a_stage_this_case_does_not_walk(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
-    with pytest.raises(KeyError, match="nothing for it to read"):
+    with pytest.raises(KeyError, match="nothing for the stage to read"):
         Session(Store(tmp_path / "store"), write=False).run(
             Case.load(cylindrical_pore_case), upto="charge"
         )
@@ -426,7 +426,7 @@ def test_ver57_protonation_runs_before_the_deposit_it_feeds(
     bare = resolve(loads_case(cylindrical_pore_case.read_text(encoding="utf-8")))
     assert "protonation" not in selected_stages(bare, None)
     assert "charge" not in selected_stages(bare, None)
-    with pytest.raises(UnknownStageError, match="nothing for it to protonate"):
+    with pytest.raises(UnknownStageError, match="nothing to protonate"):
         selected_stages(bare, "protonation")
 
 

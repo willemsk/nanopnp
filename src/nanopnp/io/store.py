@@ -41,7 +41,9 @@ LOCKS = ".locks"
 
 _GATE = "gate"
 
-BUSY_MESSAGE = "A run is in progress in another program; nothing was removed."
+BUSY_MESSAGE = (
+    "A run is active in another program. The clean-up removed nothing. Wait for that run to end."
+)
 
 FANOUT = 2
 
@@ -163,7 +165,7 @@ class Store:
         for name, source in artefact.payload.items():
             if not Path(source).is_file():
                 raise StoreError(
-                    f"payload {name!r} of artefact {artefact.short_hash} is not a file: {source}"
+                    f"Payload {name!r} of artefact {artefact.short_hash} is not a file: {source}"
                 )
         # A put is no read: an entry's own record time stands for its last read until one comes.
         held = self.get(artefact.schema, artefact.hash, mark=False)
@@ -196,7 +198,7 @@ class Store:
             shutil.rmtree(staging, ignore_errors=True)
         stored = self.get(artefact.schema, artefact.hash, mark=False)
         if stored is None:
-            raise StoreError(f"artefact {artefact.short_hash} is not in the store after its put")
+            raise StoreError(f"Artefact {artefact.short_hash} is not in the store after the put.")
         logger.debug("stored %s %s", stored.schema, stored.short_hash)
         return stored
 
@@ -216,9 +218,9 @@ class Store:
         except FileNotFoundError:
             return None  # a clean-up renamed the entry away after the check above
         except json.JSONDecodeError as error:
-            raise StoreError(f"{meta_path}: not readable as JSON: {error}") from error
+            raise StoreError(f"{meta_path}: cannot read the file as JSON: {error}") from error
         if not isinstance(meta, dict):
-            raise StoreError(f"{meta_path}: a stored record is a JSON object")
+            raise StoreError(f"{meta_path}: a stored record must be a JSON object.")
         try:
             entries = _payload_entries(meta)
             artefact = Artefact(
@@ -232,7 +234,7 @@ class Store:
                 recorded_payload={name: str(entry["sha256"]) for name, entry in entries.items()},
             )
         except (KeyError, TypeError) as error:
-            raise StoreError(f"{meta_path}: incomplete artefact record: {error}") from error
+            raise StoreError(f"{meta_path}: the artefact record is incomplete: {error}") from error
         if artefact.recorded_hash != artefact.hash:
             logger.warning(
                 "artefact %s records hash %s but its parameters hash to %s; "
@@ -254,9 +256,10 @@ class Store:
         produced = compute()
         if produced.hash != key.hash:
             raise StoreError(
-                f"stage produced artefact {produced.short_hash} under key {key.short_hash}: the "
-                "parameters the stage declared do not determine the artefact it made, so a later "
-                "cache hit would return a different run's answer"
+                f"The stage produced artefact {produced.short_hash} under key {key.short_hash}. "
+                "The parameters that the stage declared do not determine the artefact that it "
+                "made. A later cache hit returns the answer of a different run. Declare "
+                "all the parameters of the stage."
             )
         return self.put(produced)
 
@@ -297,7 +300,7 @@ class Store:
         for entry in entries:
             directory = entry.path.resolve()
             if root not in directory.parents:
-                raise StoreError(f"{directory} is not an entry of the store at {self._root}")
+                raise StoreError(f"{directory} is not an entry of the store at {self._root}.")
             if not directory.is_dir():
                 continue
             try:
@@ -425,8 +428,8 @@ class Store:
             gate = _open_gate(folder)
         except OSError as error:
             raise StoreError(
-                f"the store at {self._root} cannot take its lock ({error}), so a clean-up cannot "
-                "tell whether a walk holds it; nothing was removed"
+                f"The store at {self._root} cannot take its lock ({error}). The clean-up cannot "
+                "tell if a walk holds the lock. It removed nothing."
             ) from error
         try:
             for walk in sorted(folder.glob("walk-*")):
@@ -605,13 +608,13 @@ def _publish(staging: Path, directory: Path) -> None:
             shutil.rmtree(directory, ignore_errors=True)
         else:
             return
-    raise StoreError(f"could not publish the artefact at {directory}: {refused}") from refused
+    raise StoreError(f"Cannot publish the artefact at {directory}: {refused}") from refused
 
 
 def _payload_entries(meta: Mapping[str, Canonicalisable]) -> dict[str, dict[str, str]]:
     payload = meta.get("payload", {})
     if not isinstance(payload, dict):
-        raise StoreError("a stored record's payload block is a JSON object")
+        raise StoreError("The payload block of a stored record must be a JSON object.")
     return {str(name): dict(entry) for name, entry in payload.items()}
 
 

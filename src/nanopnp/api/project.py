@@ -191,7 +191,9 @@ class Project:
         """
         root = Path(folder).expanduser().resolve()
         if root.exists() and (not root.is_dir() or any(root.iterdir())):
-            raise ProjectError(f"{root} is not empty, so a project cannot be created in it")
+            raise ProjectError(
+                f"{root} is not empty. A project cannot be created in it. Use an empty folder."
+            )
         root.mkdir(parents=True, exist_ok=True)
         for sub in (*FOLDERS.values(), INPUTS_FOLDER):
             (root / sub).mkdir(parents=True, exist_ok=True)
@@ -334,7 +336,7 @@ class Project:
         """Open an item in the window and make it the current one; ``<kind>/<name>``."""
         kind, name = split_reference(item)
         if name not in self._file.names(kind):
-            raise ProjectError(f"the project holds no {kind} {name!r}")
+            raise ProjectError(f"The project holds no {kind} {name!r}.")
         if item not in self._file.open:
             self._file.open.append(item)
         self._file.current = item
@@ -343,7 +345,9 @@ class Project:
     def save_layout(self, suite: Suite, layout: SuiteLayout) -> None:
         """Save how one suite's window is divided."""
         if suite not in SUITES:
-            raise ProjectError(f"no suite {suite!r}; the suites are {', '.join(SUITES)}")
+            raise ProjectError(
+                f"The project has no suite {suite!r}. The suites are {', '.join(SUITES)}."
+            )
         self._file.layout[suite] = layout
         write_project(self._root, self._file)
 
@@ -359,7 +363,7 @@ class Project:
         """
         source = Path(path).expanduser().resolve()
         if not source.is_file():
-            raise ProjectError(f"{source} is not a file, so it cannot be an input")
+            raise ProjectError(f"{source} is not a file. It cannot be an input.")
         if link:
             return source
         target = self._root / INPUTS_FOLDER / source.name
@@ -367,7 +371,7 @@ class Project:
             if target.resolve() == source or file_hash(target) == file_hash(source):
                 return target
             raise ProjectError(
-                f"inputs/{source.name} is a different file from {source}; rename one of them"
+                f"inputs/{source.name} is a different file from {source}. Rename one of them."
             )
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target)
@@ -411,8 +415,8 @@ class Project:
         label = name if name is not None else case.name
         if not valid_name(label):
             raise ProjectError(
-                f"{label!r} is not an item name: use letters, digits, '.', '_' or '-', and start "
-                "with a letter or a digit; name the study with name="
+                f"{label!r} is not an item name. Use letters, digits, '.', '_' or '-'. Start "
+                "with a letter or a digit. Name the study with name=."
             )
         written: list[Path] = []
         index = self._file.library.model_copy(deep=True)
@@ -513,15 +517,15 @@ class Project:
         try:
             read = Case.load(study)
         except (CaseValidationError, FileNotFoundError, ValueError) as error:
-            raise ProjectError(f"the study written to {study} is not readable: {error}") from None
+            raise ProjectError(f"The study written to {study} is not readable: {error}") from None
         before = _comparable(case)
         after = _comparable(read)
         before["name"] = after["name"] = label
         different = sorted(key for key in before if before[key] != after.get(key))
         if different:
             raise ProjectError(
-                f"the items written for {case.name!r} do not resolve to the case given; they "
-                f"differ in {', '.join(different)}"
+                f"The items written for {case.name!r} do not resolve to the case given. They "
+                f"differ in {', '.join(different)}."
             )
 
     # -- models: built alone, their values and their variants ----------------
@@ -546,7 +550,9 @@ class Project:
 
     def _build_case(self, kind: ModelKind, name: str, location: Path) -> Case:
         if kind not in BUILD_UPTO:
-            raise ProjectError(f"a {kind} model is built by the studies that name it, not alone")
+            raise ProjectError(
+                f"A {kind} model is built by the studies that name it. It is not built alone."
+            )
         body = read_model_file(kind, location).body
         layers: list[Mapping[str, Any]] = [_build_layer(idealised=_holds(body, "geometry.pore"))]
         source = f"<{kind} model {name} built alone>"
@@ -632,8 +638,8 @@ class Project:
         names = self._file.names("continuum")
         if not names:
             raise ProjectError(
-                "the project holds no continuum model to show a physics model over; import a "
-                "case or add a continuum model"
+                "The project holds no continuum model to show a physics model over. Import a "
+                "case, or add a continuum model."
             )
         current = self.current
         if current is not None:
@@ -709,11 +715,11 @@ class Project:
             If the project holds no such continuum or molecular model.
         """
         if name not in self._file.names("continuum"):
-            raise ProjectError(f"the project holds no continuum {name!r}")
+            raise ProjectError(f"The project holds no continuum {name!r}.")
         if molecular is None:
             self._file.built_with.pop(name, None)
         elif molecular not in self._file.names("molecular"):
-            raise ProjectError(f"the project holds no molecular {molecular!r}")
+            raise ProjectError(f"The project holds no molecular {molecular!r}.")
         else:
             self._file.built_with[name] = molecular
         write_project(self._root, self._file)
@@ -747,23 +753,23 @@ class Project:
         """
         if owner_of(path) != kind:
             raise ProjectError(
-                f"{path} belongs to {_holder(owner_of(path))}, not to {kind} model {name!r}"
+                f"{path} belongs to {_holder(owner_of(path))}, not to the {kind} model {name!r}."
             )
         body = _body(self.path(kind, name))
         if _linked(body) and path != VARIANT_PATH:
             raise ProjectError(
                 f"{kind} {name!r} is a linked variant of {body['variant_of']['model']} and reads "
-                f"{path} from it; set the value there, or save the variant as a full copy"
+                f"{path} from it. Set the value there, or save the variant as a full copy."
             )
         children = self._linked_variants(kind, name)
         if children and path == VARIANT_PATH:
             raise ProjectError(
-                f"{kind} {name!r} is the parent of the linked variant {children[0]!r}, which "
-                f"holds its own {VARIANT_PATH}; edit the variant"
+                f"{kind} {name!r} is the parent of the linked variant {children[0]!r}. The "
+                f"variant holds its own {VARIANT_PATH}. Edit the variant."
             )
         if value is None:
             if not _delete(body, path):
-                raise ProjectError(f"{kind} {name!r} sets no {path}")
+                raise ProjectError(f"{kind} {name!r} sets no {path}.")
         else:
             _put(body, path, value)
         self._checked_write(kind, name, body)
@@ -813,8 +819,8 @@ class Project:
                 isinstance(other, dict) and other.get("name") == entry["name"] for other in kept
             ):
                 raise ProjectError(
-                    f"{kind} {name!r} already exposes a value named {entry['name']!r}; rename "
-                    f"it before exposing {path} under that name"
+                    f"{kind} {name!r} already exposes a value named {entry['name']!r}. Rename "
+                    f"it before you expose {path} under that name."
                 )
             at = next((k for k, other in enumerate(listed) if _exposes(other, path)), len(kept))
             kept.insert(at, entry)
@@ -851,7 +857,7 @@ class Project:
         kind: ModelKind = "molecular"
         self._free_name(kind, name)
         if parent not in self._file.names(kind):
-            raise ProjectError(f"the project holds no {kind} {parent!r}")
+            raise ProjectError(f"The project holds no {kind} {parent!r}.")
         source = read_model_file(kind, self.path(kind, parent), rebase=False)
         head: dict[str, Any] = {"schema": SCHEMAS[kind], "name": name}
         link = {"model": f"{parent}.yaml", "linked": not copy}
@@ -864,8 +870,8 @@ class Project:
         else:
             if source.variant_of is not None or source.body.get("charge", {}).get("edits"):
                 raise ProjectError(
-                    f"{kind} {parent!r} is itself a variant or holds {VARIANT_PATH}, and a "
-                    "linked variant follows an unedited model; save a full copy instead"
+                    f"{kind} {parent!r} is itself a variant or holds {VARIANT_PATH}. A linked "
+                    "variant follows an unedited model. Save a full copy instead."
                 )
             body = {**head, "variant_of": link}
         _put(body, VARIANT_PATH, _copied(edits))
@@ -896,11 +902,11 @@ class Project:
         """
         self._free_name(kind, name)
         if parent not in self._file.names(kind):
-            raise ProjectError(f"the project holds no {kind} {parent!r}")
+            raise ProjectError(f"The project holds no {kind} {parent!r}.")
         for path in values:
             if owner_of(path) != kind:
                 raise ProjectError(
-                    f"{path} belongs to {_holder(owner_of(path))}, not to a {kind} model"
+                    f"{path} belongs to {_holder(owner_of(path))}, not to a {kind} model."
                 )
         location = self.path(kind, parent)
         body: dict[str, Any] = {"schema": SCHEMAS[kind], "name": name}
@@ -920,11 +926,11 @@ class Project:
     def _free_name(self, kind: ItemKind, name: str) -> None:
         if not valid_name(name):
             raise ProjectError(
-                f"{name!r} is not an item name: use letters, digits, '.', '_' or '-', and start "
-                "with a letter or a digit"
+                f"{name!r} is not an item name. Use letters, digits, '.', '_' or '-'. Start "
+                "with a letter or a digit."
             )
         if name in self._file.names(kind) or self.path(kind, name).exists():
-            raise ProjectError(f"the project already holds a {kind} {name!r}")
+            raise ProjectError(f"The project already holds a {kind} {name!r}.")
 
     def _linked_variants(self, kind: ModelKind, name: str) -> list[str]:
         found: list[str] = []
@@ -1006,7 +1012,7 @@ class Project:
         location = self.path(target_kind, target)
         body = _body(location)
         if not _delete(body, path):
-            raise ProjectError(f"{target_kind} {target!r} sets no {path}")
+            raise ProjectError(f"{target_kind} {target!r} sets no {path}.")
         self._write_item(target_kind, target, body)
 
     def problems(self) -> tuple[Problem, ...]:
@@ -1030,7 +1036,9 @@ class Project:
         item, suite = item_reference(kind, name), ITEM_SUITES[kind]
         location = self.path(kind, name)
         if not location.is_file():
-            return [Problem(item, None, f"{location} is indexed but does not exist", suite)]
+            return [
+                Problem(item, None, f"{location} is indexed, but the file does not exist.", suite)
+            ]
         if kind == "comparison":
             return []
         try:
@@ -1043,7 +1051,8 @@ class Project:
                 Problem(
                     item,
                     "name",
-                    f"the file is {location.name} but its name: is {body.get('name')!r}",
+                    f"The file is {location.name}, but its name: is {body.get('name')!r}. "
+                    "Make the two the same.",
                     suite,
                 )
             )
@@ -1079,9 +1088,12 @@ class Project:
         """
         target = Path(destination).expanduser().resolve()
         if target.exists() and (not target.is_dir() or any(target.iterdir())):
-            raise ProjectError(f"{target} is not empty, so a project cannot be exported to it")
+            raise ProjectError(
+                f"{target} is not empty. A project cannot be exported to it. Use a missing or "
+                "empty folder."
+            )
         if target == self._root or self._root in target.parents:
-            raise ProjectError("a project cannot be exported into itself")
+            raise ProjectError("A project cannot be exported into itself.")
         plan = self._export_plan()
         target.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(self._root / PROJECT_FILENAME, target / PROJECT_FILENAME)
@@ -1128,12 +1140,14 @@ class Project:
         def collect(_: str, value: str) -> str | None:
             resolved = self._resolved(kind, value)
             if not resolved.is_file():
-                raise ProjectError(f"{resolved} is named by {kind} {name!r} and is missing")
+                raise ProjectError(
+                    f"{resolved} is named by {kind} {name!r}, and the file is missing."
+                )
             held = names.get(resolved.name)
             if held is not None and held != resolved and file_hash(held) != file_hash(resolved):
                 raise ProjectError(
-                    f"{held} and {resolved} share the name {resolved.name}; "
-                    "rename one before exporting"
+                    f"{held} and {resolved} share the name {resolved.name}. Rename one before "
+                    "you export."
                 )
             names.setdefault(resolved.name, resolved)
             inputs[resolved] = f"{INPUTS_FOLDER}/{resolved.name}"
@@ -1153,7 +1167,7 @@ class Project:
                 location = self.path(kind, name)
                 relative = str(location.relative_to(self._root))
                 if not location.is_file():
-                    raise ProjectError(f"{location} is indexed but does not exist")
+                    raise ProjectError(f"{location} is indexed, but the file does not exist.")
                 if kind == "comparison":
                     items[relative] = None
                     continue
@@ -1216,7 +1230,7 @@ class Project:
         location = self.path(kind, name)
         if location.is_file():
             if location.read_text(encoding="utf-8") != _text(body):
-                raise ProjectError(f"the project already holds a different {kind} {name!r}")
+                raise ProjectError(f"The project already holds a different {kind} {name!r}.")
             return
         written.append(self._write_item(kind, name, body))
 
@@ -1264,7 +1278,7 @@ def _text(body: Mapping[str, Any]) -> str:
 def _body(location: Path) -> dict[str, Any]:
     raw = yaml.safe_load(location.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
-        raise ProjectError(f"{location} is not a YAML mapping")
+        raise ProjectError(f"{location} must be a YAML mapping.")
     return raw
 
 

@@ -131,9 +131,9 @@ def _resolve_structure(document: CaseDocument, base: Path) -> ResolvedStructure 
     match = _POINT_GROUP.fullmatch(group)
     if match is None:
         raise CaseValidationError(
-            f"structure.symmetry.point_group {group!r} is not a cyclic point group; the accepted "
-            "form is C<n> with n >= 1, such as C12 for ClyA, C7 for alpha-hemolysin or C8 for "
-            "MspA (section 5.3.1 NOTE on structure:)"
+            f"structure.symmetry.point_group {group!r} is not a cyclic point group. Use the form "
+            "C<n> with n >= 1. For example, use C12 for ClyA, C7 for alpha-hemolysin or C8 for "
+            "MspA (section 5.3.1 NOTE on structure:)."
         )
     n = int(match.group(1))
     # The ring's rules hold where the ring gives the axis; the channel's axis takes any chains.
@@ -145,47 +145,52 @@ def _resolve_structure(document: CaseDocument, base: Path) -> ResolvedStructure 
         grouped = any(len(group) > 1 for group in groups)
         if any(not chain for chain in chains):
             raise CaseValidationError(
-                f"structure.source.chains {spec.source.chains!r} has an empty entry; it is `all` "
-                "or a comma-separated list of chain identifiers, or of groups of them joined by "
-                "`+`, such as A+B,C+D"
+                f"structure.source.chains {spec.source.chains!r} has an empty entry. Set it to "
+                "`all`, or to a comma-separated list of chain identifiers. To make a group of "
+                "chains, join the identifiers with `+`, such as A+B,C+D."
             )
         repeated = sorted({chain for chain in chains if chains.count(chain) > 1})
         if repeated:
             raise CaseValidationError(
-                f"structure.source.chains lists {', '.join(repeated)} more than once"
+                f"structure.source.chains lists {', '.join(repeated)} more than once. "
+                "List each chain one time."
             )
         if grouped and n == 1:
             raise CaseValidationError(
-                f"structure.source.chains {spec.source.chains!r} groups chains with `+`, and "
+                f"structure.source.chains {spec.source.chains!r} groups chains with `+`. "
                 "structure.symmetry.point_group C1 has no ring of repeating units to group them "
-                "into; list the chains with commas"
+                "into. List the chains with commas."
             )
         if ring and len({len(group) for group in groups}) > 1:
             odd = next(group for group in groups if len(group) != len(groups[0]))
             raise CaseValidationError(
-                f"structure.source.chains {spec.source.chains!r} has groups of unequal size: "
-                f"{'+'.join(groups[0])} holds {len(groups[0])} chains and {'+'.join(odd)} holds "
-                f"{len(odd)}; each group is one repeating unit of the ring (FR-03)"
+                f"structure.source.chains {spec.source.chains!r} has groups of unequal size. "
+                f"{'+'.join(groups[0])} holds {len(groups[0])} chains. "
+                f"{'+'.join(odd)} holds {len(odd)}. "
+                "Each group must be one repeating unit of the ring (FR-03)."
             )
         if ring and grouped and len(groups) != n:
             raise CaseValidationError(
                 f"structure.source.chains lists {len(groups)} groups "
-                f"({', '.join('+'.join(group) for group in groups)}), and "
-                f"structure.symmetry.point_group {group} has {n} (FR-03)"
+                f"({', '.join('+'.join(group) for group in groups)}). "
+                f"structure.symmetry.point_group {group} has {n} units (FR-03). "
+                "Make the two counts equal."
             )
         if ring and not grouped and len(chains) != n:
             raise CaseValidationError(
-                f"structure.source.chains lists {len(chains)} chains ({', '.join(chains)}), and "
-                f"structure.symmetry.point_group {group} has {n} (FR-03)"
+                f"structure.source.chains lists {len(chains)} chains ({', '.join(chains)}). "
+                f"structure.symmetry.point_group {group} has {n} units (FR-03). "
+                "Make the two counts equal."
             )
     frames = spec.ensemble.frames
     if frames.last_ns is not None and not frames.last_ns > 0.0:
         raise CaseValidationError(
-            f"structure.ensemble.frames.last_ns is {frames.last_ns}; it is a positive time in ns"
+            f"structure.ensemble.frames.last_ns is {frames.last_ns}. It must be a positive time "
+            "in ns."
         )
     if frames.count is not None and frames.count < 1:
         raise CaseValidationError(
-            f"structure.ensemble.frames.count is {frames.count}; it is at least 1"
+            f"structure.ensemble.frames.count is {frames.count}. It must be at least 1."
         )
     trajectory = spec.ensemble.trajectory
     spec = spec.model_copy(
@@ -207,23 +212,23 @@ def _resolve_density(document: CaseDocument) -> Density | None:
     low, high = GRID_SPACING_RANGE_NM
     if not low <= spec.grid_spacing_nm <= high:
         raise CaseValidationError(
-            f"geometry.density.grid_spacing_nm is {spec.grid_spacing_nm} nm; FR-04 requires "
-            f"{low}-{high} nm (0.25-0.5 A), because the trans constriction's contour moves with "
-            "resolution (section 5.3.1 NOTE on geometry.density)"
+            f"geometry.density.grid_spacing_nm is {spec.grid_spacing_nm} nm. FR-04 requires "
+            f"{low}-{high} nm (0.25-0.5 A). The contour of the trans constriction moves with "
+            "the resolution (section 5.3.1 NOTE on geometry.density). Set a value in this range."
         )
     if not 0.0 < spec.sharpness < math.inf:
         raise CaseValidationError(
-            f"geometry.density.sharpness is {spec.sharpness}; it scales each atom's radius to "
-            "its Gaussian width, so it is a positive number (section 5.3.1 NOTE on "
-            "geometry.density)"
+            f"geometry.density.sharpness is {spec.sharpness}. It scales the radius of each atom "
+            "to its Gaussian width. It must be a positive number (section 5.3.1 NOTE on "
+            "geometry.density)."
         )
     forcefield = document.charge.forcefield if document.charge is not None else "CHARMM"
     if spec.atoms == "protonated" and document.inputs.pqr is None and forcefield != "CHARMM":
         raise CaseValidationError(
-            f"geometry.density.atoms is 'protonated' beside charge.forcefield {forcefield!r}; "
-            "stage 2 takes each protonated atom's radius from the CHARMM set, which does not "
-            "hold the hydrogen names of that force field. Use charge.forcefield: CHARMM, or "
-            "set geometry.density.atoms: as_loaded (section 5.3.1 NOTE on geometry.density)"
+            f"geometry.density.atoms is 'protonated' beside charge.forcefield {forcefield!r}. "
+            "Stage 2 takes the radius of each protonated atom from the CHARMM set. That set does "
+            "not hold the hydrogen names of this force field. Use charge.forcefield: CHARMM, or "
+            "set geometry.density.atoms: as_loaded (section 5.3.1 NOTE on geometry.density)."
         )
     return spec
 
@@ -234,16 +239,16 @@ def _resolve_contour(document: CaseDocument, density: Density | None) -> Contour
     spec = document.geometry.contour if document.geometry is not None else Contour()
     if not (math.isfinite(spec.isolevel) and 0.0 < spec.isolevel < 1.0):
         raise CaseValidationError(
-            f"geometry.contour.isolevel is {spec.isolevel}; it is a level of a density in "
-            "[0, 1], so it lies in (0, 1) (section 5.3.1 NOTE on geometry.contour)"
+            f"geometry.contour.isolevel is {spec.isolevel}. It is a level of a density in "
+            "[0, 1]. It must lie in (0, 1) (section 5.3.1 NOTE on geometry.contour)."
         )
     h = density.grid_spacing_nm
     if not (math.isfinite(spec.simplify_tol_nm) and 0.0 < spec.simplify_tol_nm < h):
         raise CaseValidationError(
-            f"geometry.contour.simplify_tol_nm is {spec.simplify_tol_nm} nm; it must be positive "
-            f"and below the density grid spacing h = {h} nm, because a larger tolerance "
-            "discards resolved geometry and breaks the feature-size margin of the closing of "
-            "radius 2h (section 5.3.1 NOTE on geometry.contour, section 5.2.1)"
+            f"geometry.contour.simplify_tol_nm is {spec.simplify_tol_nm} nm. It must be positive "
+            f"and below the density grid spacing h = {h} nm. A larger tolerance discards "
+            "resolved geometry. It also breaks the feature-size margin of the closing of "
+            "radius 2h (section 5.3.1 NOTE on geometry.contour, section 5.2.1)."
         )
     return spec
 
@@ -383,16 +388,16 @@ def _check_structure_beside_profile(resolved: ResolvedCase) -> None:
     if resolved.profile is None or resolved.structure is None or resolved.deposits_charge:
         return
     reason = (
-        "inputs.charge supplies the charge stage 7 would deposit"
+        "inputs.charge supplies the charge that stage 7 deposits otherwise"
         if resolved.charge is not None
         else f"physics.model {resolved.model!r} declares no fixed_charge"
     )
     raise CaseValidationError(
         f"case {resolved.name!r} carries a structure: section beside inputs.profile, and "
-        f"{reason}, so no charge is deposited from the structure's protonation. Stages 2 to 4 "
-        "do not run beside a supplied profile, so the structure would be recorded as an input "
-        "to a run that never read it (section 5.3.1 NOTE on inputs.profile); remove structure: "
-        "or inputs.profile"
+        f"{reason}. No charge is deposited from the protonation of the structure. Stages 2 "
+        "to 4 do not run beside a supplied profile. The structure is recorded as an "
+        "input to a run that never read it (section 5.3.1 NOTE on inputs.profile). Remove "
+        "structure: or inputs.profile."
     )
 
 

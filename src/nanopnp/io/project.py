@@ -137,16 +137,16 @@ def read_project(folder: str | Path) -> ProjectFile:
     """Read the project file of ``folder``; ProjectFormatError if it is not one."""
     path = Path(folder) / PROJECT_FILENAME
     if not path.is_file():
-        raise ProjectFormatError(f"{folder} holds no {PROJECT_FILENAME}, so it is not a project")
+        raise ProjectFormatError(f"{folder} holds no {PROJECT_FILENAME}. It is not a project.")
     try:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as error:
-        raise ProjectFormatError(f"{path}: not readable as YAML: {error}") from None
+        raise ProjectFormatError(f"{path}: cannot read the file as YAML: {error}") from None
     if not isinstance(raw, Mapping):
-        raise ProjectFormatError(f"{path}: a project file is a YAML mapping")
+        raise ProjectFormatError(f"{path}: a project file must be a YAML mapping.")
     if raw.get("schema") != PROJECT_SCHEMA:
         raise ProjectFormatError(
-            f"{path}: expected schema {PROJECT_SCHEMA!r}, found {raw.get('schema')!r}"
+            f"{path}: the schema must be {PROJECT_SCHEMA!r}. It is {raw.get('schema')!r}."
         )
     try:
         return ProjectFile.model_validate(raw)
@@ -175,6 +175,7 @@ def split_reference(reference: str) -> tuple[ItemKind, str]:
     kind, _, name = reference.partition("/")
     if kind not in ITEM_KINDS or not name:
         raise ValueError(
-            f"{reference!r} is not <kind>/<name> with a kind of {', '.join(ITEM_KINDS)}"
+            f"{reference!r} is not of the form <kind>/<name>. The kind must be one of: "
+            f"{', '.join(ITEM_KINDS)}."
         )
     return kind, name

@@ -112,41 +112,41 @@ def check_document(document: CaseDocument, *, source: str | None = None) -> Case
     problems: list[str] = []
     if document.physics.model not in registered_models():
         problems.append(
-            f"physics.model {document.physics.model!r} is not registered; the models are "
-            f"{', '.join(registered_models())}"
+            f"physics.model {document.physics.model!r} is not registered. "
+            f"Use one of: {', '.join(registered_models())}."
         )
     if document.numerics.mesh.backend not in registered_meshers():
         problems.append(
             f"numerics.mesh.backend {document.numerics.mesh.backend!r} is not a registered "
-            f"mesher; the meshers are {', '.join(registered_meshers())}"
+            f"mesher. Use one of: {', '.join(registered_meshers())}."
         )
     if document.numerics.stabilisation not in registered_stabilisations():
         problems.append(
             f"numerics.stabilisation {document.numerics.stabilisation!r} is not a registered "
-            f"mode; the available modes are {', '.join(registered_stabilisations())}. "
-            "Recording a mode the solver does not apply would make the FR-25 manifest "
-            "describe a run that never happened"
+            f"mode. Use one of: {', '.join(registered_stabilisations())}. "
+            "A mode that the solver does not apply makes the FR-25 manifest "
+            "describe a run that did not happen."
         )
     steric = document.electrolyte.corrections.steric.model
     if steric not in (NO_STERIC_MODEL, *registered_steric_models()):
         problems.append(
-            f"{_STERIC_MODEL_PATH} {steric!r} is not a registered steric model; the models are "
-            f"{', '.join((NO_STERIC_MODEL, *registered_steric_models()))}"
+            f"{_STERIC_MODEL_PATH} {steric!r} is not a registered steric model. "
+            f"Use one of: {', '.join((NO_STERIC_MODEL, *registered_steric_models()))}."
         )
     unknown = sorted(set(document.outputs) - set(registered_outputs()))
     if unknown:
         problems.append(
-            f"outputs {', '.join(unknown)} are not selectable; the outputs are "
-            f"{', '.join(registered_outputs())}"
+            f"outputs {', '.join(unknown)} are not selectable. "
+            f"Use these outputs: {', '.join(registered_outputs())}."
         )
     solver = document.numerics.linear.solver
     if solver not in registered_solvers():
         reason = rejection(solver)
         problems.append(
-            f"numerics.linear.solver {solver!r} is not usable: {reason}"
+            f"numerics.linear.solver {solver!r} is not usable: {reason.rstrip('.')}."
             if reason is not None
-            else f"numerics.linear.solver {solver!r} is not available; the solvers are "
-            f"{', '.join(registered_solvers())}"
+            else f"numerics.linear.solver {solver!r} is not available. "
+            f"Use one of: {', '.join(registered_solvers())}."
         )
     if problems:
         # Rendered as the schema renders a document-level refusal, which is how
@@ -159,7 +159,7 @@ def check_document(document: CaseDocument, *, source: str | None = None) -> Case
                     "type": "value_error",
                     "loc": (),
                     "input": document.model_dump(by_alias=True, mode="json"),
-                    "ctx": {"error": ValueError("; ".join(problems))},
+                    "ctx": {"error": ValueError(" ".join(problems))},
                 }
             ],
         )
@@ -177,8 +177,9 @@ def element_orders(document: CaseDocument) -> tuple[int, int, int]:
     if concentration_order != order:
         raise CaseValidationError(
             f"numerics.elements.c is {elements.c!r} and numerics.elements.phi is "
-            f"{elements.phi!r}; this release carries one order for phi and c_i, which the "
-            "NUM-02 log branch and the PHY-05 steric term both assume"
+            f"{elements.phi!r}. This release uses one order for phi and c_i, because the "
+            "NUM-02 log branch and the PHY-05 steric term both assume it. Set the two to the "
+            "same order."
         )
     # ``u`` is not folded into that equality. The reference mode of section 6.4
     # runs phi and c at P2 with u and p at P1, so the velocity order is a third
@@ -238,8 +239,8 @@ def _order(label: str, field: str) -> int:
         return _ORDERS[label]
     except KeyError:
         raise CaseValidationError(
-            f"numerics.elements.{field} {label!r} is not an element label; "
-            f"the labels are {', '.join(sorted(_ORDERS))}"
+            f"numerics.elements.{field} {label!r} is not an element label. "
+            f"Use one of: {', '.join(sorted(_ORDERS))}."
         ) from None
 
 
@@ -250,17 +251,17 @@ def check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
     if temperature_K != electrolyte.temperature_K:
         problems.append(
             f"electrolyte.temperature_K is {temperature_K} K, but "
-            f"{document.electrolyte.parameters!r} is fitted at {electrolyte.temperature_K} K and "
-            "the solve takes every material property and V_T from the file; set temperature_K: "
-            f"{electrolyte.temperature_K} or supply a parameter file fitted at the temperature "
-            "you want"
+            f"{document.electrolyte.parameters!r} is fitted at {electrolyte.temperature_K} K. "
+            "The solve takes every material property and V_T from the file. Set temperature_K: "
+            f"{electrolyte.temperature_K}. Or supply a parameter file that is fitted at the "
+            "temperature that you want."
         )
     for index, species in enumerate(document.electrolyte.species):
         valence = electrolyte.ion(species.name).valence
         if valence != species.z:
             problems.append(
                 f"electrolyte.species[{index}].z is {species.z:+d} for {species.name!r}, but "
-                f"{document.electrolyte.parameters!r} gives {valence:+d}"
+                f"{document.electrolyte.parameters!r} gives {valence:+d}. Set z to {valence:+d}."
             )
     steric = document.electrolyte.corrections.steric
     if steric.a_ion_nm is not None:
@@ -271,8 +272,8 @@ def check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
                     f"electrolyte.corrections.steric.a_ion_nm is {steric.a_ion_nm} nm, but "
                     f"{document.electrolyte.parameters!r} gives "
                     f"{ion.steric_diameter * 1e9} nm for {ion.name!r} "
-                    f"(species[{index}]); the diameters are fitted parameters of the correction "
-                    "file and the case file cannot override them (FR-16)"
+                    f"(species[{index}]). The diameters are fitted parameters of the correction "
+                    "file. The case file cannot override them (FR-16). Remove a_ion_nm."
                 )
     if steric.a_water_nm is not None:
         given_m = steric.a_water_nm * 1e-9
@@ -280,10 +281,10 @@ def check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
             problems.append(
                 f"electrolyte.corrections.steric.a_water_nm is {steric.a_water_nm} nm, but "
                 f"{document.electrolyte.parameters!r} gives "
-                f"{electrolyte.water_steric_diameter * 1e9} nm"
+                f"{electrolyte.water_steric_diameter * 1e9} nm. Remove a_water_nm."
             )
     if problems:
-        raise CaseValidationError("; ".join(problems))
+        raise CaseValidationError(" ".join(problems))
 
 
 def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:  # noqa: C901
@@ -298,9 +299,9 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:  # noqa
     stored = document.inputs.mesh
     if stored is not None and stored.artefact is not None and (stored.format or stored.groups):
         raise CaseValidationError(
-            "inputs.mesh.artefact names a stage-6 artefact already in the store, which carries "
-            "its own format and vocabulary mapping; remove inputs.mesh.format and "
-            "inputs.mesh.groups"
+            "inputs.mesh.artefact names a stage-6 artefact that is in the store. That artefact "
+            "has its own format and vocabulary mapping. Remove inputs.mesh.format and "
+            "inputs.mesh.groups."
         )
     for supplied, what in SUPPLIED_FIELDS.items():
         field: SuppliedArtefact | None = getattr(document.inputs, supplied)
@@ -308,30 +309,32 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:  # noqa
             continue
         if field.groups:
             raise CaseValidationError(
-                f"inputs.{supplied}.groups is the mesh's vocabulary mapping (IF-06) and means "
-                f"nothing for {what}; a field is named by its header document, which carries the "
-                "quantity and the units (section 5.3.1 NOTE)"
+                f"inputs.{supplied}.groups is the vocabulary mapping of the mesh (IF-06). It "
+                f"means nothing for {what}. A header document names a field, and it holds the "
+                "quantity and the units (section 5.3.1 NOTE). "
+                f"Remove inputs.{supplied}.groups."
             )
         if field.format not in (None, FIELD_FORMAT):
             raise CaseValidationError(
-                f"inputs.{supplied}.format is {field.format!r}; a supplied field is named by a "
-                f"header document, so the format is {FIELD_FORMAT!r} and the *data* format is read "
-                "from the document's data.format key (section 5.3.1 NOTE)"
+                f"inputs.{supplied}.format is {field.format!r}. A header document names a "
+                f"supplied field, so the format must be {FIELD_FORMAT!r}. The program reads the "
+                "data format from the data.format key of the document (section 5.3.1 NOTE). "
+                f"Set inputs.{supplied}.format to {FIELD_FORMAT!r}."
             )
     if document.structure is not None and document.inputs.mesh is not None:
         raise CaseValidationError(
-            f"case {document.name!r} carries a structure: section and supplies inputs.mesh. A "
-            "stage whose output is supplied does not run, and neither does anything upstream of "
-            "it, so the structure would be recorded as an input to a run that never read it "
-            "(section 5.3.1 NOTE on inputs:); remove one of them"
+            f"case {document.name!r} has a structure: section and supplies inputs.mesh. A "
+            "stage whose output is supplied does not run. Nothing upstream of it runs. The "
+            "structure is recorded as an input to a run that never read it "
+            "(section 5.3.1 NOTE on inputs:). Remove one of them."
         )
     _check_pore(document)
     if document.geometry is not None and document.inputs.mesh is not None:
         raise CaseValidationError(
-            f"case {document.name!r} carries a geometry: section and supplies inputs.mesh. A "
-            "stage whose output is supplied does not run, and neither does anything upstream of "
-            "it, so the geometry would be recorded as an input to a run that never read it "
-            "(section 5.3.1 NOTE on geometry.density); remove one of them"
+            f"case {document.name!r} has a geometry: section and supplies inputs.mesh. A "
+            "stage whose output is supplied does not run. Nothing upstream of it runs. The "
+            "geometry is recorded as an input to a run that never read it "
+            "(section 5.3.1 NOTE on geometry.density). Remove one of them."
         )
     _check_profile(document)
     if (
@@ -341,10 +344,10 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:  # noqa
         and (document.geometry is None or document.geometry.pore is None)
     ):
         raise CaseValidationError(
-            f"case {document.name!r} names no geometry: it supplies neither inputs.mesh nor "
-            "inputs.profile, declares no geometry.pore and carries no structure: section, so "
-            "there is nothing to mesh and "
-            "no mesh to solve on (section 5.3.1 NOTE on inputs:)"
+            f"case {document.name!r} names no geometry. It supplies neither inputs.mesh nor "
+            "inputs.profile. It declares no geometry.pore and has no structure: section. "
+            "There is nothing to mesh and no mesh to solve on (section 5.3.1 NOTE on inputs:). "
+            "Add one of them."
         )
     if document.inputs.mesh is None:
         _check_generation(document)
@@ -352,16 +355,16 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:  # noqa
     nonlinear = document.numerics.nonlinear
     if nonlinear.strategy != "newton":
         raise UnsupportedCaseSection(
-            f"numerics.nonlinear.strategy {nonlinear.strategy!r} selects NUM-20's hybrid "
-            "segregated fallback, which no release of SPECIFICATION.md schedules; every rung is "
-            "solved by the monolithic damped Newton of NUM-16 (strategy: newton)"
+            f"numerics.nonlinear.strategy {nonlinear.strategy!r} selects the hybrid segregated "
+            "fallback of NUM-20. No release of SPECIFICATION.md schedules it. The monolithic "
+            "damped Newton method of NUM-16 solves every rung. Set strategy: newton."
         )
     if nonlinear.damping != "residual":
         raise UnsupportedCaseSection(
-            f"numerics.nonlinear.damping {nonlinear.damping!r} selects NUM-20's damped Newton "
-            "with l2 backtracking, which no release of SPECIFICATION.md schedules; the damping is "
-            "NUM-16's, adapted on residual reduction (damping: residual), whose recovery rule the "
-            "reference records"
+            f"numerics.nonlinear.damping {nonlinear.damping!r} selects the damped Newton method "
+            "of NUM-20 with l2 backtracking. No release of SPECIFICATION.md schedules it. The "
+            "damping is the one of NUM-16, adapted on residual reduction. The reference records "
+            "its recovery rule. Set damping: residual."
         )
     walls = document.boundary_conditions.walls
     if (walls.slip, walls.ion_flux) != (APPLIED_WALLS[_SLIP], APPLIED_WALLS[_ION_FLUX]):
@@ -370,8 +373,9 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:  # noqa
         # manifest without being applied (section 5.3.1 NOTE on walls).
         raise UnsupportedCaseSection(
             f"boundary_conditions.walls asks for slip: {walls.slip} and ion_flux: "
-            f"{walls.ion_flux}; this release applies slip: no_slip and ion_flux: no_flux only, "
-            "and no release of SPECIFICATION.md section 3 schedules the others yet"
+            f"{walls.ion_flux}. This release applies slip: no_slip and ion_flux: no_flux only. "
+            "No release of SPECIFICATION.md section 3 schedules the others yet. Set slip: "
+            "no_slip and ion_flux: no_flux."
         )
     # Read from the model's declaration, never from its name (section 5.4.3
     # NOTE): the switch check first, because a case the model cannot pose is a
@@ -397,8 +401,9 @@ def _check_pore(document: CaseDocument) -> None:
         charge = document.boundary_conditions.wall_charge_C_m2
         if charge != 0.0:
             raise CaseValidationError(
-                f"boundary_conditions.wall_charge_C_m2 is {charge} with no geometry.pore; it is "
-                f"the surface charge of an idealised pore's wall, and nothing else has one ({note})"
+                f"boundary_conditions.wall_charge_C_m2 is {charge} with no geometry.pore. It is "
+                f"the surface charge of the wall of an idealised pore. Nothing else has one "
+                f"({note}). Remove it, or add geometry.pore."
             )
         return
     for name, present in (
@@ -408,46 +413,46 @@ def _check_pore(document: CaseDocument) -> None:
     ):
         if present:
             raise CaseValidationError(
-                f"geometry.pore and {name} are both given; an idealised pore is the geometry, "
-                f"and {name} would be a second one ({note}); remove one of them"
+                f"geometry.pore and {name} are both given. An idealised pore is the geometry. "
+                f"{name} is a second geometry ({note}). Remove one of them."
             )
     assert geometry is not None
     if pore.radius_nm >= geometry.reservoir.radius_nm:
         raise CaseValidationError(
-            f"geometry.pore.radius_nm is {pore.radius_nm} nm, not below "
-            f"geometry.reservoir.radius_nm {geometry.reservoir.radius_nm} nm; the lumen opens "
-            f"into a larger reservoir ({note})"
+            f"geometry.pore.radius_nm is {pore.radius_nm} nm. It is not below "
+            f"geometry.reservoir.radius_nm {geometry.reservoir.radius_nm} nm. The lumen opens "
+            f"into a larger reservoir ({note}). Set a pore radius below the reservoir radius."
         )
     if "membrane" not in document.physics.solid_permittivities:
         raise CaseValidationError(
-            "physics.solid_permittivities.membrane is not set; the solid around an idealised "
-            "pore is the membrane domain, and an unlisted solid is taken as ion-free water "
-            f"({note}); set its relative permittivity"
+            "physics.solid_permittivities.membrane is not set. The solid around an idealised "
+            "pore is the membrane domain. The program takes an unlisted solid as ion-free "
+            f"water ({note}). Set its relative permittivity."
         )
     if geometry.membrane.centre_z_nm != 0.0:
         raise CaseValidationError(
             f"geometry.membrane.centre_z_nm is {geometry.membrane.centre_z_nm} with "
-            f"geometry.pore; it is a position in a structure's frame, and the pore sits at 0 "
-            f"({note})"
+            "geometry.pore. It is a position in the frame of a structure. The pore sits at 0 "
+            f"({note}). Remove geometry.membrane.centre_z_nm."
         )
     for key, default in (("density", Density()), ("contour", Contour())):
         if getattr(geometry, key) != default:
             raise CaseValidationError(
-                f"geometry.{key} is set beside geometry.pore; stages 2 to 4 read it and an "
-                f"idealised pore skips them ({note})"
+                f"geometry.{key} is set beside geometry.pore. Stages 2 to 4 read it. An "
+                f"idealised pore skips these stages ({note}). Remove it."
             )
     backend = document.numerics.mesh.backend
     if backend != "netgen":
         raise CaseValidationError(
-            f"numerics.mesh.backend is {backend!r} beside geometry.pore; the idealised pore's "
-            f"size field is posed for netgen only ({note})"
+            f"numerics.mesh.backend is {backend!r} beside geometry.pore. The size field of an "
+            f"idealised pore works with netgen only ({note}). Set numerics.mesh.backend: netgen."
         )
     for name, value in document.numerics.mesh.sizes.model_dump().items():
         if value is not None:
             raise CaseValidationError(
-                f"numerics.mesh.sizes.{name} is {value} beside geometry.pore; an idealised pore "
-                "is meshed at the global and wall sizes alone and has no such part, so it would "
-                f"change nothing ({note})"
+                f"numerics.mesh.sizes.{name} is {value} beside geometry.pore. An idealised pore "
+                "is meshed at the global and wall sizes only. It has no such part, so the key "
+                f"changes nothing ({note}). Remove it."
             )
 
 
@@ -456,19 +461,21 @@ def _check_charge(document: CaseDocument) -> None:
     if pqr is not None:
         if pqr.path is None:
             raise CaseValidationError(
-                "inputs.pqr: artefact: names a protonation artefact in the store; the stage's "
-                "own artefact is reached through a structure: section, and a supplied PQR is "
-                "named by inputs.pqr: path: (section 5.3.1 NOTE on inputs:)"
+                "inputs.pqr: artefact: names a protonation artefact in the store. A structure: "
+                "section reaches the artefact of the stage. A supplied PQR file is named by "
+                "inputs.pqr: path: (section 5.3.1 NOTE on inputs:). Set inputs.pqr: path: "
+                "instead."
             )
         if pqr.groups:
             raise CaseValidationError(
-                "inputs.pqr.groups is the mesh's vocabulary mapping (IF-06) and means nothing "
-                "for a PQR file (section 5.3.1 NOTE on inputs:)"
+                "inputs.pqr.groups is the vocabulary mapping of the mesh (IF-06). It means "
+                "nothing for a PQR file (section 5.3.1 NOTE on inputs:). Remove it."
             )
         if pqr.format not in (None, PQR_FORMAT):
             raise CaseValidationError(
-                f"inputs.pqr.format is {pqr.format!r}; a supplied PQR file of one frame or one "
-                f"MODEL per frame has format {PQR_FORMAT!r} (section 5.3.1 NOTE on inputs:)"
+                f"inputs.pqr.format is {pqr.format!r}. A supplied PQR file of one frame, or of "
+                f"one MODEL per frame, has the format {PQR_FORMAT!r} (section 5.3.1 NOTE on "
+                f"inputs:). Set inputs.pqr.format to {PQR_FORMAT!r}."
             )
     charge = document.charge
     if charge is None:
@@ -479,9 +486,9 @@ def _check_charge(document: CaseDocument) -> None:
     _check_smearing(document, charge.smearing, defaults.smearing)
     if charge.titration == "none" and charge.ph != defaults.ph:
         raise CaseValidationError(
-            f"charge.ph is {charge.ph} beside charge.titration: none, which runs PDB2PQR "
-            "without a titration method, so the pH reaches no calculation; remove charge.ph or "
-            "set charge.titration: propka (section 5.3.1 NOTE on the protonation keys)"
+            f"charge.ph is {charge.ph} beside charge.titration: none. This setting runs PDB2PQR "
+            "without a titration method, so the pH reaches no calculation. Remove charge.ph, "
+            "or set charge.titration: propka (section 5.3.1 NOTE on the protonation keys)."
         )
     changed = [
         f"charge.{key}"
@@ -494,21 +501,22 @@ def _check_charge(document: CaseDocument) -> None:
     # Under the protonated density the stage runs for stage 2 even where the charge is supplied.
     feeds_density = document.structure is not None and density.atoms == "protonated"
     where = (
-        "beside inputs.pqr, which supplies the charges and radii PDB2PQR would compute"
+        "beside inputs.pqr. That input supplies the charges and radii that PDB2PQR computes "
+        "otherwise"
         if pqr is not None
-        else "beside inputs.charge with geometry.density.atoms: as_loaded, which leave nothing "
+        else "beside inputs.charge with geometry.density.atoms: as_loaded. These leave nothing "
         "for the protonation to feed"
         if document.inputs.charge is not None and not feeds_density
-        else "in a case with neither a structure: section nor inputs.pqr, so there is nothing "
+        else "in a case with neither a structure: section nor inputs.pqr. There is nothing "
         "to protonate"
         if document.structure is None
         else None
     )
     if where is not None:
         raise CaseValidationError(
-            f"{', '.join(changed)} {'is' if len(changed) == 1 else 'are'} set {where}; the "
-            "protonation stage they configure does not run, so they would change nothing "
-            "(section 5.3.1 NOTE on the protonation keys)"
+            f"{', '.join(changed)} {'is' if len(changed) == 1 else 'are'} set {where}. The "
+            "protonation stage that the keys configure does not run, so the keys have no "
+            "effect (section 5.3.1 NOTE on the protonation keys). Remove the keys."
         )
 
 
@@ -522,15 +530,15 @@ def _check_edits(document: CaseDocument, charge: Charge) -> None:
     groups = TitratableGroups.load()
     note = "section 5.3.1 NOTE on charge.edits"
     where = (
-        "beside inputs.charge, which supplies the fixed charge the edit would change"
+        "beside inputs.charge. That input supplies the fixed charge that the edit changes"
         if document.inputs.charge is not None
-        else "in a case with neither a structure: section nor inputs.pqr, so there is no "
+        else "in a case with neither a structure: section nor inputs.pqr. There is no "
         "protonation to edit"
         if document.structure is None and document.inputs.pqr is None
         else None
     )
     if where is not None:
-        raise CaseValidationError(f"charge.edits is set {where} ({note})")
+        raise CaseValidationError(f"charge.edits is set {where} ({note}). Remove it.")
     # Keyed on the parsed residue, so 'ASP 021' is the residue 'ASP 21' names.
     seen: dict[tuple[tuple[str, int, str], str], int] = {}
     for index, edit in enumerate(charge.edits):
@@ -540,27 +548,30 @@ def _check_edits(document: CaseDocument, charge: Charge) -> None:
         named = variant_parent(parent)
         if named is not None:
             raise CaseValidationError(
-                f"{name}: {parent} is a protonation-variant name; an edit names the residue by "
-                f"its parent, {named} ({note})"
+                f"{name}: {parent} is a protonation-variant name. An edit names the residue by "
+                f"its parent, {named} ({note}). Use {named} as the residue name."
             )
         if edit.state is not None:
             reason = (
-                f"on {parent}, which has no ASH, GLH or HIP state to fix"
+                f"on {parent}. This residue has no ASH, GLH or HIP state to fix"
                 if parent not in STATE_RESIDUES
-                else "beside titration: none, which runs PDB2PQR without a titration method"
+                else "beside titration: none. That setting runs PDB2PQR without a titration method"
                 if charge.titration == "none"
-                else f"under the force field {charge.forcefield}, which holds no state to fix"
+                else f"under the force field {charge.forcefield}. That force field has no "
+                "state to fix"
                 if charge.forcefield != "CHARMM"
-                else "beside inputs.pqr, which supplies the states PDB2PQR would compute"
+                else "beside inputs.pqr. That input supplies the states that PDB2PQR computes "
+                "otherwise"
                 if document.inputs.pqr is not None
                 else None
             )
             if reason is not None:
-                raise CaseValidationError(f"{name}: state is refused {reason} ({note})")
+                raise CaseValidationError(f"{name}: state is refused {reason} ({note}). Remove it.")
         if edit.charge_change_e is not None and not groups.has_group(parent):
             raise CaseValidationError(
-                f"{name}: charge_change_e is refused: {parent} has no titratable group to place "
-                f"the change on; the groups are {', '.join(sorted(groups.groups))} ({note})"
+                f"{name}: charge_change_e is refused. {parent} has no titratable group to place "
+                f"the change on. The groups are {', '.join(sorted(groups.groups))} ({note}). "
+                "Name a residue of one of these groups."
             )
         for kind in ("state", "charge", "radius"):
             earlier = seen.get((residue, kind))
@@ -568,13 +579,12 @@ def _check_edits(document: CaseDocument, charge: Charge) -> None:
             clash = {edit.kind, kind} == {"state", "charge"}
             if earlier is not None and (same or clash):
                 raise CaseValidationError(
-                    f"{name} clashes with charge.edits[{earlier}]: "
+                    f"{name} clashes with charge.edits[{earlier}] ({note}). "
                     + (
-                        f"one {kind} edit per residue"
+                        f"Use one {kind} edit for each residue."
                         if same
-                        else "state and charge_change_e on one residue"
+                        else "Do not set state and charge_change_e on one residue."
                     )
-                    + f" ({note})"
                 )
         seen[(residue, edit.kind)] = index
 
@@ -586,56 +596,58 @@ def _check_profile_keys(document: CaseDocument, charge: Charge) -> None:
     named = f"{', '.join(changed)} {'is' if len(changed) == 1 else 'are'} set away from 0"
     if document.inputs.mesh is not None:
         raise CaseValidationError(
-            f"{named} beside inputs.mesh; both are built from the stage-4 profile, and a "
-            "supplied mesh has none, so they would change nothing (section 5.3.1 NOTE on the "
-            "v2 keys that change a number)"
+            f"{named} beside inputs.mesh. Both are built from the stage-4 profile. A supplied "
+            "mesh has no profile, so the keys have no effect (section 5.3.1 NOTE on the "
+            "v2 keys that change a number). Remove the keys."
         )
     if document.structure is None and document.inputs.profile is None:
         raise CaseValidationError(
-            f"{named} in a case with neither a structure: section nor inputs.profile; both are "
-            "built from the stage-4 profile, and there is none (section 5.3.1 NOTE on the v2 keys "
-            "that change a number)"
+            f"{named} in a case with neither a structure: section nor inputs.profile. Both are "
+            "built from the stage-4 profile. The case has no profile (section 5.3.1 NOTE on "
+            "the v2 keys that change a number). Add a structure: section or inputs.profile, "
+            "or remove the keys."
         )
     if charge.dielectric_transition_nm > 0.0 and document.inputs.eps_r is not None:
         raise CaseValidationError(
             f"charge.dielectric_transition_nm is {charge.dielectric_transition_nm} nm beside "
-            "inputs.eps_r; both supply the solid fraction chi, so the case names one quantity "
-            "twice; remove one of them (section 5.3.1 NOTE on the v2 keys that change a number)"
+            "inputs.eps_r. Both supply the solid fraction chi, so the case names one quantity "
+            "twice (section 5.3.1 NOTE on the v2 keys that change a number). Remove one of them."
         )
     h_c = contour_spacing_nm(document)
     delta = charge.dielectric_transition_nm
     if 0.0 < delta < h_c:
         raise CaseValidationError(
             f"charge.dielectric_transition_nm is {delta} nm, below "
-            f"geometry.density.grid_spacing_nm = {h_c} nm: the transition would be finer than "
-            "the grid the contour it is built on is placed on (section 4.4 NOTE on the derived "
-            "solid fraction)"
+            f"geometry.density.grid_spacing_nm = {h_c} nm. The transition is finer than the "
+            "grid that places the contour (section 4.4 NOTE on the derived solid fraction). "
+            f"Set it to {h_c} nm or more."
         )
     offset = charge.exclusion_offset_nm
     if 0.0 < offset <= 2.0 * h_c:
         raise CaseValidationError(
             f"charge.exclusion_offset_nm is {offset} nm, at most twice "
-            f"geometry.density.grid_spacing_nm = {h_c} nm: the shell is a face of width a, and "
-            f"section 5.2.1's feature-size criterion admits nothing narrower than 2 h_c = "
-            f"{2.0 * h_c:g} nm (section 5.2.1 NOTE on the ion-exclusion shell)"
+            f"geometry.density.grid_spacing_nm = {h_c} nm. The shell is a face of width a. "
+            f"The feature-size criterion of section 5.2.1 admits nothing narrower than "
+            f"2 h_c = {2.0 * h_c:g} nm (section 5.2.1 NOTE on the ion-exclusion shell). "
+            f"Set it above {2.0 * h_c:g} nm."
         )
 
 
 def _check_smearing(document: CaseDocument, smearing: Smearing, defaults: Smearing) -> None:
     if smearing.axis_cutoff_nm != defaults.axis_cutoff_nm:
         raise CaseValidationError(
-            f"charge.smearing.axis_cutoff_nm is {smearing.axis_cutoff_nm}; it is refused away "
-            f"from its default {defaults.axis_cutoff_nm} on every path (PHY-18). The deposited "
-            "kernel is regular on the axis and takes no guard, and a supplied field declares its "
-            "own axis_cutoff_nm in its header document, so the key would change nothing "
-            "(section 5.3.1 NOTE on charge.smearing)"
+            f"charge.smearing.axis_cutoff_nm is {smearing.axis_cutoff_nm}. The program refuses "
+            f"every value other than its default {defaults.axis_cutoff_nm}, on every path "
+            "(PHY-18). The deposited kernel is regular on the axis and takes no guard. A "
+            "supplied field declares its own axis_cutoff_nm in its header document. The key "
+            "changes nothing (section 5.3.1 NOTE on charge.smearing). Remove it."
         )
     for key in SMEARING_KEYS:
         value = getattr(smearing, key)
         if not 0.0 < value < math.inf:
             raise CaseValidationError(
-                f"charge.smearing.{key} is {value}; it must be finite and positive (PHY-16 "
-                "steps 4-6)"
+                f"charge.smearing.{key} is {value}. It must be finite and positive (PHY-16 "
+                "steps 4-6)."
             )
     changed = [
         f"charge.smearing.{key}"
@@ -645,9 +657,9 @@ def _check_smearing(document: CaseDocument, smearing: Smearing, defaults: Smeari
     if not changed:
         return
     where = (
-        "beside inputs.charge, which supplies the field stage 7 would otherwise deposit"
+        "beside inputs.charge. That input supplies the field that stage 7 deposits otherwise"
         if document.inputs.charge is not None
-        else "in a case with neither a structure: section nor inputs.pqr, so there is nothing "
+        else "in a case with neither a structure: section nor inputs.pqr. There is nothing "
         "to deposit"
         if document.structure is None and document.inputs.pqr is None
         else None
@@ -656,10 +668,8 @@ def _check_smearing(document: CaseDocument, smearing: Smearing, defaults: Smeari
         other = "inputs.charge" if document.inputs.charge is not None else "structure:"
         raise CaseValidationError(
             f"{', '.join(changed)} {'is' if len(changed) == 1 else 'are'} set {where} "
-            f"({other}); the deposition stage 7 would configure with "
-            f"{'it' if len(changed) == 1 else 'them'} does not run, so "
-            f"{'it' if len(changed) == 1 else 'they'} would change nothing (section 5.3.1 NOTE "
-            "on charge.smearing)"
+            f"({other}). Stage 7 does not run the deposition that the keys configure, so the "
+            "keys have no effect (section 5.3.1 NOTE on charge.smearing). Remove the keys."
         )
 
 
@@ -669,21 +679,22 @@ def _check_profile(document: CaseDocument) -> None:
         return
     if profile.path is None:
         raise CaseValidationError(
-            "inputs.profile: artefact: names a profile in the store; stage 4's artefact is "
-            "reached through a structure: section, and a supplied profile is named by "
-            "inputs.profile: path: (section 5.3.1 NOTE on inputs:)"
+            "inputs.profile: artefact: names a profile in the store. A structure: section "
+            "reaches the artefact of stage 4. A supplied profile is named by "
+            "inputs.profile: path: (section 5.3.1 NOTE on inputs:). Set inputs.profile: path: "
+            "instead."
         )
     if profile.groups:
         raise CaseValidationError(
-            "inputs.profile.groups is the mesh's vocabulary mapping (IF-06) and means nothing "
-            "for a profile, whose one boundary stage 5 names itself (section 5.3.1 NOTE on "
-            "inputs:)"
+            "inputs.profile.groups is the vocabulary mapping of the mesh (IF-06). It means "
+            "nothing for a profile. Stage 5 names the one boundary of a profile itself "
+            "(section 5.3.1 NOTE on inputs:). Remove it."
         )
     if profile.format not in (None, PROFILE_FORMAT):
         raise CaseValidationError(
-            f"inputs.profile.format is {profile.format!r}; a supplied profile is a "
-            f"nanopnp/profile/v0.5 document, format {PROFILE_FORMAT!r} (section 5.3.1 NOTE on "
-            "inputs:)"
+            f"inputs.profile.format is {profile.format!r}. A supplied profile is a "
+            f"nanopnp/profile/v0.5 document with the format {PROFILE_FORMAT!r} (section 5.3.1 "
+            f"NOTE on inputs:). Set inputs.profile.format to {PROFILE_FORMAT!r}."
         )
     geometry = document.geometry
     if geometry is None:
@@ -691,9 +702,9 @@ def _check_profile(document: CaseDocument) -> None:
     for key, default in (("density", Density()), ("contour", Contour())):
         if getattr(geometry, key) != default:
             raise CaseValidationError(
-                f"geometry.{key} is set beside inputs.profile. Stages 2 to 4 read it and a "
-                "supplied profile means they do not run, so it would change nothing; remove it "
-                "(section 5.3.1 NOTE on inputs:)"
+                f"geometry.{key} is set beside inputs.profile. Stages 2 to 4 read it. A "
+                "supplied profile means that these stages do not run, so the key has no effect "
+                "(section 5.3.1 NOTE on inputs:). Remove it."
             )
 
 
@@ -701,14 +712,16 @@ def _check_generation(document: CaseDocument) -> None:
     mesh = document.numerics.mesh
     if mesh.boundary_layer:
         raise UnsupportedCaseSection(
-            "numerics.mesh.boundary_layer is true; boundary-layer meshing is FR-11, after v1.0. "
-            "The reference mesh used none, only isotropic grading to the wall (section 5.2.2)"
+            "numerics.mesh.boundary_layer is true. A boundary layer is FR-11, after v1.0. "
+            "The reference mesh used none. It used isotropic grading to the wall "
+            "(section 5.2.2). Set it to false."
         )
     geometry = document.geometry
     if geometry is not None and geometry.analyte is not None:
         raise UnsupportedCaseSection(
-            f"geometry.analyte is a {geometry.analyte.shape}; an analyte in a generated region "
-            "is FR-21, v0.7. The benchmark geometries embed one (PHY-11)"
+            f"geometry.analyte is a {geometry.analyte.shape}. An analyte in a generated region "
+            "is FR-21, v0.7. The benchmark geometries embed one (PHY-11). "
+            "Remove geometry.analyte."
         )
     membrane = geometry.membrane if geometry is not None else Membrane()
     reservoir = geometry.reservoir if geometry is not None else Reservoir()
@@ -718,24 +731,25 @@ def _check_generation(document: CaseDocument) -> None:
     ):
         if not (math.isfinite(value) and value > 0.0):
             raise CaseValidationError(
-                f"{key} is {value}; it is a length, finite and positive (section 5.3.1 NOTE on "
-                "numerics.mesh)"
+                f"{key} is {value}. It is a length. It must be finite and positive "
+                "(section 5.3.1 NOTE on numerics.mesh)."
             )
     if not math.isfinite(membrane.centre_z_nm):
         raise CaseValidationError(
-            f"geometry.membrane.centre_z_nm is {membrane.centre_z_nm}; it is a finite position "
-            "along the axis in the structure's frame"
+            f"geometry.membrane.centre_z_nm is {membrane.centre_z_nm}. It must be a finite "
+            "position along the axis in the frame of the structure."
         )
     if mesh.wall_h_nm != "auto" and not (math.isfinite(mesh.wall_h_nm) and mesh.wall_h_nm > 0.0):
         raise CaseValidationError(
-            f"numerics.mesh.wall_h_nm is {mesh.wall_h_nm}; it is `auto` or an element size in "
-            "nm, finite and positive (section 5.3.1 NOTE on numerics.mesh)"
+            f"numerics.mesh.wall_h_nm is {mesh.wall_h_nm}. It must be `auto`, or an element "
+            "size in nm that is finite and positive (section 5.3.1 NOTE on numerics.mesh)."
         )
     if mesh.wall_for_concentration_M is not None and mesh.wall_h_nm != "auto":
         raise CaseValidationError(
             f"numerics.mesh.wall_for_concentration_M is {mesh.wall_for_concentration_M} beside "
-            f"numerics.mesh.wall_h_nm {mesh.wall_h_nm}; it sizes `auto`, and an explicit size "
-            "is used as written, so it would change nothing (section 5.3.1 NOTE on numerics.mesh)"
+            f"numerics.mesh.wall_h_nm {mesh.wall_h_nm}. It sizes `auto`. The program uses an "
+            "explicit size as written, so the key changes nothing (section 5.3.1 NOTE on "
+            "numerics.mesh). Remove it."
         )
 
 
@@ -757,10 +771,10 @@ def _check_ladder_can_honour(physics: Physics) -> None:
         return
     named = ", ".join(f"physics.{name}" for name in mismatched)
     raise CaseValidationError(
-        f"{named} would be silently ignored by the NUM-18 ladder, which fixes the path rather "
-        "than reading these from the case (flow on from stage 6, variable_density and inertia "
-        "on, dielectric_gradient_forces off); set numerics.continuation: none to run a single "
-        "rung with the switches as given, or set them to match the ladder"
+        f"The NUM-18 ladder ignores {named}. The ladder fixes the path. It does not read "
+        "these keys from the case. It sets flow on from stage 6, variable_density and inertia "
+        "on, and dielectric_gradient_forces off. Set numerics.continuation: none to run a "
+        "single rung with the switches as given. Or set the switches to match the ladder."
     )
 
 
@@ -786,10 +800,10 @@ def _check_solid_permittivity_keys(document: CaseDocument) -> None:
     for name in named:
         if name not in SOLID_MATERIALS:
             close = difflib.get_close_matches(name, solids, n=1)
-            hint = f"; did you mean {close[0]!r}?" if close else ""
+            hint = f" A close name is {close[0]!r}." if close else ""
             raise CaseValidationError(
-                f"physics.solid_permittivities names {name!r}, which is not a material of the "
-                f"vocabulary; the solids are {solids}{hint}"
+                f"physics.solid_permittivities names {name!r}. That name is not a material of "
+                f"the vocabulary. The solids are {solids}.{hint}"
             )
 
 
@@ -803,47 +817,50 @@ def _check_physics_switches(document: CaseDocument) -> None:
         if value not in honoured:
             admitted = " or ".join(str(choice).lower() for choice in honoured)
             raise CaseValidationError(
-                f"physics.model {model!r} honours physics.{name}: {admitted} only (PHY-21), so "
-                f"physics.{name} must be {admitted}; {str(value).lower()} would be recorded in "
-                f"the manifest and never applied. Models honouring {str(value).lower()}: "
-                f"{_honouring(name, value)}"
+                f"physics.model {model!r} accepts physics.{name}: {admitted} only (PHY-21). "
+                f"physics.{name} must be {admitted}. The manifest records "
+                f"{str(value).lower()} and the run does not apply it. Models that accept "
+                f"{str(value).lower()}: {_honouring(name, value)}"
             )
     transition = (document.charge or Charge()).dielectric_transition_nm
     if transition > 0.0 and "solid_fraction" not in declared.coefficients:
         raise CaseValidationError(
-            f"physics.model {model!r} takes no material permittivity field, so "
-            f"charge.dielectric_transition_nm = {transition} nm would derive a chi stage 7 gates "
-            "and the solve ignores, as it refuses inputs.eps_r (PHY-24, section 5.4.3). Models "
-            f"accepting it: {_accepting('solid_fraction')}"
+            f"physics.model {model!r} takes no material permittivity field. "
+            f"charge.dielectric_transition_nm = {transition} nm derives a chi that stage 7 "
+            "gates and the solve ignores, as it refuses inputs.eps_r (PHY-24, section 5.4.3). "
+            "Set it to 0, or use a model that accepts it: "
+            f"{_accepting('solid_fraction')}"
         )
     if physics.solid_permittivities and not declared.solids:
         raise CaseValidationError(
-            f"physics.model {model!r} carries no solid materials, so "
-            "physics.solid_permittivities would be recorded and never applied; it is posed on a "
-            "mesh with no solid domain (PHY-21 NOTE). Models carrying solids: "
+            f"physics.model {model!r} has no solid materials. It works on a mesh with no solid "
+            "domain (PHY-21 NOTE). The manifest records physics.solid_permittivities and the "
+            "run does not apply it. Remove it, or use a model that has solids: "
             f"{_admitting(lambda other: declaration(other).solids)}"
         )
     if document.inputs.mesh is None and not declared.solids:
         # Every region stages 5 and 6 build carries a membrane and a protein, so
         # the stage-6 gate would refuse this case -- after meshing it.
         raise CaseValidationError(
-            f"physics.model {model!r} carries no solid materials, so it is posed on a mesh with "
-            "no solid domain (PHY-21 NOTE), and every mesh stages 5 and 6 generate carries a "
-            "membrane and a protein; supply inputs.mesh with no solid domain. Models carrying "
+            f"physics.model {model!r} has no solid materials. It works on a mesh with no solid "
+            "domain (PHY-21 NOTE). Every mesh that stages 5 and 6 generate has a membrane and "
+            "a protein. Supply inputs.mesh with no solid domain, or use a model that has "
             f"solids: {_admitting(lambda other: declaration(other).solids)}"
         )
     wall_charge = document.boundary_conditions.wall_charge_C_m2
     if wall_charge != 0.0 and "surface_charge" not in declared.coefficients:
         raise CaseValidationError(
-            f"physics.model {model!r} takes no surface charge, so "
-            f"boundary_conditions.wall_charge_C_m2 = {wall_charge} would be recorded and never "
-            f"applied (PHY-09). Models accepting it: {_accepting('surface_charge')}"
+            f"physics.model {model!r} takes no surface charge. The manifest records "
+            f"boundary_conditions.wall_charge_C_m2 = {wall_charge} and the run does not apply "
+            "it (PHY-09). Set it to 0, or use a model that accepts it: "
+            f"{_accepting('surface_charge')}"
         )
     if document.inputs.pqr is not None and "fixed_charge" not in declared.coefficients:
         raise CaseValidationError(
-            f"physics.model {model!r} takes no fixed-charge source, so inputs.pqr would be "
-            "protonated into a charge stage 7 never deposits and the solve never reads (WP28 D8). "
-            f"Models accepting it: {_accepting('fixed_charge')}"
+            f"physics.model {model!r} takes no fixed-charge source. The protonation of "
+            "inputs.pqr makes a charge that stage 7 does not deposit. The solve does not read "
+            "it (WP28 D8). Remove inputs.pqr, or use a model that accepts it: "
+            f"{_accepting('fixed_charge')}"
         )
     for supplied, coefficient, what in (
         ("charge", "fixed_charge", "a fixed-charge source"),
@@ -853,9 +870,10 @@ def _check_physics_switches(document: CaseDocument) -> None:
             declared.coefficients
         ):
             raise CaseValidationError(
-                f"physics.model {model!r} takes no {what}, so inputs.{supplied} would be gated by "
-                "stage 7 and recorded in the manifest while the solve ignored it (PHY-24). "
-                f"Models accepting it: {_accepting(coefficient)}"
+                f"physics.model {model!r} takes no {what}. Stage 7 gates inputs.{supplied} and "
+                "the manifest records it, but the solve ignores it (PHY-24). "
+                f"Remove inputs.{supplied}, or use a model that accepts it: "
+                f"{_accepting(coefficient)}"
             )
 
 
@@ -877,15 +895,15 @@ def _check_unread(document: CaseDocument) -> None:
     model_name = document.physics.model
     if n == 1:
         header = (
-            f"physics.model '{model_name}' does not read 1 key this case sets; it would be "
-            "recorded in the manifest and never applied (PHY-21, section 5.4.3), so leave it "
-            "at its default:"
+            f"physics.model '{model_name}' does not read 1 key that this case sets. The "
+            "manifest records the key and the run does not apply it (PHY-21, section 5.4.3). "
+            "Set the key to its default:"
         )
     else:
         header = (
-            f"physics.model '{model_name}' does not read {n} keys this case sets; each would be "
-            "recorded in the manifest and never applied (PHY-21, section 5.4.3), so leave each "
-            "at its default:"
+            f"physics.model '{model_name}' does not read {n} keys that this case sets. The "
+            "manifest records each key and the run does not apply any of them (PHY-21, "
+            "section 5.4.3). Set each key to its default:"
         )
     lines = [header]
     for path, val, default in violations:
@@ -929,14 +947,14 @@ def _check_correction_parts(document: CaseDocument) -> None:
         return
     n = len(violations)
     header = (
-        "electrolyte.corrections switches off 1 part no correction model applies; it would be "
-        "recorded in the manifest as a deviation and never applied (PHY-22), so leave it at "
-        "its default, true:"
+        "electrolyte.corrections switches off 1 part that no correction model applies. The "
+        "manifest records it as a deviation and the run does not apply it (PHY-22). Set it "
+        "to its default, true:"
         if n == 1
         else (
-            f"electrolyte.corrections switches off {n} parts no correction model applies; "
-            "each would be recorded in the manifest as a deviation and never applied (PHY-22), "
-            "so leave each at its default, true:"
+            f"electrolyte.corrections switches off {n} parts that no correction model applies. "
+            "The manifest records each as a deviation and the run does not apply any of them "
+            "(PHY-22). Set each part to its default, true:"
         )
     )
     lines = [header]
@@ -966,7 +984,7 @@ def _check_switch_partners(document: CaseDocument) -> None:
     ):
         lines.append(
             f"  physics.variable_density: false (density model '{density.model}' applies no "
-            "fit that varies the density, so the flow is already of constant density)"
+            "fit that changes the density. The flow has a constant density)"
         )
 
     permittivity = corrections.permittivity
@@ -981,14 +999,14 @@ def _check_switch_partners(document: CaseDocument) -> None:
     ):
         lines.append(
             "  physics.dielectric_gradient_forces: true (permittivity model "
-            f"'{permittivity.model}' applies no concentration fit, so d(eps)/d(c) is zero "
-            "and the force vanishes)"
+            f"'{permittivity.model}' applies no concentration fit. d(eps)/d(c) is zero, so "
+            "the force is zero)"
         )
     if lines:
         raise CaseValidationError(
-            "a switch is set beside a leaf that leaves it nothing to switch; it would be "
-            "recorded in the manifest as a deviation and never applied (PHY-22), so leave "
-            "each at its default or restore its partner:\n" + "\n".join(lines)
+            "A switch is set beside a leaf that leaves it nothing to switch. The manifest "
+            "records it as a deviation and the run does not apply it (PHY-22). Set each switch "
+            "to its default, or restore its partner:\n" + "\n".join(lines)
         )
 
 
@@ -1001,9 +1019,9 @@ def _check_driver(document: CaseDocument) -> None:
         if len(species) == 2 and abs(species[0].z) == 1 and abs(species[1].z) == 1:
             raise CaseValidationError(
                 "electrolyte.driver: ionic_strength drives the corrections with "
-                "I = 1/2 sum z_i^2 c_i, which equals the average concentration (c_1 + c_2)/2 "
-                "for two species of unit valence, so it would be recorded in the manifest as "
-                "a deviation and never change a number (PHY-13); leave it at its default, average"
+                "I = 1/2 sum z_i^2 c_i. For two species of unit valence, this equals the "
+                "average concentration (c_1 + c_2)/2. The manifest records the setting as a "
+                "deviation and it changes no number (PHY-13). Set it to its default, average."
             )
 
 
@@ -1014,11 +1032,11 @@ def _check_strategy(document: CaseDocument) -> None:
     if value in admitted:
         return
     raise CaseValidationError(
-        f"physics.model {model!r} admits numerics.continuation {', '.join(admitted)} only, not "
-        f"{value!r}: the NUM-18 ladder is a path through named models, and every rung from "
-        "stage 6 carries the flow coupling and transport this model may not have. Write "
-        f"numerics.continuation: {' or '.join(admitted)}, or choose a model admitting {value!r}: "
-        f"{_admitting(lambda other: value in declaration(other).strategies)}"
+        f"physics.model {model!r} accepts numerics.continuation {', '.join(admitted)} only, "
+        f"not {value!r}. The NUM-18 ladder is a path through named models. Every rung from "
+        "stage 6 carries the flow coupling and transport, and this model can lack them. Set "
+        f"numerics.continuation: {' or '.join(admitted)}, or choose a model that accepts "
+        f"{value!r}: {_admitting(lambda other: value in declaration(other).strategies)}"
     )
 
 
@@ -1031,9 +1049,9 @@ def _check_outputs(document: CaseDocument) -> None:
     if not unoffered:
         return
     raise CaseValidationError(
-        f"outputs asks for {', '.join(unoffered)}, which physics.model {model!r} does not "
-        f"provide; it provides {', '.join(offered)} (section 6.7), so remove "
-        f"{', '.join(unoffered)} from outputs"
+        f"outputs asks for {', '.join(unoffered)}. physics.model {model!r} does not provide "
+        f"these outputs. It provides {', '.join(offered)} (section 6.7). Remove "
+        f"{', '.join(unoffered)} from outputs."
     )
 
 
@@ -1042,16 +1060,17 @@ def check_operating_point(document: CaseDocument) -> None:
     concentration = document.electrolyte.concentration_M
     if not (math.isfinite(concentration) and concentration > 0.0):
         raise CaseValidationError(
-            f"electrolyte.concentration_M is {concentration!r}; it must be finite and positive"
+            f"electrolyte.concentration_M is {concentration!r}. It must be finite and positive."
         )
     bias = document.boundary_conditions.bias_V
     if not math.isfinite(bias):
-        raise CaseValidationError(f"boundary_conditions.bias_V is {bias!r}; it must be finite")
+        raise CaseValidationError(f"boundary_conditions.bias_V is {bias!r}. It must be finite.")
     cap = document.numerics.wall_distance.max_distance_nm
     if not (math.isfinite(cap) and cap > 0.0):
         raise CaseValidationError(
-            f"numerics.wall_distance.max_distance_nm is {cap!r}; the PHY-02 saturation distance "
-            "must be finite and positive, or the wall functions are evaluated at a capped d"
+            f"numerics.wall_distance.max_distance_nm is {cap!r}. It is the PHY-02 saturation "
+            "distance. It must be finite and positive. Otherwise the wall functions use a "
+            "capped d."
         )
 
 

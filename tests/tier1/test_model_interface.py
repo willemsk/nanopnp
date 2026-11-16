@@ -623,7 +623,7 @@ def test_ver56_pnp_ns_beside_corrections_it_overrides_runs_and_restores(
     with pytest.raises(CaseValidationError) as raised:
         resolve(loads_case(quickstart))
     message = str(raised.value)
-    assert "physics.model 'pnp-ns' does not read 6 keys this case sets" in message
+    assert "physics.model 'pnp-ns' does not read 6 keys that this case sets" in message
     for prop in ("diffusivity", "mobility", "viscosity", "permittivity", "density"):
         assert f"electrolyte.corrections.{prop}.model: willems2020_nacl" in message
     assert "electrolyte.corrections.steric.model: borukhov" in message

@@ -191,22 +191,26 @@ def exposed_values(
         entries = [_exposed_entry(entry, source) for entry in declared]
     else:
         raise CaseValidationError(
-            f"{source}: exposes: {declared!r} is not a list of {{name, path, range}}"
+            f"{source}: exposes: {declared!r} is not a list of {{name, path, range}}. "
+            "Write a list of entries."
         )
     numeric = _exposable_paths()
     found: list[ExposedValue] = []
     for name, path, span in entries:
         where = f"{source}: exposes: {name}"
         if not isinstance(name, str) or not _EXPOSED_NAME.fullmatch(name):
-            raise CaseValidationError(f"{where}: the name is not [A-Za-z][A-Za-z0-9_]*")
+            raise CaseValidationError(f"{where}: the name must match [A-Za-z][A-Za-z0-9_]*.")
         if any(value.name == name for value in found):
-            raise CaseValidationError(f"{where}: the name is exposed twice")
+            raise CaseValidationError(f"{where}: the name is exposed twice. Use each name once.")
         generic = ".".join(SEQUENCE_INDEX if part.isdigit() else part for part in path.split("."))
         if generic not in numeric:
-            raise CaseValidationError(f"{where}: {path} is not a numeric field of the case")
+            raise CaseValidationError(
+                f"{where}: {path} is not a numeric field of the case. Use a numeric field."
+            )
         if owner_of(path) != kind:
             raise CaseValidationError(
-                f"{where}: {path} belongs to {_holder(owner_of(path))}, not to a {kind} model"
+                f"{where}: {path} belongs to {_holder(owner_of(path))}, not to a {kind} model. "
+                f"Use a field of a {kind} model."
             )
         own = _value_in(raw, path)
         if own is None:
@@ -218,7 +222,8 @@ def exposed_values(
             low, high = _range(span, where)
             if isinstance(own, int | float) and not low <= own <= high:
                 raise CaseValidationError(
-                    f"{where}: the model's value {own!r} lies outside its range [{low}, {high}]"
+                    f"{where}: the value {own!r} of the model is outside its range "
+                    f"[{low}, {high}]. Change the range or the value."
                 )
         found.append(ExposedValue(name, path, field_unit(generic), low, high, own))
     return tuple(found)
@@ -239,17 +244,21 @@ def _exposable_paths() -> frozenset[str]:
 
 def _exposed_entry(entry: object, source: str) -> tuple[object, str, object]:
     if not isinstance(entry, Mapping):
-        raise CaseValidationError(f"{source}: exposes: {entry!r} is not {{name, path, range}}")
+        raise CaseValidationError(
+            f"{source}: exposes: {entry!r} is not an entry of {{name, path, range}}."
+        )
     # YAML reads `yes:` or `1:` as a key that is not a string.
     unknown = sorted(str(key) for key in set(entry) - {"name", "path", "range"})
     if unknown:
         raise CaseValidationError(
-            f"{source}: exposes: {entry.get('name')}: {unknown[0]}: unknown key; an entry "
-            "holds name, path and an optional range"
+            f"{source}: exposes: {entry.get('name')}: {unknown[0]}: unknown key. An entry "
+            "holds name, path and an optional range."
         )
     name, path = entry.get("name"), entry.get("path")
     if not isinstance(path, str):
-        raise CaseValidationError(f"{source}: exposes: {name}: {path!r} is not a case path")
+        raise CaseValidationError(
+            f"{source}: exposes: {name}: {path!r} is not a case path. Use a path of the schema."
+        )
     return name, path, entry.get("range")
 
 
@@ -265,7 +274,8 @@ def _range(span: object, where: str) -> tuple[float, float]:
     ):
         return float(span[0]), float(span[1])
     raise CaseValidationError(
-        f"{where}: range: {span!r} is not two finite numbers in increasing order"
+        f"{where}: range: {span!r} is not two finite numbers in increasing order. "
+        "Write the low number first."
     )
 
 
@@ -342,9 +352,9 @@ class ModelRecord:
             )
             if owned:
                 raise CaseValidationError(
-                    f"<{name}>: {path}: None: the block holds {', '.join(owned)}, which a named "
-                    f"model sets, so a study cannot drop it whole; set those keys in the model "
-                    f"file, or substitute the block's own keys one by one"
+                    f"<{name}>: {path}: None: the block holds {', '.join(owned)}. A named "
+                    "model sets these keys, so a study cannot drop the block whole. Set those "
+                    "keys in the model file. Or substitute the keys of the block one by one."
                 )
 
     def carried(
@@ -359,15 +369,15 @@ class ModelRecord:
         for path, value in assignments.items():
             kind = path.removeprefix("models.")
             if kind not in MODEL_KINDS:
-                raise CaseValidationError(f"{path}: models: accepts {', '.join(MODEL_KINDS)}")
+                raise CaseValidationError(f"{path}: models: accepts {', '.join(MODEL_KINDS)} only.")
             if value is None:
-                raise CaseValidationError(f"{path}: a study cannot drop a model it names")
+                raise CaseValidationError(f"{path}: a study cannot drop a model that it names.")
             if kind not in self.kinds:
                 # The study's document holds a default for every key of the new model, which
                 # cannot be told from a value it wrote, so each default would override it.
                 raise CaseValidationError(
-                    f"{path}: the study names no {kind} model, and a substitution swaps a model "
-                    f"the study names; write models.{kind} in the study file instead"
+                    f"{path}: the study names no {kind} model. A substitution swaps a model "
+                    f"that the study names. Write models.{kind} in the study file instead."
                 )
             paths[kind] = (self.base / Path(str(value))).resolve()
         study = study_layer(document, self)
@@ -431,7 +441,9 @@ class VariableRecord(Resolution):
         """Return the field paths a variable reaches, through other variables too."""
         if name not in self.definitions:
             known = ", ".join(self.definitions) or "none"
-            raise UnknownCasePathError(f"variables.{name} is not a variable of the case ({known})")
+            raise UnknownCasePathError(
+                f"variables.{name} is not a variable of the case. The case defines {known}."
+            )
         moved = {name}
         grown = True
         while grown:
@@ -522,7 +534,7 @@ def _expanded(assignments: Mapping[str, FieldValue]) -> dict[str, FieldValue]:
             found.update((f"variables.{name}", item) for name, item in value.items())
         else:
             raise CaseValidationError(
-                f"variables: {value!r}: set the variables by name, as variables.<name>"
+                f"variables: {value!r}: set each variable by name, as variables.<name>."
             )
     return found
 
@@ -535,12 +547,13 @@ def _variable_name(path: str, known: Mapping[str, Variable]) -> str:
     parts = path.split(".")
     if len(parts) != 2:
         raise CaseValidationError(
-            f"{path}: set a variable whole, as variables.<name>, with a number in its unit or a "
-            "definition"
+            f"{path}: set a variable whole, as variables.<name>. Use a number in its unit, "
+            "or a definition."
         )
     if parts[1] not in known:
         raise UnknownCasePathError(
-            f"{path!r} is not a variable of the case (it defines {', '.join(known) or 'none'})"
+            f"{path!r} is not a variable of the case. The case defines "
+            f"{', '.join(known) or 'none'}."
         )
     return parts[1]
 
@@ -557,7 +570,8 @@ def _redefined(path: str, value: FieldValue, record: VariableRecord) -> Variable
             raise CaseValidationError(f"{path}: {value!r} is not a definition: {error}") from None
     if isinstance(value, bool) or not isinstance(value, int | float) or not math.isfinite(value):
         raise CaseValidationError(
-            f"{path}: {value!r} is neither a finite number in {unit!r} nor a definition"
+            f"{path}: {value!r} is neither a finite number in {unit!r} nor a definition. "
+            "Set a number or a definition."
         )
     return Variable(value=float(value), unit=unit)
 
@@ -632,13 +646,13 @@ def read_mapping(
 def _named_files(raw: object, directory: Path, source: str) -> dict[str, Path]:
     if not isinstance(raw, Mapping):
         raise CaseValidationError(
-            f"{source}: models: is a mapping of molecular:, continuum: and physics: model file "
-            "paths"
+            f"{source}: models: must be a mapping of molecular:, continuum: and physics: model "
+            "file paths."
         )
     unknown = sorted(set(raw) - set(MODEL_KINDS))
     if unknown:
         raise CaseValidationError(
-            f"{source}: models.{unknown[0]}: unknown key; models: accepts {', '.join(MODEL_KINDS)}"
+            f"{source}: models.{unknown[0]}: unknown key. models: accepts {', '.join(MODEL_KINDS)}."
         )
     named: dict[str, Path] = {}
     for kind in MODEL_KINDS:
@@ -646,12 +660,14 @@ def _named_files(raw: object, directory: Path, source: str) -> dict[str, Path]:
         if value is None:
             continue
         if not isinstance(value, str):
-            raise CaseValidationError(f"{source}: models.{kind}: {value!r} is not a file path")
+            raise CaseValidationError(
+                f"{source}: models.{kind}: {value!r} is not a file path. Write a file path."
+            )
         named[kind] = (directory / value).resolve()
     if not named:
         raise CaseValidationError(
-            f"{source}: models: names at least one of a molecular:, a continuum: and a physics: "
-            "file"
+            f"{source}: models: must name at least one of a molecular:, a continuum: and a "
+            "physics: file."
         )
     return named
 
@@ -684,8 +700,8 @@ def _resolve(
         raise _located(
             error,
             [(source, pruned), *models],
-            "the named models with the study's own keys do not form a case, so a model "
-            f"cannot be reused alone: {', '.join(str(path) for path in paths.values())}",
+            "The named models and the keys of the study do not form a case. A model cannot be "
+            f"used alone. The files are: {', '.join(str(path) for path in paths.values())}.",
         ) from None
     merged_raw = _merge_all([mapping for _, mapping in layers], dict(study))
     merged_raw["models"] = {file.kind: str(file.path) for file in files}
@@ -722,7 +738,8 @@ def read_model_file(
 def _model_mapping(kind: ModelKind, location: Path, source: str | None) -> Mapping[str, Any]:
     if not location.is_file():
         raise CaseValidationError(
-            f"{source if source is not None else location}: models.{kind}: {location} is not a file"
+            f"{source if source is not None else location}: models.{kind}: {location} is not a "
+            "file. Write the path of a file."
         )
     try:
         raw = yaml.safe_load(location.read_text(encoding="utf-8"))
@@ -731,10 +748,10 @@ def _model_mapping(kind: ModelKind, location: Path, source: str | None) -> Mappi
             f"{location}: a {kind} model is not valid YAML: {error}"
         ) from None
     if not isinstance(raw, Mapping):
-        raise CaseValidationError(f"{location}: a {kind} model is a YAML mapping")
+        raise CaseValidationError(f"{location}: a {kind} model must be a YAML mapping.")
     if raw.get("schema") != SCHEMAS[kind]:
         raise CaseValidationError(
-            f"{location}: expected schema {SCHEMAS[kind]!r}, found {raw.get('schema')!r}"
+            f"{location}: the schema must be {SCHEMAS[kind]!r}. It is {raw.get('schema')!r}."
         )
     return raw
 
@@ -746,28 +763,32 @@ def _read_model_file(
     raw = _model_mapping(kind, location, source)
     name = raw.get("name")
     if not isinstance(name, str) or not name:
-        raise CaseValidationError(f"{location}: a {kind} model carries a name")
+        raise CaseValidationError(f"{location}: a {kind} model must have a name.")
     if "models" in raw:
-        raise CaseValidationError(f"{location}: a model names no model, so it holds no models: key")
+        raise CaseValidationError(
+            f"{location}: a model file cannot hold a models: key, because a model names no model."
+        )
     body = {key: value for key, value in raw.items() if key not in HEADER_KEYS}
     for expression in expression_paths(body):
         entered = _value_in(body, expression)
         raise CaseValidationError(
             f"{location}: {expression}: you entered {entered!r}, but an expression belongs to the "
-            f"study, not to a {kind} model; a model file holds numbers. Write a number here, "
-            "or give the expression as an override in the study"
+            f"study, not to a {kind} model. A model file holds numbers. Write a number here. "
+            "Or give the expression as an override in the study."
         )
     for leaf in _leaves(body, ""):
         if owner_of(leaf) != kind:
             raise CaseValidationError(
-                f"{location}: {leaf}: belongs to {_holder(owner_of(leaf))}, not to a {kind} model"
+                f"{location}: {leaf}: belongs to {_holder(owner_of(leaf))}, not to a {kind} "
+                "model. Remove it from this file."
             )
     variant = _variant_of(kind, raw.get("variant_of"), location)
     if child is not None and variant is not None:
         # Refused before its own parent is read, so a cycle of variants ends here.
         raise CaseValidationError(
             f"{child}: variant_of.model: {location.name} is itself a variant or holds "
-            f"{VARIANT_PATH}; a linked variant's parent is an unedited model"
+            f"{VARIANT_PATH}. The parent of a linked variant must be an unedited model. "
+            "Choose another parent."
         )
     if variant is None or not variant.linked:
         exposed = exposed_values(kind, raw, str(location))
@@ -777,9 +798,9 @@ def _read_model_file(
     own = sorted(leaf for leaf in _leaves(body, "") if leaf != VARIANT_PATH)
     if own:
         raise CaseValidationError(
-            f"{location}: {own[0]}: a linked variant holds only {VARIANT_PATH} and reads every "
-            f"other value from {variant.model}; set the value there, or make the variant a "
-            "full copy (variant_of.linked: false)"
+            f"{location}: {own[0]}: a linked variant holds only {VARIANT_PATH}. It reads every "
+            f"other value from {variant.model}. Set the value there, or make the variant a "
+            "full copy (variant_of.linked: false)."
         )
     parent = _read_model_file(
         kind, location.parent / variant.model, rebase=rebase, source=source, child=location
@@ -787,7 +808,8 @@ def _read_model_file(
     if _value_in(parent.body, VARIANT_PATH):
         raise CaseValidationError(
             f"{location}: variant_of.model: {variant.model} is itself a variant or holds "
-            f"{VARIANT_PATH}; a linked variant's parent is an unedited model"
+            f"{VARIANT_PATH}. The parent of a linked variant must be an unedited model. "
+            "Choose another parent."
         )
     merged = _merge(parent.body, body, "")
     listed = raw.get("exposes")
@@ -805,7 +827,8 @@ def _variant_of(kind: ModelKind, raw: object, location: Path) -> VariantOf | Non
         return None
     if kind != "molecular":
         raise CaseValidationError(
-            f"{location}: variant_of: only a molecular model is a variant, not a {kind} model"
+            f"{location}: variant_of: only a molecular model can be a variant, not a {kind} "
+            "model. Remove variant_of."
         )
     if (
         not isinstance(raw, Mapping)
@@ -816,7 +839,7 @@ def _variant_of(kind: ModelKind, raw: object, location: Path) -> VariantOf | Non
     ):
         raise CaseValidationError(
             f"{location}: variant_of: {raw!r} is not {{model: <file name>, linked: true or "
-            "false}, the parent's file beside this one"
+            "false}. The model is the file of the parent, beside this one. Write both keys."
         )
     return VariantOf(raw["model"], raw["linked"])
 

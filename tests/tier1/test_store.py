@@ -197,7 +197,7 @@ def test_fr27_a_walk_in_another_program_stops_a_clean_up(tmp_path: Path) -> None
         assert process.stdout is not None
         assert process.stdout.readline().strip() == "holding"
         # (8) A walk in another program makes a clean-up refuse, removing nothing.
-        with pytest.raises(StoreBusy, match="nothing was removed"):
+        with pytest.raises(StoreBusy, match="removed nothing"):
             store.evict(keep=frozenset())
         assert store.get(entry.schema, entry.hash) is not None
     finally:

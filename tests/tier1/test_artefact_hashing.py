@@ -454,7 +454,7 @@ def test_ver26_a_put_whose_entry_cannot_be_read_back_is_refused(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(Store, "get", lambda self, schema, digest, **_: None)
-    with pytest.raises(StoreError, match="is not in the store after its put"):
+    with pytest.raises(StoreError, match="is not in the store after the put"):
         _put_with_payload(Store(tmp_path / "store"), tmp_path / "src", b"x")
 
 
@@ -465,5 +465,5 @@ def test_ver26_a_put_that_cannot_publish_is_refused(
         raise PermissionError("read-only")
 
     monkeypatch.setattr(Path, "rename", refuse)
-    with pytest.raises(StoreError, match="could not publish"):
+    with pytest.raises(StoreError, match="Cannot publish the artefact"):
         _put_with_payload(Store(tmp_path / "store"), tmp_path / "src", b"x")
