@@ -3382,8 +3382,20 @@ behaviours of the dielectric-gradient switch, a deviation off by default, depart
   alone, yet `pnp` honours `dielectric_gradient_forces: true`, and `epnp-ns` does with `flow: false` on a single rung;
   each assembles the Nernst–Planck decrement alone.
 
-The Equations tool shows what is assembled (`physics/terms.py`). **Open**, a question for the author: whether PHY-23 is
-amended to state both, or the code made to meet it.
+The Equations tool shows what is assembled (`physics/terms.py`).
+
+**Fixed** at WP5.18's ship, ruled by the author on 16 November 2026 (§8.2.42,
+`specification/history/42-phy23s-terms-without-the-flow-and-under-a-solid-fraction.md`), with PHY-23's NOTE:
+
+- **Without the flow.** The code meets PHY-23. `pnp` declares the switch off, `physics.flow: false` beside it is
+  refused naming the clause, and the model refuses the pair. The Physics tools grey the switch while the flow is off.
+- **Under a solid fraction.** Both terms differentiate the blend. The force takes `(1 − χ) ∇ε_r,f + (ε_p − ε_r,f) ∇χ`,
+  and the decrement takes `(1 − χ) ∂ε_r,f/∂cᵢ`. `∇χ` is the exact derivative of `χ`'s bilinear interpolant
+  (`density/grid.py:coefficient_gradient`): NGSolve's `Diff` of a `VoxelCoefficient` is zero. NUM-28's domain route
+  takes the blend in its Maxwell stress, so its split stays consistent, and the indicator current takes the blended
+  decrement, as the reaction flux does. The surface route still reads the fluid's own permittivity on the analyte's
+  fluid side; the two differ only where `χ` reaches the analyte. The jump of `ε_p` where the nearest solid changes is
+  REV-257.
 
 ### REV-251: A project whose first study deposits no charge opens with a failed walk
 
@@ -3513,3 +3525,16 @@ These stay:
   its axes' units, or none.
 
 **Open**, a question for the author: the layout and the words at WP5.19's round; the view and the region with WP5.21.
+
+### REV-257: The blend's nearest-solid jump carries no dielectric force
+
+Found by the physics review of REV-250's fix at WP5.18's ship. Under a solid fraction, PHY-20's blend goes to the
+`ε_p` of the nearest solid, an element-wise field (`materials/fields.py:nearest_solid_permittivity`). Where the
+nearest solid changes inside the band where `χ > 0`, between the protein and the membrane, the blend jumps by
+`χ Δε_p` across an element edge. PHY-23's volume terms differentiate `ε_p` as constant, so that jump's interface force
+is not assembled. The domain route's Maxwell stress keeps it implicitly, so NUM-28's split is not exact where the
+extension's support crosses such an edge. The size depends on how far `χ` reaches past the protein–membrane junction,
+which has not been measured on ClyA or 2WCD.
+
+**Open**: measure the jump's force on a smoothed 2WCD case with the switch on, then assemble it as an edge term or
+blend `ε_p` smoothly. With the next package that changes PHY-23's terms.

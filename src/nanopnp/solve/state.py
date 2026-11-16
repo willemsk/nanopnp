@@ -256,6 +256,7 @@ def single_rung(
         supplied["fixed_charge"] = fields.charge.assemble(model.scales)
     if fields.eps_r is not None and "solid_fraction" in declared.coefficients:
         supplied["solid_fraction"] = fields.eps_r.chi()
+        supplied["solid_fraction_gradient"] = fields.eps_r.chi_gradient()
     if resolved.wall_charge_C_m2 != 0.0 and "surface_charge" in declared.coefficients:
         import ngsolve as ngs
 
@@ -310,6 +311,7 @@ def ladder(
         solid_permittivities=dict(resolved.document.physics.solid_permittivities),
         fixed_charge_field=(None if fields.charge is None else fields.charge.fixed_charge_C_m3()),
         solid_fraction=None if fields.eps_r is None else fields.eps_r.chi(),
+        solid_fraction_gradient=None if fields.eps_r is None else fields.eps_r.chi_gradient(),
         surface_charge_C_m2=resolved.wall_charge_C_m2,
         # From ``model_options`` so the ladder and ``single_rung`` cannot differ in order
         # or mode (NUM-03, NUM-13).
@@ -727,4 +729,5 @@ def restore(
         residual=residual,
         wall_distance_nm=distance,
         solid_fraction=keywords.get("solid_fraction"),
+        solid_fraction_gradient=keywords.get("solid_fraction_gradient"),
     )

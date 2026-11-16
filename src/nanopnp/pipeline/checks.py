@@ -811,6 +811,18 @@ def _check_physics_switches(document: CaseDocument) -> None:
     physics = document.physics
     model = physics.model
     declared = declaration(model)
+    if physics.dielectric_gradient_forces and not physics.flow:
+        remedy = (
+            "Set physics.flow: true, or set physics.dielectric_gradient_forces: false."
+            if True in declared.switches["flow"]
+            else f"physics.model {model!r} has no flow. Set physics.dielectric_gradient_forces: "
+            "false."
+        )
+        raise CaseValidationError(
+            "physics.dielectric_gradient_forces is true, but the flow is off. PHY-23 adds the "
+            "force on the fluid and the term in each ion's flux together. A model with no flow "
+            f"has no force term. {remedy}"
+        )
     for name in SWITCHES:
         value = getattr(physics, name)
         honoured = declared.switches[name]
@@ -989,8 +1001,16 @@ def _check_switch_partners(document: CaseDocument) -> None:
 
     permittivity = corrections.permittivity
     permittivity_path = "electrolyte.corrections.permittivity.concentration"
+    # A solid fraction's step, (eps_p - eps_r,f) grad(chi), is a force with no fluid fit (PHY-23).
+    # A derived chi reaches the electrolyte only where its half-width passes the exclusion shell,
+    # which is not electrolyte: neither term is assembled in it.
+    charge = document.charge or Charge()
+    blended = document.inputs.eps_r is not None or (
+        charge.dielectric_transition_nm / 2.0 > charge.exclusion_offset_nm
+    )
     if (
         physics.dielectric_gradient_forces
+        and not blended
         and permittivity_path not in decl.unread
         and not (
             permittivity.concentration

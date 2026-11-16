@@ -15,7 +15,7 @@ from nanopnp.charge.fields import (
     load_grid,
 )
 from nanopnp.core.typing import Expression, Mesh
-from nanopnp.density.grid import RadialGrid, coefficient
+from nanopnp.density.grid import RadialGrid, coefficient, coefficient_gradient
 from nanopnp.geometry.profile import signed_area
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -133,6 +133,10 @@ class _SolidFractionChecks:
         """Return the solid fraction as a coefficient function."""
         raise NotImplementedError
 
+    def chi_gradient(self) -> Expression:
+        """Return the gradient of :meth:`chi`, ``(d/dr, d/dz)`` per nm."""
+        raise NotImplementedError
+
     def check_range(self) -> None:
         """Abort unless every grid sample of chi lies in [0, 1]."""
         check_range(self.grid, what=self.label)
@@ -179,6 +183,10 @@ class SolidFractionField(_SolidFractionChecks):
     def chi(self) -> Expression:
         """Return the solid fraction as a coefficient function; zero outside the grid."""
         return coefficient(self.grid)
+
+    def chi_gradient(self) -> Expression:
+        """Return the gradient of :meth:`chi`, ``(d/dr, d/dz)`` per nm."""
+        return coefficient_gradient(self.grid)
 
 
 def check_range(grid: RadialGrid, *, what: str) -> None:
@@ -469,6 +477,15 @@ class DerivedSolidFraction(_SolidFractionChecks):
             return lattice
         indicator = self.mesh.MaterialCF(dict.fromkeys(present, 1.0), default=0.0)
         return indicator + (1.0 - indicator) * lattice
+
+    def chi_gradient(self) -> Expression:
+        """Return the gradient of :meth:`chi`, ``(d/dr, d/dz)`` per nm; zero on every held solid."""
+        present = [name for name in self.held if name in set(self.mesh.GetMaterials())]
+        lattice = coefficient_gradient(self.grid)
+        if not present:
+            return lattice
+        indicator = self.mesh.MaterialCF(dict.fromkeys(present, 1.0), default=0.0)
+        return (1.0 - indicator) * lattice
 
 
 def derived_summary(

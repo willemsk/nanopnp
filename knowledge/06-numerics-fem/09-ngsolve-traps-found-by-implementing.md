@@ -44,6 +44,8 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_charge_fields.py::test_ver29_the_truncation_gate_names_the_ring_value_and_its_location
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_charge_fields.py::test_phy23_the_solid_fraction_gradient_is_the_interpolants_own_where_diff_gives_zero
+  at: '2026-11-16T00:00:00Z'
 - by: process:tests/tier1/test_charge_quadrature.py::test_qr03_every_fixed_charge_source_carries_the_charge_s_rule
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_charge_quadrature.py::test_qr03_the_gate_measures_the_charge_the_solve_assembles
@@ -366,6 +368,16 @@ resolved 0.5 nm alternating field, order 3 against 8 was 1.2 × 10⁻² off, lea
 a charge 12 times QR-03's conservation budget while the order-8 gate passed at 2 × 10⁻⁵.
 Sharing one rule through `Measures.volume(..., rule_order=n)` and `Measures.integrate(..., rule_order=n)`
 makes the operator and its gate one rule exactly. **[tested: tests/tier1/test_charge_quadrature.py::test_qr03_the_gate_measures_the_charge_the_solve_assembles]** **[tested: tests/tier1/test_charge_quadrature.py::test_qr03_every_fixed_charge_source_carries_the_charge_s_rule]**
+
+**21. `Diff` of a `VoxelCoefficient` is zero, with no error.** `coefficient(grid).Diff(ngs.x)` came
+back `0.0` at every point of a grid built to vary in `r`, as `.Diff(ngs.y)` did in `z`. The
+symbolic derivative treats the voxel lookup as a constant, so a term written as `chi.Diff(x)`
+assembles, converges and drops the whole `∇χ`. In PHY-23's force under a solid fraction that is
+the `(ε_p − ε_r,f) ∇χ` step, the largest part. Differentiate the interpolant instead: on each cell
+the bilinear `χ = a + b r + c z + d r z` has `∂χ/∂r = b + d z` and `∂χ/∂z = c + d r`, built from
+cell-wise `VoxelCoefficient`s (`linear=False`) with a ring of zero cells beyond the box
+(`density/grid.py:coefficient_gradient`). It matched a central difference of the interpolant to
+5e-10 at 400 random points; the test holds it to 1e-6 at 60. **[tested: tests/tier1/test_charge_fields.py::test_phy23_the_solid_fraction_gradient_is_the_interpolants_own_where_diff_gives_zero]**
 
 ### 8.1.1 Mesh-integral error on a sub-element-scale field converges in neither `h` nor order
 

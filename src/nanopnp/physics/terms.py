@@ -144,6 +144,8 @@ SYMBOLS: tuple[Symbol, ...] = (
     Symbol(r"\varepsilon_0", "vacuum permittivity", "F m⁻¹"),
     Symbol(r"\varepsilon_r", "relative permittivity", "1"),
     Symbol(r"\varepsilon_{r,f}", "relative permittivity of the electrolyte", "1"),
+    Symbol(r"\varepsilon_p", "relative permittivity of the solid the blend goes to", "1"),
+    Symbol(r"\chi", "solid fraction of PHY-20's dielectric blend", "1"),
     Symbol(r"\rho_{\mathrm{pore}}", "fixed space charge of the protein", "C m⁻³"),
     Symbol(r"F", "Faraday constant", "C mol⁻¹"),
     Symbol(r"z_i", "valence of ion $i$", "1"),
@@ -260,20 +262,24 @@ _BODY_FORCE = Term(
 _DIELECTRIC_FORCE = Term(
     "Dielectric-gradient force",
     "PHY-23",
-    r"- \tfrac{1}{2}\, \varepsilon_0\, |\nabla \phi|^2\, "
-    r"\nabla \varepsilon_{r,f}",
+    r"- \tfrac{1}{2}\, \varepsilon_0\, |\nabla \phi|^2\, \nabla \varepsilon_r",
     ("flow", "dielectric_gradient_forces"),
     joins="Body force",
+    defines=(
+        r"\nabla \varepsilon_r = (1 - \chi)\, \nabla \varepsilon_{r,f} + "
+        r"(\varepsilon_p - \varepsilon_{r,f})\, \nabla \chi",
+    ),
+    note=r"In the electrolyte, $\chi = 0$ unless a solid fraction is supplied.",
 )
 _DECREMENT = Term(
     "Dielectric decrement",
     "PHY-23",
     r"+ \frac{D_i(\langle c \rangle, d)\, c_i}{R T}\, \nabla \mu_i^{\mathrm{ex}}",
-    ("dielectric_gradient_forces",),
+    ("flow", "dielectric_gradient_forces"),
     joins="Nernst–Planck",
     defines=(
         r"\mu_i^{\mathrm{ex}} = -\tfrac{1}{2}\, \varepsilon_0\, |\nabla \phi|^2\, "
-        r"\frac{\partial \varepsilon_{r,f}}{\partial c_i}",
+        r"(1 - \chi)\, \frac{\partial \varepsilon_{r,f}}{\partial c_i}",
     ),
 )
 _DEBYE = r"\lambda_D^2 = \frac{\varepsilon_0\, \varepsilon_{r,f}^0\, R T}{2 F^2 c_0}"
@@ -394,7 +400,6 @@ PNP_TERMS: tuple[Term, ...] = (
         note=r"The model solves no flow: $\mathbf{u} \equiv \mathbf{0}$.",
     ),
     _STERIC,
-    _DECREMENT,
     Term(
         "Corrections",
         "PHY-10",

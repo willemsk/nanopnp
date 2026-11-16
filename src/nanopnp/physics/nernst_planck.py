@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import TypeAlias
 
 from nanopnp.core.typing import Expression, IntegralTerm, Option
+from nanopnp.materials.fields import SolidBlend, blend_sensitivity
 from nanopnp.numerics.measures import Measures
 from nanopnp.physics.coefficients import NondimensionalCoefficients
 
@@ -115,8 +116,14 @@ def excess_potential_gradient(
     coefficients: NondimensionalCoefficients,
     variables: ConcentrationVariables,
     potential: Expression,
+    solid: SolidBlend | None = None,
 ) -> Expression:
     """Return ``grad(mu~_ex,i)``, the dielectric-decrement term (a deviation).
+
+    Parameters
+    ----------
+    solid
+        The blend's solid side where a solid fraction is supplied; None for the sharp split.
 
     Raises
     ------
@@ -134,8 +141,13 @@ def excess_potential_gradient(
     field = ngs.grad(potential)
     hessian = potential.Operator("hesse")
     sensitivity = coefficients.permittivity_sensitivity(species)
+    sensitivity_gradient = _sensitivity_gradient(sensitivity, variables)
+    if solid is not None:
+        sensitivity, sensitivity_gradient = blend_sensitivity(
+            solid, sensitivity, sensitivity_gradient
+        )
     first = 2.0 * (hessian * field) * sensitivity
-    second = (field * field) * _sensitivity_gradient(sensitivity, variables)
+    second = (field * field) * sensitivity_gradient
     return -(first + second) / (2.0 * coefficients.screening)
 
 
@@ -156,6 +168,7 @@ def species_flux(
     velocity: Expression | None = None,
     steric: StericForm | None,
     dielectric_gradient: bool = False,
+    solid: SolidBlend | None = None,
 ) -> Expression:
     """Return the dimensionless total flux ``J~_i`` of one species.
 
@@ -167,6 +180,8 @@ def species_flux(
         The form of ``beta~_i``, or None for the classical PNP flux.
     dielectric_gradient
         Whether the dielectric-decrement term is included.
+    solid
+        The blend's solid side where a solid fraction is supplied; None for the sharp split.
     """
     ion = coefficients.electrolyte.ion(species)
     concentration = variables.values[species]
@@ -182,7 +197,11 @@ def species_flux(
         bracket = bracket + diffusivity * concentration * steric(variables, coefficients, species)
     if dielectric_gradient:
         bracket = bracket + diffusivity * concentration * excess_potential_gradient(
-            species, coefficients=coefficients, variables=variables, potential=potential
+            species,
+            coefficients=coefficients,
+            variables=variables,
+            potential=potential,
+            solid=solid,
         )
     if velocity is not None:
         bracket = bracket - coefficients.peclet * velocity * concentration

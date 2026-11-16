@@ -254,7 +254,7 @@ def test_ver71_the_switch_sets_honour_only_what_changes_the_operator() -> None:
     assert pnp["flow"] == (False,)
     assert pnp["variable_density"] == (False,)
     assert pnp["inertia"] == (False,)
-    assert set(pnp["dielectric_gradient_forces"]) == {False, True}
+    assert pnp["dielectric_gradient_forces"] == (False,)
     classical = declaration("pnp-ns").switches
     assert set(classical["flow"]) == {False, True}
     assert classical["variable_density"] == (True,)

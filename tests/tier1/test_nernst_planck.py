@@ -6,6 +6,7 @@ import ngsolve as ngs
 import pytest
 
 from nanopnp.materials.electrolyte import CorrectionChoice, CorrectionSwitches, Electrolyte
+from nanopnp.materials.fields import SolidBlend, blend
 from nanopnp.mesh.primitives import SlabGeometry
 from nanopnp.numerics.gates import PackingFractionGate
 from nanopnp.physics import steric
@@ -14,6 +15,7 @@ from nanopnp.physics.coefficients import (
     NondimensionalCoefficients,
     mesh_unit_scales,
 )
+from nanopnp.physics.flow import permittivity_gradient
 from nanopnp.physics.nernst_planck import (
     ConcentrationVariables,
     excess_potential_gradient,
@@ -244,6 +246,41 @@ def test_phy23_the_permittivity_sensitivity_is_zero_when_the_correction_is_off(
         "Na+", coefficients=coefficients, variables=variables, potential=potential
     )
     assert tuple(gradient(point)) == (0.0, 0.0)
+
+
+def test_phy23_the_dielectric_terms_differentiate_the_blend_not_the_fluid_alone(
+    mesh: ngs.Mesh,
+) -> None:
+    variables, coefficients = _linear_state(mesh)
+    chi = 0.2 + 0.3 * ngs.x + 0.1 * ngs.y
+    solid = SolidBlend(chi=chi, gradient=ngs.CF((0.3, 0.1)), solid_permittivity=ngs.CF(0.256))
+    potential = ngs.GridFunction(ngs.H1(mesh, order=2))
+    potential.Set(ngs.x * ngs.x + ngs.y)
+    fluid = coefficients.relative_permittivity()
+    blended = blend(chi, solid.solid_permittivity, fluid)
+    # mu~_ex,i = -|grad phi~|^2 (d eps~_r / d c~_i) / (2 S); the blend's d eps~_r / d c~_i.
+    field = ngs.grad(potential)
+    excess = (
+        -(field * field)
+        * (1.0 - chi)
+        * coefficients.permittivity_sensitivity("Na+")
+        / (2.0 * coefficients.screening)
+    )
+    force = permittivity_gradient(coefficients, variables, solid=solid)
+    decrement = excess_potential_gradient(
+        "Na+", coefficients=coefficients, variables=variables, potential=potential, solid=solid
+    )
+    step = 1e-5
+    for r, z in ((0.5, 0.25), (0.3, 0.7), (0.8, 0.45)):
+
+        def slope(cf: ngs.CoefficientFunction, r: float = r, z: float = z) -> tuple[float, float]:
+            return (
+                (cf(mesh(r + step, z)) - cf(mesh(r - step, z))) / (2.0 * step),
+                (cf(mesh(r, z + step)) - cf(mesh(r, z - step))) / (2.0 * step),
+            )
+
+        assert force(mesh(r, z)) == pytest.approx(slope(blended), rel=1e-6)
+        assert decrement(mesh(r, z)) == pytest.approx(slope(excess), rel=1e-5)
 
 
 def test_phy05_a_registered_steric_form_is_added_once_to_the_bracket(

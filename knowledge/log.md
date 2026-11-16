@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-16
+* **Record**: `Diff` of a `VoxelCoefficient` is zero with no error; the solid fraction's gradient is the bilinear interpolant's own, cell by cell (WP5.18; REV-250). ([NGSolve traps and measured numerics facts](06-numerics-fem/09-ngsolve-traps-found-by-implementing.md))
+
 ## 2026-11-12
 * **Update**: `geometry/analyte.py` no longer imports `mesh.primitives` under `TYPE_CHECKING`, so the `geometry` to `mesh` pair the import-contract trial found is gone with MOD-03's row (WP5.17; REV-170). ([25. xenon and import-linter beside ruff's C901 and VER-61](07-software-stack/25-complexity-and-import-contract-tools.md))
 * **Update**: The flux-trap note names the analytic cylindrical pore by `CylinderPore`, which `mesh_cylinder_pore` meshes; the class `CylindricalPoreGeometry` is gone (WP5.17; REV-170). ([7. Quantities of interest — and the flux trap](06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md))

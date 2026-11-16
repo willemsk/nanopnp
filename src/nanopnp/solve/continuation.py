@@ -505,6 +505,7 @@ def default_ladder(  # noqa: C901, PLR0913
     fixed_charge_domain: str | None = None,
     fixed_charge_field: FixedCharge | None = None,
     solid_fraction: Expression | None = None,
+    solid_fraction_gradient: Expression | None = None,
     wall_potential_V: float = 0.0,
     wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
     solid_permittivities: Mapping[str, float] | None = None,
@@ -533,6 +534,8 @@ def default_ladder(  # noqa: C901, PLR0913
         Material the fixed charge is confined to; None spreads it over the whole domain.
     solid_fraction
         Passed to every rung that solves Poisson; not ramped.
+    solid_fraction_gradient
+        Passed beside ``solid_fraction``.
     """
     import ngsolve as ngs
 
@@ -606,7 +609,12 @@ def default_ladder(  # noqa: C901, PLR0913
     rungs: list[Rung] = []
 
     def _dielectric() -> dict[str, Option]:
-        return {} if solid_fraction is None else {"solid_fraction": solid_fraction}
+        if solid_fraction is None:
+            return {}
+        return {
+            "solid_fraction": solid_fraction,
+            "solid_fraction_gradient": solid_fraction_gradient,
+        }
 
     # -- stages 1 and 2: Poisson-Boltzmann --------------------------------
     screening_nm = debye_length_nm(build_M, relative_permittivity=base.permittivity_0)
