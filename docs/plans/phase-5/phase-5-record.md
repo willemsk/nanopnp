@@ -781,3 +781,24 @@ At WP5.18's plan the author ruled that each Physics tool shows its physics model
 > the ground, the walls and the solid permittivities, a role picked in the (r, z) view of the open study's geometry or in
 > the list; Exposed values, the physics model's declaration (AJ5). The guided route's salt step lands here. Tag
 > `v0.6.0-alpha.18`.
+
+## Amended 16 November 2026 (§8.2.42 AR3 to AR5)
+
+At WP5.19's plan the author ruled that a solve's thread count is recorded and keys no result (AR3), that the package
+adds *New study* and the study drawn as a graph (AR4), and that the charge check's reach against a shifted outline is
+measured and stated rather than guarded by a new refusal (AR5). The entry read:
+
+> ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
+>
+> The prototype round on 2WCD settles the charge screen's design with its function (AJ8; REV-215). Overview of the three
+> models; Study setup with each model's exposed values first and *More values* (AJ5) over the overrides of WP5.05; Sweep,
+> with variables and the forecast's warning of WP5.07; Charge on the mesh, a residue and the charge map linked both ways,
+> with its colour bar, axes and dark map (FR-33; REV-205, REV-209); Runs, a run's convergence unfolded in the queue, its
+> record written into the project (REV-206), and the Compute settings, solves at once and threads per solve, each run's
+> record stating its thread count (AN1, AN4). `upto` on reproduce (REV-41). The 200 ms redraw is measured on the author's
+> machine with a GPU (AG7; criterion 6). Q24 to Q26 and Q28 to Q36 move here; VER-44 and VER-60 as restated. Tag
+> `v0.6.0-alpha.19`.
+
+Its row of *Verification* read:
+
+> | WP5.19, Study | 1 | VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) |
