@@ -305,6 +305,17 @@ no user meets (a wrong argument type in code) stays.
 > (r, z) view, the region of a study that does not resolve, the equations specialised to the corrections chosen and the
 > pane's layout; REV-253 and REV-254 gain the plots' and the frame's points.
 
+> **Outcome — the review.** `/np-ship`'s pre-review pass dropped two tests outside the scope, the role text the
+> workbench shows and an exposed value's round trip through the model file (`ab7ace0`). The `physics-reviewer` found no
+> error in the physics diff; two refusal texts were made exact, and the ionic-strength driver's ⟨c⟩ on the Equations
+> page went to REV-255. [CODE_REVIEW_058](../../code_reviews/CODE_REVIEW_058.md) (xhigh) on `ab7ace0` raised 15
+> findings and fixed 12 (`41893b1`), among them an exposed value's range, which no field could set, a material's reset
+> that left its number drawn, and the solids read from a case that is None while the study refuses. No fix
+> contradicted a decision of this plan. The rest is REV-255 (Conditions' repeated resolves, the plot frame's `*_nm`
+> keys) and REV-254 (a refusal's place read back from its words). Measured: the implementing windows 4.9 agent hours
+> and 8 touches in four sessions, `/np-ship` to its review 0.8 agent hours and 3 touches in two: 5.7 agent hours and
+> 11 touches in six sessions, against the estimate of about three sessions, 3 to 6 agent hours and 8 touches.
+
 ### Work items
 
 - [x] 2c22fa2 1. `physics/models.py` (`Term`, the six models' terms, `role_conditions`), §5.4.3's NOTE (D5, D7); done when
