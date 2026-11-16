@@ -56,7 +56,7 @@ def test_ver65_a_new_backend_import_fails_naming_subpackage_module_and_line() ->
 
 def test_ver65_a_subpackage_that_stops_reaching_the_backend_fails_as_lost() -> None:
     text = GRID.read_text(encoding="utf-8")
-    assert text.count("    import ngsolve as ngs\n") == 1
+    assert text.count("    import ngsolve as ngs\n") == 2
     use = backend_imports(
         sources={"density/grid.py": text.replace("    import ngsolve as ngs\n", "")}
     )

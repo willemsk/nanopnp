@@ -112,6 +112,12 @@ def indicator_currents(
     variables = model.concentration_variables(functions)
     coefficients = model.coefficients(variables, distance)
     velocity = functions[VELOCITY] if model.flow else None
+    # The decrement as the solve assembled it: under a solid fraction, the blend's (PHY-23).
+    solid = (
+        model.solid_blend(mesh, solution.solid_fraction, solution.solid_fraction_gradient)
+        if model.dielectric_gradient_forces
+        else None
+    )
     gradient = ngs.grad(indicator)
     scale = TWO_PI * model.scales.current_A
 
@@ -129,6 +135,7 @@ def indicator_currents(
             velocity=velocity,
             steric=model.steric_form,
             dielectric_gradient=model.dielectric_gradient_forces,
+            solid=solid,
         )
         integral = measures.integrate(
             flux * gradient,

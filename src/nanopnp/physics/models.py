@@ -31,7 +31,7 @@ from nanopnp.materials.electrolyte import (
     CorrectionSwitches,
     Electrolyte,
 )
-from nanopnp.materials.fields import blend, nearest_solid_permittivity
+from nanopnp.materials.fields import SolidBlend, blend, nearest_solid_permittivity
 from nanopnp.mesh.primitives import (
     DEFAULT_BOUNDARIES,
     ELECTROLYTE_DOMAINS,
@@ -227,6 +227,8 @@ class ModelSolution:
         The convergence record, or None for a linear model.
     solid_fraction
         The solid fraction assembled with, or None for the sharp split.
+    solid_fraction_gradient
+        The gradient of ``solid_fraction``, where it was supplied with one.
     """
 
     model: PhysicsModel
@@ -236,6 +238,7 @@ class ModelSolution:
     residual: AssembledForm | None = None
     wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM
     solid_fraction: Expression | None = None
+    solid_fraction_gradient: Expression | None = None
 
     def component(self, name: str) -> Expression:
         """Return one field of the solution by name; KeyError if the model does not solve for it."""
@@ -483,6 +486,12 @@ class TransportModel(PhysicsModel, Protocol):
         """Return ``eps~_r`` over all of Omega at a state."""
         ...
 
+    def solid_blend(
+        self, mesh: Mesh, solid_fraction: Expression | None, gradient: Expression | None
+    ) -> SolidBlend | None:
+        """Return what PHY-23's terms need of the blend; None for the sharp split."""
+        ...
+
 
 def relative_permittivity_field(
     mesh: Mesh,
@@ -534,7 +543,46 @@ def relative_permittivity_field(
     # materials.fields: a second copy of the blend here is a second place for it
     # to drift.
     water = mesh.MaterialCF(dict.fromkeys(sorted(off_fluid), ion_free), default=fluid_permittivity)
-    return blend(solid_fraction, nearest_solid_permittivity(mesh, named), water)
+    return blend(solid_fraction, solid_branch(mesh, solid_permittivities, permittivity_0), water)
+
+
+def solid_branch(
+    mesh: Mesh, solid_permittivities: Mapping[str, float], permittivity_0: float
+) -> Expression:
+    """Return the ``eps~_p`` a solid fraction blends towards, over ``eps_r,f^0``."""
+    named = {material: value / permittivity_0 for material, value in solid_permittivities.items()}
+    return nearest_solid_permittivity(mesh, named)
+
+
+def solid_blend(
+    mesh: Mesh,
+    solid_fraction: Expression | None,
+    gradient: Expression | None,
+    *,
+    solid_permittivities: Mapping[str, float],
+    permittivity_0: float,
+) -> SolidBlend | None:
+    """Return what PHY-23's terms need of the blend in the electrolyte; None for the sharp split.
+
+    Raises
+    ------
+    ValueError
+        If a solid fraction comes without its gradient.
+    """
+    if solid_fraction is None:
+        return None
+    if gradient is None:
+        raise ValueError(
+            "a solid fraction was supplied without its gradient. The dielectric-gradient terms "
+            "(PHY-23) and NUM-28's force split differentiate the blend chi eps_p + (1 - chi) "
+            "eps_r,f, and NGSolve differentiates a gridded chi to zero without an error. Pass "
+            "solid_fraction_gradient beside solid_fraction"
+        )
+    return SolidBlend(
+        chi=solid_fraction,
+        gradient=gradient,
+        solid_permittivity=solid_branch(mesh, solid_permittivities, permittivity_0),
+    )
 
 
 @dataclass(frozen=True)
@@ -591,6 +639,12 @@ class CoupledModel:
             raise ValueError(
                 "dielectric_gradient_forces cannot be combined with the NUM-02 log branch: the "
                 "permittivity sensitivity d(eps~_r)/d(c~_i) would be differentiated in w_i"
+            )
+        if self.dielectric_gradient_forces and not self.flow:
+            raise ValueError(
+                "dielectric_gradient_forces needs the flow: PHY-23 adds the force on the fluid "
+                "and the term in each ion's flux together, and a model with no flow has no "
+                "force term"
             )
 
     @property
@@ -835,6 +889,18 @@ class CoupledModel:
             solid_fraction=solid_fraction,
         )
 
+    def solid_blend(
+        self, mesh: Mesh, solid_fraction: Expression | None, gradient: Expression | None
+    ) -> SolidBlend | None:
+        """Return what PHY-23's terms need of the blend; None for the sharp split."""
+        return solid_blend(
+            mesh,
+            solid_fraction,
+            gradient,
+            solid_permittivities=self.solid_permittivities,
+            permittivity_0=self.electrolyte.permittivity_0,
+        )
+
     def relative_permittivity(self, solution: ModelSolution) -> Expression:
         """Return ``eps~_r`` as the solve used it, at the converged state."""
         values = {field.name: solution.component(field.name) for field in self.fields}
@@ -853,6 +919,7 @@ class CoupledModel:
         wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
         fixed_charge: FixedCharge | None = None,
         solid_fraction: Expression | None = None,
+        solid_fraction_gradient: Expression | None = None,
         surface_charge: Expression | None = None,
         surface_charge_boundary: str = "wall",
         sources: Mapping[str, Expression] | None = None,
@@ -867,6 +934,8 @@ class CoupledModel:
             Symmetry and quadrature policy; its element order must match the model's.
         fixed_charge
             The dimensionless protein space charge, if any.
+        solid_fraction_gradient
+            The gradient of ``solid_fraction``; the dielectric-gradient terms need it.
         """
         _reject_unknown(kwargs, f"{self.name!r}.residual_form")
         if measures.element_order != self.order:
@@ -891,6 +960,11 @@ class CoupledModel:
         coefficients = self.coefficients(variables, wall_distance_nm)
         potential, potential_test = trials[POTENTIAL], tests[POTENTIAL]
         velocity = trials[VELOCITY] if self.flow else None
+        solid = (
+            self.solid_blend(mesh, solid_fraction, solid_fraction_gradient)
+            if self.dielectric_gradient_forces
+            else None
+        )
 
         stabilisation = self.stabilisation_model
         if stabilisation.terms and state is None:
@@ -948,6 +1022,7 @@ class CoupledModel:
                 velocity=velocity,
                 steric=self.steric_form,
                 dielectric_gradient=self.dielectric_gradient_forces,
+                solid=solid,
             )
             field_name = concentration_field_name(name)
             residual += nernst_planck_residual(flux, tests[field_name], measures, definedon=fluid)
@@ -969,14 +1044,16 @@ class CoupledModel:
 
         if self.flow:
             residual += self._flow_residual(
-                trials, tests, measures, coefficients, variables, definedon=fluid
+                trials, tests, measures, coefficients, variables, definedon=fluid, solid=solid
             )
             if stabilisation.terms:
                 flow_term = stabilisation.flow_term(
                     measures,
-                    trial=self._flow_state(trials, coefficients, variables, sources=sources),
+                    trial=self._flow_state(
+                        trials, coefficients, variables, sources=sources, solid=solid
+                    ),
                     lagged=self._flow_state(
-                        lagged, lagged_coefficients, lagged_variables, sources=sources
+                        lagged, lagged_coefficients, lagged_variables, sources=sources, solid=solid
                     ),
                     velocity_test=tests[VELOCITY],
                     pressure_test=tests[PRESSURE],
@@ -1015,6 +1092,7 @@ class CoupledModel:
         variables: ConcentrationVariables,
         *,
         sources: Mapping[str, Expression],
+        solid: SolidBlend | None = None,
     ) -> FlowState:
         import ngsolve as ngs
 
@@ -1027,7 +1105,9 @@ class CoupledModel:
             # The Korteweg-Helmholtz force of PHY-23, which survives the
             # approximate residual: it carries first derivatives only.
             field = ngs.grad(functions[POTENTIAL])
-            force = force - 0.5 * (field * field) * permittivity_gradient(coefficients, variables)
+            force = force - 0.5 * (field * field) * permittivity_gradient(
+                coefficients, variables, solid=solid
+            )
         return FlowState(
             coefficients=coefficients,
             velocity=functions[VELOCITY],
@@ -1047,6 +1127,7 @@ class CoupledModel:
         variables: ConcentrationVariables,
         *,
         definedon: Option,
+        solid: SolidBlend | None = None,
     ) -> IntegralTerm:
         velocity, pressure = trials[VELOCITY], trials[PRESSURE]
         velocity_test, pressure_test = tests[VELOCITY], tests[PRESSURE]
@@ -1090,7 +1171,7 @@ class CoupledModel:
         if self.dielectric_gradient_forces:
             residual += dielectric_gradient_force(
                 trials[POTENTIAL],
-                permittivity_gradient(coefficients, variables),
+                permittivity_gradient(coefficients, variables, solid=solid),
                 velocity_test,
                 measures,
                 definedon=definedon,
@@ -1142,6 +1223,7 @@ class CoupledModel:
         wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
         fixed_charge: FixedCharge | None = None,
         solid_fraction: Expression | None = None,
+        solid_fraction_gradient: Expression | None = None,
         surface_charge: Expression | None = None,
         surface_charge_boundary: str = "wall",
         sources: Mapping[str, Expression] | None = None,
@@ -1183,6 +1265,7 @@ class CoupledModel:
             wall_distance_nm=wall_distance_nm,
             fixed_charge=fixed_charge,
             solid_fraction=solid_fraction,
+            solid_fraction_gradient=solid_fraction_gradient,
             surface_charge=surface_charge,
             surface_charge_boundary=surface_charge_boundary,
             sources=sources,
@@ -1209,6 +1292,7 @@ class CoupledModel:
             residual=residual,
             wall_distance_nm=wall_distance_nm,
             solid_fraction=solid_fraction,
+            solid_fraction_gradient=solid_fraction_gradient,
         )
 
     def cold_state(
@@ -1529,12 +1613,16 @@ class PoissonModel(_SingleFieldModel):
         *,
         fixed_charge: FixedCharge | None = None,
         solid_fraction: Expression | None = None,
+        solid_fraction_gradient: Expression | None = None,
         surface_charge: Expression | None = None,
         surface_charge_boundary: str = "wall",
         state: GridFunction | None = None,
         **kwargs: Option,
     ) -> IntegralTerm:
-        """Return the Poisson residual ``int eps~ grad(phi~).grad(v) r - int rho~_pore v r``."""
+        """Return the Poisson residual ``int eps~ grad(phi~).grad(v) r - int rho~_pore v r``.
+
+        ``solid_fraction_gradient`` is accepted beside ``solid_fraction`` and not read.
+        """
         _reject_unknown(kwargs, f"{self.name!r}.residual_form")
         self._check_order(measures)
         trial, test = space.TnT()
@@ -1573,6 +1661,7 @@ class PoissonModel(_SingleFieldModel):
         potential_values: Expression = 0.0,
         fixed_charge: FixedCharge | None = None,
         solid_fraction: Expression | None = None,
+        solid_fraction_gradient: Expression | None = None,
         surface_charge: Expression | None = None,
         surface_charge_boundary: str = "wall",
         initial: ModelSolution | None = None,
@@ -1610,7 +1699,12 @@ class PoissonModel(_SingleFieldModel):
         solve_correction(residual.mat, rhs, correction, space.FreeDofs(), solver=solver)
         state.vec.data += correction
         return ModelSolution(
-            model=self, space=space, state=state, residual=residual, solid_fraction=solid_fraction
+            model=self,
+            space=space,
+            state=state,
+            residual=residual,
+            solid_fraction=solid_fraction,
+            solid_fraction_gradient=solid_fraction_gradient,
         )
 
 
@@ -1936,6 +2030,7 @@ register_model(
             "flow": (False,),
             "variable_density": (False,),
             "inertia": (False,),
+            "dielectric_gradient_forces": (False,),
         },
         strategies=("none",),
         unread=frozenset(

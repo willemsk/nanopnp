@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from nanopnp.core.typing import Expression, Mesh
@@ -23,6 +24,49 @@ def blend(
         The piecewise solid branch; each solid blends towards its own ``eps_p``.
     """
     return chi * solid_permittivity + (1.0 - chi) * fluid_permittivity
+
+
+@dataclass(frozen=True)
+class SolidBlend:
+    """The solid side of the blend in the electrolyte: ``chi``, ``grad(chi)`` and ``eps_p``.
+
+    Parameters
+    ----------
+    gradient
+        ``grad(chi)`` per mesh length unit.
+    solid_permittivity
+        The ``eps_p`` of :func:`nearest_solid_permittivity`, in the units of the fluid's.
+    """
+
+    chi: Expression
+    gradient: Expression
+    solid_permittivity: Expression
+
+
+def blend_gradient(
+    solid: SolidBlend, fluid_permittivity: Expression, fluid_gradient: Expression
+) -> Expression:
+    """Return the blend's gradient, ``(1 - chi) grad eps_r,f + (eps_p - eps_r,f) grad chi``.
+
+    ``eps_p`` is piecewise constant, so its own gradient is zero almost everywhere.
+    """
+    return (1.0 - solid.chi) * fluid_gradient + (
+        solid.solid_permittivity - fluid_permittivity
+    ) * solid.gradient
+
+
+def blend_sensitivity(
+    solid: SolidBlend, sensitivity: Expression, sensitivity_gradient: Expression
+) -> tuple[Expression, Expression]:
+    """Return ``d eps_r / d c_i`` of the blend and its gradient, from the fluid's own pair.
+
+    The solid branch does not depend on ``c_i``, so the blend's sensitivity is
+    ``(1 - chi) d eps_r,f / d c_i``.
+    """
+    return (
+        (1.0 - solid.chi) * sensitivity,
+        (1.0 - solid.chi) * sensitivity_gradient - sensitivity * solid.gradient,
+    )
 
 
 _NEAREST_SOLID_CACHE = "_nanopnp_nearest_solid_permittivity"

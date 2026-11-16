@@ -415,6 +415,7 @@ class _Integrands:
     velocity_gradient: Expression
     pressure: Expression
     permittivity: Expression
+    medium_permittivity: Expression
     viscosity: Expression
     body_force: Expression
     korteweg_force: Expression | None
@@ -443,18 +444,29 @@ def _integrands(solution: ModelSolution, wall_distance_nm: Expression | None) ->
 
     field = ngs.grad(functions[POTENTIAL])
     permittivity = coefficients.relative_permittivity()
+    solid = model.solid_blend(mesh, solution.solid_fraction, solution.solid_fraction_gradient)
+    # The Maxwell stress takes the permittivity Poisson was solved with: the blend where a
+    # solid fraction reaches into the electrolyte. Any other leaves a force the split omits.
+    medium = (
+        permittivity
+        if solid is None
+        else model.permittivity(mesh, coefficients, solid_fraction=solution.solid_fraction)
+    )
     # f_ion = rho_ion E = -S (sum_i z_i c~_i) grad(phi~), the Poisson source's own charge (PHY-08).
     body_force = -coefficients.screening * coefficients.ionic_charge_density() * field
 
-    if model.electrolyte.switches.permittivity.model == "none":
+    korteweg: Expression | None
+    if model.electrolyte.switches.permittivity.model == "none" and solid is None:
         # grad(eps) = 0, so the Korteweg-Helmholtz force is too and the chain rule is skipped.
-        korteweg: Expression | None = ngs.CF((0.0, 0.0))
-    elif variables.logarithmic:
+        korteweg = ngs.CF((0.0, 0.0))
+    elif variables.logarithmic and model.electrolyte.switches.permittivity.model != "none":
         # d(eps~_r)/d(c~_i) would come back in w_i; see _Integrands.korteweg.
         korteweg = None
     else:
         korteweg = (
-            -0.5 * ngs.InnerProduct(field, field) * permittivity_gradient(coefficients, variables)
+            -0.5
+            * ngs.InnerProduct(field, field)
+            * permittivity_gradient(coefficients, variables, solid=solid)
         )
 
     velocity = functions[VELOCITY]
@@ -467,6 +479,7 @@ def _integrands(solution: ModelSolution, wall_distance_nm: Expression | None) ->
         velocity_gradient=ngs.grad(velocity),
         pressure=functions[PRESSURE],
         permittivity=permittivity,
+        medium_permittivity=medium,
         viscosity=coefficients.viscosity(),
         body_force=body_force,
         korteweg_force=korteweg,
@@ -519,7 +532,7 @@ def _domain_force(
     em_N = electrostatic_domain_force(
         mesh,
         terms.potential_gradient,
-        terms.permittivity,
+        terms.medium_permittivity,
         extension,
         measures,
         force_N=model.scales.force_N,

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from nanopnp.core.typing import Expression, IntegralTerm, Numeric, Option
+from nanopnp.materials.fields import SolidBlend, blend_gradient
 from nanopnp.numerics.measures import Measures
 from nanopnp.physics.coefficients import NondimensionalCoefficients
 from nanopnp.physics.nernst_planck import ConcentrationVariables
@@ -127,18 +128,36 @@ def electrical_body_force(
 def permittivity_gradient(
     coefficients: NondimensionalCoefficients,
     variables: ConcentrationVariables,
+    *,
+    solid: SolidBlend | None = None,
 ) -> Expression:
-    """Return ``grad(eps~_r)`` by the chain rule over the concentrations."""
-    if variables.logarithmic:
+    """Return ``grad(eps~_r)`` in the electrolyte, by the chain rule over the concentrations.
+
+    Parameters
+    ----------
+    solid
+        The blend's solid side where a solid fraction is supplied; None for the sharp split,
+        under which ``eps~_r`` is the fluid's own in the electrolyte.
+    """
+    import ngsolve as ngs
+
+    fluid = coefficients.relative_permittivity()
+    if not isinstance(fluid, ngs.CoefficientFunction):
+        # No fit moves eps_r,f, so only the blend's step can be non-zero.
+        total: Expression = ngs.CF((0.0, 0.0))
+    elif variables.logarithmic:
         raise NotImplementedError(
             "the dielectric-gradient body force is not implemented for the NUM-02 log branch: "
             "d(eps~_r)/d(c~_i) would come back as the derivative in w_i"
         )
-    names = list(variables.values)
-    total = coefficients.permittivity_sensitivity(names[0]) * variables.gradients[names[0]]
-    for name in names[1:]:
-        total = total + coefficients.permittivity_sensitivity(name) * variables.gradients[name]
-    return total
+    else:
+        names = list(variables.values)
+        total = coefficients.permittivity_sensitivity(names[0]) * variables.gradients[names[0]]
+        for name in names[1:]:
+            total = total + coefficients.permittivity_sensitivity(name) * variables.gradients[name]
+    if solid is None:
+        return total
+    return blend_gradient(solid, fluid, total)
 
 
 def dielectric_gradient_force(

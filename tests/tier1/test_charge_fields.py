@@ -31,6 +31,7 @@ from nanopnp.density.grid import (
     RadialGrid,
     RingMaximum,
     coefficient,
+    coefficient_gradient,
     read_grid,
     writable_formats,
     write_grid,
@@ -200,6 +201,25 @@ def test_ver29_the_interpolant_is_zero_outside_the_grid_box(mesh):
     assert padded(mesh(1.0, 1.0)) == pytest.approx(7.0)
     assert padded(mesh(4.0, 6.0)) == pytest.approx(0.0)
     assert clamped(mesh(4.0, 6.0)) == pytest.approx(7.0), "the raw continuation is not zero"
+
+
+def test_phy23_the_solid_fraction_gradient_is_the_interpolants_own_where_diff_gives_zero(mesh):
+    import ngsolve as ngs
+
+    rng = np.random.default_rng(23)
+    grid = RadialGrid(origin_nm=(0.5, 1.0), spacing_nm=(0.4, 0.7), values=rng.random((9, 11)))
+    interpolant = coefficient(grid)
+    gradient = coefficient_gradient(grid)
+    step = 1e-6
+
+    assert interpolant.Diff(ngs.x)(mesh(2.3, 3.1)) == 0.0, "NGSolve's own derivative is zero"
+    for r, z in rng.uniform((0.2, 0.4), (5.0, 7.5), size=(60, 2)):
+        expected = (
+            (interpolant(mesh(r + step, z)) - interpolant(mesh(r - step, z))) / (2.0 * step),
+            (interpolant(mesh(r, z + step)) - interpolant(mesh(r, z - step))) / (2.0 * step),
+        )
+        assert gradient(mesh(r, z)) == pytest.approx(expected, abs=1e-6)
+    assert gradient(mesh(5.8, 9.5)) == (0.0, 0.0), "beyond the padded box chi is flat"
 
 
 def test_ver29_the_comsol_grid_table_reads_as_delivered(tmp_path):

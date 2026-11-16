@@ -291,6 +291,47 @@ def coefficient(grid: RadialGrid, *, pad: bool = True) -> Expression:
     )
 
 
+def coefficient_gradient(grid: RadialGrid) -> Expression:
+    """Return the gradient ``(d/dr, d/dz)`` of the padded :func:`coefficient`, exact on every cell.
+
+    ``Diff`` of a ``VoxelCoefficient`` returns zero, so each cell's own bilinear
+    polynomial is differentiated here: ``d/dr`` is linear in ``z`` across the cell
+    and ``d/dz`` linear in ``r``.
+    """
+    import ngsolve as ngs
+    import numpy as np
+
+    source = grid.padded()
+    values = source.values
+    dr, dz = source.spacing_nm
+    (r_min, r_max), (z_min, z_max) = source.extent_nm
+    # Indexed [i_z, i_r]: the corners of each cell, lower and upper in z, left and right in r.
+    lower_left, lower_right = values[:-1, :-1], values[:-1, 1:]
+    upper_left, upper_right = values[1:, :-1], values[1:, 1:]
+    twist = upper_right - upper_left - lower_right + lower_left
+    rows, columns = twist.shape
+    cell_r = np.broadcast_to(r_min + dr * np.arange(columns), twist.shape)
+    cell_z = np.broadcast_to((z_min + dz * np.arange(rows))[:, None], twist.shape)
+
+    def cells(array: np.ndarray) -> Expression:
+        # A ring of zero cells: beyond the box the interpolant is its clamped zero edge, flat.
+        return ngs.VoxelCoefficient(
+            start=(r_min - dr, z_min - dz),
+            end=(r_max + dr, z_max + dz),
+            values=np.pad(array, 1, mode="constant", constant_values=0.0),
+            linear=False,
+        )
+
+    along_r = (cells((lower_right - lower_left) / dr), cells(twist / (dr * dz)), cells(cell_z))
+    along_z = (cells((upper_left - lower_left) / dz), cells(twist / (dr * dz)), cells(cell_r))
+    return ngs.CF(
+        (
+            along_r[0] + along_r[1] * (ngs.y - along_r[2]),
+            along_z[0] + along_z[1] * (ngs.x - along_z[2]),
+        )
+    )
+
+
 def detect_format(path: Path, declared: str | None = None) -> GridFormat:
     """Return the format a grid file is in, declared or read from its suffix.
 

@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,405. By source: history ruling 349; plan decision row 705; REV row 255; MOD row 18; OPN row 9; WB row 42; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
+Rows: 1,409. By source: history ruling 351; plan decision row 705; REV row 257; MOD row 18; OPN row 9; WB row 42; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
 
-By decider: author 569; open 5; session, own call 828; session, put to the author 3.
+By decider: author 573; open 5; session, own call 828; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1081,6 +1081,8 @@ By decider: author 569; open 5; session, own call 828; session, put to the autho
 | WP5.18 D9 | session, own call | `docs/plans/phase-5/wp5.18-the-physics-suite.md` | 2026-11-13 | WP5.18 | The model's list: each name and range edited, removed, a value added from its numeric fields; `Project.set_exposed(..., label=None, span=None)`; the view as a study lists it \| AK3, AJ5; decided by the plan \| | unstated | delivered plan |
 | WP5.18 D10 | author | `docs/plans/phase-5/wp5.18-the-physics-suite.md` | 2026-11-13 | WP5.18 | Drafted on example 01's NaCl case in its states, reviewed, published, collected with REV-235's and REV-245's points; then finished \| AJ8, ruled by the author \| | REV-235, REV-245 | delivered plan |
 | WP5.18 D11 | author | `docs/plans/phase-5/wp5.18-the-physics-suite.md` | 2026-11-13 | WP5.18 | Each equation and condition in LaTeX, drawn by KaTeX (MIT, vendored); Conditions over stage 5's region, *Show mesh* over it; Electrolyte two plots, the driver on a square-root axis; red, warning and a new info colour; t… | WB-42 | delivered plan |
+| §8.2.42 AR1 | author | `specification/history/42-phy23s-terms-without-the-flow-and-under-a-solid-fraction.md` | 2026-11-16 | phase ruling | The switch is refused where no flow is solved, and greyed in the Physics tools while the flow is off.** In a case file a switch cannot be dropped silently, because the manifest would record a deviation the solve never c… | PHY-23 NOTE, the design document's Equations row | in force |
+| §8.2.42 AR2 | author | `specification/history/42-phy23s-terms-without-the-flow-and-under-a-solid-fraction.md` | 2026-11-16 | phase ruling | Under a solid fraction both terms differentiate the blend, built now.** The author chose this over refusing the switch beside a solid fraction until it was built (*the recommendation*), amending PHY-23 to differentiate… | PHY-23 NOTE | in force |
 | REV-01 | session, own call | `docs/project/review-findings.md` |  | WP37 | TOL_NM's home loaded pydantic and yaml | WP37 | fixed |
 | REV-02 | session, own call | `docs/project/review-findings.md` |  | WP37 | cli/errors.py was a re-export nothing imported | WP37 | fixed |
 | REV-03 | session, own call | `docs/project/review-findings.md` |  | WP38 | The solution-field names lived in two layers | WP38 | fixed |
@@ -1330,12 +1332,14 @@ By decider: author 569; open 5; session, own call 828; session, put to the autho
 | REV-247 | author | `docs/project/review-findings.md` |  | WP5.19 | The solid-share gate's reach against an outline in another frame is not measured | ruled by the author, 13 November 2026: WP5.19 (WP5.17) | accepted |
 | REV-248 | author | `docs/project/review-findings.md` |  | WP5.17 | What the code review of the Continuum suite left open | ruled by the author, 13 November 2026 (WP5.17) | fixed |
 | REV-249 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A correction a physics model does not set reads none, and is not marked | WP5.18 | open |
-| REV-250 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | PHY-23's terms under a solid fraction and without the flow | WP5.18 | open |
+| REV-250 | author | `docs/project/review-findings.md` |  | WP5.18 | PHY-23's terms under a solid fraction and without the flow | ruled by the author, 16 November 2026 (WP5.18) | fixed |
 | REV-251 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A project whose first study deposits no charge opens with a failed walk | WP5.18 | open |
 | REV-252 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | Where a value is exposed in the Molecular and Continuum suites | WP5.18 | open |
 | REV-253 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A plot's axes the user tunes | WP5.18 | open |
 | REV-254 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | The stages' diagnostics and the other suites' words in ASD-STE100 | WP5.18 | open |
 | REV-255 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | What the Physics suite's final review left open | WP5.18 | open |
+| REV-256 | author | `docs/project/review-findings.md` |  | WP5.19 | A field's message, its text size and a field of several boxes, in every suite | ruled by the author, 16 November 2026: WP5.19 (WP5.18) | open |
+| REV-257 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | The blend's nearest-solid jump carries no dielectric force | WP5.18 | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |

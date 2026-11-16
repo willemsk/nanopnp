@@ -510,12 +510,31 @@ of unit valence, for which `I = ½ Σ z_i² c_i` equals `⟨c⟩` exactly (PHY-0
 beside a partner leaf are refused on the same ground (REV-73): `variable_density: false` where the
 density correction applies no fit that varies the density (the flow is of constant density already),
 and `dielectric_gradient_forces: true` where the permittivity correction applies no concentration fit
-(`dε/dc = 0`, so the force vanishes).
+and no solid fraction reaches the electrolyte: no `inputs.eps_r`, and no derived `χ` whose half-width
+`δ/2` passes the exclusion offset (`dε/dc = 0` and `∇χ = 0` there, so the force vanishes).
 
 **PHY-23.** `dielectric_gradient_forces` SHALL enable both the momentum term
 `−½|∇φ|²∇(ε_0 ε_r)` and the Nernst–Planck term `−½|∇φ|² ∂ε/∂c_i` together, and SHALL NOT permit
 either in isolation. Enabling it is a deviation from the validated model and SHALL be recorded in
 the run provenance.
+
+NOTE (PHY-23's terms without the flow and under a solid fraction, PHY-20; §8.2.42): a model that
+solves no flow has no momentum term to pair with the Nernst–Planck term, so the switch SHALL be
+refused there, naming this clause: `pnp` declares it off, and `physics.flow: false` beside it is
+refused. Where a solid fraction `χ` reaches into the electrolyte (PHY-20's NOTE), `ε_r` in both
+terms is the blend, so the momentum term is
+
+```
+−½ ε_0 |∇φ|² [ (1 − χ) ∇ε_r,f  +  (ε_p − ε_r,f) ∇χ ]
+```
+
+and the Nernst–Planck term takes `∂ε_r/∂c_i = (1 − χ) ∂ε_r,f/∂c_i`. `ε_p` is piecewise constant,
+so its own gradient is zero almost everywhere. Where the nearest solid changes inside the blend, its
+jump carries no term (REV-257). `∇χ` SHALL be the derivative of the interpolant that evaluates `χ`,
+cell by cell: the derivative of the coefficient itself comes back zero for a gridded `χ`, with no
+error. The indicator current takes the same Nernst–Planck term as the solve (FR-23). NUM-28's split
+takes the same blended `ε_r` in the Maxwell stress of its domain route and the same gradient in
+`f_KH`, so its consistency terms cancel as they do without `χ`.
 
 **PHY-24.** Poisson–Boltzmann SHALL be implemented as a distinct model, not as the PNP solver
 evaluated at zero bias (see PHY-14 and ADR-005).

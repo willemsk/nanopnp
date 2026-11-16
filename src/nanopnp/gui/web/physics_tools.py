@@ -39,6 +39,9 @@ CONCENTRATION = "electrolyte.concentration_M"
 SPECIES = "electrolyte.species"
 PERMITTIVITIES = "physics.solid_permittivities"
 VARIABLE_DENSITY = "physics.variable_density"
+FLOW = "physics.flow"
+DIELECTRIC = "physics.dielectric_gradient_forces"
+NEEDS_FLOW = "Dielectric forces need the flow."
 DENSITY_CORRECTION = "electrolyte.corrections.density.model"
 WALL_CHARGE = "boundary_conditions.wall_charge_C_m2"
 LATER = ", later"
@@ -262,6 +265,13 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                     ui.label(f"{name} needs {FIELDS[path].label.lower()} {state}.").classes(
                         "field-hint"
                     )
+            elif path == DIELECTRIC and not model.shown(FLOW):
+                # PHY-23 adds the force and each ion's term together, and the force needs a flow.
+                if not model.shown(path):
+                    why = NEEDS_FLOW
+                else:
+                    with self.rows[path]:
+                        ui.label(NEEDS_FLOW).classes("field-hint")
         elif any(path == leaf or leaf.startswith(f"{path}.") for leaf in declared.unread):
             where = "above" if self.tool.id == "equations" else "in Equations"
             why = f"{name} does not read this value. Choose another model {where}."
@@ -346,6 +356,8 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 ]
                 if turns:
                     return f"Turn {' and '.join(turns)}. {name} cannot run otherwise."
+            if path == DIELECTRIC and not self.model.shown(FLOW):
+                return "Turn dielectric forces off, or turn the flow on."
         if path is not None and path.startswith(f"{PERMITTIVITIES}."):
             solid = path.rpartition(".")[2]
             return f"Type the relative permittivity of the {solid}. It has no default."
