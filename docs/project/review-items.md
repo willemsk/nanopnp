@@ -3064,6 +3064,10 @@ path, comes with the project dialogs. The project dialogs, the settings' rows, t
 the frame's chrome wait for the round of a suite that needs them.
 At WP5.17's collect (`docs/design/reviews/2026-11-12-continuum.md`) none was put: the Continuum screens open none
 of them, and they wait for the Physics suite's round (WP5.18).
+At WP5.18's collect (`docs/design/reviews/2026-11-16-physics.md`) the dark Electrolyte pick put the frame's chrome
+(the title bar's count and palette button, the status line beside the panel's tabs, the rail's items), and the author
+kept it as built, so those points are closed. The project dialogs, the settings' rows, the menus, the Glossary and the
+log wait for the Study suite's round (WP5.19).
 
 ### REV-236: Chords the operating system may claim, a command that cannot be unbound, and the glossary written twice
 
@@ -3284,6 +3288,10 @@ name, and the design document's renderer and glossary rows. These stay:
 **Open**, a question for the author: the layout, the colours and the words at the next suite's round (WP5.18), with
 the screens in front of the author; the canvas's labels and keys with WP5.21; the domains read from the artefact
 when the region artefact records its faces' outlines.
+At WP5.18's collect (`docs/design/reviews/2026-11-16-physics.md`) the author kept the colours ("Colors are fine") and
+ruled the status colours (WB-42), which give a building stage's ● the info colour; the "Later" banners stay; *Expose*
+leaves the Physics tools, its place elsewhere being REV-252; the words come under ASD-STE100, the Physics suite's in
+WP5.18 and the rest under REV-254; the scroll cue and the glossary links wait for WP5.21.
 
 
 ### REV-246: A saved outline's exclusion shell takes the default grid
@@ -3387,3 +3395,36 @@ the charged tube first.
 
 **Open**: the walk a project opens with is the Study suite's, WP5.19, which runs a study to the last stage it selects.
 
+### REV-252: Where a value is exposed in the Molecular and Continuum suites
+
+At WP5.18's collect (`docs/design/reviews/2026-11-16-physics.md`) the author, on the refused Conditions shot: "I would
+remove the "Expose" checkbox for the Bias here, as there is no reason for it to get special treatment. Alternatively,
+all values should get a checkbox next to them, but then we need to think carefully about the resulting layout and the
+role of the "Exposed values" pane. Let's discuss." Asked, the author chose to remove the per-field *Expose* from the
+Physics tools alone, whose Exposed values tool edits the list. `_Pane.field` still offers *Expose* beside each number
+a Molecular or Continuum model sets, the one place their lists (pH, the mesh's size scale, AK3) change. REV-245's
+critique proposed it as a toggle beside the field's reset.
+
+**Open**, a question for the author: at the Study suite's round (WP5.19), which reads every kind's list, whether each
+kind gets its own list tool, *Expose* goes on every number, or it stays as it is.
+
+### REV-253: A plot's axes the user tunes
+
+At WP5.18's collect the author chose a square-root concentration axis for Electrolyte's curves from four drawn
+prototypes: "B. is fine, but the labels near the origin overlap. Perhaps this is something we make tunable later on,
+once we build/borrow a more general plotting module for the package. To revisit with the analysis suite." The plot
+frame of `gui/web/assets/plane.js` draws linear and square-root axes with fixed ticks; nothing lets the user choose an
+axis's scale, range or ticks.
+
+**Open**: with the analysis suite, which needs a general plotting module, built or borrowed.
+
+### REV-254: The stages' diagnostics and the other suites' words in ASD-STE100
+
+At WP5.18's collect the author asked for simple sentences in ASD-STE100 and chose to rewrite the library's refusal
+texts in the package. Item 9 rewrites the refusals of `pipeline/`, `io/` and `api/project.py`, and item 10 the Physics
+suite's own words. Left: the gates' diagnostics and the stages' own errors in `mesh/`, `geometry/`, `charge/`,
+`density/`, `structure/`, `numerics/`, `solve/`, `post/` and `sweep/` (about 550 raise sites); the CLI's messages; and
+the Molecular and Continuum suites' own words, among them REV-245's: the changes list's lead, the two wordings of an
+unset default, the part card's repeated name.
+
+**Open**: WP5.21's pass over the workbench's words and keyboard, or a package of its own if the diagnostics need one.

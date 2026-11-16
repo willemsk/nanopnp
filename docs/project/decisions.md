@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,399. By source: history ruling 349; plan decision row 704; REV row 251; MOD row 18; OPN row 9; WB row 41; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
+Rows: 1,404. By source: history ruling 349; plan decision row 705; REV row 254; MOD row 18; OPN row 9; WB row 42; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
 
-By decider: author 567; open 5; session, own call 824; session, put to the author 3.
+By decider: author 569; open 5; session, own call 827; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1080,6 +1080,7 @@ By decider: author 567; open 5; session, own call 824; session, put to the autho
 | WP5.18 D8 | session, own call | `docs/plans/phase-5/wp5.18-the-physics-suite.md` | 2026-11-13 | WP5.18 | `plane.js` draws `frame: "plot"`: axes scaled apart, ticks, a legend; `line`, `band` and `rule` layers in data units \| The renderer table; decided by the plan \| | unstated | plan in flight |
 | WP5.18 D9 | session, own call | `docs/plans/phase-5/wp5.18-the-physics-suite.md` | 2026-11-13 | WP5.18 | The model's list: each name and range edited, removed, a value added from its numeric fields; `Project.set_exposed(..., label=None, span=None)`; the view as a study lists it \| AK3, AJ5; decided by the plan \| | unstated | plan in flight |
 | WP5.18 D10 | author | `docs/plans/phase-5/wp5.18-the-physics-suite.md` | 2026-11-13 | WP5.18 | Drafted on example 01's NaCl case in its states, reviewed, published, collected with REV-235's and REV-245's points; then finished \| AJ8, ruled by the author \| | REV-235, REV-245 | plan in flight |
+| WP5.18 D11 | author | `docs/plans/phase-5/wp5.18-the-physics-suite.md` | 2026-11-13 | WP5.18 | Each equation and condition in LaTeX, drawn by KaTeX (MIT, vendored); Conditions over stage 5's region, *Show mesh* over it; Electrolyte two plots, the driver on a square-root axis; red, warning and a new info colour; t… | WB-42 | plan in flight |
 | REV-01 | session, own call | `docs/project/review-findings.md` |  | WP37 | TOL_NM's home loaded pydantic and yaml | WP37 | fixed |
 | REV-02 | session, own call | `docs/project/review-findings.md` |  | WP37 | cli/errors.py was a re-export nothing imported | WP37 | fixed |
 | REV-03 | session, own call | `docs/project/review-findings.md` |  | WP38 | The solution-field names lived in two layers | WP38 | fixed |
@@ -1331,6 +1332,9 @@ By decider: author 567; open 5; session, own call 824; session, put to the autho
 | REV-249 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A correction a physics model does not set reads none, and is not marked | WP5.18 | open |
 | REV-250 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | PHY-23's terms under a solid fraction and without the flow | WP5.18 | open |
 | REV-251 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A project whose first study deposits no charge opens with a failed walk | WP5.18 | open |
+| REV-252 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | Where a value is exposed in the Molecular and Continuum suites | WP5.18 | open |
+| REV-253 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A plot's axes the user tunes | WP5.18 | open |
+| REV-254 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | The stages' diagnostics and the other suites' words in ASD-STE100 | WP5.18 | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |
@@ -1394,6 +1398,7 @@ By decider: author 567; open 5; session, own call 824; session, put to the autho
 | WB-39 | author | `docs/design/workbench.md` |  | WP5.01 | The Molecular round: where a pane stands, the charge colours, the settings, the folded bar / The author, marking the Molecular drafts on 2WCD (`reviews/2026-11-11-molecular.md`): "Pane to the left. Consistency is key.";… | docs/design/workbench.md | in the design document |
 | WB-40 | author | `docs/design/workbench.md` |  | WP5.01 | The Molecular round's second marks: the stages, the word for a stopped build, a suite's icon, the membrane, a file picker / The author, marking the finished tools (`reviews/2026-11-12-molecular.md`): "the step cards sho… | docs/design/workbench.md | in the design document |
 | WB-41 | author | `docs/design/workbench.md` |  | WP5.01 | The Continuum round: one geometry tool, Region's domains, the mesh's parts, the tool list / The author, marking the Continuum drafts (`reviews/2026-11-12-continuum.md`): of Contour, "Can this not be merged with protein… | docs/design/workbench.md | in the design document |
+| WB-42 | author | `docs/design/workbench.md` |  | WP5.01 | The Physics round: the equations set as mathematics, the geometry under the boundaries, two plots, the status colours, plain words / The author, marking the Physics drafts (`reviews/2026-11-16-physics.md`): of Equations… | docs/design/workbench.md | in the design document |
 | current.md bullet | author | `docs/plans/current.md` |  |  | Process rules** are §8.4. **Cost fixes follow measurement** (M2). **Phase 5 is a | §8.4 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | The `MOD-nn` rulings stand** (§8.2.8). **A moved edge edits `modularity-layering.yaml` in its commit (VER-61)**; a VER-62 miss | §8.2.8, VER-61, VER-62 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | An open item is a `REV-nn` row** until resolved (H12). | unstated | in force (cache) |

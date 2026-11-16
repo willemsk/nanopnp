@@ -35,7 +35,7 @@ FR-39; PHY-09, PHY-21; VER-56, VER-61, VER-78. **Constrained by:** AJ4, AJ5, AJ8
 **Implementing session:** Opus, high effort; sub-agents Sonnet, high. Tag `v0.6.0-alpha.18`.
 
 **Amended when it lands:** VER-78's text; §5.3.1's NOTE on model files (AQ1, AQ2); §5.4.3's NOTE on what a model
-declares (its terms); FR-31's and FR-39's matrix rows.
+declares (its terms); FR-35's NOTE on a refusal's words (D11); FR-31's and FR-39's matrix rows.
 
 ### Decisions
 
@@ -51,6 +51,7 @@ declares (its terms); FR-31's and FR-39's matrix rows.
 | D8 The plot frame | `plane.js` draws `frame: "plot"`: axes scaled apart, ticks, a legend; `line`, `band` and `rule` layers in data units | The renderer table; decided by the plan |
 | D9 Exposed values | The model's list: each name and range edited, removed, a value added from its numeric fields; `Project.set_exposed(..., label=None, span=None)`; the view as a study lists it | AK3, AJ5; decided by the plan |
 | D10 The round | Drafted on example 01's NaCl case in its states, reviewed, published, collected with REV-235's and REV-245's points; then finished | AJ8, ruled by the author |
+| D11 The round's rulings | Each equation and condition in LaTeX, drawn by KaTeX (MIT, vendored); Conditions over stage 5's region, *Show mesh* over it; Electrolyte two plots, the driver on a square-root axis; red, warning and a new info colour; the refusals of `pipeline/`, `io/` and `api/project.py` and the suite's words in ASD-STE100; *Expose* out of the Physics tools | WB-42, ruled by the author at the collect (`docs/design/reviews/2026-11-16-physics.md`) |
 
 ### Grounding
 
@@ -260,6 +261,21 @@ shown study refusing (`physics.model: pnp` by `set_value`), a role picked, and *
 > builds at its own salt. The review (21 findings, one blocking) and the critique (25 of 40) went to the digest's
 > cards, 13 picks for 64 shots: <https://claude.ai/artifact/SwZB5Mk91tzw3JFWvjvScp>.
 
+> **Outcome — item 8: seven keeps, six changes, three rulings.** The author kept 7 picks and changed 6
+> ([the record](../../design/reviews/2026-11-16-physics.md)). At the collect the author chose the square-root axis
+> from four matplotlib prototypes, *Expose* out of the Physics tools alone, and the library's refusal texts rewritten
+> now (D11; WB-42). REV-252 to REV-254 hold what waits. Conditions draws the region because stage 5's named shape
+> rebuilds from its record in about 5 ms (`build_region`, or the idealised pore's `shape()`), with the names the
+> mesher uses.
+
+**Item 9.** ASD-STE100 Issue 9's writing rules: an instruction in the imperative, at most 20 words; a description at
+most 25; one topic per sentence; active voice; the simple tenses, no *-ing* form outside a technical name; *must* and
+*can*, never *may*, *should* or *shall*; no noun cluster of more than three words; a list for more than one fact. Each
+text keeps what FR-35 and QR-12's NOTEs ask: the rule, the value entered, the case path verbatim and a remedy naming a
+setting the run reads. Case paths, file paths and values stay as they are; `gui/web/` parses some texts by their paths,
+so a text that loses a path breaks it. The tests that match a text follow the new words, none loosened. A `raise` that
+no user meets (a wrong argument type in code) stays.
+
 ### Work items
 
 - [x] 2c22fa2 1. `physics/models.py` (`Term`, the six models' terms, `role_conditions`), §5.4.3's NOTE (D5, D7); done when
@@ -276,9 +292,12 @@ shown study refusing (`physics.model: pnp` by `set_value`), a role picked, and *
 - [x] 7. Compaction checkpoint; the author's verdicts. **Executor:** main
 - [ ] 8. `/np-gui collect`; REV-235's and REV-245's points ruled or carried; the design document's rows (D10); done
   when the code and review say so. **Executor:** main
-- [ ] 9. The tools finished to the verdicts, with *Modified only* and `?field=`; done when VER-78 and
+- [ ] 9. The refusal texts of `pipeline/`, `io/` and `api/project.py` in ASD-STE100, FR-35's NOTE (D11); done when Tier 1
+  passes. **Executor:** general-purpose on Sonnet, high, in its own worktree
+- [ ] 10. The tools finished to the verdicts (D11), with *Modified only* and `?field=`; done when VER-78 and
   `test_physics_model.py` pass. **Executor:** main
-- [ ] 10. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; FR-31's and FR-39's matrix rows;
+- [ ] 11. Compaction checkpoint. **Executor:** main
+- [ ] 12. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; FR-31's and FR-39's matrix rows;
   `current.md`; done when the code and review say so. **Executor:** main
 
 ### Verification
