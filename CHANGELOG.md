@@ -22,6 +22,44 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.6.0-alpha.18]
+
+WP5.18: the Physics suite, Phase 5's eighteenth package; tag `v0.6.0-alpha.18` once merged (§8.2.41 AQ1, AQ2; WB-42;
+REV-235's and REV-245's Physics points). Each registered model states its equations' terms, a physics model is shown
+inside a study, a change of model sets its switches with an undo, the library's refusals read in ASD-STE100, and the
+workbench gains its Physics tools. No golden moves. The [plan](docs/plans/phase-5/wp5.18-the-physics-suite.md) records
+the work.
+
+- **Added**:
+  - The Physics tools, each a page at `/physics/<tool>` beside the tool list: *Equations*, *Electrolyte*, *Conditions*
+    and *Exposed values* (FR-31, FR-35, FR-39). Each shows its physics model inside the study picked in *Shown in*,
+    the study's own physics values left out and listed, or over the project's continuum model where it holds no
+    study (AQ1).
+  - *Equations*: the registered model, its switches, element orders and stabilisation, and each equation written
+    whole in LaTeX and drawn by KaTeX, with its corrections, its definitions and a table of its symbols. Choosing
+    another model sets the switches it honours and removes the values it refuses, listing each change with *Undo*
+    (AQ2; VER-56).
+  - *Electrolyte*: the parameter set, the ions, the concentration, the temperature, the driver and the corrections;
+    two graphs of the corrections, against the driver on a square-root axis and against the wall distance.
+  - *Conditions*: the bias, the grounded side, the walls and each solid's permittivity; each boundary role's
+    conditions, picked in the list or in the view, which draws stage 5's region by its named edges, the mesh shown
+    on request (PHY-09).
+  - *Exposed values*: the physics model's list, each entry named, ranged, removed, or added from its numeric fields.
+  - `ModelDeclaration.terms` and `physics/terms.py`: each registered model's terms, from the PHY or NUM clause each
+    comes from, with the switches and the correction leaf under which it is assembled; `role_conditions` gives
+    each boundary's condition per field with the ground on either side (§5.4.3; VER-56).
+  - `Project.physics_case`, `Project.choose_physics` and `Project.set_exposed` (§5.3.1's NOTE on model files).
+  - The view's plot frame: axes scaled apart, linear or square-root, ticks and a key, with line, band and rule
+    layers in data units.
+  - An info colour, `--info`, for information such as a building stage (WB-42).
+- **Changed**:
+  - The refusals of `pipeline/`, `io/` and `api/project.py` follow ASD-STE100's writing rules, each keeping its
+    rule, value, case path and remedy (FR-35's NOTE; QR-12).
+  - `Project.problems` resolves each study and lists one that its own physics model cannot run with (FR-35).
+  - A tool's card leads with one plain line, or the refusal's own words less the file and path it starts with; a
+    preview in another study, and the field it names, take the warning colour, and a refusal that blocks a run stays
+    red (WB-42). The tool whose value blocks a study is marked in the tool list.
+
 ## [0.6.0-alpha.17]
 
 WP5.17: the Continuum suite, Phase 5's seventeenth package; tag `v0.6.0-alpha.17` once merged (§8.2.40 AP1 to AP4;

@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.17 merged (`v0.6.0-alpha.17`); WP5.18, the Physics suite, planned, then the suites WP5.19 and WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.17 merged (`v0.6.0-alpha.17`); WP5.18, the Physics suite, delivered, then the suites WP5.19 and WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -297,7 +297,20 @@ physics model's declaration (AJ5). Each tool shows its model inside a study pick
 values left out, or over the project's continuum model where it holds no study (AQ1). The guided route's salt step
 lands here. Tag `v0.6.0-alpha.18`.
 
-**Planned 13 November 2026** ([the plan](wp5.18-the-physics-suite.md)).
+**Delivered 16 November 2026** ([the plan](wp5.18-the-physics-suite.md)). Each registered model states its terms in
+LaTeX, from the PHY or NUM clause each comes from, and `role_conditions` each boundary's conditions with either side
+grounded (VER-56; PHY-09). `Project.physics_case` shows a physics model inside a study (AQ1), `choose_physics` sets a
+model's switches with an undo (AQ2), and `set_exposed` names and ranges an entry (FR-39). After the prototype round on
+example 01 ([the record](../../design/reviews/2026-11-16-physics.md); AJ8) the four tools stand at `/physics/<tool>`:
+Equations drawn by KaTeX (vendored, its digests checked as Mol*'s; CON-09), Electrolyte's two graphs with the driver
+on a square-root axis, Conditions over stage 5's region with the mesh on request, and Exposed values (FR-31; VER-78).
+The library's refusals follow ASD-STE100 (FR-35's NOTE), and the status colours gain blue for information (WB-42).
+
+Live constraints: REV-250 asks whether PHY-23 states the dielectric force under a solid fraction and without the flow.
+REV-251 (the walk a project opens with) and REV-252 (where Molecular and Continuum expose a value) are WP5.19's, with
+REV-255's pane layout; REV-253's tunable plots are the analysis suite's; REV-254's words, REV-255's (r, z) view and
+the boundaries picked for the wall distance are WP5.21's. A Physics tool's page is `physics_tools.py`'s pane over
+`PhysicsModel`, its drawing `plane.py:physics_plane`.
 
 ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
 

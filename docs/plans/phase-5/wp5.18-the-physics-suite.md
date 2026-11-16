@@ -1,6 +1,6 @@
 # WP5.18 — The Physics suite
 
-**Status: planned, not started.** Planned 13 November 2026 on `main` (`e3c5f54`). It inherits §8.2.34 AJ2 to AJ5 and
+**Status: delivered, 16 November 2026.** Planned 13 November 2026 on `main` (`e3c5f54`). It inherits §8.2.34 AJ2 to AJ5 and
 AJ8, §8.2.35 AK1 to AK3 and this plan's §8.2.41 AQ1, AQ2.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An identifier here points to
@@ -326,7 +326,7 @@ no user meets (a wrong argument type in code) stays.
 - [x] 77b3d76 10. The tools finished to the verdicts (D11), with *Modified only* and `?field=`; done when VER-78 and
   `test_physics_model.py` pass. **Executor:** main
 - [x] 11. Compaction checkpoint. **Executor:** main
-- [ ] 12. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; FR-31's and FR-39's matrix rows;
+- [x] dd8cc99 12. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; FR-31's and FR-39's matrix rows;
   `current.md`; done when the code and review say so. **Executor:** main
 
 ### Verification
