@@ -315,6 +315,18 @@ no user meets (a wrong argument type in code) stays.
 > keys) and REV-254 (a refusal's place read back from its words). Measured: the implementing windows 4.9 agent hours
 > and 8 touches in four sessions, `/np-ship` to its review 0.8 agent hours and 3 touches in two: 5.7 agent hours and
 > 11 touches in six sessions, against the estimate of about three sessions, 3 to 6 agent hours and 8 touches.
+>
+> **Outcome — round 2 and REV-250.** The author marked round 2's 19 picks 18 `keep` and 1 `change`
+> ([the record](../../design/reviews/2026-11-16-physics-2.md)). The change, a remark on every suite's fields, is drawn
+> at WP5.19's round (REV-256). REV-250 was ruled at the same collect
+> ([§8.2.42](../../../specification/history/42-phy23s-terms-without-the-flow-and-under-a-solid-fraction.md)):
+>
+> - the dielectric-gradient switch is refused where no flow is solved, and greyed in the Physics tools while the flow
+>   is off;
+> - under a solid fraction, both of its terms differentiate PHY-20's blend;
+> - NUM-28's domain route takes the blend.
+>
+> NGSolve differentiates a gridded `χ` to zero with no error, so `∇χ` is the interpolant's own, cell by cell (trap 21).
 
 ### Work items
 
