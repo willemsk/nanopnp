@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.17 merged (`v0.6.0-alpha.17`); WP5.18, the Physics suite, delivered, then the suites WP5.19 and WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.18 merged (`v0.6.0-alpha.18`); WP5.19, the Study suite, planned, then WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -312,16 +312,18 @@ REV-255's pane layout; REV-253's tunable plots are the analysis suite's; REV-254
 the boundaries picked for the wall distance are WP5.21's. A Physics tool's page is `physics_tools.py`'s pane over
 `PhysicsModel`, its drawing `plane.py:physics_plane`.
 
-### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
+### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215, REV-247; AG7; AP5; §8.2.42 AR3 to AR5)
 
 The prototype round on 2WCD settles the charge screen's design with its function (AJ8; REV-215). Overview of the three
-models; Study setup with each model's exposed values first and *More values* (AJ5) over the overrides of WP5.05; Sweep,
-with variables and the forecast's warning of WP5.07; Charge on the mesh, a residue and the charge map linked both ways,
-with its colour bar, axes and dark map (FR-33; REV-205, REV-209); Runs, a run's convergence unfolded in the queue, its
-record written into the project (REV-206), and the Compute settings, solves at once and threads per solve, each run's
-record stating its thread count (AN1, AN4). `upto` on reproduce (REV-41). The 200 ms redraw is measured on the author's
-machine with a GPU (AG7; criterion 6). Q24 to Q26 and Q28 to Q36 move here; VER-44 and VER-60 as restated. Tag
-`v0.6.0-alpha.19`.
+models; Study setup with each model's exposed values first and *More values* (AJ5) over the overrides of WP5.05, as a
+form and as a graph, and *New study*, pairing three of the project's models (AR4); Sweep, with variables and the
+forecast's warning of WP5.07; Charge on the mesh, a residue and the charge map linked both ways, with its colour bar,
+axes and dark map (FR-33; REV-205, REV-209); Runs, a run's convergence unfolded in the queue, its record written into
+the project (REV-206), and the Compute settings, solves at once and threads per solve, each run's record stating its
+thread count, which keys no result (AN1, AN4; AR3). `upto` on reproduce (REV-41). A supplied outline's exclusion shell
+takes the outline's own spacing (AP5); the charge check's reach against a shifted outline is measured and stated
+(REV-247; AR5). The 200 ms redraw is measured on the author's machine with a GPU (AG7; criterion 6). Q24 to Q26 and Q28
+to Q36 move here; VER-44 and VER-60 as restated. Tag `v0.6.0-alpha.19`.
 
 ### WP5.20 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
 
@@ -395,7 +397,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.16, Molecular | 1, 2 | The channel's axis and the chain groups' ring axis against a known axis, and their gates (VER-48); a model built alone keys as a study's walk does; a linked variant follows its parent; VER-62 unmoved by REV-218; VER-78 |
 | WP5.17, Continuum | 1, 2 | VER-55 as restated, an unedited outline beside its structure depositing the same charge (AP1); VER-62's mesh hash unmoved by REV-170 and by untyped part sizes; MOD-03's edge gone (VER-61); a continuum model built alone keys as a study at its salt (FR-39); typed part sizes key as the table (VER-53); VER-78 |
 | WP5.18, Physics | 1 | A physics model edited in the suite resolves to the case it shows; VER-78 |
-| WP5.19, Study | 1 | VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) |
+| WP5.19, Study | 1, 2 | VER-44 and VER-60 as restated; FR-39's study and its sweep; VER-36's pair by resolved bias; VER-35 to a stage; VER-59's supplied spacing; a run's thread count keying nothing (VER-62); VER-78; the 200 ms measure (criterion 6) |
 | WP5.20, Analysis | 1 | AG6's difference: exact for a linear field, zero for identical runs; VER-78 |
 | WP5.21, route and Qt's removal; WP5.22, the close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 |
 

@@ -3325,6 +3325,9 @@ edit passes at 0.977. Not measured: the share of a 2WCD outline shifted by its f
 study, measures that share. If the shifted outline passes, either a supplied outline beside a structure gains a frame
 check, or AP1's consequence is restated to the reach the gate has.
 
+**Ruled** (§8.2.42 AR5, 16 November 2026, at WP5.19's plan): should the shifted outline pass, AP1's consequence and
+VER-55's restated NOTE state the smallest shift the gate refuses; no frame check is added.
+
 ### REV-248: What the code review of the Continuum suite left open
 
 [CODE_REVIEW_056](../code_reviews/CODE_REVIEW_056.md) on WP5.17 fixed 16 of its 25 findings. `/np-ship` reverted
