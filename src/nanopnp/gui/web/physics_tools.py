@@ -621,6 +621,7 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         resolved = None if model is None else model.resolved()
         with self.roles_box:
             if model is None:
+                ui.label("No model is open, so no role is shown.").classes("later")
                 return
             if resolved is None:
                 ui.label("The study cannot run with the model, so no role is shown.").classes(

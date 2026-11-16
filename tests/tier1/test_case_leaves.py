@@ -489,7 +489,7 @@ def test_ver71_the_ionic_strength_driver_of_a_one_one_salt_is_refused(
         "electrolyte.driver: ionic_strength drives the corrections with I = 1/2 sum z_i^2 c_i. "
         "For two species of unit valence, this equals the average concentration "
         "(c_1 + c_2)/2. The manifest records the setting as a deviation and it changes no "
-        "number (PHY-13). Set it to its default, average."
+        "number (PHY-22). Set it to its default, average."
     )
 
 
