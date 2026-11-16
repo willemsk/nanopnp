@@ -28,6 +28,9 @@ __all__ = [
 PARTS = "<parts>"
 """Where a host equation takes the parts that join it, on the right of its flux or force."""
 
+PARTS_BELOW = "<parts-below>"
+"""Where a host equation written in lines takes the parts that join it, on a line of their own."""
+
 LEFT = "<left>"
 """Where a host equation takes the parts that join its left side."""
 
@@ -112,6 +115,7 @@ def written(terms: Iterable[Term], in_force: Callable[[Term], bool]) -> tuple[Wr
         right = " ".join(joined_right)
         left = " ".join(term.equation for term in parts if term.left)
         equation = host.equation.replace(PARTS, f"{spaced}{right}" if right else "")
+        equation = equation.replace(PARTS_BELOW, rf" \\ &\qquad {right}" if right else "")
         equation = equation.replace(LEFT, f"{left} " if left else "")
         found.append(
             Written(
@@ -229,7 +233,12 @@ _POISSON = Term(
     r"-\nabla \cdot \left( \varepsilon_0\, \varepsilon_r(\langle c \rangle, \mathbf{x})\, "
     rf"\nabla \phi \right) = {_SPACE_CHARGE}",
 )
-_NERNST_PLANCK = Term("Nernst–Planck", "PHY-04", _FLUX.replace("{bracket}", _CORRECTED_BRACKET))
+# The bracket's coefficients carry their arguments, so a part does not fit beside them.
+_NERNST_PLANCK = Term(
+    "Nernst–Planck",
+    "PHY-04",
+    _FLUX.replace("{bracket}", _CORRECTED_BRACKET).replace(PARTS, PARTS_BELOW),
+)
 _STERIC = Term(
     "Steric flux",
     "PHY-05",

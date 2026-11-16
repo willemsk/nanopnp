@@ -3465,6 +3465,10 @@ on a second render) was reviewed by the `gui-reviewer` (22 findings: 9 major, 13
 - a two-line hint that grows its row, and a *Go to* button on one line;
 - KaTeX in the design document's renderer table, and its look-and-feel line.
 
+`/np-ship` fixed two more, found while choosing round 2's picks: the flux's corrected bracket takes the parts that join
+it on a line of their own, so `pnp`'s steric part no longer runs past the view's edge; and the empty Conditions' roles
+box says no model is open.
+
 These stay:
 
 - **The (r, z) view in Conditions.** Its key covers the drawing's top right. It opens on the pore, where the
@@ -3479,7 +3483,10 @@ These stay:
   as X⁰. With all five none, `epnp-ns` is not written as `pnp-ns`'s PHY-21 block. With the variable density on and
   the density's correction none, ϱ is constant as assembled, yet written ϱ(⟨c⟩) with the two notes that then say
   nothing; and the variable density's note says the inertia uses it with the inertia off (the physics review of item
-  12). A change to `physics/terms.py`'s composition, with a physics review: the next package that changes it.
+  12). Under `electrolyte.driver: ionic_strength` the corrections read I = ½ Σ z_i² c_i, yet the equations and the
+  clamp's note write ⟨c⟩ (the physics review at `/np-ship`); the one parameter set shipped, a 1:1 salt, refuses that
+  driver (PHY-22's NOTE), so no case reaches it yet. A change to `physics/terms.py`'s composition, with a physics
+  review: the next package that changes it.
 - **The pane's layout.** The study's card stands above *Shown in*, which causes it. After a change of model, its note
   stands between the card and the *Model* row. The status line repeats the *Shown in* select. The symbols table is
   below the fold. Exposed values' *Name* head stands over the field's label, not its name, and its view is a two-row

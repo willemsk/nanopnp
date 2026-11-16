@@ -1021,7 +1021,7 @@ def _check_driver(document: CaseDocument) -> None:
                 "electrolyte.driver: ionic_strength drives the corrections with "
                 "I = 1/2 sum z_i^2 c_i. For two species of unit valence, this equals the "
                 "average concentration (c_1 + c_2)/2. The manifest records the setting as a "
-                "deviation and it changes no number (PHY-13). Set it to its default, average."
+                "deviation and it changes no number (PHY-22). Set it to its default, average."
             )
 
 
@@ -1069,8 +1069,7 @@ def check_operating_point(document: CaseDocument) -> None:
     if not (math.isfinite(cap) and cap > 0.0):
         raise CaseValidationError(
             f"numerics.wall_distance.max_distance_nm is {cap!r}. It is the PHY-02 saturation "
-            "distance. It must be finite and positive. Otherwise the wall functions use a "
-            "capped d."
+            "distance, where the wall functions cap d. It must be finite and positive."
         )
 
 
