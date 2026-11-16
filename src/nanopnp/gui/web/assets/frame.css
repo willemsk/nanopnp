@@ -1149,16 +1149,13 @@ body .parts .parts-row[aria-pressed="true"] {
 .term-define .katex-display > .katex {
   text-align: left;
 }
-.term-define .katex {
-  font-size: 0.95em;
-}
 .term-note,
 .role-words {
   font-size: var(--text-sm);
   color: var(--muted);
 }
 .terms-off {
-  margin: 0;
+  margin: 0 0 var(--gap);
   padding-left: 1.2em;
   font-size: var(--text-sm);
 }
@@ -1182,7 +1179,8 @@ body .parts .parts-row[aria-pressed="true"] {
 }
 .corrections-row {
   display: grid;
-  grid-template-columns: 0.8rem 5.5rem minmax(0, 1fr) auto auto auto;
+  /* Fixed columns, so the heads stand over the boxes of every row. */
+  grid-template-columns: 0.8rem 5rem minmax(0, 1fr) 1.75rem 1.75rem var(--target-min);
   align-items: center;
   column-gap: var(--gap);
   min-height: var(--row);
@@ -1199,6 +1197,16 @@ body .parts .parts-row[aria-pressed="true"] {
 /* A correction model's whole name shows, in the small face. */
 .corrections-row .q-field__native {
   font-size: var(--text-xs);
+}
+.corrections-row .q-field__control {
+  padding: 0 4px 0 8px;
+}
+/* A select's arrow sits close to the right edge, so a name such as a parameter set's shows whole. */
+.tool-pane .q-select .q-field__control {
+  padding-right: 4px;
+}
+.tool-pane .q-select .q-field__append {
+  padding-left: 4px;
 }
 /* A solid's row: its name, its number, its mark and its reset. */
 .material-row > .q-btn {
@@ -1235,6 +1243,47 @@ body .parts .parts-row[aria-pressed="true"] {
 }
 .role-text {
   font-size: var(--text-sm);
+}
+/* A condition's mathematics never breaks; its words wrap beside it. */
+.role-text > .tex {
+  flex: none;
+}
+.role-text > .role-words {
+  min-width: 0;
+}
+/* A unit is never broken across lines. */
+[data-control="equations-symbols"] td:last-child {
+  white-space: nowrap;
+}
+/* A hint or message under a field takes its own height: two lines do not run into the next row. */
+.tool-pane .q-field--with-bottom {
+  padding-bottom: 0;
+}
+.tool-pane .q-field__bottom--animated {
+  position: static;
+  transform: none;
+}
+/* A field a preview flags blocks nothing: it takes the warning colour, as its card (WB-42).
+   Quasar's `.text-negative` is an !important rule in a layer: the `theme` layer comes first. */
+@layer theme {
+  .field-warn .q-field__bottom,
+  .field-warn .q-field__control.text-negative {
+    color: var(--warn) !important;
+  }
+}
+/* A toggle that cannot be set reads as the other disabled controls: grey. */
+.tool-pane .q-toggle.disabled,
+.tool-pane .q-checkbox.disabled {
+  filter: grayscale(1);
+}
+/* A card's Go to button is one line; its whole label is its title. */
+.note-card .q-btn {
+  max-width: 100%;
+}
+.note-card .q-btn .block {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 /* An exposed value: the field it exposes on a line of its own, then its name, its range and its
    removal on the next. */

@@ -210,9 +210,10 @@ accessibility target (WB-30, WB-31). In short, the default:
 - medium density by default, 13.5 px type and 30 px rows, and a compact setting of 12.5 px and 26 px, saved
   per user; the gaps and padding tight at both (WB-18, WB-31);
 - light and dark, following the operating system, with a switch (WB-19);
-- one accent for selection, the primary action and focus; built, stale and blocked in green, amber and red,
-  each with a glyph and a word (WB-20, WB-40); a changed value's own mark, a filled diamond, and a study's
-  override an outlined one (WB-28);
+- one accent for selection, the primary action and focus; built in green, what blocks a run in red, what
+  blocks nothing, as a stale stage or a preview, in amber, and information, as a building stage, in blue,
+  each with a glyph and a word (WB-20, WB-40, WB-42); a changed value's own mark, a filled diamond, and a
+  study's override an outlined one (WB-28);
 - viridis (cividis for colour-vision deficiency) and a diverging map centred on zero by default, charge
   always diverging (VER-60), any Matplotlib map per plot, recorded with it (WB-20);
 - Inter, numbers in tabular figures, a narrow no-break space before an SI unit with an engineering prefix
@@ -403,6 +404,7 @@ third party's.
 | The molecule in 3D | Mol*, as its standalone bundle (`molstar.js`, `molstar.css`) | `src/nanopnp/gui/web/assets/molstar/` | MIT (CON-09) |
 | Fields on the mesh | npm `webgui` 0.2.39 | `src/nanopnp/gui/assets/webgui/` | LGPL-2.1-or-later, with three.js (MIT) and dat.gui (Apache-2.0) (CON-09) |
 | Maps, plots and the mesh in (r, z) | A canvas the page draws from the data of `plot/data.py`, the Continuum suite's mesh among them (WP5.17) | `src/nanopnp/gui/web/` | BSD-3-Clause |
+| Equations and conditions | KaTeX 0.19.1 (`katex.min.js`, `katex.min.css`, its fonts), from the LaTeX of `physics/terms.py` (WP5.18) | `src/nanopnp/gui/web/assets/katex/` | MIT (CON-09) |
 
 The results explorer asks four controls of its field view: zoom, a colour scale for each quantity, the mesh
 on or off, and a framed opening view (the author's verdicts on today's shell). Read from the shipped

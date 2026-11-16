@@ -15,6 +15,7 @@ colors:
   ok: "#1b7043"
   warn: "#8a5200"
   err: "#b4231a"
+  info: "#1f5fae"
   changed: "#0f6b75"
   canvas-3d: "#0d0f13"
   canvas-3d-ink: "#e8eaef"
@@ -75,8 +76,9 @@ Light values are in the frontmatter. A token with no dark value keeps its light 
 | `--accent-ink` | `#ffffff` | `#1a1240` | text on --accent, 6.7:1 |
 | `--focus` | `#5b3fd6` | `#b4a2ff` | focus ring, 5.6:1 on --sel |
 | `--ok` | `#1b7043` | `#79d6a0` | built, passed  ✓; 5.1:1 on --sel |
-| `--warn` | `#8a5200` | `#f2bd5e` | stale, a warning  ● |
-| `--err` | `#b4231a` | `#ff8b80` | refused, failed  ✕ |
+| `--warn` | `#8a5200` | `#f2bd5e` | stale, a warning: what blocks nothing  ● |
+| `--err` | `#b4231a` | `#ff8b80` | refused, failed, what blocks a run  ✕ |
+| `--info` | `#1f5fae` | `#8cb8ff` | information, as a stage building  ● (WB-42) |
 | `--changed` | `#0f6b75` | `#5fd0d9` | a value changed from its default  ◆; an override, outlined ◇ (WB-28) |
 | `--canvas-3d` | `#0d0f13` | `same` |  |
 | `--canvas-3d-ink` | `#e8eaef` | `same` |  |

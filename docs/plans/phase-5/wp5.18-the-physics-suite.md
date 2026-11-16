@@ -292,6 +292,19 @@ no user meets (a wrong argument type in code) stays.
 > case, so Electrolyte draws its own block's curves against the driver (`pipeline/case.py:block_electrolyte`; F6). *Expose* leaves the Physics panes (`_Pane.exposes`). A switch the model cannot run with stays free, so the
 > refusal's remedy can be made. F13's pick from the boundaries waits for WP5.21.
 
+**Item 12.**
+
+> **Outcome — 17 of the reviewer's 22 findings fixed, the rest in REV-255.** The final render (306 shots) measured no
+> contrast, non-text or target failure. The `gui-reviewer` found 22 (9 major, none blocking) and `impeccable` 13 (27/40),
+> most of them the reviewer's too. Three dispositions of [the round](../../design/reviews/2026-11-16-physics.md) were not
+> met: the correction names cut (F10), the Bulk and Wall heads off their boxes, and a pore drawn while the study
+> refuses (F5, for a refusal at resolution rather than at a later stage). Item 12 fixed the first two and most of the
+> rest (REV-255's list). Two touched the written equations, read again by the physics review: the flux writes
+> D_i(⟨c⟩, d) and μ_i(⟨c⟩, d), the clamp's upper end is the parameter set's c_max, not 5.3 M. A card now leads with
+> the library's own words, less the file and path it starts with, which item 9 made plain. REV-255 carries the
+> (r, z) view, the region of a study that does not resolve, the equations specialised to the corrections chosen and the
+> pane's layout; REV-253 and REV-254 gain the plots' and the frame's points.
+
 ### Work items
 
 - [x] 2c22fa2 1. `physics/models.py` (`Term`, the six models' terms, `role_conditions`), §5.4.3's NOTE (D5, D7); done when

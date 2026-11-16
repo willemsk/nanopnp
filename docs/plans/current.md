@@ -1,24 +1,24 @@
 # Current work
 
-Updated 13 November 2026 (WP5.18 planned and reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 16 November 2026 (WP5.18 implemented). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 4 is released, and Phase 5 is merged through the Continuum suite. The Physics suite is planned to your two
-rulings: each tool shows the physics model inside a study you pick, and picking another set of equations sets its
-switches, with a note and Undo. Two suites, the route and the close follow, about 40 sessions.
+Phase 4 is released, and Phase 5 is merged through the Continuum suite. The Physics suite is built to your verdicts:
+the equations set as mathematics, two graphs of the corrections, the boundary conditions over the pore, and simple
+refusals. Two suites, the route and the close follow, about 37 sessions.
 
-**Your call.** Approve the Physics suite's reviewed plan? Recommendation: yes; its two choices are yours as
-ruled.
+**Your call.** Merge the Physics suite once its review is green? Recommendation: yes; each verdict is built.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.17 merged
   (`v0.6.0-alpha.17`).
-  **WP5.18** [planned](phase-5/wp5.18-the-physics-suite.md) and reviewed (CODE_REVIEW_057) on
-  `claude/trusting-bell-hhyxbe` (§8.2.41; REV-249). Next, `/np-implement wp 5.18`. host: claude-code.
+  **WP5.18** [implemented](phase-5/wp5.18-the-physics-suite.md) on `claude/hopeful-hamilton-3xq15p`; the author's
+  round collected ([the record](../design/reviews/2026-11-16-physics.md)). Next, `/np-ship wp 5.18`.
+  host: claude-code.
 
 ## Not to be re-decided
 
@@ -45,7 +45,8 @@ ruled.
 - **Plans are archived by phase** (§8.2.36 AL5, AL22 to AL26). **Text follows the tested program; its gaps, REV-223 to 225, are Phase 6's** (§8.2.37 AM1, AM2).
 - **A pore's axis is found; a variant follows its parent** (§8.2.39). **An edited outline keeps its charge; a
   continuum model builds alone; mesh parts are typed** (§8.2.40). **A physics model is shown in a picked study; a
-  change of model sets its switches** (§8.2.41).
+  change of model sets its switches** (§8.2.41). **Red blocks, blue informs; refusals are
+  ASD-STE100** (WB-42; FR-35).
 
 ## Somebody else's
 
