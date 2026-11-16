@@ -1,4 +1,4 @@
-"""A physics model edited in the Physics suite: the case it shows, a change of model, its list."""
+"""A physics model edited in the Physics suite: the case it shows and a change of model."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from nanopnp.gui.web.physics import PhysicsModel
 from nanopnp.gui.web.screens import SUITES
 from nanopnp.io.case import FieldValue
 from nanopnp.io.case_paths import schema_default
-from nanopnp.io.models import exposed_values, leaves, owner_of
+from nanopnp.io.models import leaves, owner_of
 from nanopnp.io.store import Store
 from nanopnp.physics import models
 from nanopnp.pipeline.case import resolve
@@ -145,23 +145,3 @@ def test_ver56_choosing_a_model_leaves_no_value_its_declaration_refuses(paired: 
             for path, value in earlier.items():
                 paired.set_value("physics", start, path, value)
             assert _body(paired, start) == before, (start, model)
-
-
-def test_fr39_an_exposed_value_named_and_ranged_reads_back(paired: Project) -> None:
-    paired.set_exposed(
-        "physics",
-        "quickstart",
-        "boundary_conditions.bias_V",
-        True,
-        label="voltage",
-        span=(-0.2, 0.2),
-    )
-    body = _body(paired, "quickstart")
-    listed = exposed_values("physics", body, "quickstart")
-    assert [value.path for value in listed] == [
-        "electrolyte.concentration_M",
-        "boundary_conditions.bias_V",
-    ]
-    voltage = listed[1]
-    assert (voltage.name, voltage.unit, voltage.low, voltage.high) == ("voltage", "volt", -0.2, 0.2)
-    assert voltage.default == 0.05

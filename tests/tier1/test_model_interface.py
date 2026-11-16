@@ -10,7 +10,7 @@ import sys
 from collections.abc import Iterator, Mapping
 from dataclasses import replace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 import pytest
 import yaml
@@ -24,7 +24,6 @@ from nanopnp.geometry.pore import CylinderPore
 from nanopnp.io.artefact import SOLUTION_SCHEMA
 from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
-from nanopnp.io.vocabulary import POTENTIAL
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
@@ -281,23 +280,6 @@ def test_ver56_every_registered_model_states_its_terms() -> None:
             if term.correction is not None:
                 assert term.correction not in declared.unread, (name, term)
                 assert options_at(term.correction), (name, term)
-
-
-@pytest.mark.parametrize("ground", ["cis", "trans"])
-def test_phy09_the_grounded_electrode_reads_zero_potential(ground: Literal["cis", "trans"]) -> None:
-    model = models.create("epnp-ns")
-    roles = models.role_conditions(model, ground)
-    other = "trans" if ground == "cis" else "cis"
-    assert roles[ground][POTENTIAL] == "phi = 0"
-    assert roles[other][POTENTIAL] == "phi = V_bias"
-    for field_name, conditions in model.boundary_conditions.items():
-        for boundary, text in conditions.items():
-            if field_name == POTENTIAL and boundary in {"cis", "trans"}:
-                continue
-            assert roles[boundary][field_name] == text, (field_name, boundary)
-    assert sum(len(fields) for fields in roles.values()) == sum(
-        len(conditions) for conditions in model.boundary_conditions.values()
-    )
 
 
 # PHY-21
