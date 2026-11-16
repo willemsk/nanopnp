@@ -682,11 +682,18 @@
         if (layer.kind === 'image' && layer.bar) {
           entries.push({ kind: 'bar', ...layer.bar });
         } else if (layer.kind === 'mesh' && layer.categorical) {
-          layer.legend.forEach((name, index) => entries.push({
+          // One entry per colour: materials drawn alike, as the fluid's parts, are told apart in
+          // the tree, not in the drawing.
+          const keyed = new Set();
+          layer.legend.forEach((name, index) => {
+            const recedes = layer.focus !== undefined && layer.focus !== index;
+            const colour = recedes ? receding() : layer.palette[index];
+            const key = `${layer.palette[index]}${recedes ? '' : ' focus'}`;
+            if (keyed.has(key)) return;
+            keyed.add(key);
             // The material's name as the tree and Region write it.
-            kind: 'swatch', text: name.charAt(0).toUpperCase() + name.slice(1),
-            colour: layer.focus !== undefined && layer.focus !== index ? receding() : layer.palette[index],
-          }));
+            entries.push({ kind: 'swatch', text: name.charAt(0).toUpperCase() + name.slice(1), colour });
+          });
         } else if (layer.kind === 'mesh') {
           entries.push({ kind: 'bar', quantity: layer.colour.toUpperCase(), unit: 'no unit',
             low: layer.scale[0], high: layer.scale[1], palette: layer.palette });

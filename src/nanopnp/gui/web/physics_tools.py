@@ -37,6 +37,8 @@ ORDERS = ("numerics.elements.phi", "numerics.elements.c")
 CONCENTRATION = "electrolyte.concentration_M"
 SPECIES = "electrolyte.species"
 PERMITTIVITIES = "physics.solid_permittivities"
+VARIABLE_DENSITY = "physics.variable_density"
+DENSITY_CORRECTION = "electrolyte.corrections.density.model"
 WALL_CHARGE = "boundary_conditions.wall_charge_C_m2"
 LATER = ", later"
 """What an option this release does not apply says after its name."""
@@ -46,6 +48,7 @@ STERIC = (
     "electrolyte.corrections.steric.a_water_nm",
 )
 WALL_DISTANCE = ("numerics.wall_distance.sources", "numerics.wall_distance.max_distance_nm")
+UNSET_CONCENTRATION = "Type the concentration. It has no default. "
 COMPOSER = (
     "Later: the composer builds a model from registered terms. It comes in a later phase. Until "
     "then, choose a registered model."
@@ -108,11 +111,15 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         }
         if not held:
             return None
+        unit = FIELDS[path].unit if path in FIELDS else ""
         said = ", ".join(
-            f"{key.removeprefix(path + '.') or 'value'} {value}" for key, value in held.items()
+            f"{value} {unit or ''}".strip()
+            if key == path
+            else f"{key.removeprefix(path + '.')} {value}"
+            for key, value in held.items()
         )
         study = self.model.within()
-        return f"Study {study} sets its own ({said}); left out here, so this is the model's"
+        return f"Study {study} sets its own value, {said}. This field shows the model's value."
 
     def solids(self) -> tuple[str, ...]:
         if self.model is None:
@@ -160,7 +167,7 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         if study is None:
             ui.label("The project has no study. The model is shown over its continuum model.")
         elif self.model.names_this(study):
-            ui.label(f"Shown in study {study}, which runs with this model.")
+            ui.label(f"Shown in study {study}, which uses this model.")
         else:
             ui.label(
                 f"Preview in study {study}, in place of its own model. This changes nothing in "
@@ -217,21 +224,7 @@ class _PhysicsPane(_Pane[PhysicsModel]):
             finally:
                 self.writing = True
             control.props(f':option-disable="o => String(o.label).endsWith({LATER!r})"')
-        if path == SPECIES:
-            listed = self.ions()
-            control.props(f'title="The ions the parameter set gives: {listed}"')
-            if isinstance(control, ui.label):
-                control.set_text(listed or "none set")
-        if path == CONCENTRATION and isinstance(control, ui.number):
-            fitted = self.fitted()
-            said = "" if control.value is not None else "Type the salt. It has no default. "
-            if fitted is not None:
-                said += f"Fitted from {fitted[0]:g} to {fitted[1]:g} M."
-            control.props(f'hint="{said.strip()}"')
-        if path in STERIC[1:] and isinstance(control, ui.number) and control.value is None:
-            given = self.set_diameters()
-            if path in given:
-                control.props(f'hint="{given[path]} in the set"')
+        self.electrolyte_hints(path, control)
         if model is None:
             return
         name = str(model.shown(MODEL))
@@ -247,6 +240,11 @@ class _PhysicsPane(_Pane[PhysicsModel]):
             state = "on" if honoured[0] else "off"
             if len(honoured) == 1 and bool(model.shown(path)) == honoured[0]:
                 why = f"{name} keeps {FIELDS[path].label.lower()} {state}. It cannot change."
+                if path == VARIABLE_DENSITY and any(
+                    DENSITY_CORRECTION.startswith(leaf) for leaf in declared.unread
+                ):
+                    # A density no correction moves is constant, whatever the switch says.
+                    why = f"{name} reads no density correction, so the density is constant."
             elif len(honoured) == 1:
                 with self.rows[path]:
                     ui.label(f"{name} needs {FIELDS[path].label.lower()} {state}.").classes(
@@ -261,6 +259,38 @@ class _PhysicsPane(_Pane[PhysicsModel]):
             self.rows[path].props(f'title="{why}"')
             with self.rows[path]:
                 ui.label(why).classes("field-hint")
+
+    def holds(self, tool_id: str, problem: str) -> tuple[str, str, str] | None:
+        model = self.model
+        path = None if model is None else self.problem_path(problem)
+        found = None if path is None else self.tool_of(path)
+        if model is None or found is None or found[0].id != self.suite.id:
+            return None
+        if found[1].id != tool_id:
+            return None
+        # The study's own model blocks its run; a preview in another study blocks nothing.
+        study = model.within()
+        if study is None or model.names_this(study):
+            return "✕", "blocked: the study cannot run with the model", "state-err"
+        return "●", "preview: the study cannot run with the model", "state-warn"
+
+    def electrolyte_hints(self, path: str, control: ui.element) -> None:
+        """Say under an electrolyte value what the parameter set gives for it."""
+        if path == SPECIES:
+            listed = self.ions()
+            control.props(f'title="The ions the parameter set gives: {listed}"')
+            if isinstance(control, ui.label):
+                control.set_text(listed or "none set")
+        if path == CONCENTRATION and isinstance(control, ui.number):
+            fitted = self.fitted()
+            said = "" if control.value is not None else UNSET_CONCENTRATION
+            if fitted is not None:
+                said += f"Fitted from {fitted[0]:g} to {fitted[1]:g} M."
+            control.props(f'hint="{said.strip()}"')
+        if path in STERIC[1:] and isinstance(control, ui.number) and control.value is None:
+            given = self.set_diameters()
+            if path in given:
+                control.props(f'hint="{given[path]} in the set"')
 
     def problem_path(self, problem: str) -> str | None:
         """Return the field a shown case's refusal names, its solid's row or another suite's."""
@@ -285,12 +315,24 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         if self.model is not None and path is not None and switch in SWITCHES:
             name = str(self.model.shown(MODEL))
             try:
-                honoured = declaration(name).switches[switch]
+                declared = declaration(name)
+                honoured = declared.switches[switch]
             except KeyError:
                 return super().lead(path)
             if len(honoured) == 1:
-                state = "on" if honoured[0] else "off"
-                return f"Turn {FIELDS[path].label.lower()} {state}. {name} cannot run otherwise."
+                # Each switch the model cannot run with, in one line: each is its own refusal.
+                wrong = [
+                    (FIELDS[f"physics.{each}"].label.lower(), held[0])
+                    for each, held in declared.switches.items()
+                    if len(held) == 1 and bool(self.model.shown(f"physics.{each}")) != held[0]
+                ]
+                turns = [
+                    f"{_listed([label for label, on in wrong if on is state])} "
+                    f"{'on' if state else 'off'}"
+                    for state in (True, False)
+                    if any(on is state for _, on in wrong)
+                ]
+                return f"Turn {' and '.join(turns)}. {name} cannot run otherwise."
         if path is not None and path.startswith(f"{PERMITTIVITIES}."):
             solid = path.rpartition(".")[2]
             return f"Type the relative permittivity of the {solid}. It has no default."
@@ -405,14 +447,14 @@ class _PhysicsPane(_Pane[PhysicsModel]):
             lines.append(f"{label}: {was} → {now}" if path in FIELDS else f"{label}: {was} removed")
         with (
             ui.element("div")
-            .classes("note-card note-ok")
+            .classes("note-card note-info")
             .props("role=status data-control=physics-chosen")
         ):
             with ui.row().classes("items-center no-wrap note-head"):
-                ui.label("✓").props("aria-hidden=true")
+                ui.label("●").props("aria-hidden=true")
                 ui.label(f"Model set to {chosen}").classes("note-title")
             if lines:
-                ui.label("These values changed, so the model can run:").classes("note-short")
+                ui.label("These values changed:").classes("note-short")
                 with ui.element("ul").classes("note-list"):
                     for line in lines:
                         TextElement(tag="li", text=line)
@@ -553,7 +595,9 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         ).props("dense data-control=physics-show-mesh").set_enabled(stored)
         if model is not None and not stored:
             ui.label(
-                "No mesh is stored for the shown study. Build it in Continuum \u203a Mesh."
+                "The shown study cannot run, so no mesh is shown."
+                if model.resolved() is None
+                else "No mesh is stored for the shown study. Build it in Continuum \u203a Mesh."
             ).classes("field-hint")
         self.roles_box = (
             ui.column()
@@ -576,6 +620,8 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         model = self.model
         resolved = None if model is None else model.resolved()
         with self.roles_box:
+            if model is None:
+                return
             if resolved is None:
                 ui.label("The study cannot run with the model, so no role is shown.").classes(
                     "later"
@@ -1001,3 +1047,8 @@ def physics_page(shell: Shell, tool: Tool) -> Callable[..., None]:
         _PhysicsPane(shell, tool, built, field).build()
 
     return page
+
+
+def _listed(items: list[str]) -> str:
+    """Return items as a sentence lists them: "a", "a and b", "a, b and c"."""
+    return items[0] if len(items) == 1 else f"{', '.join(items[:-1])} and {items[-1]}"

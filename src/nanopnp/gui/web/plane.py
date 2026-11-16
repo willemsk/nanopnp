@@ -1010,7 +1010,9 @@ def _conditions_plane(
         unread = (f"The mesh does not read: {error}",)
         return Plane("model", axes, extent, (*domains, *lines), unread)
     drawn = _mesh_layer(elements, mesh_hash, "material", None, mesh_held=mesh_held)
-    return Plane("model", axes, extent, (drawn, *framing, *lines))
+    # The mesh takes the domains' place; the region's outlines and the roles stay as they were.
+    outlines = [layer for layer in domains if layer["kind"] != "domain"]
+    return Plane("model", axes, extent, (drawn, *outlines, *lines))
 
 
 def _supplied_conditions(

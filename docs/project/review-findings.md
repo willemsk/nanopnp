@@ -276,3 +276,4 @@ is a rolling register, and its header stays `open`.
 | REV-252 | interface | low | open | [WP5.18](../plans/phase-5/wp5.18-the-physics-suite.md) | [Where a value is exposed in the Molecular and Continuum suites](review-items.md#rev-252-where-a-value-is-exposed-in-the-molecular-and-continuum-suites) |
 | REV-253 | interface | low | open | [WP5.18](../plans/phase-5/wp5.18-the-physics-suite.md) | [A plot's axes the user tunes](review-items.md#rev-253-a-plots-axes-the-user-tunes) |
 | REV-254 | interface | low | open | [WP5.18](../plans/phase-5/wp5.18-the-physics-suite.md) | [The stages' diagnostics and the other suites' words in ASD-STE100](review-items.md#rev-254-the-stages-diagnostics-and-the-other-suites-words-in-asd-ste100) |
+| REV-255 | interface | low | open | [WP5.18](../plans/phase-5/wp5.18-the-physics-suite.md) | [What the Physics suite's final review left open](review-items.md#rev-255-what-the-physics-suites-final-review-left-open) |

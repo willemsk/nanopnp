@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import tempfile
 import typing
 from collections.abc import Callable, Iterator
@@ -73,6 +74,8 @@ LINKED_NOTE = ("prepare", "ensemble", "protonation")
 """The tools whose values a linked variant reads from its parent."""
 CARD_SHORT = 200
 """A card shows this much of a message; the rest unfolds."""
+_PLACE = re.compile(r"^(?:In study [^\s:]+:\s+)?(?:[^\s:]+:\s+)+")
+"""The study, file and case path a refusal starts with."""
 MEMBRANE_OFF_NM = 0.01
 """How far the registration residues' centre may lie from the membrane's before Prepare warns."""
 STRUCTURE_SUFFIXES = (".pdb", ".ent", ".cif", ".mmcif", ".gz")
@@ -507,6 +510,10 @@ class _Pane(Generic[ModelT]):
         """Return why the tool's build waits, such as an edit not yet saved, or None."""
         return None
 
+    def holds(self, tool_id: str, problem: str) -> tuple[str, str, str] | None:
+        """Return the glyph, word and look of a tool whose value a refusal names, or None."""
+        return None
+
     def listen(self) -> None:
         """Route the view's events to the pane."""
 
@@ -576,7 +583,8 @@ class _Pane(Generic[ModelT]):
                     for solid in self.solids():
                         self.material_row(path, spec, solid, held)
                     if not self.solids():
-                        ui.label("The pore has no solid.").classes("later")
+                        said = "The pore has no solid." if self.model else "No model is open."
+                        ui.label(said).classes("later")
             elif spec.kind == "list":
                 entries = shown if isinstance(shown, list) else []
                 text = f"{len(entries)} edit{'' if len(entries) == 1 else 's'}"
@@ -618,6 +626,9 @@ class _Pane(Generic[ModelT]):
             reset = ui.button(icon="sym_o_undo", on_click=lambda _, p=path: self.reset(p)).props(
                 f'flat dense aria-label="Reset {spec.label}" data-control=reset-{control_name}'
             )
+            if aside is not None:
+                # Said where it is seen, not in the diamond's title alone.
+                ui.label(aside).classes("field-hint")
             # A value is exposed to studies once the model sets it; an unset one has nothing to
             # expose.
             if self.exposes and spec.kind == "number" and (value is not None or exposed):
@@ -823,6 +834,9 @@ class _Pane(Generic[ModelT]):
                 look = STATES["refused"][2]
                 glyph.text, word.text = STATES["refused"][0], "blocked: the file forms no case"
                 glyph.classes(replace=f"tool-glyph {look}")
+            elif problem is not None and (held := self.holds(tool_id, problem)) is not None:
+                glyph.text, word.text, look = held
+                glyph.classes(replace=f"tool-glyph {look}")
             word.classes(replace=f"tool-word {look}")
             bar.set_visibility(stage is not None and stage == covering)
             if stage is not None and stage == covering:
@@ -894,22 +908,21 @@ class _Pane(Generic[ModelT]):
         label = self.label_of(path).lower()
         if _value_of(self.body(), path) is None and _default_of(path) is None:
             return f"Type the {label}. It has no default."
-        return f"Change the {label}. The case cannot use this value."
+        return None
 
     def card(
         self, kind: str, title: str, text: str, path: str | None, *, dismiss: str | None = None
     ) -> None:
         glyph = "✕" if kind == "err" else "●"
+        # The plain line leads, else the refusal's own words with its value and remedy, less
+        # the place it names; the whole message is one click away.
         lead = self.lead(path) if kind in ("err", "warn") else None
-        short = text
-        if lead is not None:
-            # The plain line leads; the whole message is one click away.
-            short = ""
-        elif len(text) > CARD_SHORT:
-            head = text[:CARD_SHORT]
+        shown = lead or (_plain(text) if kind in ("err", "warn") else text)
+        if lead is None and len(shown) > CARD_SHORT:
+            head = shown[:CARD_SHORT]
             cut = max(head.rfind(". "), head.rfind("; "), head.rfind(", "), head.rfind(" "))
-            short = head[:cut].rstrip(",;.")
-        whole = short == text
+            shown = f"{head[:cut].rstrip(',;.')}…"
+        whole = shown == text
         with (
             ui.element("div")
             .classes(f"note-card note-{kind}")
@@ -918,10 +931,7 @@ class _Pane(Generic[ModelT]):
             with ui.row().classes("items-center no-wrap note-head"):
                 ui.label(glyph).props("aria-hidden=true")
                 ui.label(title).classes("note-title")
-            if lead is not None:
-                ui.label(lead).classes("note-short")
-            elif short:
-                ui.label(text if whole else f"{short}…").classes("note-short")
+            ui.label(shown).classes("note-short")
             if not whole:
                 with (
                     ui.expansion("The whole message")
@@ -933,32 +943,45 @@ class _Pane(Generic[ModelT]):
                 if path in self.controls:
                     # The field says what to do there in a few words; the card says why.
                     unset = _value_of(self.body(), path) is None and _default_of(path) is None
-                    self.flag(path, "Type a value." if unset else "Change this value.")
+                    self.flag(path, "Type a value." if unset else "Change this value.", kind)
                     ui.button(
                         f"Go to {self.label_of(path)}", on_click=lambda _, p=path: self.go_to(p)
-                    ).props("outline dense no-caps data-control=note-field")
-                elif path in FIELDS and (found := self.tool_of(path)) is not None:
+                    ).props(
+                        f'outline dense no-caps data-control=note-field title="Go to '
+                        f'{self.label_of(path)}"'
+                    )
+                elif (
+                    path is not None
+                    and (path in FIELDS or path.rpartition(".")[0] in FIELDS)
+                    and (found := self.tool_of(path)) is not None
+                ):
                     suite, tool = found
                     where = (
                         tool.title
                         if suite.id == self.suite.id
                         else f"{suite.title} \u203a {tool.title}"
                     )
+                    named = f"Go to {self.label_of(path)}, in {where}"
                     ui.button(
-                        f"Go to {FIELDS[path].label}, in {where}",
+                        named,
                         on_click=lambda _, s=suite.id, t=tool, p=path: ui.navigate.to(
                             f"/{s}/{t.id}?field={p}"
                         ),
-                    ).props("outline dense no-caps data-control=note-field")
+                    ).props(f'outline dense no-caps data-control=note-field title="{named}"')
                 if dismiss is not None:
                     ui.button("Dismiss", on_click=lambda _, k=dismiss: self.dismiss(k)).props(
                         "flat dense no-caps"
                     )
 
-    def flag(self, path: str, line: str) -> None:
+    def flag(self, path: str, line: str, kind: str = "err") -> None:
         control = self.controls[path]
         if isinstance(control, ValidationElement):
-            control.error = line
+            # The field takes its card's colour and glyph: a preview's blocks nothing (WB-42).
+            control.props("no-error-icon")
+            control.classes(remove="field-warn")
+            if kind == "warn":
+                control.classes(add="field-warn")
+            control.error = f"{'●' if kind == 'warn' else '✕'} {line}"
             self.flagged = path
 
     async def go_to(self, path: str) -> None:
@@ -1949,3 +1972,9 @@ def tool_page(shell: Shell, tool: Tool) -> Callable[..., None]:
         _MolecularPane(shell, tool, built, field).build()
 
     return page
+
+
+def _plain(text: str) -> str:
+    """Return a refusal's words without the study, file and case path it starts with."""
+    words = _PLACE.sub("", text, count=1).strip()
+    return f"{words[:1].upper()}{words[1:]}" if words else text

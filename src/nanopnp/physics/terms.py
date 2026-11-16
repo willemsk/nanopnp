@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import math
 import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
+
+from nanopnp.materials.electrolyte import CONCENTRATION_FLOOR_M
 
 __all__ = [
     "CONDITIONS",
@@ -95,6 +98,10 @@ def written(terms: Iterable[Term], in_force: Callable[[Term], bool]) -> tuple[Wr
             text = re.sub(rf"{re.escape(symbol)}(?![A-Za-z^])", instead.replace("\\", "\\\\"), text)
         return text
 
+    def varies(term: Term) -> bool:
+        # A term that writes a quantity the model holds constant has nothing to note of it.
+        return held(term.equation) == term.equation
+
     hosts = [term for term in kept if term.joins is None]
     found = []
     for host in hosts:
@@ -111,7 +118,7 @@ def written(terms: Iterable[Term], in_force: Callable[[Term], bool]) -> tuple[Wr
                 term=host,
                 equation=held(equation),
                 defines=tuple(held(item) for term in (host, *parts) for item in term.defines),
-                notes=tuple(term.note for term in (host, *parts) if term.note),
+                notes=tuple(term.note for term in (host, *parts) if term.note and varies(term)),
                 joined=tuple(parts),
             )
         )
@@ -189,6 +196,7 @@ SYMBOLS: tuple[Symbol, ...] = (
     Symbol(r"\zeta", "zeta potential on a wall", "V"),
     Symbol(r"V_{\mathrm{bias}}", "bias on the electrode that is not grounded", "V"),
     Symbol(r"c_{\mathrm{bulk}}", "concentration of each ion in the reservoirs", "mol m⁻³"),
+    Symbol(r"c_{\max}", "upper end of the parameter set's fitted concentration range", "mol L⁻¹"),
 )
 
 
@@ -209,7 +217,9 @@ _FLUX = (
     r"\begin{aligned} \nabla \cdot \mathbf{J}_i &= 0, \\ "
     r"\mathbf{J}_i &= -\bigl[{bracket}<parts>\bigr] \end{aligned}"
 )
-_CORRECTED_BRACKET = r"D_i\, \nabla c_i + z_i\, \mu_i\, c_i \nabla \phi"
+_CORRECTED_BRACKET = (
+    r"D_i(\langle c \rangle, d)\, \nabla c_i + z_i\, \mu_i(\langle c \rangle, d)\, c_i \nabla \phi"
+)
 _SPACE_CHARGE = r"\rho_{\mathrm{pore}}(\mathbf{x}) + F \sum_i z_i c_i"
 
 # Each equation is the one its clause states, in its symbols, as the model assembles it.
@@ -223,7 +233,7 @@ _NERNST_PLANCK = Term("Nernst–Planck", "PHY-04", _FLUX.replace("{bracket}", _C
 _STERIC = Term(
     "Steric flux",
     "PHY-05",
-    r"+ D_i\, \beta_i\, c_i",
+    r"+ D_i(\langle c \rangle, d)\, \beta_i\, c_i",
     correction=_STERIC_MODEL,
     joins="Nernst–Planck",
     defines=(
@@ -249,7 +259,7 @@ _DIELECTRIC_FORCE = Term(
 _DECREMENT = Term(
     "Dielectric decrement",
     "PHY-23",
-    r"+ \frac{D_i\, c_i}{R T}\, \nabla \mu_i^{\mathrm{ex}}",
+    r"+ \frac{D_i(\langle c \rangle, d)\, c_i}{R T}\, \nabla \mu_i^{\mathrm{ex}}",
     ("dielectric_gradient_forces",),
     joins="Nernst–Planck",
     defines=(
@@ -263,8 +273,12 @@ _CORRECTIONS_LAW = (
     r"\bar{c} &= \frac{\langle c \rangle}{1\,\mathrm{M}}, \qquad "
     r"\bar{d} = \max\!\left(\frac{d}{1\,\mathrm{nm}}, 0\right) \end{aligned}"
 )
+_EXPONENT = math.floor(math.log10(CONCENTRATION_FLOOR_M))
+_MANTISSA = f"{CONCENTRATION_FLOOR_M / 10.0**_EXPONENT:.3g}"
+_FLOOR = ("" if _MANTISSA == "1" else rf"{_MANTISSA} \times ") + f"10^{{{_EXPONENT}}}"
 _CLAMPS = (
-    r" Each $c_i$ is clamped to $[10^{-6}, 5.3]$ M before $\langle c \rangle$ is formed. "
+    rf" Each $c_i$ is clamped to $[{_FLOOR}\,\mathrm{{M}}, c_{{\max}}]$ before "
+    r"$\langle c \rangle$ is formed. "
     r"$f^w = 1$ for $\varepsilon_{r,f}$ and $\varrho$. A correction with its bulk part off has "
     r"$f^c = 1$, and with its wall part off, $f^w = 1$. A property whose correction is none "
     r"keeps $X = X^0$."
@@ -292,7 +306,10 @@ def _inertia(density: str) -> Term:
         ("flow", "inertia"),
         joins="Momentum",
         left=True,
-        note=rf"The inertia ${density} (\mathbf{{u}} \cdot \nabla) \mathbf{{u}}$ equals PHY-07's "
+        # With the density held constant the two inertias are one, and nothing is said.
+        note=""
+        if density == r"\varrho^0"
+        else rf"The inertia ${density} (\mathbf{{u}} \cdot \nabla) \mathbf{{u}}$ equals PHY-07's "
         rf"$(\mathbf{{u}} \cdot \nabla)({density} \mathbf{{u}})$ only where "
         rf"$\mathbf{{u}} \cdot \nabla {density} = 0$.",
     )

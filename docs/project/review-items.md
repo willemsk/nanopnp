@@ -3416,6 +3416,11 @@ once we build/borrow a more general plotting module for the package. To revisit 
 frame of `gui/web/assets/plane.js` draws linear and square-root axes with fixed ticks; nothing lets the user choose an
 axis's scale, range or ticks.
 
+WP5.18's final review added two points: the fitted range is shaded over about nine tenths of the concentration axis,
+where the critique would shade the part beyond the fit instead; and in the wall-distance plot one curve sets the axis
+to 4 while six lie between 0.8 and 1, where they overlap. In dark, the key's swatch of the fitted range is lighter
+than the band it names.
+
 **Open**: with the analysis suite, which needs a general plotting module, built or borrowed.
 
 ### REV-254: The stages' diagnostics and the other suites' words in ASD-STE100
@@ -3427,4 +3432,61 @@ suite's own words. Left: the gates' diagnostics and the stages' own errors in `m
 the Molecular and Continuum suites' own words, among them REV-245's: the changes list's lead, the two wordings of an
 unset default, the part card's repeated name.
 
+WP5.18's final review added the frame's own words: the Problems list and the Study suite's page give a refusal's whole
+text, the Study page twice, with its case path written twice and no *Go to*, where a tool's card leads with the
+refusal's words less its file and path; and the Study page still says "refused" where WB-40 says *blocked*.
+
 **Open**: WP5.21's pass over the workbench's words and keyboard, or a package of its own if the diagnostics need one.
+The Study page's, WP5.19's.
+
+### REV-255: What the Physics suite's final review left open
+
+WP5.18's final render (306 shots; no contrast, non-text or target finding; two shots failed under load and drew clean
+on a second render) was reviewed by the `gui-reviewer` (22 findings: 9 major, 13 minor, none blocking) and by
+`impeccable`'s critique (27/40, 13 findings). Item 12 fixed:
+
+- the corrections table's heads over their boxes, and each model's and the parameter set's whole name;
+- a condition's mathematics unbroken, and a unit never split;
+- the definitions under an equation drawn at the equation's size;
+- the flux's corrected coefficients written with their arguments, D_i(⟨c⟩, d) and μ_i(⟨c⟩, d), as ε_r
+  and η are;
+- the clamp's upper end named c_max, the parameter set's, not written as 5.3 M;
+- a note on a density held constant left out;
+- a refusal's card leading with the library's own words, less the file and path it starts with;
+- a field a preview flags in the warning colour and ●, a blocking one with ✕;
+- every switch a model needs set named in one line;
+- the change note in the info colour;
+- "uses this model" for "runs with this model";
+- *Show mesh*'s reason when the study cannot run, and one key entry per colour with the region's outlines kept when
+  the mesh is shown;
+- a study's own value written under its field;
+- the tool row whose value blocks a study marked ✕, or ● for a preview;
+- the empty state's words, and disabled toggles drawn grey;
+- a two-line hint that grows its row, and a *Go to* button on one line;
+- KaTeX in the design document's renderer table, and its look-and-feel line.
+
+These stay:
+
+- **The (r, z) view in Conditions.** Its key covers the drawing's top right. It opens on the pore, where the
+  reservoir's, cis and trans boundaries the key lists are out of view. An empty view's note sits at its foot, beside
+  a *Fit* that acts on nothing. With REV-245's canvas labels and keys, WP5.21.
+- **A study its physics model refuses draws no region.** The Conditions view resolves the shown case. A study that
+  cannot run with its physics model, such as `pnp` with the flow on, forms no case, so neither its region nor its
+  roles show, though the store holds the region. The region could come from the continuum model built alone, whose
+  stage 5 keys as the study's. WP5.21, with the view.
+- **The equations written for the corrections chosen.** Equations writes a model's terms with its switches. A
+  property whose correction is none is written as X(⟨c⟩, d) under the note that it keeps X = X⁰, not
+  as X⁰. With all five none, `epnp-ns` is not written as `pnp-ns`'s PHY-21 block. With the variable density on and
+  the density's correction none, ϱ is constant as assembled, yet written ϱ(⟨c⟩) with the two notes that then say
+  nothing; and the variable density's note says the inertia uses it with the inertia off (the physics review of item
+  12). A change to `physics/terms.py`'s composition, with a physics review: the next package that changes it.
+- **The pane's layout.** The study's card stands above *Shown in*, which causes it. After a change of model, its note
+  stands between the card and the *Model* row. The status line repeats the *Shown in* select. The symbols table is
+  below the fold. Exposed values' *Name* head stands over the field's label, not its name, and its view is a two-row
+  table. A solid's row and its field each carry the changed mark. The corrections' selects show no arrow, so the name
+  fits. A number's unit sits below the value's baseline. At WP5.19's round, which reuses the pane.
+- **Words.** The pane writes "C/m²" where the symbols table writes "C m⁻²". The plots' ⟨c⟩ draws as "(c)" in the
+  interface's face, so "average concentration ⟨c⟩ (M)" reads as two brackets. The momentum and continuity notes ("equals
+  PHY-07's … only where …") are the register the author called pedantic; they state what the model assembles.
+
+**Open**, a question for the author: the layout and the words at WP5.19's round; the view and the region with WP5.21.
