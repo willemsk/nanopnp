@@ -3526,6 +3526,21 @@ These stay:
 
 **Open**, a question for the author: the layout and the words at WP5.19's round; the view and the region with WP5.21.
 
+### REV-256: A field's message, its text size and a field of several boxes, in every suite
+
+At WP5.18's round 2 ([the record](../design/reviews/2026-11-16-physics-2.md)) the author, on the in-tube Conditions
+shot: "General remark that counts for all screen: would a better place for the "Type a value" and the dot not be on the
+right hand side of the box? The font of the boxes also seems larger than that of its description. Stylistically I would
+like for them to form a more consistent whole (maybe try a single box with different shading?)."
+
+Today a field's message, the ● and its line, sits under the box (WB-12). The box's text is drawn larger than its label.
+A field of several boxes, such as the solid permittivities, is a column of separate boxes. The Molecular, Continuum and
+Physics suites share the field. Asked, the author chose to draw it first: mockups at the Study suite's round (WP5.19),
+which reuses the pane. Each mockup has the message at the box's right, the box's text at its label's size, and a field
+of several boxes drawn as one box with shaded rows. Each is drawn in the three suites.
+
+**Open** until WP5.19's round rules on the mockups and the package builds what the author keeps. WB-12 changes with it.
+
 ### REV-257: The blend's nearest-solid jump carries no dielectric force
 
 Found by the physics review of REV-250's fix at WP5.18's ship. Under a solid fraction, PHY-20's blend goes to the
