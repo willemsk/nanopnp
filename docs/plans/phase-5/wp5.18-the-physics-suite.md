@@ -310,9 +310,9 @@ no user meets (a wrong argument type in code) stays.
   when the code and review say so. **Executor:** main
 - [x] f929c64 9. The refusal texts of `pipeline/`, `io/` and `api/project.py` in ASD-STE100, FR-35's NOTE (D11); done when Tier 1
   passes. **Executor:** general-purpose on Sonnet, high, in its own worktree
-- [ ] 10. The tools finished to the verdicts (D11), with *Modified only* and `?field=`; done when VER-78 and
+- [x] 77b3d76 10. The tools finished to the verdicts (D11), with *Modified only* and `?field=`; done when VER-78 and
   `test_physics_model.py` pass. **Executor:** main
-- [ ] 11. Compaction checkpoint. **Executor:** main
+- [x] 11. Compaction checkpoint. **Executor:** main
 - [ ] 12. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; FR-31's and FR-39's matrix rows;
   `current.md`; done when the code and review say so. **Executor:** main
 
