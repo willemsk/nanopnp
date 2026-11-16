@@ -810,7 +810,7 @@ def ion_text(name: str) -> str:
 
 
 def _curve_style(name: str, ions: list[str]) -> tuple[str, list[int]]:
-    """Return a correction's colour, by its property, and its dash, by its ion."""
+    # The colour follows the property, the dash the ion.
     prop, _, ion = name.partition(":")
     colour = (
         SERIES[CURVE_PROPERTIES.index(prop) % len(SERIES)]
@@ -1066,7 +1066,9 @@ def shown_solids(case: Case | None, store: Store) -> tuple[str, ...] | None:
             read_in = read(path, format=detect_format(path, supplied.format))
             materials: object = list(apply_groups(read_in, dict(supplied.groups))[0].materials)
         else:
-            held, _ = _stored_stages(resolved, store)
+            # Keyed to the mesh alone, so a later stage's check, such as a solid with no
+            # permittivity, does not hide the solids it names.
+            held, _ = _stored_stages(resolved, store, upto="mesh")
             materials = held["mesh"].summary.get("materials") if "mesh" in held else None
     except REFUSED:
         return None

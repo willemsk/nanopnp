@@ -351,6 +351,7 @@ class _Pane(Generic[ModelT]):
         self.stage, self.build_title, self.colouring = BUILDS[tool.id]
         self.rows: dict[str, ui.element] = {}
         self.marks: dict[str, tuple[ui.label, ui.button]] = {}
+        self.material_marks: dict[str, tuple[ui.label, ui.button]] = {}
         self.controls: dict[str, ui.element] = {}
         self.writing = True
         self.modified_only = False
@@ -695,11 +696,13 @@ class _Pane(Generic[ModelT]):
             number.set_enabled(not self.idle())
             self.controls[row_path] = number
             set_here = solid in held
-            ui.label("\u25c6" if set_here else "").classes("changed mark").props("aria-hidden=true")
-            ui.button(
-                icon="sym_o_undo",
-                on_click=lambda _, p=path, m=solid: self.write_material(p, m, None),
-            ).props(f'flat dense aria-label="Reset {spec.label}, {solid}"').set_visibility(set_here)
+            mark = ui.label("\u25c6" if set_here else "").classes("changed mark")
+            mark.props("aria-hidden=true")
+            undo = ui.button(
+                icon="sym_o_undo", on_click=lambda _, p=path, m=solid: self.reset_material(p, m)
+            ).props(f'flat dense aria-label="Reset {spec.label}, {solid}"')
+            undo.set_visibility(set_here)
+            self.material_marks[row_path] = (mark, undo)
 
     def tool_of(self, path: str) -> tuple[Suite, Tool] | None:
         """Return the suite and tool whose pane sets a path: this suite's first, then any."""
@@ -728,6 +731,30 @@ class _Pane(Generic[ModelT]):
         else:
             mapping.pop(material, None)
         self.write(path, mapping or None)
+        self.show_material(path, material)
+
+    def reset_material(self, path: str, material: str) -> None:
+        """Remove one material's number from the model, and clear its field once removed."""
+        self.write_material(path, material, None)
+        held = _value_of(self.body(), path)
+        number = self.controls.get(f"{path}.{material}")
+        if isinstance(number, ui.number) and not (isinstance(held, dict) and material in held):
+            self.writing = False
+            try:
+                number.value = None
+            finally:
+                self.writing = True
+
+    def show_material(self, path: str, material: str) -> None:
+        """Show one material's mark and reset while the model's file sets its number."""
+        shown = self.material_marks.get(f"{path}.{material}")
+        if shown is None:
+            return
+        held = _value_of(self.body(), path)
+        set_here = isinstance(held, dict) and material in held
+        mark, undo = shown
+        mark.set_text("\u25c6" if set_here else "")
+        undo.set_visibility(set_here)
 
     def reset(self, path: str) -> None:
         if self.model is None:
@@ -1975,6 +2002,5 @@ def tool_page(shell: Shell, tool: Tool) -> Callable[..., None]:
 
 
 def _plain(text: str) -> str:
-    """Return a refusal's words without the study, file and case path it starts with."""
     words = _PLACE.sub("", text, count=1).strip()
     return f"{words[:1].upper()}{words[1:]}" if words else text

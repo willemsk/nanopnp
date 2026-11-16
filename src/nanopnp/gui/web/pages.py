@@ -184,15 +184,14 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             if electrolyte is not None:
                 return JSONResponse(electrolyte_plane(electrolyte, None).json())
         try:
-            with model.keyed_once():
-                drawn = physics_plane(
-                    case,
-                    project.session().store,
-                    tool,
-                    pick=pick or None,
-                    mesh_held=held,
-                    mesh=bool(mesh),
-                )
+            drawn = physics_plane(
+                case,
+                project.session().store,
+                tool,
+                pick=pick or None,
+                mesh_held=held,
+                mesh=bool(mesh),
+            )
         except ValueError as error:
             raise HTTPException(422, str(error)) from None
         return JSONResponse(drawn.json())
