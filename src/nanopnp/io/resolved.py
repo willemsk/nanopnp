@@ -101,6 +101,7 @@ class ResolvedCase:
     wall_charge_C_m2: float = 0.0
     correction_files: Mapping[str, Path] = dataclass_field(default_factory=dict)
     outline_spacing_nm: float | None = None
+    outline_h_c_nm: float | None = None
 
     @property
     def contour_spacing_nm(self) -> float:
@@ -111,11 +112,11 @@ class ResolvedCase:
     def shell_spacing_nm(self) -> float:
         """``h_c`` of the ion-exclusion shell: a supplied outline's, else the density grid's.
 
-        A supplied outline's is the point spacing its file records, never coarser than the
-        coarsest density grid; it is read at resolve only where the shell is on.
+        A supplied outline's is the point spacing its file records (``outline_spacing_nm``) held
+        within the density grid's range; it is read at resolve only where the shell is on.
         """
-        if self.outline_spacing_nm is not None:
-            return self.outline_spacing_nm
+        if self.outline_h_c_nm is not None:
+            return self.outline_h_c_nm
         return self.contour_spacing_nm
 
     @property

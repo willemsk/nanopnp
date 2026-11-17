@@ -8,6 +8,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from nanopnp.core.paths import correction_source, names_a_path
 from nanopnp.core.stages import (
     CancelToken,
@@ -357,6 +359,7 @@ def resolve(document: CaseDocument, *, base: Path | None = None) -> ResolvedCase
         raise CaseValidationError(
             f"physics.model {physics.model!r} cannot be built for this case: {error}"
         ) from error
+    spacing = _outline_spacing(document, where)
     resolved = ResolvedCase(
         document=document,
         electrolyte=electrolyte,
@@ -401,7 +404,8 @@ def resolve(document: CaseDocument, *, base: Path | None = None) -> ResolvedCase
         pore=geometry.pore if mesh is None else None,
         wall_charge_C_m2=document.boundary_conditions.wall_charge_C_m2,
         correction_files=files,
-        outline_spacing_nm=_outline_spacing(document, where),
+        outline_spacing_nm=spacing,
+        outline_h_c_nm=_outline_h_c(spacing),
     )
     _check_structure_beside_profile(resolved)
     check_exclusion_offset(resolved)
@@ -409,26 +413,27 @@ def resolve(document: CaseDocument, *, base: Path | None = None) -> ResolvedCase
 
 
 def _outline_spacing(document: CaseDocument, base: Path) -> float | None:
-    # A supplied outline's shell is built at the outline's own resolution, never coarser than the
-    # coarsest density grid, so a few long straight edges shell as the grid's (§8.2.42 AR6).
+    # The point spacing a supplied outline's file records, read only where its shell is on.
     profile = _rebased(document.inputs.profile, base)
     offset = (document.charge or Charge()).exclusion_offset_nm
     if profile is None or profile.path is None or not offset > 0.0:
         return None
     try:
-        recorded = load_profile(profile.path).provenance.min_vertex_spacing_nm
-    except (OSError, ValueError) as error:
+        return load_profile(profile.path).provenance.min_vertex_spacing_nm
+    except (OSError, ValueError, yaml.YAMLError) as error:
         raise CaseValidationError(
             f"inputs.profile: {profile.path} is not an outline the ion-exclusion shell can be "
             f"built on: {error}"
         ) from None
-    if not recorded > 0.0:
-        raise CaseValidationError(
-            f"inputs.profile: {profile.path} records min_vertex_spacing_nm = {recorded} nm. The "
-            "ion-exclusion shell is built at the outline's point spacing, which must be "
-            "positive (section 5.2 NOTE on the ion-exclusion shell). Remove the repeated vertex."
-        )
-    return min(recorded, GRID_SPACING_RANGE_NM[1])
+
+
+def _outline_h_c(recorded: float | None) -> float | None:
+    # Held within the density grid's range (§8.2.42 AR6): a few long straight edges shell as the
+    # coarsest grid, and one edited edge shortened below the finest does not refine the whole ring.
+    if recorded is None:
+        return None
+    low, high = GRID_SPACING_RANGE_NM
+    return min(max(recorded, low), high)
 
 
 def _check_structure_beside_profile(resolved: ResolvedCase) -> None:

@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,424. By source: history ruling 355; plan decision row 716; REV row 257; MOD row 18; OPN row 9; WB row 42; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
+Rows: 1,425. By source: history ruling 355; plan decision row 717; REV row 257; MOD row 18; OPN row 9; WB row 42; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
 
-By decider: author 582; open 5; session, own call 834; session, put to the author 3.
+By decider: author 582; open 5; session, own call 835; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1097,6 +1097,7 @@ By decider: author 582; open 5; session, own call 834; session, put to the autho
 | WP5.19 D9 | author | `docs/plans/phase-5/wp5.19-the-study-suite.md` | 2026-11-16 | WP5.19 | `upto` on reproduce; REV-206's export limits; AP5's shell spacing; REV-247 measured, AP1's consequence narrowed to its reach \| REV-41, REV-206, AP5; AR5, ruled by the author \| | REV-206, REV-247, REV-41 | plan in flight |
 | WP5.19 D10 | author | `docs/plans/phase-5/wp5.19-the-study-suite.md` | 2026-11-16 | WP5.19 | The tools and graph on 2WCD, with REV-256's mockups; reviewed, published, collected with REV-240's, REV-252's and REV-255's points; finished \| AJ8, REV-215, ruled by the author \| | REV-256, REV-240, REV-252, REV-255, REV-215 | plan in flight |
 | WP5.19 D11 | author | `docs/plans/phase-5/wp5.19-the-study-suite.md` | 2026-11-16 | WP5.19 | `.claude/scripts/gui/redraw.cjs`, run by the author with a GPU: median and p95 of 20 picks, front end and whole repaint; a miss profiled \| AG7, ruled by the author \| | unstated | plan in flight |
+| WP5.19 D12 | session, own call | `docs/plans/phase-5/wp5.19-the-study-suite.md` | 2026-11-16 | WP5.19 | A supplied outline's `h_c` is also held at the finest density grid, 0.025 nm, where an edited edge is shorter: one short edge would otherwise refine the whole ring and halve the closing that fills gaps no water enters \|… | unstated | plan in flight |
 | §8.2.42 AR6 | author | `specification/history/42-phy23s-terms-without-the-flow-and-under-a-solid-fraction.md` | 2026-11-17 | WP5.19 | Added 17 November 2026, at WP5.19's item 4.* **A supplied outline's exclusion shell takes the outline's point spacing, never coarser than the coarsest density grid, 0.05 nm.** Building AP5 found a case it did not weigh:… | §5.2's NOTE on the ion-exclusion shell; §5.3.1's NOTE on inputs.profile | in force |
 | REV-01 | session, own call | `docs/project/review-findings.md` |  | WP37 | TOL_NM's home loaded pydantic and yaml | WP37 | fixed |
 | REV-02 | session, own call | `docs/project/review-findings.md` |  | WP37 | cli/errors.py was a re-export nothing imported | WP37 | fixed |

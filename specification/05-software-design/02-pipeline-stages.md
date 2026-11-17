@@ -344,11 +344,13 @@ NOTE (the ion-exclusion shell, stage 5, FR-15, PHY-20; WP30; §8.2.40 AP5; §8.2
 `charge.exclusion_offset_nm`, `a`, makes stage 5 build the exclusion contour from the model-frame
 profile `P`, with `h_c` as in the NOTE on the contour's size target. Beside a supplied outline
 (`inputs.profile`), which carries no density grid, `h_c` is the point spacing the outline's file
-records, `provenance.min_vertex_spacing_nm`, read when the case is resolved, never coarser than the
-coarsest density grid, 0.05 nm: an outline the density builds, a saved edit among them, shells at its
-own resolution, and one drawn with a few long straight edges shells as that grid's. An outline whose
-recorded spacing is not positive is refused when the case is resolved, naming its file, and so is an
-offset of at most `2 h_c`, naming the offset, `h_c` and where `h_c` comes from. The stage-5 key carries
+records, `provenance.min_vertex_spacing_nm`, read when the case is resolved and held within the
+density grid's range, 0.025 to 0.05 nm: an outline the density builds, a saved edit among them, shells
+at its own resolution; one drawn with a few long straight edges shells as the coarsest grid (§8.2.42
+AR6); and one with an edited edge shorter than the finest grid shells as the finest, so one short edge
+does not refine the whole ring. An outline its loader refuses, a repeated vertex among its faults, is
+refused when the case is resolved, naming its file, and so is an offset of at most `2 h_c`, naming the
+offset, `h_c` and where `h_c` comes from, with the recorded spacing where the range held it. The stage-5 key carries
 that `h_c` where the shell is on:
 
 1. `O` is the dilation of `P` by `a`, with round joins at 8 segments per quarter circle (WP20 D5).
