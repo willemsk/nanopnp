@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import math
+import struct
 import threading
+import zlib
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,7 +19,6 @@ from nanopnp.geometry.profile import load_profile
 from nanopnp.gui.geometry import ImageModel, density_section, lookup_table, reduced_image
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
-from nanopnp.gui.web.link import png
 from nanopnp.io.case import Membrane, Reservoir
 from nanopnp.mesh.adapter import detect_format, read
 from nanopnp.mesh.ingest import BOUNDARY_VOCABULARY, FLUID_MATERIALS, apply_groups, deployed_mesh
@@ -38,6 +39,7 @@ from nanopnp.plot.data import (
     region_drawing,
     region_edges,
 )
+from nanopnp.post.export import FIXED_CHARGE_ATTRIBUTE
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -60,6 +62,7 @@ __all__ = [
     "ROLE_TITLES",
     "SERIES",
     "Plane",
+    "deployed_layer",
     "electrolyte_plane",
     "image_png",
     "ion_text",
@@ -67,6 +70,7 @@ __all__ = [
     "mesh_stored",
     "physics_plane",
     "plane",
+    "png",
     "shown_solids",
 ]
 
@@ -226,6 +230,22 @@ class Plane:
             "notes": list(self.notes),
             **({"panels": list(self.panels)} if self.panels else {}),
         }
+
+
+def png(rgba: bytes, width: int, height: int) -> bytes:
+    """Return a PNG of tightly packed RGBA8888 rows, top row first."""
+
+    def chunk(kind: bytes, data: bytes) -> bytes:
+        body = kind + data
+        return struct.pack(">I", len(data)) + body + struct.pack(">I", zlib.crc32(body))
+
+    rows = b"".join(b"\x00" + rgba[y * width * 4 : (y + 1) * width * 4] for y in range(height))
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(rows))
+        + chunk(b"IEND", b"")
+    )
 
 
 def _flat(points_nm: Iterable[Sequence[float]]) -> list[float]:
@@ -668,6 +688,48 @@ def _mesh_layer(
         "categorical": colour == "material",
         "outlined": outlined,
         **({} if focus is None else {"focus": focus}),
+    }
+
+
+def deployed_layer(path: Path, *, positive: Literal["blue", "red"] = "blue") -> dict[str, Any]:
+    """Return a run's deployed charge, one mean per element, as a mesh layer with its colour bar.
+
+    ``path`` is the file :func:`nanopnp.gui.render.render_charge_elements` wrote. The charge's
+    scale is symmetric about zero, a positive charge in the named colour.
+    """
+    import numpy as np
+
+    with np.load(path) as held:
+        vertices = np.asarray(held["vertices_nm"], dtype=np.float64)
+        triangles = np.asarray(held["triangles"], dtype=np.int64)
+        values = np.asarray(held["values"], dtype=np.float64)
+        material = np.asarray(held["material"], dtype=np.int64)
+        name, units = str(held["name"]), str(held["units"])
+    charge = name == FIXED_CHARGE_ATTRIBUTE
+    limit = float(np.abs(values).max()) if values.size else 0.0
+    if charge:
+        # An all-zero charge still needs a range a colour map can divide by.
+        scale = [-limit, limit] if limit > 0.0 else [-1.0, 1.0]
+        palette = _stops(lookup_table("diverging_r" if positive == "blue" else "diverging"))
+    else:
+        scale = [0.0, 1.0]
+        palette = _stops(lookup_table("viridis"))
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+    return {
+        "id": "deployed",
+        "kind": "mesh",
+        "mesh": f"deployed-{digest}",
+        "vertices_nm": vertices.ravel().tolist(),
+        "triangles": triangles.ravel().tolist(),
+        "material": material.tolist(),
+        "colour": name,
+        "values": values.tolist(),
+        "palette": palette,
+        "scale": scale,
+        "legend": [],
+        "categorical": False,
+        "outlined": [],
+        "bar": {"quantity": name, "unit": units},
     }
 
 

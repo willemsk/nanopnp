@@ -1,6 +1,6 @@
 # WP5.19 — The Study suite
 
-**Status: in progress, items 1 to 5 done.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
+**Status: in progress, items 1 to 6 done.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
 AN4, AP5, AQ1 and this plan's AR3 to AR6 (§8.2.31 to §8.2.42).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
@@ -231,7 +231,14 @@ z_nm, n=5)`, `Link`'s body moved; `residue_key` with it; `png` moves to `plane.p
 each element's r-weighted mean of the deployed coefficient, ∫ρ r dA / ∫ r dA at the solve's order, so that the
 layer's ∫ 2πr dA keeps `q_mesh_e`, with the vertices and triangles to `<run>/viewer/charge.elements.npz`; `plane.py` draws it as a `mesh` layer with its bar.
 
-**Item 8.**
+> **Outcome — the link and the deployed charge are library steps.** `ResidueCharges` and `residue_key` are in
+> `plot/data.py`; `png` and `deployed_layer` in `plane.py`; `first_frame_pdb`, `_pdb_text` and `_chain_id` in `molview.py`.
+> `link.py` is a shell over them until item 9 removes it. `ChargeRequest(elements=True)` asks the render child for
+> `render_charge_elements`. On the charged tube, its second atom moved into residue 19, the elements' means times each
+> element's volume of revolution give `q_mesh_e` to 10⁻¹², and each atom's residue ranks first at the atom. The test's
+> stage hashes, worst-plane rules and legs come with `StudyModel`, at item 9.
+
+**Item 9.**
 - Tools: `overview`, `sweep`, `runs` with `view="page"`; `setup` with fields `models.molecular`, `models.continuum`,
   `models.physics`, `outputs`, `numerics.continuation` and `view="page"`; `charge` with `view="pair"`, a new
   `Tool.view` value routed as `Route("study", "pair")` and shown by `show_pair`. `Route.view`, `tool_view` and
@@ -253,7 +260,7 @@ layer's ∫ 2πr dA keeps `q_mesh_e`, with the vertices and triangles to `<run>/
   `/study/<id>` light and dark, a residue picked, *New study*; the charged tube run once, its queue entry unfolded;
   REV-256's mockups under `docs/design/mockups/fields/`, shot by `/np-gui render mockups`.
 
-**Item 9** (Sonnet). `redraw.cjs <url>` drives `/study/charge` of a served 2WCD project: 20 picks on the map after a
+**Item 10** (Sonnet). `redraw.cjs <url>` drives `/study/charge` of a served 2WCD project: 20 picks on the map after a
 warm-up, 1.5 s apart; per pick the time to the markers' paint and to Mol*'s second frame after the selection; prints
 median and p95 of each, the browser's GPU string and `--json`. Check: it runs headless here (software GL).
 
@@ -270,21 +277,22 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
   consequence and VER-55's NOTE (D9); done when `test_exclusion_shell.py` passes and the `physics-reviewer` has read it.
   **Executor:** main
 - [x] 5. Compaction checkpoint. **Executor:** main
-- [ ] 6. `gui/web/queue.py`, `frame.py`, `builds.py`, `settings.py`, `states.py`, `assets/plane.js` (D6 to D8); done when
+- [x] 3c37531 6. `gui/web/queue.py`, `frame.py`, `builds.py`, `settings.py`, `states.py`, `assets/plane.js` (D6 to D8); done when
   `test_study_runs.py` and `test_gui_settings.py` pass. **Executor:** main
 - [ ] 7. `plot/data.py:ResidueCharges`, `gui/render.py` (D5); done when `test_study_charge.py` passes. **Executor:** main
-- [ ] 8. `gui/web/study.py`, `study_tools.py`, `screens.py`, `pages.py`, `shell.py`, `modularity-layering.yaml`;
+- [ ] 8. Compaction checkpoint, added at the author's request after item 7. **Executor:** main
+- [ ] 9. `gui/web/study.py`, `study_tools.py`, `screens.py`, `pages.py`, `shell.py`, `modularity-layering.yaml`;
   `link.py` and `st-charge` removed; `render_shell.py` group `study` with REV-256's mockups; `/np-gui render shell`, `review`, `publish` (D1, D3
   to D6, D10); done when the digest is published and VER-78 passes. **Executor:** main
-- [ ] 9. `.claude/scripts/gui/redraw.cjs` (D11); done when its check passes. **Executor:** general-purpose on Sonnet,
+- [ ] 10. `.claude/scripts/gui/redraw.cjs` (D11); done when its check passes. **Executor:** general-purpose on Sonnet,
   high
-- [ ] 10. Compaction checkpoint; the author's verdicts; the author runs `redraw.cjs`. **Executor:** main
-- [ ] 11. `/np-gui collect`; REV-215, REV-240's, REV-252's, REV-255's and REV-256's points ruled or carried; the
+- [ ] 11. Compaction checkpoint; the author's verdicts; the author runs `redraw.cjs`. **Executor:** main
+- [ ] 12. `/np-gui collect`; REV-215, REV-240's, REV-252's, REV-255's and REV-256's points ruled or carried; the
   design document's rows (D10); done when the code and review say so. **Executor:** main
-- [ ] 12. The tools finished to the verdicts, REV-254's Study words (D10); done when VER-78, VER-60 and VER-44 pass.
+- [ ] 13. The tools finished to the verdicts, REV-254's Study words (D10); done when VER-78, VER-60 and VER-44 pass.
   **Executor:** main
-- [ ] 13. Compaction checkpoint. **Executor:** main
-- [ ] 14. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; AG7's numbers or a `REV-nn` row;
+- [ ] 14. Compaction checkpoint. **Executor:** main
+- [ ] 15. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; AG7's numbers or a `REV-nn` row;
   VER-78's text, FR-33's and FR-39's matrix rows; `current.md`; done when the code and review say so. **Executor:** main
 
 ### Verification
@@ -310,4 +318,4 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 
 ### Open questions
 
-None; the round's go to the author at item 10.
+None; the round's go to the author at item 11.

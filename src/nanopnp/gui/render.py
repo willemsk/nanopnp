@@ -24,6 +24,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 logger = logging.getLogger(__name__)
 
 __all__ = [
+    "CHARGE_ELEMENTS_FILENAME",
     "CHI_RANGE",
     "MESH_SCENE_STEM",
     "READY_FLAG",
@@ -41,12 +42,14 @@ __all__ = [
     "RenderRequest",
     "Rendered",
     "RenderedCharge",
+    "RenderedElements",
     "RenderedMesh",
     "deployed_coefficient",
     "host_document",
     "readiness_script",
     "render",
     "render_charge",
+    "render_charge_elements",
     "render_mesh",
     "renderer_source",
 ]
@@ -216,13 +219,25 @@ class RenderedMesh:
     wall: dict[str, object]
 
 
+CHARGE_ELEMENTS_FILENAME = "charge.elements.npz"
+"""The file under a run's ``viewer/`` holding each element's deployed charge or ``chi``."""
+
+
 @dataclass(frozen=True)
 class ChargeRequest:
-    """What the charge tab asks for: a run's deployed charge or ``chi``."""
+    """What the charge tab asks for: a run's deployed charge or ``chi``.
+
+    Parameters
+    ----------
+    elements
+        Write each element's mean to :data:`CHARGE_ELEMENTS_FILENAME`, for the (r, z) canvas,
+        in place of a ``webgui`` scene.
+    """
 
     run: str
     quantity: ChargeQuantity = "charge"
     renderer: str = RENDERER_SOURCE
+    elements: bool = False
 
 
 @dataclass(frozen=True)
@@ -248,7 +263,25 @@ class RenderedCharge:
     materials: tuple[str, ...]
 
 
-RenderEvent: TypeAlias = Rendered | RenderedMesh | RenderedCharge | RenderFailed
+@dataclass(frozen=True)
+class RenderedElements:
+    """Each element's deployed coefficient was written; the file and what it holds.
+
+    Parameters
+    ----------
+    limit
+        The largest magnitude of the elements' means.
+    """
+
+    path: str
+    quantity: ChargeQuantity
+    name: str
+    units: str
+    limit: float
+    elements: int
+
+
+RenderEvent: TypeAlias = Rendered | RenderedMesh | RenderedCharge | RenderedElements | RenderFailed
 
 
 def _state_path(run: Path) -> Path:
@@ -488,6 +521,15 @@ class DeployedCoefficient:
     measures: Measures
     name: str
     units: str
+    rule_order: int | None = None
+    """The quadrature order the solve assembles the coefficient with; None for its measures'."""
+
+    @property
+    def order(self) -> int:
+        """The quadrature order the coefficient is integrated at, as the solve does."""
+        if self.rule_order is not None:
+            return self.rule_order
+        return self.measures.integration_order()
 
 
 def deployed_coefficient(run: Path, quantity: ChargeQuantity) -> DeployedCoefficient:
@@ -532,12 +574,14 @@ def deployed_coefficient(run: Path, quantity: ChargeQuantity) -> DeployedCoeffic
                 f"case {resolved.name!r} carries no fixed charge: it neither deposits one in "
                 "stage 7 nor supplies one through inputs.charge, so there is nothing to draw"
             )
+        assembled = fields.charge.fixed_charge_C_m3()
         return DeployedCoefficient(
             mesh=mesh,
-            coefficient=fields.charge.volume_density_C_m3(),
+            coefficient=assembled.density,
             measures=measures,
             name=FIXED_CHARGE_ATTRIBUTE,
             units=CANONICAL_UNITS["volume_charge_density"],
+            rule_order=assembled.rule_order,
         )
     if fields.eps_r is None:
         raise KeyError(
@@ -598,6 +642,56 @@ def render_charge(request: ChargeRequest) -> RenderedCharge:
     )
 
 
+def render_charge_elements(request: ChargeRequest) -> RenderedElements:
+    """Write each element's mean of a run's deployed charge or ``chi`` into its ``viewer/``.
+
+    The mean is weighted by r, the integral of the coefficient times r over the element divided
+    by that of r, at the solve's quadrature order: each mean times its element's volume of
+    revolution then sums to the charge the solve assembles, Q_mesh.
+    """
+    import ngsolve as ngs
+    import numpy as np
+
+    run = Path(request.run)
+    deployed = deployed_coefficient(run, request.quantity)
+    mesh = deployed.mesh
+    order = deployed.order
+    # ``ngs.x`` is r: the measure's own weight, element by element.
+    weighted = ngs.Integrate(deployed.coefficient * ngs.x, mesh, order=order, element_wise=True)
+    measure = ngs.Integrate(ngs.x, mesh, order=order, element_wise=True)
+    means = np.asarray(weighted.NumPy(), dtype=np.float64) / np.asarray(
+        measure.NumPy(), dtype=np.float64
+    )
+    vertices = np.array([vertex.point for vertex in mesh.vertices], dtype=np.float64)
+    elements = list(mesh.Elements(ngs.VOL))
+    triangles = np.array([[v.nr for v in element.vertices] for element in elements], np.int64)
+    materials = tuple(str(name) for name in mesh.GetMaterials())
+    material = np.array([element.index for element in elements], dtype=np.int64)
+    directory = run / VIEWER_DIRNAME
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / CHARGE_ELEMENTS_FILENAME
+    partial = path.with_suffix(".partial.npz")
+    np.savez(
+        partial,
+        vertices_nm=vertices,
+        triangles=triangles,
+        values=means,
+        material=material,
+        materials=np.array(materials),
+        name=np.array(deployed.name),
+        units=np.array(deployed.units),
+    )
+    partial.replace(path)
+    return RenderedElements(
+        path=str(path),
+        quantity=request.quantity,
+        name=deployed.name,
+        units=deployed.units,
+        limit=float(np.abs(means).max()) if means.size else 0.0,
+        elements=len(elements),
+    )
+
+
 AnyRequest: TypeAlias = RenderRequest | MeshRequest | ChargeRequest
 
 
@@ -605,6 +699,8 @@ def _worker(request: AnyRequest, events: Queue[RenderEvent]) -> None:
     try:
         if isinstance(request, MeshRequest):
             events.put(render_mesh(request))
+        elif isinstance(request, ChargeRequest) and request.elements:
+            events.put(render_charge_elements(request))
         elif isinstance(request, ChargeRequest):
             events.put(render_charge(request))
         else:
