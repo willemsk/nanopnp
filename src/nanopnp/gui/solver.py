@@ -16,6 +16,8 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from multiprocessing.queues import Queue
     from multiprocessing.synchronize import Event as EventType
 
+    from nanopnp.api.session import Session
+
 logger = logging.getLogger(__name__)
 
 __all__ = [
@@ -50,12 +52,23 @@ class RunRequest:
         The last stage to walk, or ``None`` for the whole pipeline.
     write
         Whether the walk writes a run directory; a model built alone writes none.
+    runs
+        The folder run directories go to, ``runs/<name>/<key>``; the store's own by default.
+    threads
+        The linear-algebra thread count the child is pinned to before it loads a library.
+    plan
+        A sweep plan's file: the child runs member ``index`` of it into the plan's folder, in
+        place of ``case``.
     """
 
     case: str
     store: str | None = None
     upto: str | None = None
     write: bool = True
+    runs: str | None = None
+    threads: int = 1
+    plan: str | None = None
+    index: int | None = None
 
 
 @dataclass(frozen=True)
@@ -273,6 +286,11 @@ def failure_event(error: BaseException) -> Failed:
 
 
 def _worker(request: RunRequest, events: Queue[RunEvent], cancel: EventType) -> None:
+    from nanopnp.sweep.run import pin_threads
+
+    # First: the count reaches the linear-algebra libraries only before they load.
+    pin_threads(request.threads)
+
     from nanopnp.api.case import Case
     from nanopnp.api.session import Session
     from nanopnp.core.stages import Cancelled as CancelledError
@@ -282,7 +300,11 @@ def _worker(request: RunRequest, events: Queue[RunEvent], cancel: EventType) -> 
     try:
         # Resolved here rather than left to the Session, so the root every
         # ``Produced`` names is the one the walk wrote into.
-        store = Store(Path(request.store)) if request.store is not None else Store()
+        root = Path(request.store) if request.store is not None else None
+        store = Store(root, runs=request.runs)
+        if request.plan is not None:
+            events.put(_member(request, Session(store), events, EventCancel(cancel)))
+            return
         result = Session(store, write=request.write).run(
             Case.load(request.case),
             upto=request.upto,
@@ -300,6 +322,29 @@ def _worker(request: RunRequest, events: Queue[RunEvent], cancel: EventType) -> 
         events.put(failure_event(error))
     else:
         events.put(Finished(directory=str(result.directory)))
+
+
+def _member(
+    request: RunRequest, session: Session, events: Queue[RunEvent], cancel: EventCancel
+) -> RunEvent:
+    from nanopnp.api.sweep import run_point
+    from nanopnp.sweep.plan import read_plan
+
+    assert request.plan is not None and request.index is not None
+    plan_file = Path(request.plan)
+    member = run_point(
+        read_plan(plan_file),
+        request.index,
+        session=session,
+        directory=plan_file.parent,
+        cancel=cancel,
+        on_solve=QueueSolve(events),
+    )
+    if member.status == "ok" and member.directory is not None:
+        return Finished(directory=member.directory)
+    if member.status == "cancelled":
+        return Cancelled(where=member.error or "cancelled")
+    return Failed(exit_code=member.exit_class, error="SweepMember", message=member.error or "")
 
 
 @dataclass

@@ -22,7 +22,7 @@ from nanopnp.gui.solver import (
     Started,
 )
 from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME
-from nanopnp.pipeline.run import RUN_RECORD_FILENAME
+from nanopnp.pipeline.run import RUN_RECORD_FILENAME, open_run
 
 TIMEOUT_S = 300.0
 
@@ -111,3 +111,31 @@ def test_fr27_a_spawned_run_reports_progress_and_finishes(
     switches = {entry["path"] for entry in outcome.deviations["switches"]}
     assert "electrolyte.corrections.viscosity.model" in switches
     assert run_outcome(directory).quantities == outcome.quantities
+
+
+def _record(case: Path, store: Path, threads: int) -> dict[str, object]:
+    process = SolverProcess(RunRequest(case=str(case), store=str(store), threads=threads))
+    process.start()
+    events = _settle(process)
+    [finished] = [event for event in events if isinstance(event, Finished)]
+    record = json.loads((Path(finished.directory) / RUN_RECORD_FILENAME).read_text("utf-8"))
+    assert isinstance(record, dict)
+    return record
+
+
+def test_fr25_a_run_records_its_thread_count_and_keys_as_at_one_thread(
+    cylindrical_pore_case: Path, tmp_path: Path
+) -> None:
+    # A count that moved a key would split the cache by machine; one unrecorded hides a cause.
+    two = _record(cylindrical_pore_case, tmp_path / "two", threads=2)
+    assert two["threads"] == 2
+    solve = open_run(Path(str(two["directory"]))).artefacts["solve"]
+    assert solve.summary["threads"] == 2
+    one = _record(cylindrical_pore_case, tmp_path / "one", threads=1)
+    assert one["threads"] == 1
+    assert one["artefacts"] == two["artefacts"]
+
+    served = _record(cylindrical_pore_case, tmp_path / "two", threads=1)
+    stages = served["stages"]
+    assert isinstance(stages, list) and all(stage["cached"] for stage in stages)
+    assert served["threads"] == 2, "a served solve states the count it was solved with"

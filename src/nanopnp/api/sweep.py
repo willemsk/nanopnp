@@ -17,6 +17,7 @@ from nanopnp.api.case import Case
 from nanopnp.api.session import Session
 from nanopnp.core.errors import classify
 from nanopnp.core.hashing import Canonicalisable
+from nanopnp.core.stages import CancelToken, SolveHook
 from nanopnp.io.artefact import SOLUTION_SCHEMA, SWEEP_SCHEMA, Artefact, StageInputs, SweepArtefact
 from nanopnp.io.case import CaseDocument, CaseValidationError, FieldValue, dumps_case
 from nanopnp.io.case_paths import UnknownCasePathError, field_path, input_paths, substitute
@@ -298,6 +299,8 @@ def run_point(
     *,
     session: Session,
     directory: Path,
+    cancel: CancelToken | None = None,
+    on_solve: SolveHook | None = None,
 ) -> MemberResult:
     """Run one member through ``session`` and return its record, capturing whatever it raised.
 
@@ -307,14 +310,28 @@ def run_point(
     ----------
     index
         Which point to run.
+    cancel
+        Polled at each stage and Newton step; a set token records the member as cancelled.
+    on_solve
+        Called with each continuation rung and Newton step of the member's solve.
     """
     # Held from the parent's lookup to the member's walk, so no clean-up removes the warm start
     # between them.
     with session.store.using():
-        return _run_point(plan, index, session=session, directory=directory)
+        return _run_point(
+            plan, index, session=session, directory=directory, cancel=cancel, on_solve=on_solve
+        )
 
 
-def _run_point(plan: SweepPlan, index: int, *, session: Session, directory: Path) -> MemberResult:
+def _run_point(
+    plan: SweepPlan,
+    index: int,
+    *,
+    session: Session,
+    directory: Path,
+    cancel: CancelToken | None,
+    on_solve: SolveHook | None,
+) -> MemberResult:
     from nanopnp.core.stages import Cancelled
 
     point = plan.point(index)
@@ -355,6 +372,8 @@ def _run_point(plan: SweepPlan, index: int, *, session: Session, directory: Path
             base=plan.base_path.parent,
             arguments={"solve": {"warm_start": warm, "cold_reason": reason}},
             resolved=held,
+            cancel=cancel,
+            on_solve=on_solve,
         )
     except Cancelled as error:
         return _failed(point, error, started, directory, cancelled=True)

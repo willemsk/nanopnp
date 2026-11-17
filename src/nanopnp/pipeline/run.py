@@ -363,6 +363,13 @@ class RunResult:
         return solution_fields(inputs, solution)
 
     @property
+    def threads(self) -> int | None:
+        """The thread count the solve ran with; None where it ran unpinned or was not reached."""
+        solve = self.artefacts.get("solve")
+        found = solve.summary.get("threads") if solve is not None else None
+        return found if isinstance(found, int) and not isinstance(found, bool) else None
+
+    @property
     def files(self) -> tuple[Path, ...]:
         """Every file stage 12 wrote, in the store."""
         written = self.artefacts.get("report")
@@ -385,6 +392,7 @@ class RunResult:
             },
             "quantities": dict(self.quantities),
             "files": [str(path) for path in self.files],
+            "threads": self.threads,
         }
 
     def write(self) -> Path:

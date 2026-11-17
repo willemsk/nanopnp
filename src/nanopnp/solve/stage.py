@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
@@ -69,6 +70,13 @@ def _input_hashes(mesh: Artefact, materials: Artefact, fields: Artefact | None) 
     if fields is not None:
         hashes["charge"] = fields.hash
     return hashes
+
+
+def _threads() -> int | None:
+    # The count the solve's linear algebra was pinned to; None where nothing pinned it and the
+    # libraries chose their own. It is a record, not a parameter: no key reads it.
+    found = os.environ.get("OPENBLAS_NUM_THREADS", "")
+    return int(found) if found.isdigit() else None
 
 
 def _field_summary(fields: ResolvedFields) -> dict[str, object]:
@@ -237,6 +245,7 @@ class SolveStage:
                 **_field_summary(fields),
                 **_wall_distance_summary(wall_distance),
                 "warm_start": cold_start(cold_reason) if warm is None else warm.summary(),
+                "threads": _threads(),
             },
         )
 

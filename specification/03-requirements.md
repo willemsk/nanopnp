@@ -203,7 +203,7 @@ the quantity-of-interest extraction. Heavy data is compressed.
 | **FR-22** | SHALL compute F^em(z), F^hd(z), their sum, and ΔU(z) = −∫F dz with barriers and minima in kT, over a series of axial analyte positions. | v0.7 |
 | **FR-23** | SHALL extract ionic current, cation and anion transport numbers, rectification ratio and EOF rate by two independent routes whose agreement is checked automatically. | v0.2 |
 | **FR-24** | SHALL sweep any case-file field, dispatch the points as independent jobs, warm-start each solve from a converged neighbour, and collect results into one dataset. | v0.2 |
-| **FR-25** | SHALL emit with every result a provenance manifest recording input hashes, library versions, mesh hash, solver settings, stabilisation mode, correction parameter file versions, and every switch set away from the validated default (§5.3.3). | v0.2 |
+| **FR-25** | SHALL emit with every result a provenance manifest recording input hashes, library versions, mesh hash, solver settings and the thread count the solve ran with, stabilisation mode, correction parameter file versions, and every switch set away from the validated default (§5.3.3). | v0.2 |
 | **FR-26** | SHALL round-trip a case file, a written and re-read case yielding a semantically identical run configuration. | v0.2 |
 | **FR-27** | SHALL make every stage independently invocable, cancellable, progress-reporting and introspectable, emitting a typed, serialisable, content-hashed artefact that may be inspected, exported, edited and substituted by hand. | v0.2 |
 | **FR-28** | SHALL export fields and the originating case file from a completed run; its figures are FR-44's. | v0.7 |

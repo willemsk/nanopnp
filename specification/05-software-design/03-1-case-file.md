@@ -762,8 +762,10 @@ material (QR-12). `rectification` is a two-point quantity, `I(+V)/I(−V)`; a ca
 single operating point SHALL be refused naming it as such, because the second bias can only come
 from a sweep (FR-24) and inventing one would report a ratio the run did not measure. A sweep
 (§5.3.4) SHALL therefore strip `rectification` from each member's `outputs:` and produce it in
-collection, from pairs of members whose case-file assignments are equal except at
-`boundary_conditions.bias_V` and whose two biases are exactly opposite. Exactly, not approximately:
+collection, from pairs of members whose resolved cases are equal except in their names, their
+`variables:` and `boundary_conditions.bias_V`, and whose two resolved biases are exactly opposite, so
+a bias set through a variable pairs as one set directly does, and a variable that also moves another
+field pairs nothing (REV-197). Exactly, not approximately:
 a tolerance on the pairing would report the ratio of two unrelated operating points as a
 rectification. A sweep asking for `rectification` whose axes produce no such pair SHALL be refused
 when the plan is built, naming the axis, rather than collecting a column of absent values (QR-12).

@@ -1293,7 +1293,7 @@ By decider: author 581; open 5; session, own call 834; session, put to the autho
 | REV-194 | session, own call | `docs/project/review-findings.md` |  | WP5.06 | A registered steric form or output enters the key by name only | WP5.06 review | fixed |
 | REV-195 | session, own call | `docs/project/review-findings.md` |  | WP5.06 | The manufactured source builds the Borukhov flux whatever steric model is named | WP5.06 review | fixed |
 | REV-196 | session, own call | `docs/project/review-findings.md` |  | WP5.06 | The case JSON Schema no longer lists the steric models and the outputs | WP5.06 review | fixed |
-| REV-197 | session, own call | `docs/project/review-findings.md` |  | WP5.07 | Rectification does not pair a bias set through a variable | WP5.07; WP5.19 | accepted |
+| REV-197 | session, own call | `docs/project/review-findings.md` |  | WP5.07 | Rectification does not pair a bias set through a variable | WP5.07; WP5.19 | fixed |
 | REV-198 | session, own call | `docs/project/review-findings.md` |  | WP5.07 | A sweep plan is not tied to the variables as written | WP5.07 review | fixed |
 | REV-199 | session, own call | `docs/project/review-findings.md` |  | WP5.07 | The sweep forecast resolves every point again | WP5.07 review | fixed |
 | REV-200 | session, own call | `docs/project/review-findings.md` |  | WP5.07 | A second type repeats the variable resolution | WP5.07 review | fixed |
