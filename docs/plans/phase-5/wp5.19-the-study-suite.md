@@ -1,6 +1,6 @@
 # WP5.19 — The Study suite
 
-**Status: in progress, items 1 to 6 done.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
+**Status: in progress, items 1 to 8 done.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
 AN4, AP5, AQ1 and this plan's AR3 to AR6 (§8.2.31 to §8.2.42).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
@@ -279,8 +279,8 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 - [x] 5. Compaction checkpoint. **Executor:** main
 - [x] 3c37531 6. `gui/web/queue.py`, `frame.py`, `builds.py`, `settings.py`, `states.py`, `assets/plane.js` (D6 to D8); done when
   `test_study_runs.py` and `test_gui_settings.py` pass. **Executor:** main
-- [ ] 7. `plot/data.py:ResidueCharges`, `gui/render.py` (D5); done when `test_study_charge.py` passes. **Executor:** main
-- [ ] 8. Compaction checkpoint, added at the author's request after item 7. **Executor:** main
+- [x] 2412bcd 7. `plot/data.py:ResidueCharges`, `gui/render.py` (D5); done when `test_study_charge.py` passes. **Executor:** main
+- [x] 8. Compaction checkpoint, added at the author's request after item 7. **Executor:** main
 - [ ] 9. `gui/web/study.py`, `study_tools.py`, `screens.py`, `pages.py`, `shell.py`, `modularity-layering.yaml`;
   `link.py` and `st-charge` removed; `render_shell.py` group `study` with REV-256's mockups; `/np-gui render shell`, `review`, `publish` (D1, D3
   to D6, D10); done when the digest is published and VER-78 passes. **Executor:** main
