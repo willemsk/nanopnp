@@ -303,7 +303,9 @@ function, and the projection adds no error of its own. The charge is deposited o
 the reference applied `ρ_pore` across all computational domains (`knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md`). The deposit
 SHALL be refused, naming the quantity and its location (QR-12), where lattice charge falls on no
 element of the mesh, or where less than half of `Σ|q_i|` has its atom centres in solid materials,
-which is how a structure in another frame than its mesh shows.
+which is how a structure in another frame than its mesh shows where the frames differ grossly; on
+2WCD the share falls below half for a shift of 5 nm toward *trans*, and a shift of up to 4 nm passes
+(§8.2.42 AR5).
 
 **PHY-17.** Smearing SHALL be performed in 3D Cartesian space and only then averaged azimuthally.
 A Gaussian applied directly in (r, z) leaks charge across `r = 0` and SHALL NOT be used.

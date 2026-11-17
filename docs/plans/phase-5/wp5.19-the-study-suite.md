@@ -1,7 +1,7 @@
 # WP5.19 — The Study suite
 
 **Status: planned, not started.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
-AN4, AP5, AQ1 and this plan's AR3 to AR5 (§8.2.31 to §8.2.42).
+AN4, AP5, AQ1 and this plan's AR3 to AR6 (§8.2.31 to §8.2.42).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
 clause.
@@ -186,12 +186,22 @@ matrix rows.
 4. Check: `uv run pytest tests/tier2/test_reproducibility.py`. QR-08's NOTE is main's, in the item's commit.
 
 **Item 4.** `ResolvedCase.shell_spacing_nm`: a supplied outline's `provenance.min_vertex_spacing_nm` (the file read
-once at resolve), else `contour_spacing_nm`; read by `RegionStage._key`, `derive_region` and the offset check, which
+once at resolve), never coarser than 0.05 nm (AR6, ruled at the item), else `contour_spacing_nm`; read by `RegionStage._key`, `derive_region` and the offset check, which
 moves to the resolved case. A recorded spacing that is not positive, a repeated vertex, is refused at resolve, naming
 the outline's file. The share: 2WCD's built outline, its z shifted by 1, 2, 3, 5 and 8 nm, supplied beside the
 structure (AP1), each deposited; `solid_share` per shift goes into a concept of
 `knowledge/04-clya-geometry-and-charge/`, listed in its `index.md`, with a line in `knowledge/log.md`. Where no shift
 is refused, AP1's consequence names the largest shift measured, which passes.
+
+> **Outcome — a coarse outline shells at 0.05 nm; the charge check catches a gross frame error only.** A four-cornered
+> outline (the test tube's, 1 nm shortest edge) would have shelled at 1 nm and refused any offset under 2 nm; the
+> author capped the spacing at the coarsest density grid (§8.2.42 AR6), so no shelled case moved. The shares, measured
+> on example 07's `2wcd.case.yaml` (mesh `size_scale: 4`, shell off) with its stage-4 outline (161 vertices, 0.0726 nm
+> closest) shifted by d along z, its provenance recomputed, supplied beside the structure and walked to `charge`:
+> d = 0, 0.979; −0.5 nm, 0.921; −1 nm, refused by stage 5 (two membrane faces); −2, −3, −4 nm, 0.735, 0.619, 0.541;
+> −5 and −8 nm, refused by the deposit at 0.479 and 0.272; +1, +2, +3, +5, +8 nm, refused by stage 5 (no crossing of
+> the membrane's lower face, so any shift above 0.39 nm). AP1's consequence, VER-55's NOTE, §5.3.1's NOTE on
+> `inputs.profile` and PHY-16 state this reach ([the concept](../../../knowledge/04-clya-geometry-and-charge/16-the-charge-checks-reach-against-a-shifted-outline.md)).
 
 **Item 6.**
 - `Queue.limit` from *Solves at once*; `Entry` gains `start: Callable[[], None] | None` and `run: RunModel | None`;
@@ -245,7 +255,7 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 - [x] ded0156 2. `sweep/plan.py`, `api/sweep.py`, `sweep/run.py`, `solve/stage.py`, `pipeline/run.py`, `gui/solver.py`, the layering file, FR-25's
   and §5.3.3's text, §5.3.1's NOTE on `outputs:` (D4, D7); done when `test_sweep_plan.py` and
   `test_gui_solver_process.py` pass. **Executor:** main
-- [ ] 3. `api/reproduce.py`, `cli/running.py` (D9); done when its check passes. **Executor:** general-purpose on
+- [x] 51f8a8f 3. `api/reproduce.py`, `cli/running.py` (D9); done when its check passes. **Executor:** general-purpose on
   Sonnet, high; QR-08's NOTE main
 - [ ] 4. `io/resolved.py`, `geometry/region.py`, `pipeline/checks.py`, AP5's NOTEs; REV-247's shares, AP1's
   consequence and VER-55's NOTE (D9); done when `test_exclusion_shell.py` passes and the `physics-reviewer` has read it.
@@ -279,7 +289,7 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 | `tests/tier1/test_study_runs.py::test_ver44_the_unfolded_run_names_each_silence_and_what_closed_each_rung` | 1 | VER-44 | Events of a silent rung, one converged on entry, one closed by a forced step, one by the update, a served solve; one each: each row's words, `closed_on`, forced count, least damping; no threshold layer | `uv run pytest tests/tier1/test_study_runs.py` |
 | `tests/tier1/test_study_charge.py::test_ver60_the_studys_charge_on_the_mesh_shows_the_walks_record` | 1 | VER-60 | `charged-tube` built to `charge`: each stage's hash equals the walk's; the image's `integral_e` equals `q_grid_e` to 10⁻¹²; rules at the worst planes; legs as `ConservationView`; the mesh layer `rho_fixed_C_m3`, its ∫ρ 2πr dA `q_mesh_e` to 10⁻¹²; `at()` on a charged atom ranks its residue first | `uv run pytest tests/tier1/test_study_charge.py` |
 | `tests/tier2/test_reproducibility.py::test_ver35_a_run_stopped_at_its_charge_reproduces_to_that_stage` | 2 | VER-35; QR-08 | The tube's `upto-charge` record reproduces into a fresh store, its misses asserted, every key equal; a moved input aborts naming it; `upto: solve` refused | `uv run pytest tests/tier2/test_reproducibility.py` |
-| `tests/tier1/test_exclusion_shell.py::test_ver59_a_supplied_outlines_shell_takes_the_outlines_recorded_spacing` | 1 | VER-59; AP5 | Recorded spacing 0.08 nm, offset 0.2 nm: `h_c_nm` keyed 0.08; offset 0.15 nm refused, naming 0.16 nm; a repeated vertex refused, naming the file; the derived case keys as before (VER-62) | `uv run pytest tests/tier1/test_exclusion_shell.py` |
+| `tests/tier1/test_exclusion_shell.py::test_ver59_a_supplied_outlines_shell_takes_the_outlines_recorded_spacing` | 1 | VER-59; AP5, AR6 | Recorded spacing 0.03 nm, offset 0.2 nm: `h_c_nm` keyed 0.03; offset 0.05 nm refused, naming 0.06 nm; the four-cornered tube, spacing 1 nm, keys 0.05 nm (AR6); a repeated vertex refused, naming the file; the derived case keys on its grid as before (VER-62) | `uv run pytest tests/tier1/test_exclusion_shell.py` |
 | `tests/tier1/test_project.py::test_fr32_an_export_keeps_every_result_and_points_its_records_at_the_copy` | 1 | FR-32 | One assertion per REV-206 limit; a failed export leaves nothing | `uv run pytest tests/tier1/test_project.py` |
 | `tests/tier1/test_gui_screens.py` | 1 | VER-78 (a) to (d), (m) | The Study pages in each state; (m): Charge on the mesh shows both hosts, each built once, and back to Molecular keeps them | `NANOPNP_REQUIRE_BROWSER=1 uv run pytest tests/tier1/test_gui_screens.py` |
 

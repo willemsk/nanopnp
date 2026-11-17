@@ -95,7 +95,9 @@ the Qt shell (§8.2.17 S13, S17).
   same profile to the bit and stage 6 the same mesh content hash, deposits the same charge on each
   material with the same conservation legs to 10⁻¹² relative, and records the structure, the
   protonation and the profile and no stage 2 to 4 artefact, and the moved edit passes the deposit's
-  gates.
+  gates. The deposit's solid-share gate refuses 2WCD's outline shifted 5 nm toward *trans* and passes
+  one shifted up to 4 nm, its charge displaced; stage 5 refuses a shift toward *cis* above 0.39 nm.
+  A smaller frame error passes, and no frame check is added (§8.2.42 AR5).
 - **VER-60**, *Charge pipeline surfaced in the workbench*: as the row above, with four changes. The
   view-models import no front-end framework, NGSolve, PDB2PQR or PROPKA in a fresh process. "Each
   bounded number's field accepts exactly its schema bounds, in both directions; an integer field

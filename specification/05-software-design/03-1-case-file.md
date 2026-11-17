@@ -273,18 +273,24 @@ a structure is unknown). `artefact:` on `inputs.charge` or `inputs.eps_r` SHALL 
 unsupported section when the case is resolved, naming the key: no release schedules the store form of
 the two fields (WP40).
 
-NOTE (`inputs.profile`; §8.2.40 AP1): `inputs.profile` is consumed by stage 5. It is named by `path`
+NOTE (`inputs.profile`; §8.2.40 AP1, AP5; §8.2.42 AR6): `inputs.profile` is consumed by stage 5. It is named by `path`
 with `format: profile1`, and `artefact:` or `groups` beside it is refused. The profile is
 hashed by the canonical digest of its validated payload. Stages 2 to 4 do not run beside it.
 `structure:` beside it stands where stage 7 deposits a charge from that structure's protonation:
 stage 1 and the protonation run for the charge, and stage 5 reads the profile in stage 1's frame, the
-frame stage 4 writes, so a profile drawn in another frame is refused by the deposit's gate on the
-share of `Σ|q_i|` in solid materials (PHY-16 NOTE on the deposition). The manifest then records the structure, the protonation and the profile,
+frame stage 4 writes. A profile drawn in another frame is refused by stage 5's junction gate or by the
+deposit's gate on the share of `Σ|q_i|` in solid materials (PHY-16 NOTE on the deposition) only where
+the frame error is gross: on 2WCD, stage 5 refuses a shift toward *cis* above 0.39 nm, and the deposit a
+shift toward *trans* of 5 nm (share 0.479), while shifts toward *trans* of up to 4 nm pass with the
+charge displaced (shares 0.979 to 0.541; `knowledge/04-clya-geometry-and-charge/16-the-charge-checks-reach-against-a-shifted-outline.md`;
+§8.2.42 AR5). The manifest then records the structure, the protonation and the profile,
 and no stage 2 to 4 artefact. Where the case deposits no charge, beside `inputs.charge` or under a
 model that declares no `fixed_charge`, the structure is read by nothing, and `structure:` beside
 `inputs.profile` SHALL be refused naming both, by the upstream rule. `geometry.density` and
 `geometry.contour` are refused where either is set away from its default; `geometry.membrane` and
-`geometry.reservoir` are read. A section set to
+`geometry.reservoir` are read. With `charge.exclusion_offset_nm` set, the ion-exclusion shell takes
+its resolution `h_c` from the outline's recorded point spacing, never coarser than the coarsest
+density grid (§5.2's NOTE on the ion-exclusion shell; §8.2.40 AP5; §8.2.42 AR6). A section set to
 its defaults is not refused, because a case dumped from its resolved document writes every section
 out, and FR-26 requires that dump to load back.
 

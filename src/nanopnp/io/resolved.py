@@ -100,11 +100,23 @@ class ResolvedCase:
     pore: Pore | None = None
     wall_charge_C_m2: float = 0.0
     correction_files: Mapping[str, Path] = dataclass_field(default_factory=dict)
+    outline_spacing_nm: float | None = None
 
     @property
     def contour_spacing_nm(self) -> float:
         """``h_c``: the density grid spacing, the contour's size target."""
         return contour_spacing_nm(self.document)
+
+    @property
+    def shell_spacing_nm(self) -> float:
+        """``h_c`` of the ion-exclusion shell: a supplied outline's, else the density grid's.
+
+        A supplied outline's is the point spacing its file records, never coarser than the
+        coarsest density grid; it is read at resolve only where the shell is on.
+        """
+        if self.outline_spacing_nm is not None:
+            return self.outline_spacing_nm
+        return self.contour_spacing_nm
 
     @property
     def derives_eps_r(self) -> bool:

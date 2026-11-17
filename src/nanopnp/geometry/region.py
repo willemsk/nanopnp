@@ -1159,7 +1159,7 @@ class RegionStage:
                 resolved.membrane,
                 resolved.reservoir,
                 exclusion_offset_nm=resolved.exclusion_offset_nm,
-                h_c_nm=resolved.contour_spacing_nm,
+                h_c_nm=resolved.shell_spacing_nm,
             ),
             inputs={"profile": identity},
         )
@@ -1196,7 +1196,7 @@ class RegionStage:
             resolved.membrane,
             resolved.reservoir,
             exclusion_offset_nm=resolved.exclusion_offset_nm,
-            h_c_nm=resolved.contour_spacing_nm,
+            h_c_nm=resolved.shell_spacing_nm,
         )
 
         written = write_region(record, directory / f"{PAYLOAD_NAME}.yaml")
