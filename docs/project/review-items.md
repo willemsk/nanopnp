@@ -2723,6 +2723,13 @@ The WP5.08 code review found four limits of `Project.export`. Two result files o
 
 **Deferred** to WP5.19, the package that writes run records into a project (§8.2.34 AJ10).
 
+**Fixed** at WP5.19's item 1. Each result goes to `results/` at its path in the stored report it belongs to; the
+store keeps one report's files in one folder, so two of one name are kept apart only where a record names them so.
+The copied `run.json` names the copy's directory, its files and its store (none without `store=True`). An input
+keeps its path under `inputs/`, and an input no item names at the path a linked input takes is refused, naming both.
+The copy is written beside the destination and moved into place whole, so a failure leaves nothing
+(`tests/tier1/test_project.py::test_fr32_an_export_keeps_every_result_and_points_its_records_at_the_copy`).
+
 ### REV-207: The frame writes the layout on every drag step, rereads the theme files, and keeps its dialogs
 
 The WP5.08 code review found: a splitter's change event writes the project file at every step of a drag; `theme.shipped()` parses `tokens.css` and `user_themes()` every theme file at each call, several times to build one page and once per colour keystroke; the New, Open, Import, Export and Glossary dialogs are created at each use and never deleted, so a long session accumulates them; an empty folder field in those dialogs reads as the server's working folder; and the palette's filter is written twice, in `fill_palette` and `first_match`.

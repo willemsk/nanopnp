@@ -6,7 +6,7 @@ description: "Specifies the workbench project: a plain folder of models, studies
 
 #### 5.3.5 Project folder
 
-NOTE (the project, FR-32, FR-34, FR-35, IF-02; §8.2.17 S11; §8.2.33 AI9 to AI14): a workbench
+NOTE (the project, FR-32, FR-34, FR-35, FR-39, IF-02; §8.2.17 S11; §8.2.33 AI9 to AI14; WP5.19): a workbench
 **project** is a folder: `nanopnp-project.yaml` (`nanopnp/project/v0.6`, which holds the item index, the
 open items, the current item, each suite's layout, the project's settings and the molecular model each continuum model
 is built alone over where one was chosen (`built_with`; §5.3.1's NOTE on model files), and no physics), `models/molecular/`,
@@ -26,12 +26,23 @@ is reused, a different file of a taken name is stored as `<name>-2`, and the stu
 input file is **copied** into `inputs/` and written relative to the item, or **linked** where it lies
 (`link=True`) and written absolute; `Project.embed` copies a linked input in and rewrites each item that
 names it. A different file of a taken input name is refused, naming both. A key hashes an input's
-contents and not its path (§5.3.2), so neither choice moves a key. A project
-**exports** (`Project.export`, `nanopnp project export`) into a missing or empty folder as readable
-files: the project file, the items, `inputs/` with each linked input copied in and its items rewritten,
-each run's record, resolved case and manifest with its `results/` copied from the files `run.json`
-names, and each sweep's records. The store goes only with `store=True`. An input the project cannot
-find is refused before anything is written.
+contents and not its path (§5.3.2), so neither choice moves a key.
+A study is made by `Project.new_study`, which pairs one model of each kind by name, and edited value by
+value: `Project.set_study_value` sets a key the study owns, an override of a value its model gives, or
+`models.<kind>` to another model of the project by its name; `Project.set_variable` defines a variable
+by its value or its expression, with its unit; `None` removes each. Each writes the study only when it
+reads as a case, so a refused value leaves the file's bytes; a value its models cannot run with is
+written and listed among the problems at its path. `Project.study_values` lists what the Study suite
+shows: each model's exposed values in model order, then each key the study sets, then each other
+override, each with its owner, unit, range, the model's value and the study's.
+A project **exports** (`Project.export`, `nanopnp project export`) into a missing or empty folder as
+readable files: the project file, the items, `inputs/` with each input at its path there and each linked
+input copied in and its items rewritten, each run's record, resolved case and manifest with its
+`results/`, each result at its path in the stored report it belongs to, and each sweep's records. The
+copied run record names the copy's directory and files, and the copy's store, which goes only with
+`store=True`. An input the project cannot find, and two inputs that take one path in the copy, are
+refused, naming both, before anything is written. The copy is written beside the destination and moved
+into place whole, so a refused or failed export leaves nothing.
 `Project.changes` lists each value of an item away from its default (the schema's, or a switch's
 validated one) and each study override, with its kind, value, default and the model's value;
 `Project.reset` removes the key from the item that sets it. `Project.problems` lists each missing file,

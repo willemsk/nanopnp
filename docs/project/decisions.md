@@ -1302,7 +1302,7 @@ By decider: author 581; open 5; session, own call 834; session, put to the autho
 | REV-203 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The frame's accessibility and layout limits | WP5.15 | fixed |
 | REV-204 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The settings and the changed list lack some guards and units | WP5.15 | fixed |
 | REV-205 | session, own call | `docs/project/review-findings.md` |  | WP5.08 | The Study page shows fixture names, and the charge screen lacks a colour bar and axes | WP5.08 review | deferred |
-| REV-206 | session, own call | `docs/project/review-findings.md` |  | WP5.08 | An exported project can lose a result file of the same name, and keeps the run record's old paths | WP5.08 review | deferred |
+| REV-206 | session, own call | `docs/project/review-findings.md` |  | WP5.08 | An exported project can lose a result file of the same name, and keeps the run record's old paths | WP5.08 review (WP5.19) | fixed |
 | REV-207 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The frame writes the layout on every drag step, rereads the theme files, and keeps its dialogs | WP5.15 | fixed |
 | REV-208 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The palette finds commands by title only, has no active row, and lists commands that cannot run | WP5.15 | fixed |
 | REV-209 | session, own call | `docs/project/review-findings.md` |  | WP5.08 | The charge screen in the frame shows a link where none exists, and its map ignores the dark theme | WP5.08 review | deferred |
