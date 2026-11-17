@@ -746,8 +746,10 @@
             entries.push({ kind: 'swatch', text: name.charAt(0).toUpperCase() + name.slice(1), colour });
           });
         } else if (layer.kind === 'mesh') {
-          entries.push({ kind: 'bar', quantity: layer.colour.toUpperCase(), unit: 'no unit',
-            low: layer.scale[0], high: layer.scale[1], palette: layer.palette });
+          // A field names its own quantity and unit; a quality is a bare number.
+          const bar = layer.bar || { quantity: layer.colour.toUpperCase(), unit: 'no unit' };
+          entries.push({ kind: 'bar', ...bar, low: layer.scale[0], high: layer.scale[1],
+            palette: layer.palette });
         } else if (layer.kind === 'domain' && layer.filled) {
           entries.push({
             kind: 'swatch', text: layer.title, colour: layer.fill, alpha: layer.picked ? 0.9 : 0.55,

@@ -22,12 +22,12 @@ from nanopnp.core.stages import walk_order
 from nanopnp.gui.web import numbers, settings
 from nanopnp.gui.web.builds import BuiltModel
 from nanopnp.gui.web.frame import Views, heading
-from nanopnp.gui.web.link import _chain_id
 from nanopnp.gui.web.molecular import MolecularModel
 from nanopnp.gui.web.molview import (
     COLOURINGS,
     REPRESENTATIONS,
     ChargeColours,
+    _chain_id,
     frame_count,
     residues,
     titration_states,

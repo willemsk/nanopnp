@@ -10,9 +10,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
+from nanopnp.charge.kernel import source_atoms, volume_density
 from nanopnp.charge.protonation import PAYLOAD_NAME as PROTONATION_PAYLOAD
 from nanopnp.charge.protonation import ProtonationTable
-from nanopnp.charge.stage import EPS_R_PAYLOAD, stored_lattice
+from nanopnp.charge.stage import CHARGE_PAYLOAD, EPS_R_PAYLOAD, frame_shift_nm, stored_lattice
 from nanopnp.core.hashing import decode_floats
 from nanopnp.density.grid import read_grid
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
@@ -57,6 +58,7 @@ __all__ = [
     "NewtonRung",
     "ProtonationCharges",
     "RegionDrawing",
+    "ResidueCharges",
     "StoredGrid",
     "SweepCurves",
     "atoms_r_z_m",
@@ -85,6 +87,7 @@ __all__ = [
     "reduced_map",
     "region_drawing",
     "region_edges",
+    "residue_key",
     "sampled",
     "structure_atoms",
     "subdivided",
@@ -363,6 +366,106 @@ def protonation_charges(artefact: Artefact) -> ProtonationCharges | None:
         )
     )
     return ProtonationCharges(labels, charge)
+
+
+STRIP_MIN_CHARGE_E = 0.5
+"""A residue is listed among the charged ones when its charge is at least this, in e."""
+
+REACH_WIDTHS = 4.0
+"""The distance, in smearing widths, beyond which an atom's density is not summed at a point."""
+
+
+def residue_key(chain: str, resid: int, icode: str) -> str:
+    """Return the name a residue goes by on the molecule and on the map, ``<chain>:<resid><icode>``.
+
+    The chain is its one PDB column, which is all Mol* reads back; a blank chain is ``A``.
+    """
+    return f"{chain.strip()[:1] or 'A'}:{resid}{icode.strip()[:1]}"
+
+
+class ResidueCharges:
+    """Each charged atom of a deposit, by residue: where it sits in (r, z) and what it carries.
+
+    The atoms are the deposit's own, in the model frame, so a residue's markers fall where its
+    charge is on the map, and a point on the map names the residues whose charge is there.
+    """
+
+    @classmethod
+    def of(
+        cls, protonation: Artefact, charge: Artefact, resolved: ResolvedCase
+    ) -> ResidueCharges | None:
+        """Return the charges of a walk's stage-7 deposit, or None where it deposits none."""
+        if CHARGE_PAYLOAD not in charge.payload or stored_lattice(charge) is None:
+            return None
+        table = ProtonationTable.read(Path(protonation.payload[PROTONATION_PAYLOAD]))
+        return cls(table, resolved)
+
+    def __init__(self, table: ProtonationTable, resolved: ResolvedCase) -> None:
+        import numpy as np
+
+        atoms = source_atoms(
+            table,
+            sharpness=resolved.smearing.sharpness,
+            shift_z_nm=frame_shift_nm(resolved),
+        )
+        self._r, self._z = atoms.r_nm, atoms.z_nm
+        self._width, self._weight = atoms.width_nm, atoms.weight_e
+        # Every charged atom of every frame (an ensemble is tens of frames of tens of thousands of
+        # atoms), keyed through plain lists and grouped in one pass in order of first appearance,
+        # which the list's order and its first chain follow.
+        chain, resid, icode = table.chain.tolist(), table.resid.tolist(), table.icode.tolist()
+        resname = table.resname.tolist()
+        rows = atoms.atom.tolist()
+        self._keys: list[str] = [
+            residue_key(str(chain[i]), int(resid[i]), str(icode[i])) for i in rows
+        ]
+        self._names = [str(resname[i]).strip() for i in rows]
+        grouped: dict[str, list[int]] = {}
+        for position, key in enumerate(self._keys):
+            grouped.setdefault(key, []).append(position)
+        self._rows: dict[str, np.ndarray] = {
+            key: np.array(found, dtype=np.intp) for key, found in grouped.items()
+        }
+
+    def __contains__(self, key: object) -> bool:
+        """Say whether a residue key names a residue that carries charge."""
+        return key in self._rows
+
+    def residues(self) -> list[tuple[str, str, float]]:
+        """Return ``(key, name, charge_e)`` of the first chain's strongly charged residues.
+
+        A residue's charge is summed over every frame's atoms.
+        """
+        first = next(iter(self._rows), "").partition(":")[0]
+        found = []
+        for key, rows in self._rows.items():
+            charge = float(self._weight[rows].sum())
+            if key.partition(":")[0] == first and abs(charge) >= STRIP_MIN_CHARGE_E:
+                found.append((key, self._names[int(rows[0])], charge))
+        return found
+
+    def markers(self, key: str) -> list[tuple[float, float, float]]:
+        """Return the ``(r_nm, z_nm, q_e)`` of each charged atom of a residue."""
+        return [
+            (float(self._r[i]), float(self._z[i]), float(self._weight[i])) for i in self._rows[key]
+        ]
+
+    def at(self, r_nm: float, z_nm: float, n: int = 5) -> list[tuple[str, float]]:
+        """Return the ``n`` residues adding most charge density at a point, as ``(key, e/nm^3)``."""
+        import numpy as np
+
+        reach = REACH_WIDTHS * self._width
+        near = np.flatnonzero((np.abs(self._z - z_nm) < reach) & (np.abs(self._r - r_nm) < reach))
+        totals: dict[str, float] = {}
+        for i in near:
+            density = float(
+                volume_density(
+                    np.array(r_nm), np.array(z_nm), self._r[i], self._z[i], self._width[i]
+                )
+            )
+            key = self._keys[i]
+            totals[key] = totals.get(key, 0.0) + float(self._weight[i]) * density
+        return sorted(totals.items(), key=lambda item: -abs(item[1]))[:n]
 
 
 @dataclass(frozen=True)

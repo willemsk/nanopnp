@@ -16,7 +16,7 @@ from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.gui.web.continuum_tools import continuum_page
 from nanopnp.gui.web.frame import Route, Views, current_suite, frame, heading
-from nanopnp.gui.web.link import Extent, png
+from nanopnp.gui.web.link import Extent
 from nanopnp.gui.web.molecular import MolecularModel
 from nanopnp.gui.web.molview import (
     COLOURINGS,
@@ -29,7 +29,14 @@ from nanopnp.gui.web.molview import (
 from nanopnp.gui.web.physics import PhysicsModel
 from nanopnp.gui.web.physics_tools import physics_page
 from nanopnp.gui.web.plane import COLOURINGS as MESH_COLOURINGS
-from nanopnp.gui.web.plane import IMAGES, electrolyte_plane, image_png, physics_plane, plane
+from nanopnp.gui.web.plane import (
+    IMAGES,
+    electrolyte_plane,
+    image_png,
+    physics_plane,
+    plane,
+    png,
+)
 from nanopnp.gui.web.screens import SUITES, TOOL_SUITES, VIEWS, Suite, Tool, screen, tool_view
 from nanopnp.gui.web.settings_page import SettingsPage
 from nanopnp.gui.web.shell import Shell

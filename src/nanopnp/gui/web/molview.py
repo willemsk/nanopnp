@@ -10,12 +10,14 @@ from nanopnp.charge.pqr import PQRFrame, read_pqr
 from nanopnp.charge.protonation import PAYLOAD_NAME as TABLE_PAYLOAD
 from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.gui.geometry import lookup_table
-from nanopnp.gui.web.link import _chain_id, _pdb_text
+from nanopnp.plot.data import residue_key
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.structure.protonated import parent_residue
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
+    import numpy as np
+
     from nanopnp.gui.web.molecular import MolecularModel
     from nanopnp.io.case import Membrane
 
@@ -26,9 +28,56 @@ __all__ = [
     "Colouring",
     "Representation",
     "annotation",
+    "first_frame_pdb",
     "scene",
     "structure_text",
 ]
+
+
+def _chain_id(chain: str) -> str:
+    # The one column of a PDB chain, as a residue's key names it.
+    return residue_key(chain, 0, "").partition(":")[0]
+
+
+# Atoms as PDB text, which Mol* reads; the positions are in Å.
+def _pdb_text(
+    positions_nm: np.ndarray,
+    name: Sequence[str],
+    resname: Sequence[str],
+    chain: Sequence[str],
+    resid: Sequence[int],
+    icode: Sequence[str],
+) -> str:
+    lines = []
+    for row in range(len(name)):
+        x, y, z = (float(v) * 10.0 for v in positions_nm[row])
+        atom = str(name[row]).strip()
+        number = int(resid[row])
+        # The four columns hold -999 to 9999, which the protonation stage keeps to; only a number
+        # past them wraps (a negative one wrapped here would be named otherwise by Mol*).
+        if not -999 <= number <= 9999:
+            number %= 10000
+        lines.append(
+            f"ATOM  {(row + 1) % 100000:5d} {atom:<4s} {str(resname[row]).strip():>3s} "
+            f"{_chain_id(str(chain[row]))}{number:4d}"
+            f"{str(icode[row]).strip()[:1] or ' '}   {x:8.3f}{y:8.3f}{z:8.3f}"
+            f"  1.00  0.00          {atom[:1]:>2s}"
+        )
+    return "\n".join([*lines, "END"]) + "\n"
+
+
+def first_frame_pdb(table: ProtonationTable) -> str:
+    """Return the first frame of a protonation table as PDB text, which Mol* reads."""
+    stop = int(table.frame_offsets[1])
+    return _pdb_text(
+        table.positions_nm[:stop],
+        table.name[:stop].tolist(),
+        table.resname[:stop].tolist(),
+        table.chain[:stop].tolist(),
+        table.resid[:stop].tolist(),
+        table.icode[:stop].tolist(),
+    )
+
 
 Representation = Literal["cartoon", "ball_and_stick", "spacefill", "surface"]
 REPRESENTATIONS: dict[Representation, str] = {
