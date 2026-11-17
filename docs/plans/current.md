@@ -17,10 +17,10 @@ close follow, about 35 sessions.
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.18 merged
   (`v0.6.0-alpha.18`).
-  **WP5.19** [in progress](phase-5/wp5.19-the-study-suite.md) on `ccr-ff91f6e7-ohlzgc`: items 1 to 10 done (the study's
+  **WP5.19** [in progress](phase-5/wp5.19-the-study-suite.md) on `ccr-ff91f6e7-ohlzgc`: items 1 to 12 done (the study's
   library steps, the thread count, `reproduce --upto`, the outline's shell spacing, the queue's slots and a run's
-  ladder, the residue link and the deployed charge, the five Study tools published for round 1). Next, item 11,
-  `redraw.cjs`.
+  ladder, the residue link and the deployed charge, the five Study tools published for round 1, `redraw.cjs`). Next,
+  item 13, the round's verdicts collected.
   host: claude-code.
 
 ## Not to be re-decided

@@ -1,6 +1,6 @@
 # WP5.19 — The Study suite
 
-**Status: in progress, items 1 to 10 done.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
+**Status: in progress, items 1 to 12 done.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
 AN4, AP5, AQ1 and this plan's AR3 to AR6 (§8.2.31 to §8.2.42).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
@@ -274,6 +274,15 @@ layer's ∫ 2πr dA keeps `q_mesh_e`, with the vertices and triangles to `<run>/
 warm-up, 1.5 s apart; per pick the time to the markers' paint and to Mol*'s second frame after the selection; prints
 median and p95 of each, the browser's GPU string and `--json`. Check: it runs headless here (software GL).
 
+> **Outcome — the redraw timed, headless here.** `redraw.cjs` clicks a residue's charged atoms on the map, 20 picks after
+> three warm-up picks, and times from the release the markers' paint, split into the server's handling up to
+> `nano.plane`, the drawing's fetch and the canvas's paint; Mol*'s second frame; and Mol*'s own share after `nano.show`.
+> It takes `--json`, `--headed` and `--trace`. On this container's software GL (SwiftShader), 2WCD at 1440 × 900, 20
+> picks: markers' paint 297 / 380 ms (median / p95), Mol*'s second frame 745 / 827 ms, Mol*'s own share 434 / 487 ms.
+> Of the markers' paint (five picks), the server's handling is 167 / 243 ms, the fetch 54 / 70 ms and the canvas 59 /
+> 67 ms. Each pick keys the study's walk two or three times in the pane and once in the route, about 45 ms each; item 14
+> keys it once. The author's GPU run decides AG7 at item 16.
+
 ### Work items
 
 - [x] 229439d 1. `api/project.py` (D2's methods, REV-206), §5.3.5's NOTE (D2, D9); done when `test_study.py` and
@@ -295,9 +304,9 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
   `link.py` and `st-charge` removed; `render_shell.py` group `study` with REV-256's mockups; `/np-gui render shell`, `review`, `publish` (D1, D3
   to D6, D10); done when the digest is published and VER-78 passes. **Executor:** main
 - [x] 10. Compaction checkpoint, added at the author's request after item 9. **Executor:** main
-- [ ] 11. `.claude/scripts/gui/redraw.cjs` (D11); done when its check passes. **Executor:** general-purpose on Sonnet,
+- [x] 3ac5148 11. `.claude/scripts/gui/redraw.cjs` (D11); done when its check passes. **Executor:** general-purpose on Sonnet,
   high
-- [ ] 12. Compaction checkpoint; the author's verdicts; the author runs `redraw.cjs`. **Executor:** main
+- [x] 12. Compaction checkpoint; the author's verdicts; the author runs `redraw.cjs`. **Executor:** main
 - [ ] 13. `/np-gui collect`; REV-215, REV-240's, REV-252's, REV-255's and REV-256's points ruled or carried; the
   design document's rows (D10); done when the code and review say so. **Executor:** main
 - [ ] 14. The tools finished to the verdicts, REV-254's Study words (D10); done when VER-78, VER-60 and VER-44 pass.
