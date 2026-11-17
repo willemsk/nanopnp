@@ -128,7 +128,7 @@ test harness can exercise is not one a user holding an archived result can rely 
 *input* is fatal and names the file, a reproduction against moved contents being a different
 calculation reported as the same one; drift in a recorded library version is reported and not fatal
 unless the caller asks for a strict environment, because a version that moved a number is caught by
-the quantity comparison, which is the assertion that matters.
+the quantity comparison, which is the assertion that matters. A run stopped early (`upto`, §5.3.3) reproduces to its last stage: each reached stage's key is compared exactly with the record's, the mesh's content hash as for a whole run, and each number of the manifest's charge group within the tolerance; the quantities are compared only where the record reached `qoi`, and the store miss and the re-entry into the solve are asserted only where it reached `solve`. `nanopnp reproduce --upto <stage>` reproduces a record up to that stage; a stage past the record's last is refused, naming both (REV-41).
 
 NOTE (older entries, FR-27, REV-32; WP5.08; §8.2.18 T2; §8.2.33 AI14): a store lists, and on request
 removes, the entries an older release wrote (`Store.stale`, `Store.remove`, `nanopnp store prune

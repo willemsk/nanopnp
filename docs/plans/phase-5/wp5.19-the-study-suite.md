@@ -242,7 +242,7 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 
 - [x] 229439d 1. `api/project.py` (D2's methods, REV-206), §5.3.5's NOTE (D2, D9); done when `test_study.py` and
   `test_project.py` pass. **Executor:** main
-- [ ] 2. `sweep/plan.py`, `api/sweep.py`, `sweep/run.py`, `solve/stage.py`, `pipeline/run.py`, `gui/solver.py`, the layering file, FR-25's
+- [x] ded0156 2. `sweep/plan.py`, `api/sweep.py`, `sweep/run.py`, `solve/stage.py`, `pipeline/run.py`, `gui/solver.py`, the layering file, FR-25's
   and §5.3.3's text, §5.3.1's NOTE on `outputs:` (D4, D7); done when `test_sweep_plan.py` and
   `test_gui_solver_process.py` pass. **Executor:** main
 - [ ] 3. `api/reproduce.py`, `cli/running.py` (D9); done when its check passes. **Executor:** general-purpose on

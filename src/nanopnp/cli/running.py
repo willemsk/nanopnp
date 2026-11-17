@@ -359,12 +359,14 @@ def _reproduce(args: argparse.Namespace) -> int:
         store=Store(args.store) if args.store is not None else None,
         tolerance=args.tolerance,
         strict_environment=args.strict_environment,
+        upto=args.upto,
     )
     payload = finding.summary()
     worst = finding.worst
     lines = [
         f"directory {finding.directory}",
         f"manifest  {finding.manifest_hash}",
+        f"upto      {finding.upto or 'the whole run'}",
         f"compared  {len(finding.quantities)} quantities at rtol {finding.tolerance:g}",
         f"worst     {'none compared' if worst is None else f'{worst:.3e}'}",
         f"result    {'reproduced' if finding.reproduced else 'NOT reproduced'}",
@@ -500,6 +502,12 @@ def _register_reproduce(subparsers: Subparsers) -> None:
         "--strict-environment",
         action="store_true",
         help="treat a library, interpreter or platform difference as a failure",
+    )
+    check.add_argument(
+        "--upto",
+        default=None,
+        metavar="STAGE",
+        help="reproduce only up to this stage, which the record must have reached",
     )
     check.set_defaults(handler=_reproduce)
 
