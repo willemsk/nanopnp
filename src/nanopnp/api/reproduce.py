@@ -99,6 +99,7 @@ class Reproduction:
     drifts: tuple[Drift, ...]
     environment: tuple[EnvironmentDrift, ...]
     tolerance: float
+    upto: str | None = None
 
     @property
     def reproduced(self) -> bool:
@@ -112,6 +113,7 @@ class Reproduction:
             "manifest": self.manifest_hash,
             "reproduced": self.reproduced,
             "tolerance": self.tolerance,
+            "upto": self.upto,
             "worst_relative_difference": self.worst,
             "compared": len(self.quantities),
             "drifts": [drift.summary() for drift in self.drifts],
@@ -258,11 +260,11 @@ def check_environment(
     return tuple(differences)
 
 
-def _recorded_quantities(directory: Path) -> Mapping[str, Canonicalisable]:
+def _recorded_run(directory: Path) -> Mapping[str, Canonicalisable]:
     path = directory / RUN_RECORD_FILENAME
     if not path.is_file():
         raise ReproductionError(
-            f"{path} is not there, so this run directory records no quantities to reproduce. "
+            f"{path} is not there, so this run directory records no stages to reproduce. "
             "A run written by 'nanopnp run' carries one beside its manifest"
         )
     # ``RunResult.write`` writes the record through ``canonical``, so every float
@@ -271,13 +273,55 @@ def _recorded_quantities(directory: Path) -> Mapping[str, Canonicalisable]:
     # comparison whose two sides disagree about the *encoding* reports a missing
     # quantity where the number is in fact there (section 5.3.2, QR-08).
     record = decode_floats(json.loads(path.read_text(encoding="utf-8")))
-    quantities = record.get("quantities") if isinstance(record, dict) else None
-    if not isinstance(quantities, dict) or not quantities:
+    if not isinstance(record, dict):
+        raise ReproductionError(f"{path} is not a run record")
+    return record
+
+
+def _recorded_stages(record: Mapping[str, Canonicalisable], *, where: Path) -> list[str]:
+    entries = record.get("stages")
+    names = (
+        [str(entry["stage"]) for entry in entries if isinstance(entry, dict)]
+        if isinstance(entries, list)
+        else []
+    )
+    if not names:
+        raise ReproductionError(f"{where / RUN_RECORD_FILENAME} lists no stage the run reached")
+    return names
+
+
+def _target_stage(upto: str | None, recorded: list[str], *, where: Path) -> str | None:
+    last = recorded[-1]
+    if upto is not None and upto not in recorded:
         raise ReproductionError(
-            f"{path} records no quantities; the run it describes stopped before stage 11 and "
-            "produced no number for a reproduction to compare"
+            f"upto {upto!r} is past what {where / RUN_RECORD_FILENAME} recorded: the run stopped "
+            f"at {last!r} (it reached {', '.join(recorded)}), so there is nothing recorded at "
+            f"{upto!r} to reproduce"
         )
-    return quantities
+    if upto is not None:
+        return upto
+    return None if "qoi" in recorded else last
+
+
+def _compare_artefacts(
+    record: Mapping[str, Canonicalisable], result: RunResult
+) -> tuple[Drift, ...]:
+    held = record.get("artefacts")
+    recorded = held if isinstance(held, dict) else {}
+    drifts: list[Drift] = []
+    for stage, artefact in result.artefacts.items():
+        entry = recorded.get(stage)
+        was = entry.get("hash") if isinstance(entry, dict) else None
+        if was is not None and was != artefact.hash:
+            drifts.append(
+                Drift(
+                    path=f"artefacts.{stage}",
+                    recorded=was,
+                    reproduced=artefact.hash,
+                    relative=None,
+                )
+            )
+    return tuple(drifts)
 
 
 def reproduce(
@@ -286,6 +330,7 @@ def reproduce(
     store: Store | None = None,
     tolerance: float = DEFAULT_TOLERANCE,
     strict_environment: bool = False,
+    upto: str | None = None,
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
 ) -> Reproduction:
@@ -299,6 +344,9 @@ def reproduce(
         Where the artefacts go; None runs into a temporary directory.
     tolerance
         Relative agreement every scalar must reach.
+    upto
+        Reproduce only up to this stage, which the record must have reached; ``None`` reproduces
+        the record to its last stage.
     """
     where = Path(directory)
     manifest_path = where / MANIFEST_FILENAME
@@ -318,7 +366,8 @@ def reproduce(
             "from one string, so one of them has been edited since the run"
         )
 
-    recorded = _recorded_quantities(where)
+    record = _recorded_run(where)
+    last = _target_stage(upto, _recorded_stages(record, where=where), where=where)
     check_inputs(manifest, where=where)
     drift = check_environment(manifest)
     if drift and strict_environment:
@@ -337,6 +386,7 @@ def reproduce(
         session = Session(target, write=False, workspace=Path(scratch) / "work")
         result = session.run(
             Case.load(case_path, base=_recorded_directory(manifest)),
+            upto=last,
             progress=progress,
             cancel=cancel,
         )
@@ -348,7 +398,30 @@ def reproduce(
                 "nothing else. Reproduce into a store that does not hold the run (QR-08)"
             )
         check_mesh(manifest, result, where=where)
-        drifts, worst = compare(recorded, result.quantities, tolerance=tolerance)
+        stage_drifts = _compare_artefacts(record, result)
+        was_charge = decode_floats(manifest.get("charge", {}))
+        charge_drifts, charge_worst = compare(
+            {"charge": was_charge if isinstance(was_charge, dict) else {}},
+            {"charge": dict(result.manifest.charge)},
+            tolerance=tolerance,
+        )
+        recorded: Mapping[str, Canonicalisable] = {}
+        quantity_drifts: tuple[Drift, ...] = ()
+        quantity_worst: float | None = None
+        if "qoi" in result.artefacts:
+            held = record.get("quantities")
+            if not isinstance(held, dict) or not held:
+                raise ReproductionError(
+                    f"{where / RUN_RECORD_FILENAME} records no quantities although the run "
+                    "reached the qoi stage; there is no number for a reproduction to compare"
+                )
+            recorded = held
+            quantity_drifts, quantity_worst = compare(
+                recorded, result.quantities, tolerance=tolerance
+            )
+        drifts = stage_drifts + charge_drifts + quantity_drifts
+        found = [value for value in (charge_worst, quantity_worst) if value is not None]
+        worst = max(found) if found else None
 
     reproduction = Reproduction(
         directory=where,
@@ -359,6 +432,7 @@ def reproduce(
         drifts=drifts,
         environment=drift,
         tolerance=tolerance,
+        upto=last,
     )
     logger.info(
         "reproduced %s: %d quantities, worst relative difference %s",

@@ -22,6 +22,7 @@ from nanopnp.geometry.pore import CylinderPore
 from nanopnp.io.store import Store
 from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.pipeline.run import RUN_RECORD_FILENAME
+from nanopnp.validation.charged_tube import write_charged_tube
 
 logger = logging.getLogger(__name__)
 
@@ -162,6 +163,44 @@ def test_ver35_a_library_difference_is_reported_and_only_fatal_when_asked(
 
     with pytest.raises(ReproductionError, match="strict_environment"):
         reproduce(archived.directory, strict_environment=True)
+
+
+# A record stopped before qoi was refused outright, or a stage key drifted unseen where no
+# quantity is compared.
+def test_ver35_a_run_stopped_at_its_charge_reproduces_to_that_stage(tmp_path: Path) -> None:
+    case_path = write_charged_tube(tmp_path / "tube")
+    made = Session(Store(tmp_path / "store"), workspace=tmp_path / "fields").run(
+        Case.load(case_path), upto="charge"
+    )
+    record = json.loads((made.directory / RUN_RECORD_FILENAME).read_text(encoding="utf-8"))
+    assert [entry["stage"] for entry in record["stages"]][-1] == "charge"
+    assert "upto-charge" in made.directory.name
+
+    found = reproduce(made.directory)
+    assert found.reproduced, [drift.summary() for drift in found.drifts]
+    assert found.upto == "charge"
+    assert found.quantities == {}
+    assert found.run.store is not None and found.run.store.misses > 0
+    assert not any(stage.name == "solve" for stage in found.run.stages)
+    assert {name: artefact.hash for name, artefact in found.run.artefacts.items()} == {
+        name: entry["hash"] for name, entry in record["artefacts"].items()
+    }
+    assert reproduce(made.directory, upto="charge").reproduced
+
+    with pytest.raises(ReproductionError) as past:
+        reproduce(made.directory, upto="solve")
+    assert "'solve'" in str(past.value)
+    assert "'charge'" in str(past.value)
+
+    pqr = case_path.parent / "atoms.pqr"
+    original = pqr.read_bytes()
+    try:
+        pqr.write_bytes(original + b"REMARK edited\n")
+        with pytest.raises(InputMovedError) as moved:
+            reproduce(made.directory)
+        assert str(pqr) in str(moved.value)
+    finally:
+        pqr.write_bytes(original)
 
 
 # QR-12
