@@ -41,6 +41,7 @@ SECTIONS: dict[str, str] = {
     "appearance": "Appearance and accessibility",
     "keyboard": "Keyboard and editing guards",
     "runs": "Runs and storage",
+    "compute": "Compute",
     "numbers": "Units and numbers",
 }
 """The settings page's sections, by identifier, in the order it lists them."""
@@ -259,6 +260,35 @@ register(
         "both",
         None,
         TypeAdapter(Annotated[float, Field(ge=0.5, le=10_000)] | None),
+        applies="next run",
+    )
+)
+_COUNT: TypeAdapter[Any] = TypeAdapter(Annotated[int, Field(ge=1, le=64)])
+
+register(
+    Setting(
+        "solves_at_once",
+        "compute",
+        "Solves at once",
+        "How many builds, runs and sweep members run at the same time; the rest wait in the queue.",
+        ("parallel", "concurrent", "queue", "processes", "workers", "builds"),
+        "user",
+        1,
+        _COUNT,
+        applies="next run",
+    )
+)
+register(
+    Setting(
+        "threads_per_solve",
+        "compute",
+        "Threads per solve",
+        "How many threads each solve's linear algebra uses. More can change a result's last "
+        "digits; each run's record states the count.",
+        ("threads", "cores", "cpu", "blas", "parallel", "performance"),
+        "user",
+        1,
+        _COUNT,
         applies="next run",
     )
 )

@@ -2,6 +2,7 @@
 // the layers the server writes (gui/web/plane.py). Equal scale, r to the right and z up; a drag pans,
 // the wheel zooms about the pointer, and a pick or an edit goes back to the server by emitEvent. A
 // drawing of the plot frame is a graph instead: each axis scaled alone to its extent, not panned.
+// A queued run's convergence draws on a canvas of its own, made the same way (nano.plot).
 (() => {
   const MARGIN = { left: 56, right: 12, top: 10, bottom: 40 };
   const ROLES = {
@@ -12,7 +13,9 @@
     boundary: ['--canvas-plot-ink', 2.5, []],
   };
   // A plot: its ticks per axis, its curves' width, its rules' dash, its bands' fill, the legend's gap.
-  const PLOT_TICKS = 5, CURVE_W = 2, RULE_DASH = [6, 4], BAND_ALPHA = 0.15, KEY_GAP = 12;
+  const PLOT_TICKS = 5, CURVE_W = 2, RULE_DASH = [6, 4], BAND_ALPHA = 0.15, KEY_GAP = 12, MARK_R = 2.5;
+  const SUPERSCRIPT = { '-': '\u207b', 0: '\u2070', 1: '\u00b9', 2: '\u00b2', 3: '\u00b3', 4: '\u2074',
+    5: '\u2075', 6: '\u2076', 7: '\u2077', 8: '\u2078', 9: '\u2079' };
   // The narrowest plot the legend stands beside; a narrower one takes it inside, top right.
   const PLOT_MIN_W = 200;
   // The solids a drawing fills lightly under their outline, so a slab reads as one.
@@ -30,7 +33,9 @@
   };
   const frames = () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
 
-  const view = {
+  // A view on one host: the frame's (r, z) canvas, which marks the screen ready, or a plot's.
+  const makeView = (hostId, marks) => ({
+    hostId, marks,
     // How many times the canvas was built in this window: the frame builds it once (VER-78 m).
     builds: 0,
     host: null, canvas: null, notes: null, fitButton: null, drawing: null, frame: undefined,
@@ -45,7 +50,7 @@
 
     build() {
       this.builds += 1;
-      this.host = document.getElementById('plane');
+      this.host = document.getElementById(this.hostId);
       this.canvas = document.createElement('canvas');
       this.canvas.tabIndex = 0;
       this.canvas.setAttribute('role', 'img');
@@ -75,13 +80,16 @@
     },
 
     // Show a drawing the server writes, building the canvas the first time; null shows the note.
+    // A plot's drawing may come whole, in place of its address.
     async show(url, note) {
-      document.body.dataset.screenReady = '0';
+      if (this.marks) document.body.dataset.screenReady = '0';
       if (this.canvas === null) this.build();
       const asked = ++this.asked;
       let drawing = null;
       try {
-        if (url) {
+        if (url && typeof url === 'object') {
+          drawing = url;
+        } else if (url) {
           drawing = await this.fetchDrawing(url, true);
           // A mesh left out that the canvas no longer holds is asked for whole.
           if (drawing.layers.some((l) => l.kind === 'mesh' && !l.vertices_nm && !this.holds(l))) {
@@ -118,7 +126,7 @@
       await frames();
       this.resized();
       await frames();
-      if (asked === this.asked) document.body.dataset.screenReady = '1';
+      if (this.marks && asked === this.asked) document.body.dataset.screenReady = '1';
     },
 
     async image(url) {
@@ -470,11 +478,12 @@
       ctx.fillStyle = token('--canvas-plot-ink') || '#16181d';
       ctx.globalAlpha = BAND_ALPHA;
       for (const layer of layers) {
-        if (layer.kind !== 'band') continue;
+        if (layer.kind !== 'band' || layer.shaded === false) continue;
         const [left] = at(layer.x[0], y0), [right] = at(layer.x[1], y0);
         ctx.fillRect(left, area.y, right - left, area.h);
       }
       ctx.globalAlpha = 1;
+      for (const layer of layers) if (layer.kind === 'band' && layer.label) this.bandLabel(ctx, area, layer, at, y0);
       ctx.lineJoin = 'round';
       for (const kind of ['rule', 'line']) {
         for (const layer of layers) {
@@ -496,6 +505,17 @@
             }
           }
           ctx.stroke();
+          if (kind === 'line' && layer.marks) {
+            // Each sample marked, so that a rung of one step shows its point.
+            ctx.fillStyle = colour;
+            const p = layer.points_nm;
+            for (let k = 0; k < p.length; k += 2) {
+              const [x, y] = at(p[k], p[k + 1]);
+              ctx.beginPath();
+              ctx.arc(x, y, MARK_R, 0, 2 * Math.PI);
+              ctx.fill();
+            }
+          }
         }
       }
       ctx.restore();
@@ -507,7 +527,38 @@
       const xTicks = panel.ticks
         ? panel.ticks.map((value) => [at(value, y0)[0], text(value)])
         : ticks(x0, x1, (x) => at(x, y0)[0]);
-      this.frameAxes(ctx, area, xTicks, ticks(y0, y1, (y) => at(x0, y)[1]), panel.axes);
+      // A logarithmic axis is drawn in decades: its values are their powers of ten.
+      const power = (value) => `10${String(Math.round(value)).replace(/./g, (c) => SUPERSCRIPT[c] || c)}`;
+      const yText = panel.y_scale === 'log' ? power : text;
+      const yTicks = panel.y_ticks
+        ? panel.y_ticks.map((value) => [at(x0, value)[1], yText(value)])
+        : ticks(y0, y1, (y) => at(x0, y)[1]);
+      this.frameAxes(ctx, area, xTicks, yTicks, panel.axes);
+    },
+
+    // A band's name, and what it holds where it holds no curve, inside it at the top: across where
+    // the band is wide enough, else up its left edge, ending at its top.
+    bandLabel(ctx, area, layer, at, y0) {
+      const [left] = at(layer.x[0], y0), [right] = at(layer.x[1], y0);
+      const lines = [layer.label, ...(layer.note ? [layer.note] : [])];
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(left, area.y, right - left, area.h);
+      ctx.clip();
+      ctx.fillStyle = token('--canvas-plot-ink') || '#16181d';
+      ctx.font = `11px ${token('--font-ui') || 'sans-serif'}`;
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+      const widest = Math.max(...lines.map((line) => ctx.measureText(line).width));
+      if (right - left >= widest + 8) {
+        lines.forEach((line, k) => ctx.fillText(line, left + 4, area.y + 4 + k * 13));
+      } else {
+        ctx.translate(left + 4, area.y + 4);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'right';
+        lines.forEach((line, k) => ctx.fillText(line, 0, k * 13));
+      }
+      ctx.restore();
     },
 
     // An outline's vertices, once they stand apart on the screen.
@@ -702,10 +753,13 @@
             kind: 'swatch', text: layer.title, colour: layer.fill, alpha: layer.picked ? 0.9 : 0.55,
           });
         } else if (layer.kind === 'band') {
-          entries.push({
-            kind: 'swatch', text: layer.title, colour: token('--canvas-plot-ink') || '#16181d',
-            alpha: BAND_ALPHA,
-          });
+          // A band labelled inside, as a run's rung, is not keyed.
+          if (layer.title) {
+            entries.push({
+              kind: 'swatch', text: layer.title, colour: token('--canvas-plot-ink') || '#16181d',
+              alpha: BAND_ALPHA,
+            });
+          }
         } else if (layer.title && layer.kind !== 'domain' && !titles.has(layer.title)) {
           titles.add(layer.title);
           entries.push({ kind: 'line', text: layer.title, style: this.lineStyle(layer) });
@@ -935,8 +989,22 @@
       event.preventDefault();
       this.emit('plane_delete', { layer: layer.id, index: picked.index });
     },
-  };
+  });
 
+  const view = makeView('plane', true);
+  // The plots of the queue's runs, by host: a host built again takes a new canvas.
+  const plots = new Map();
   window.nano.canvas = view;
   window.nano.plane = (url, note) => view.show(url, note);
+  window.nano.plot = (hostId, drawing) => {
+    const host = document.getElementById(hostId);
+    for (const [id, plot] of plots) if (plot.host && !plot.host.isConnected) plots.delete(id);
+    if (!host) return null;
+    let plot = plots.get(hostId);
+    if (!plot || (plot.host && plot.host !== host)) {
+      plot = makeView(hostId, false);
+      plots.set(hostId, plot);
+    }
+    return plot.show(drawing, '');
+  };
 })();

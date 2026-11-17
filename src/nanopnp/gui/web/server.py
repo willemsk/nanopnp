@@ -160,10 +160,12 @@ def build_app(token: str, bench: Workbench) -> Guard:
     The guard learns its allowed Host values once the port is bound, so the caller sets
     ``guard.hosts`` before serving.
     """
+    shell = Shell(bench)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         yield
+        shell.queue.stop()
         _stop_children()
 
     app = FastAPI(title="nanopnp workbench", lifespan=lifespan)
@@ -173,7 +175,7 @@ def build_app(token: str, bench: Workbench) -> Guard:
         """Say that the server is up, and which version of nanopnp runs it."""
         return {"status": "ok", "version": __version__}
 
-    install(app, Shell(bench), token)
+    install(app, shell, token)
     return Guard(app, token)
 
 

@@ -17,7 +17,7 @@ from nanopnp.api.case import Case
 from nanopnp.api.session import Session
 from nanopnp.core.errors import classify
 from nanopnp.core.hashing import Canonicalisable
-from nanopnp.core.stages import CancelToken, SolveHook
+from nanopnp.core.stages import CancelToken, SolveHook, StageHook
 from nanopnp.io.artefact import SOLUTION_SCHEMA, SWEEP_SCHEMA, Artefact, StageInputs, SweepArtefact
 from nanopnp.io.case import CaseDocument, CaseValidationError, FieldValue, dumps_case
 from nanopnp.io.case_paths import UnknownCasePathError, field_path, input_paths, substitute
@@ -301,6 +301,7 @@ def run_point(
     directory: Path,
     cancel: CancelToken | None = None,
     on_solve: SolveHook | None = None,
+    on_stage: StageHook | None = None,
 ) -> MemberResult:
     """Run one member through ``session`` and return its record, capturing whatever it raised.
 
@@ -314,12 +315,20 @@ def run_point(
         Polled at each stage and Newton step; a set token records the member as cancelled.
     on_solve
         Called with each continuation rung and Newton step of the member's solve.
+    on_stage
+        Called as each stage of the member's walk starts.
     """
     # Held from the parent's lookup to the member's walk, so no clean-up removes the warm start
     # between them.
     with session.store.using():
         return _run_point(
-            plan, index, session=session, directory=directory, cancel=cancel, on_solve=on_solve
+            plan,
+            index,
+            session=session,
+            directory=directory,
+            cancel=cancel,
+            on_solve=on_solve,
+            on_stage=on_stage,
         )
 
 
@@ -331,6 +340,7 @@ def _run_point(
     directory: Path,
     cancel: CancelToken | None,
     on_solve: SolveHook | None,
+    on_stage: StageHook | None,
 ) -> MemberResult:
     from nanopnp.core.stages import Cancelled
 
@@ -373,6 +383,7 @@ def _run_point(
             arguments={"solve": {"warm_start": warm, "cold_reason": reason}},
             resolved=held,
             cancel=cancel,
+            on_stage=on_stage,
             on_solve=on_solve,
         )
     except Cancelled as error:

@@ -14,12 +14,22 @@ from nanopnp.core.errors import EXIT_CASE, EXIT_GATE, classify
 from nanopnp.gui.web import settings
 from nanopnp.gui.web.queue import Queue
 from nanopnp.io.store import StaleEntry, Store, StoreError
+from nanopnp.pipeline.case import resolve
+from nanopnp.pipeline.run import selected_stages
 from nanopnp.validation.charged_tube import write_charged_tube, write_dielectric_tube
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.gui.web.link import Link
 
-__all__ = ["STATES", "Workbench", "boot", "boot_case", "boot_project", "cap_store"]
+__all__ = [
+    "STATES",
+    "Workbench",
+    "boot",
+    "boot_case",
+    "boot_project",
+    "cap_store",
+    "opening_stage",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -90,8 +100,22 @@ def boot_case(case: Path, work: Path, *, name: str | None = None) -> Workbench:
     )
 
 
+def opening_stage(project: Project, study: str) -> str:
+    """Return the stage a project's opening walk takes a study to: the charge, else the mesh.
+
+    A study whose charge is neither deposited nor supplied runs no charge stage.
+    """
+    try:
+        case = project.study(study)
+        wanted = selected_stages(resolve(case, base=case.source.base), None)
+    except (ValueError, KeyError, OSError):
+        # A study that does not resolve is refused by the walk itself, naming why.
+        return "charge"
+    return "charge" if "charge" in wanted else "mesh"
+
+
 def boot_project(project: Project, queue: Queue | None = None) -> Workbench:
-    """Walk a project's first study to the charge stage; a refusal is kept as text.
+    """Walk a project's first study to the charge stage, else to its mesh; keep a refusal as text.
 
     The walk writes no run record, and its entry goes into the queue.
     """
@@ -100,11 +124,12 @@ def boot_project(project: Project, queue: Queue | None = None) -> Workbench:
     if not studies:
         return Workbench(project.name, project=project, queue=queue)
     study = studies[0]
-    entry = queue.add(f"{study} to charge", "running")
+    upto = opening_stage(project, study)
+    entry = queue.add(f"{study} to {upto}", "running")
     session = project.session()
     session.write = False
     try:
-        result = session.run(project.study(study), upto="charge")
+        result = session.run(project.study(study), upto=upto)
     except Exception as error:
         if classify(error) not in {EXIT_CASE, EXIT_GATE}:
             raise
