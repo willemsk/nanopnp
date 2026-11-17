@@ -552,15 +552,17 @@ def _warnings(
     return tuple(found)
 
 
-def _pairs(points: Sequence[Point]) -> tuple[tuple[int, int], ...]:
-    bias = "boundary_conditions.bias_V"
+def _pairs(
+    points: Sequence[Point], resolved: Sequence[ResolvedCase]
+) -> tuple[tuple[int, int], ...]:
+    # Keyed by the case each point resolves to, so a bias set through a variable pairs as one
+    # set directly does; a variable that also moves another field keys its points apart.
     by_rest: dict[str, dict[float, int]] = {}
-    for point in points:
-        if bias not in point.assignments:
-            continue
-        rest = {path: value for path, value in point.assignments.items() if path != bias}
+    for point, case in zip(points, resolved, strict=True):
+        rest = case.document.model_dump(by_alias=True, mode="json", exclude={"name", "variables"})
+        rest.get("boundary_conditions", {}).pop("bias_V", None)
         key = canonical(rest).decode("utf-8")
-        by_rest.setdefault(key, {})[float(point.assignments[bias])] = point.index
+        by_rest.setdefault(key, {})[float(case.bias_V)] = point.index
     found: list[tuple[int, int]] = []
     for biases in by_rest.values():
         for value, index in sorted(biases.items()):
@@ -656,22 +658,22 @@ def build_plan(
         document=document.summary(),
         points=tuple(points),
         rectification=RECTIFICATION in base.outputs,
-        pairs=_pairs(points),
         warnings=_warnings(document, barriers, base),
         workers=document.workers,
         variables=_variables_as_written(base),
     )
-    # Before the resolve rather than after it: an asymmetric bias axis makes the
-    # plan impossible whatever its points resolve to, and the point of checking
-    # here at all is that a sweep is refused in seconds (§5.3.4).
+    resolved = _resolve_every_point(base, plan, beside=beside)
+    # After the resolve, before the mesh gate: a bias set through a variable is known only once
+    # each point resolves, and the refusal still comes before anything is meshed (§5.3.4).
+    plan = replace(plan, pairs=_pairs(plan.points, resolved))
     if plan.rectification and not plan.pairs:
         raise SweepPlanError(
             f"the base case asks for {RECTIFICATION!r}, which is the two-point ratio "
             "I(+V)/I(-V) and can only come from a matched pair of members, but no two points "
-            "of this sweep differ only in 'boundary_conditions.bias_V' at exactly opposite "
-            "values. Give the bias axis a symmetric set of values, or drop the output"
+            "of this sweep resolve to cases that differ only in 'boundary_conditions.bias_V' "
+            "at exactly opposite values. Give the bias axis a symmetric set of values, or drop "
+            "the output"
         )
-    resolved = _resolve_every_point(base, plan, beside=beside)
     plan = replace(
         plan,
         files=_planned_files(resolved),

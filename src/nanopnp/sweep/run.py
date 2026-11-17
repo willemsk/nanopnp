@@ -28,10 +28,13 @@ THREAD_VARIABLES: tuple[str, ...] = (
 )
 
 
-def pin_threads() -> dict[str, str]:
-    """Pin the linear-algebra thread counts to one; return what was set."""
+def pin_threads(count: int = 1) -> dict[str, str]:
+    """Pin the linear-algebra thread counts to ``count``, one by default; return what was set.
+
+    It acts only in a process that has not yet loaded NumPy or NGSolve, as a fresh worker.
+    """
     for variable in THREAD_VARIABLES:
-        os.environ[variable] = "1"
+        os.environ[variable] = str(count)
     return {variable: os.environ[variable] for variable in THREAD_VARIABLES}
 
 

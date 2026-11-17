@@ -218,7 +218,7 @@ is a rolling register, and its header stays `open`.
 | REV-194 | provenance | low | fixed | WP5.06 review | [A registered steric form or output enters the key by name only](review-items.md#rev-194-a-registered-steric-form-or-output-enters-the-key-by-name-only) |
 | REV-195 | verification | low | fixed | WP5.06 review | [The manufactured source builds the Borukhov flux whatever steric model is named](review-items.md#rev-195-the-manufactured-source-builds-the-borukhov-flux-whatever-steric-model-is-named) |
 | REV-196 | interface | low | fixed | WP5.06 review | [The case JSON Schema no longer lists the steric models and the outputs](review-items.md#rev-196-the-case-json-schema-no-longer-lists-the-steric-models-and-the-outputs) |
-| REV-197 | interface | low | accepted | WP5.07; WP5.19 | [Rectification does not pair a bias set through a variable](review-items.md#rev-197-rectification-does-not-pair-a-bias-set-through-a-variable) |
+| REV-197 | interface | low | fixed | WP5.07; [WP5.19](../plans/phase-5/wp5.19-the-study-suite.md) | [Rectification does not pair a bias set through a variable](review-items.md#rev-197-rectification-does-not-pair-a-bias-set-through-a-variable) |
 | REV-198 | interface | low | fixed | WP5.07 review | [A sweep plan is not tied to the variables as written](review-items.md#rev-198-a-sweep-plan-is-not-tied-to-the-variables-as-written) |
 | REV-199 | performance | low | fixed | WP5.07 review | [The sweep forecast resolves every point again](review-items.md#rev-199-the-sweep-forecast-resolves-every-point-again) |
 | REV-200 | coupling | low | fixed | WP5.07 review | [A second type repeats the variable resolution](review-items.md#rev-200-a-second-type-repeats-the-variable-resolution) |

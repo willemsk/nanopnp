@@ -266,6 +266,44 @@ def test_ver36_a_symmetric_bias_axis_supplies_the_pairs(tmp_path: Path) -> None:
     assert plan.point(reverse).assignments["boundary_conditions.bias_V"] == -0.05
 
 
+VARIABLE_BIAS = """
+schema: nanopnp/case/v0.6
+name: base
+variables:
+  v: {{value: 0.05, unit: V}}
+  u: {{value: 1, unit: V}}
+  c0: {{value: 0.1, unit: M}}
+geometry:
+  pore: {{shape: cylinder, radius_nm: 2}}
+  membrane: {{thickness_nm: 6}}
+  reservoir: {{radius_nm: 10}}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: {concentration}
+boundary_conditions: {{bias_V: v, ground: cis}}
+physics: {{model: epnp-ns, solid_permittivities: {{membrane: 3.2}}}}
+outputs: [current, rectification]
+"""
+
+
+def test_ver36_a_bias_set_through_a_variable_pairs_its_rectification(tmp_path: Path) -> None:
+    # Pairing by the assignments would refuse this sweep, or pair two points that differ in more.
+    base = tmp_path / "base.yaml"
+    axis = "  - {name: v, path: variables.v, values: [-0.05, 0.0, 0.05]}\n"
+    base.write_text(VARIABLE_BIAS.format(concentration="c0"), encoding="utf-8")
+    plan = _plan(base, axis)
+    [(forward, reverse)] = plan.pairs
+    assert (
+        plan.case(forward).boundary_conditions.bias_V,
+        plan.case(reverse).boundary_conditions.bias_V,
+    ) == (0.05, -0.05)
+
+    # The variable also moves the salt, so no two points differ in the bias alone.
+    base.write_text(VARIABLE_BIAS.format(concentration='"c0 * (1 + v / u)"'), encoding="utf-8")
+    with pytest.raises(SweepPlanError, match="matched pair"):
+        _plan(base, axis)
+
+
 # QR-06
 def test_ver36_the_member_case_carries_the_identity_and_drops_rectification(
     tmp_path: Path,

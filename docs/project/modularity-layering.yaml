@@ -91,6 +91,7 @@ edges:
   - {from: gui, to: post, relation: static, finding: null}
   - {from: gui, to: solve, relation: static, finding: null}
   - {from: gui, to: structure, relation: static, finding: null}
+  - {from: gui, to: sweep, relation: static, finding: null}
   - {from: gui, to: symmetry, relation: static, finding: null}
   - {from: gui, to: validation, relation: static, finding: null}
   - {from: io, to: core, relation: static, finding: null}

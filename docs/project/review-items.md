@@ -2661,6 +2661,11 @@ on `variables.v`) assigns no `bias_V`, so the plan finds no matched pair and ref
 
 **Accepted**: WP5.19, which builds the Sweep tool (§8.2.34 AJ10), pairs points by each point's resolved bias (`plan.case(index).boundary_conditions.bias_V`) instead of its assignments.
 
+**Fixed** at WP5.19's item 2. The plan pairs the points after it resolves them, by their resolved cases without
+their names, their variables and the bias, at exactly opposite resolved biases; a variable that also moves another
+field pairs nothing, and the refusal follows (§5.3.1's NOTE on `outputs:`;
+`tests/tier1/test_sweep_plan.py::test_ver36_a_bias_set_through_a_variable_pairs_its_rectification`).
+
 ### REV-198: A sweep plan is not tied to the variables as written
 
 The plan reads barriers, warm-start parents and variable-axis reach from the variables as written, but `SweepPlan.base_case()` accepts a base case whose resolved numbers hash the same. A formula changed to a literal of equal value passes the check, and the plan's barriers are then stale. Found by the WP5.07 review (FR-39). The remedy is a plan identity that covers the variable record.
