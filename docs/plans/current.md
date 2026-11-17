@@ -1,6 +1,6 @@
 # Current work
 
-Updated 16 November 2026 (WP5.19 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 17 November 2026 (WP5.19 reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
@@ -17,7 +17,7 @@ close follow, about 35 sessions.
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.18 merged
   (`v0.6.0-alpha.18`).
-  **WP5.19** [planned](phase-5/wp5.19-the-study-suite.md) on `ccr-24fd66d5-2we2o9`. Next, `/np-plan wp 5.19 review`.
+  **WP5.19** [planned and reviewed](phase-5/wp5.19-the-study-suite.md) on `ccr-24fd66d5-2we2o9`. Next, your approval, then `/np-implement wp 5.19`.
   host: claude-code.
 
 ## Not to be re-decided
