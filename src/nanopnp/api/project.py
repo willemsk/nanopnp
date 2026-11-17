@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
 import re
 import shutil
 from collections.abc import Callable, Mapping
@@ -15,26 +16,32 @@ from typing import Any, TypeVar
 
 import yaml
 from pydantic import JsonValue
+from pydantic_core import to_jsonable_python
 
 from nanopnp.api.case import Case
 from nanopnp.api.session import Session
-from nanopnp.core.hashing import file_hash
+from nanopnp.core.hashing import canonical, file_hash
 from nanopnp.io import case as schema
 from nanopnp.io.case import SCHEMA, CaseValidationError, FieldValue
 from nanopnp.io.case_paths import (
+    SEQUENCE_INDEX,
     UnknownCasePathError,
     field_at,
     input_paths,
     rewrite_inputs,
+    schema_bounds,
     schema_default,
+    value_at,
 )
 from nanopnp.io.defaults import Change, changes, mapping_changes
 from nanopnp.io.manifest import RUN_RECORD_FILENAME
 from nanopnp.io.models import (
     EXPOSED,
+    METADATA_KEYS,
     MODEL_KINDS,
     SCHEMAS,
     VARIANT_PATH,
+    Kind,
     ModelFile,
     ModelKind,
     _holder,
@@ -67,13 +74,14 @@ from nanopnp.io.project import (
     write_project,
 )
 from nanopnp.io.store import LOCKS, StaleEntry, Store, StoreUsage
+from nanopnp.io.variables import field_unit
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.physics.models import SWITCHES, declaration
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import keyed_walk, selected_stages
 from nanopnp.sweep.run import MEMBERS_DIRNAME
 
-__all__ = ["Problem", "Project", "ProjectError"]
+__all__ = ["Problem", "Project", "ProjectError", "StudyValue"]
 
 T = TypeVar("T")
 
@@ -129,6 +137,39 @@ class Problem:
             "message": self.message,
             "suite": self.suite,
         }
+
+
+@dataclass(frozen=True)
+class StudyValue:
+    """One value a study shows: who owns it, its name, field, unit, range, and both its values.
+
+    Parameters
+    ----------
+    kind
+        The model that owns the field, or ``study`` for a key the study owns.
+    name
+        The name a model exposes the value under; the dotted path for any other value.
+    low, high
+        The exposed range, else the field's schema bounds; ``None`` where there is none.
+    model
+        The value the study's model gives the field; ``None`` for a key the study owns.
+    study
+        The study's own value or override, resolved; ``None`` where the study sets none.
+    """
+
+    kind: Kind
+    name: str
+    path: str
+    unit: str
+    low: float | None
+    high: float | None
+    model: JsonValue
+    study: JsonValue
+
+    @property
+    def value(self) -> JsonValue:
+        """The value the study runs with: its own where it sets one, else its model's."""
+        return self.study if self.study is not None else self.model
 
 
 class Project:
@@ -924,6 +965,167 @@ class Project:
         write_project(self._root, self._file)
         return written
 
+    # -- studies: made, their values and their variables ---------------------
+
+    def new_study(self, name: str, molecular: str, continuum: str, physics: str) -> Path:
+        """Create a study that pairs one model of each kind and sets no value; return its file.
+
+        Raises
+        ------
+        ProjectError
+            If the name is not an item name or is taken, or the project holds no such model.
+        CaseValidationError
+            If the three models form no case; nothing is written.
+        """
+        self._free_name("study", name)
+        named = dict(zip(MODEL_KINDS, (molecular, continuum, physics), strict=True))
+        paths = {kind: self._model_path(kind, model) for kind, model in named.items()}
+        location = self._checked_study(name, {"schema": SCHEMA, "name": name, "models": paths})
+        write_project(self._root, self._file)
+        return location
+
+    def set_study_value(self, name: str, path: str, value: FieldValue) -> None:
+        """Set one value of a study, or with ``None`` remove it; nothing is written if refused.
+
+        ``models.<kind>`` takes the name of a model of the project. Any other path is the
+        study's own key, or an override of the value its model gives. The study is written only
+        when it reads as a case; a value its models cannot run with is a problem of the study
+        (:meth:`problems`), at its path.
+
+        Raises
+        ------
+        ProjectError
+            If the path is a file's header or a variable, the project holds no model of the
+            name, or the study sets no such value to remove.
+        CaseValidationError
+            If the edited study is refused.
+        """
+        head = path.split(".", 1)[0]
+        if head == "variables":
+            raise ProjectError(f"{path} is a variable. Set it with set_variable.")
+        if head in METADATA_KEYS and not path.startswith("models."):
+            raise ProjectError(f"{path} is the study file's own. It is not a value to set.")
+        body = _body(self.path("study", name))
+        if path.startswith("models.") and value is not None:
+            kind = next((k for k in MODEL_KINDS if f"models.{k}" == path), None)
+            if kind is None:
+                raise ProjectError(f"{path}: models: holds {', '.join(MODEL_KINDS)} only.")
+            value = self._model_path(kind, str(value))
+        if value is None:
+            if not _delete(body, path):
+                raise ProjectError(f"study {name!r} sets no {path}.")
+        else:
+            _put(body, path, value)
+        self._checked_study(name, body)
+
+    def set_variable(
+        self,
+        name: str,
+        variable: str,
+        *,
+        value: float | None = None,
+        expression: str | None = None,
+        unit: str = "dimensionless",
+    ) -> None:
+        """Define a variable of a study by its value or its expression; with neither, remove it.
+
+        Raises
+        ------
+        ProjectError
+            If both a value and an expression are given, or the study defines no such variable
+            to remove.
+        CaseValidationError
+            If the edited study is refused: the name, the expression, the unit, or a field that
+            reads the variable; nothing is written.
+        """
+        if value is not None and expression is not None:
+            raise ProjectError(
+                f"{variable} takes a value or an expression, not both. Give one of the two."
+            )
+        body = _body(self.path("study", name))
+        defined = body.get("variables")
+        block: dict[str, Any] = dict(defined) if isinstance(defined, dict) else {}
+        if value is None and expression is None:
+            if block.pop(variable, None) is None:
+                raise ProjectError(f"study {name!r} defines no variable {variable!r}.")
+        else:
+            entry = {"value": value} if value is not None else {"expression": expression}
+            block[variable] = {**entry, "unit": unit}
+        head: dict[str, Any] = {key: body.pop(key) for key in ("schema", "name") if key in body}
+        body.pop("variables", None)
+        if block:
+            head["variables"] = block
+        self._checked_study(name, {**head, **body})
+
+    def study_values(self, name: str) -> tuple[StudyValue, ...]:
+        """Return the values a study shows: each model's exposed values, then the rest it sets.
+
+        The exposed values come in model order, molecular, continuum then physics; then each
+        key the study owns and sets; then each override of a value a model does not expose.
+
+        Raises
+        ------
+        CaseValidationError
+            If the study is refused.
+        """
+        case = self.study(name)
+        record = case.models_record
+        overrides = {
+            path: (to_jsonable_python(model), to_jsonable_python(study))
+            for path, (model, study) in (record.overrides.items() if record is not None else ())
+        }
+        found: list[StudyValue] = []
+        files = {file.kind: file for file in record.files} if record is not None else {}
+        for kind in MODEL_KINDS:
+            for exposed in files[kind].exposed if kind in files else ():
+                own = overrides.pop(exposed.path, None)
+                found.append(
+                    StudyValue(
+                        kind,
+                        exposed.name,
+                        exposed.path,
+                        exposed.unit,
+                        exposed.low,
+                        exposed.high,
+                        _case_value(case, exposed.path, exposed.default) if own is None else own[0],
+                        None if own is None else own[1],
+                    )
+                )
+        shown = {value.path for value in found}
+        for path, _ in leaves(_body(self.path("study", name))):
+            head = path.split(".", 1)[0]
+            if head in METADATA_KEYS or head == "variables" or path in shown:
+                continue
+            if owner_of(path) == "study":
+                own_value = to_jsonable_python(value_at(case, path))
+                found.append(StudyValue("study", path, path, *_described(path), None, own_value))
+        for path, (model, study) in sorted(overrides.items()):
+            found.append(StudyValue(owner_of(path), path, path, *_described(path), model, study))
+        return tuple(found)
+
+    def _model_path(self, kind: ModelKind, model: str) -> str:
+        location = self.path(kind, model)
+        if model not in self._file.names(kind) or not location.is_file():
+            raise ProjectError(f"The project holds no {kind} model {model!r}.")
+        return f"../{FOLDERS[kind]}/{model}.yaml"
+
+    def _checked_study(self, name: str, body: Mapping[str, Any]) -> Path:
+        # Staged beside the study, where its model paths read, and moved into place only once it
+        # reads as a case.
+        location = self.path("study", name)
+        location.parent.mkdir(parents=True, exist_ok=True)
+        staged = location.with_name(f".{location.name}.staged")
+        staged.write_text(_text(body), encoding="utf-8")
+        try:
+            Case.load(staged)
+            staged.replace(location)
+        finally:
+            staged.unlink(missing_ok=True)
+        names = self._file.names("study")
+        if name not in names:
+            names.append(name)
+        return location
+
     def _free_name(self, kind: ItemKind, name: str) -> None:
         if not valid_name(name):
             raise ProjectError(
@@ -1080,14 +1282,17 @@ class Project:
     def export(self, destination: str | Path, *, store: bool = False) -> Path:
         """Copy the project, as readable files, to a missing or empty folder.
 
-        Every input an item names is copied into the copy's ``inputs/``, with the items that
-        name a linked one rewritten. The run records and their results come with it, the store
-        only with ``store``.
+        Every input an item names is copied into the copy's ``inputs/`` at its path there, with
+        the items that name a linked one rewritten. Each run's record, resolved case and manifest
+        come with its results, each at its path in the report it belongs to, and the copied
+        record names the copy's files; the store comes only with ``store``. The copy is written
+        beside the destination and moved into place whole, so a refused or failed export leaves
+        nothing.
 
         Raises
         ------
         ProjectError
-            If an input is missing, two inputs share a name, or the destination holds files.
+            If an input is missing, two inputs take one path, or the destination holds files.
         """
         target = Path(destination).expanduser().resolve()
         if target.exists() and (not target.is_dir() or any(target.iterdir())):
@@ -1098,30 +1303,43 @@ class Project:
         if target == self._root or self._root in target.parents:
             raise ProjectError("A project cannot be exported into itself.")
         plan = self._export_plan()
-        target.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(self._root / PROJECT_FILENAME, target / PROJECT_FILENAME)
+        partial = target.with_name(f"{target.name}.partial-{os.getpid()}")
+        shutil.rmtree(partial, ignore_errors=True)
+        try:
+            self._write_export(partial, target, plan, store=store)
+            if target.exists():
+                target.rmdir()
+            partial.rename(target)
+        except BaseException:
+            shutil.rmtree(partial, ignore_errors=True)
+            raise
+        return target
+
+    def _write_export(self, partial: Path, target: Path, plan: _Plan, *, store: bool) -> None:
+        partial.mkdir(parents=True)
+        shutil.copyfile(self._root / PROJECT_FILENAME, partial / PROJECT_FILENAME)
         for relative, body in plan.items.items():
-            place = target / relative
+            place = partial / relative
             place.parent.mkdir(parents=True, exist_ok=True)
             if body is None:
                 shutil.copyfile(self._root / relative, place)
             else:
                 place.write_text(_text(body), encoding="utf-8")
         for source, relative in plan.inputs.items():
-            place = target / relative
+            place = partial / relative
             place.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, place)
-        self._export_runs(target)
+        copied_store = target / STORE_FOLDER if store else None
+        self._export_runs(partial, target, copied_store)
         sweeps = self._root / SWEEPS_FOLDER
         if sweeps.is_dir():
-            shutil.copytree(sweeps, target / SWEEPS_FOLDER)
+            shutil.copytree(sweeps, partial / SWEEPS_FOLDER)
         if store and (self._root / STORE_FOLDER).is_dir():
             shutil.copytree(
                 self._root / STORE_FOLDER,
-                target / STORE_FOLDER,
+                partial / STORE_FOLDER,
                 ignore=shutil.ignore_patterns(LOCKS),
             )
-        return target
 
     def _pointing(
         self, kind: ItemKind, wanted: Path, copy: Path
@@ -1135,7 +1353,7 @@ class Project:
         self,
         kind: ItemKind,
         name: str,
-        names: dict[str, Path],
+        places: dict[str, Path],
         inputs: dict[Path, str],
     ) -> Callable[[str, str], str | None]:
         kept = (self._root / INPUTS_FOLDER).resolve()
@@ -1146,24 +1364,20 @@ class Project:
                 raise ProjectError(
                     f"{resolved} is named by {kind} {name!r}, and the file is missing."
                 )
-            held = names.get(resolved.name)
-            if held is not None and held != resolved and file_hash(held) != file_hash(resolved):
-                raise ProjectError(
-                    f"{held} and {resolved} share the name {resolved.name}. Rename one before "
-                    "you export."
-                )
-            names.setdefault(resolved.name, resolved)
-            inputs[resolved] = f"{INPUTS_FOLDER}/{resolved.name}"
-            if kept in resolved.parents:
+            inside = kept in resolved.parents
+            relative = resolved.relative_to(kept).as_posix() if inside else resolved.name
+            _take(places, f"{INPUTS_FOLDER}/{relative}", resolved)
+            inputs[resolved] = f"{INPUTS_FOLDER}/{relative}"
+            if inside:
                 return None
-            return self.input_path(kind, self._root / INPUTS_FOLDER / resolved.name)
+            return self.input_path(kind, self._root / INPUTS_FOLDER / relative)
 
         return collect
 
     def _export_plan(self) -> _Plan:
         kept = (self._root / INPUTS_FOLDER).resolve()
         inputs: dict[Path, str] = {}
-        names: dict[str, Path] = {}
+        places: dict[str, Path] = {}
         items: dict[str, dict[str, Any] | None] = {}
         for kind in ITEM_KINDS:
             for name in self._file.names(kind):
@@ -1176,31 +1390,43 @@ class Project:
                     continue
                 body = _body(location)
 
-                collect = self._gathering(kind, name, names, inputs)
+                collect = self._gathering(kind, name, places, inputs)
                 changed = rewrite_inputs(body, collect)
                 items[relative] = body if changed else None
-        for source in sorted((self._root / INPUTS_FOLDER).glob("*")) if kept.is_dir() else ():
+        # An input no item names goes at its own path, unless a linked input takes that path.
+        for source in sorted(kept.rglob("*")) if kept.is_dir() else ():
             if source.is_file():
-                inputs.setdefault(source.resolve(), f"{INPUTS_FOLDER}/{source.name}")
+                place = f"{INPUTS_FOLDER}/{source.resolve().relative_to(kept).as_posix()}"
+                _take(places, place, source.resolve())
+                inputs.setdefault(source.resolve(), place)
         return _Plan(items=items, inputs=inputs)
 
-    def _export_runs(self, target: Path) -> None:
+    def _export_runs(self, partial: Path, target: Path, store: Path | None) -> None:
         base = self._root / RUNS_FOLDER
         if not base.is_dir():
             return
         for study in sorted(p for p in base.iterdir() if p.is_dir()):
             for run in sorted(p for p in study.iterdir() if (p / "run.json").is_file()):
-                place = target / RUNS_FOLDER / study.name / run.name
+                relative = Path(RUNS_FOLDER, study.name, run.name)
+                place = partial / relative
                 place.mkdir(parents=True, exist_ok=True)
                 for name in _RUN_FILES:
                     if (run / name).is_file():
                         shutil.copyfile(run / name, place / name)
                 record = json.loads((run / "run.json").read_text(encoding="utf-8"))
+                files: list[str] = []
                 for entry in record.get("files", []):
                     result = Path(str(entry))
-                    if result.is_file():
-                        (place / "results").mkdir(exist_ok=True)
-                        shutil.copyfile(result, place / "results" / result.name)
+                    if not result.is_file():
+                        continue
+                    inside = Path("results", _report_path(record, result))
+                    (place / inside).parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(result, place / inside)
+                    files.append(str(target / relative / inside))
+                record["directory"] = str(target / relative)
+                record["files"] = files
+                record["store"] = str(store) if store is not None else None
+                (place / RUN_RECORD_FILENAME).write_bytes(canonical(record) + b"\n")
 
     # -- the index and the item files ----------------------------------------
 
@@ -1263,6 +1489,25 @@ class Project:
 class _Plan:
     items: dict[str, dict[str, Any] | None]
     inputs: dict[Path, str]
+
+
+def _take(places: dict[str, Path], place: str, source: Path) -> None:
+    held = places.setdefault(place, source)
+    if held != source and file_hash(held) != file_hash(source):
+        raise ProjectError(
+            f"{held} and {source} both go to {place} in the copy. Rename one before you export."
+        )
+
+
+def _report_path(record: Mapping[str, Any], result: Path) -> str:
+    # A result's path in the stored report it belongs to, so two of one name stay apart.
+    report = record.get("artefacts", {}).get("report")
+    store = record.get("store")
+    if isinstance(report, dict) and isinstance(store, str):
+        location = Store(store).location(str(report.get("schema")), str(report.get("hash")))
+        if location in result.parents:
+            return result.relative_to(location).as_posix()
+    return result.name
 
 
 def _json_object(path: Path) -> dict[str, Any]:
@@ -1329,6 +1574,26 @@ def _holds(body: Mapping[str, Any], dotted: str) -> bool:
             return False
         cursor = cursor[part]
     return cursor is not None
+
+
+def _case_value(case: Case, path: str, absent: FieldValue) -> JsonValue:
+    # A value whose block the case leaves out, such as the pH of a case without charge, is the
+    # model's declared default.
+    try:
+        found: JsonValue = to_jsonable_python(value_at(case, path))
+    except UnknownCasePathError:
+        found = to_jsonable_python(absent)
+    return found
+
+
+def _described(path: str) -> tuple[str, float | None, float | None]:
+    # The unit and the schema bounds of a field; a field that is not a number has neither.
+    generic = ".".join(SEQUENCE_INDEX if part.isdigit() else part for part in path.split("."))
+    try:
+        unit = field_unit(generic)
+    except KeyError:
+        return "", None, None
+    return unit, *schema_bounds(generic)
 
 
 def _check_leaf(path: str, value: FieldValue, location: Path) -> None:

@@ -139,6 +139,68 @@ def test_fr32_an_exported_project_reads_back(tmp_path: Path) -> None:
     assert all(cached for name, (_, cached) in again.items() if name != "case")
 
 
+def test_fr32_an_export_keeps_every_result_and_points_its_records_at_the_copy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A copy that loses a result, points back at its original, or is left half-written misleads.
+    project = Project.create(tmp_path / "project")
+    tube = Case.load(write_charged_tube(tmp_path / "tube"))
+    project.import_case(tube)
+    (project.root / "inputs" / "sub").mkdir()
+    (project.root / "inputs" / "atoms.pqr").rename(project.root / "inputs/sub/atoms.pqr")
+    model = project.path("molecular", "charged-tube")
+    model.write_text(model.read_text("utf-8").replace("inputs/atoms.pqr", "inputs/sub/atoms.pqr"))
+    run = project.session().run(project.study("charged-tube"), upto="charge")
+    record = json.loads((run.directory / "run.json").read_text(encoding="utf-8"))
+    report = {"schema": "nanopnp/report/v1", "hash": "ab" * 32}
+    stored = Store(project.root / STORE_FOLDER).location(report["schema"], report["hash"])
+    for folder in ("a", "b"):
+        (stored / folder).mkdir(parents=True)
+        (stored / folder / "out.txt").write_text(folder, encoding="utf-8")
+    record["artefacts"]["report"] = report
+    record["files"] = [str(stored / "a" / "out.txt"), str(stored / "b" / "out.txt")]
+    (run.directory / "run.json").write_text(json.dumps(record), encoding="utf-8")
+
+    copy = project.export(tmp_path / "copy")
+    copied_run = copy / run.directory.relative_to(project.root)
+    results = copied_run / "results"
+    assert [(results / f / "out.txt").read_text("utf-8") for f in "ab"] == ["a", "b"]
+    copied = json.loads((copied_run / "run.json").read_text(encoding="utf-8"))
+    assert (copied["directory"], copied["store"]) == (str(copied_run), None)
+    assert copied["files"] == [str(results / "a" / "out.txt"), str(results / "b" / "out.txt")]
+    assert (copy / "inputs/sub/atoms.pqr").is_file() and not (copy / "inputs/atoms.pqr").exists()
+    assert Project.open(copy).problems() == ()
+    whole = project.export(tmp_path / "whole", store=True)
+    assert json.loads((whole / copied_run.relative_to(copy) / "run.json").read_text())[
+        "store"
+    ] == str(whole / STORE_FOLDER)
+
+    # An input no item names, at the path a linked input takes, is refused before any write.
+    linked = Project.create(tmp_path / "linked")
+    linked.import_case(tube, link=True)
+    (linked.root / "inputs" / "profile.yaml").write_text("another file\n", encoding="utf-8")
+    with pytest.raises(ProjectError, match=r"profile\.yaml and .*profile\.yaml both go to"):
+        linked.export(tmp_path / "refused")
+    assert not (tmp_path / "refused").exists()
+
+    # A failure part-way leaves no destination and no partial copy.
+    (project.root / "sweeps").mkdir()
+
+    def broken(*_: object, **__: object) -> None:
+        raise OSError("disk full")
+
+    monkeypatch.setattr("nanopnp.api.project.shutil.copytree", broken)
+    with pytest.raises(OSError, match="disk full"):
+        project.export(tmp_path / "failed")
+    assert sorted(p.name for p in tmp_path.iterdir()) == [
+        "copy",
+        "linked",
+        "project",
+        "tube",
+        "whole",
+    ]
+
+
 CONTINUUM = """\
 schema: nanopnp/continuum-model/v0.6
 name: tube
