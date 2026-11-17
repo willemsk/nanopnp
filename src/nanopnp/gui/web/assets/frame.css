@@ -883,6 +883,28 @@ body a.tool-link.tool-link-open {
   font-family: var(--font-ui);
 }
 
+/* Charge on the mesh: the molecule and the (r, z) canvas side by side, each kept. */
+.view-region.view-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--gap);
+}
+/* A queued run unfolded: its convergence plot over its rung table. */
+.run-plot {
+  position: relative;
+  width: 100%;
+  height: 14rem;
+  border: 1px solid var(--line);
+  background: var(--canvas-plot);
+}
+.run-plot canvas {
+  display: block;
+}
+.run-summary {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 /* The Continuum suite's (r, z) view: one canvas, beside the pane as the molecule is. */
 #plane {
   position: relative;

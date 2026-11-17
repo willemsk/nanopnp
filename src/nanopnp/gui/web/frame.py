@@ -25,6 +25,8 @@ from nanopnp.gui.web.builds import refusals
 from nanopnp.gui.web.glossary import GLOSSARY
 from nanopnp.gui.web.numbers import Style, shown
 from nanopnp.gui.web.palette import Palette, options
+from nanopnp.gui.web.queue import Entry
+from nanopnp.gui.web.runs import RUNG_COLUMNS, convergence_plane, rung_rows
 from nanopnp.gui.web.screens import GROUPS, SUITES, tool_for
 from nanopnp.gui.web.screens import Suite as SuiteScreen
 from nanopnp.gui.web.settings_page import SettingsPage
@@ -172,6 +174,12 @@ class Views(Protocol):
         while the drawing's frame stays the same.
         """
 
+    async def show_pair(self, scene_url: str | None, plane_url: str | None, key: str = "") -> None:
+        """Show the Mol* host and the (r, z) canvas side by side, each built once; mark it ready.
+
+        ``key`` names the structure, as for :meth:`show_molecule`.
+        """
+
     def changes_moved(self) -> None:
         """Count and list the changed values again, after a tool wrote one."""
 
@@ -213,6 +221,13 @@ class _Frame:
         self.changes_table: ui.table
         self.changed_label: ui.label
         self.queue_label: ui.label
+        self.queue_box: ui.column
+        self.log_box: ui.column
+        self.queue_seen: tuple[int, int, int] = (-1, -1, -1)
+        self.unfolded: set[int] = set()
+        """The queue's run entries open in this window, by number."""
+        self.run_views: dict[int, tuple[ui.label, ui.table]] = {}
+        self.run_seen: dict[int, tuple[str, int, int]] = {}
         self.view: ui.element
         self.hosts: dict[str, ui.element] = {}
         self.drawer: ui.left_drawer
@@ -385,8 +400,21 @@ class _Frame:
     def show_host(self, name: str) -> None:
         """Show the view region with one host in it, the other hidden but kept."""
         self.view.set_visibility(True)
+        self.view.classes(remove="view-pair")
         for host, element in self.hosts.items():
             element.set_visibility(host == name)
+
+    async def show_pair(self, scene_url: str | None, plane_url: str | None, key: str = "") -> None:
+        """Show the Mol* host and the (r, z) canvas side by side, each built once; mark it ready."""
+        self.view.set_visibility(True)
+        self.view.classes(add="view-pair")
+        for element in self.hosts.values():
+            element.set_visibility(True)
+        scene = "null" if scene_url is None else json.dumps(scene_url)
+        await ui.run_javascript(f"nano.scene({scene}, {json.dumps(key)})", timeout=60)
+        # The canvas last: its drawing marks the screen ready once both have drawn.
+        drawing = "null" if plane_url is None else json.dumps(plane_url)
+        await ui.run_javascript(f"nano.plane({drawing}, '')", timeout=60)
 
     async def show_molecule(self, scene_url: str | None, key: str = "") -> None:
         """Show the frame's Mol* host, built once, with a scene; mark the screen ready."""
@@ -827,19 +855,103 @@ class _Frame:
             with ui.column().classes("panel-body w-full"):
                 with ui.tab_panels(self.tabs, value=self.panel).classes("w-full"):
                     with ui.tab_panel("queue"):
-                        with ui.column().props("data-control=queue-list"):
-                            for entry in self.shell.queue.entries or []:
-                                ui.label(entry.line())
-                            if not self.shell.queue.entries:
-                                ui.label("Nothing is queued.")
+                        self.queue_box = ui.column().classes("w-full gap-1")
+                        self.queue_box.props("data-control=queue-list")
+                        self.queue_rows()
                     with ui.tab_panel("log"):
-                        with ui.column().props("data-control=log-list"):
-                            for line in self.shell.queue.log or ["The log is empty."]:
-                                ui.label(line)
+                        self.log_box = ui.column().props("data-control=log-list")
+                        self.log_rows()
                     with ui.tab_panel("changes"):
                         self.changes_list()
                     with ui.tab_panel("problems"):
                         self.problems_list()
+
+    # -- the queue ----------------------------------------------------------
+
+    def queue_rows(self) -> None:
+        queue = self.shell.queue
+        self.queue_seen = (queue.moved, len(queue.log), len(queue.entries))
+        self.run_views = {}
+        self.run_seen = {}
+        with self.queue_box:
+            if not queue.entries:
+                ui.label("Nothing is queued.")
+            for entry in queue.entries:
+                if entry.run is None:
+                    ui.label(entry.line())
+                else:
+                    self.run_entry(entry)
+
+    def log_rows(self) -> None:
+        with self.log_box:
+            for line in self.shell.queue.log or ["The log is empty."]:
+                ui.label(line)
+
+    def run_entry(self, entry: Entry) -> None:
+        """Draw a run's entry, which unfolds to its convergence plot and its rung table."""
+        run = entry.run
+        assert run is not None
+        number = entry.number
+        with (
+            ui.expansion(
+                entry.line(),
+                value=number in self.unfolded,
+                on_value_change=lambda e, n=number: self.unfold(n, bool(e.value)),
+            )
+            .props(f"dense data-control=queue-entry-{number}")
+            .classes("run-entry w-full")
+        ):
+            summary = ui.label(run.convergence.summary).classes("run-summary")
+            ui.element("div").props(
+                f'id=run-plot-{number} data-control=run-plot role=img aria-label="Convergence of '
+                f'{entry.label}"'
+            ).classes("run-plot")
+            table = (
+                ui.table(columns=RUNG_COLUMNS, rows=rung_rows(run.convergence), row_key="key")
+                .props("dense flat data-control=run-rungs")
+                .classes("run-rungs w-full")
+            )
+        self.run_views[number] = (summary, table)
+
+    def unfold(self, number: int, value: bool) -> None:
+        if value:
+            self.unfolded.add(number)
+            self.run_seen.pop(number, None)
+            self.follow_run(number)
+        else:
+            self.unfolded.discard(number)
+
+    def follow_run(self, number: int) -> None:
+        """Bring an unfolded run's plot and table to what its run has said."""
+        entries = self.shell.queue.entries
+        if number > len(entries) or number not in self.run_views:
+            return
+        run = entries[number - 1].run
+        if run is None:
+            return
+        model = run.convergence
+        seen = (model.state, len(model.bands), sum(len(band.steps) for band in model.bands))
+        if self.run_seen.get(number) == seen:
+            return
+        self.run_seen[number] = seen
+        summary, table = self.run_views[number]
+        summary.text = model.summary
+        table.rows = rung_rows(model)
+        table.update()
+        drawing = json.dumps(convergence_plane(model).json())
+        ui.run_javascript(f"nano.plot('run-plot-{number}', {drawing})")
+
+    def watch_queue(self) -> None:
+        """Redraw the queue and the log after an entry moved, and each unfolded run as it goes."""
+        queue = self.shell.queue
+        if (queue.moved, len(queue.log), len(queue.entries)) != self.queue_seen:
+            self.queue_box.clear()
+            self.queue_rows()
+            self.log_box.clear()
+            self.log_rows()
+            self.queue_moved()
+        for number in sorted(self.unfolded):
+            self.follow_run(number)
 
     def changed_text(self, changed: int) -> str:
         return f"{changed} changed" if self.shell.bench.project is not None else "No project"
@@ -1152,6 +1264,7 @@ def frame(
     built.dialogs()
     built.palette_dialog()
     built.apply_layout()
+    ui.timer(0.5, built.watch_queue)
     if palette:
         built.opening = asyncio.Event()
         built.open_palette(palette)

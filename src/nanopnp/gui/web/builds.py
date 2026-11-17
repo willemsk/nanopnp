@@ -239,7 +239,8 @@ class BuiltModel:
         """Read what a running build has said: its stage, its end, and a refusal."""
         held = self._held
         build = held.build
-        if build is None:
+        if build is None or build.entry.status == "waiting":
+            # A build waiting for a slot has no process yet: it has not ended.
             return
         # Read before the drain: a child that ended by then has posted its last word, which the
         # drain reads, where one ending after the drain would be taken for one that said nothing.
@@ -259,7 +260,7 @@ class BuiltModel:
                 held.build = None
             elif isinstance(event, Cancelled):
                 self.queue.set(build.entry, "failed")
-                self.queue.log.append(f"cancelled {build.entry.label}")
+                self.queue.say(f"cancelled {build.entry.label}")
                 held.build = None
         if held.build is None or ended:
             if held.build is not None:
@@ -314,10 +315,10 @@ class BuiltModel:
         return found
 
     def build(self, upto: str) -> None:
-        """Start the walk that builds the model up to a stage, unless one is running.
+        """Queue the walk that builds the model up to a stage, unless one is held.
 
-        The walk runs in a child process, writes no run directory, and reads the case from a
-        temporary folder that is removed when it ends.
+        The walk starts when the queue has a slot, runs in a child process, writes no run
+        directory, and reads the case from a temporary folder that is removed when it ends.
         """
         held = self._held
         self.poll()
@@ -335,16 +336,29 @@ class BuiltModel:
                 write=False,
             )
         )
-        entry = self.queue.add(f"{self.name} to {upto}", "running", suite=self.kind)
+        entry = self.queue.add(
+            f"{self.name} to {upto}",
+            suite=self.kind,
+            start=process.start,
+            poll=self.poll,
+            cancel=process.cancel,
+        )
         held.refusal = None
         # Until the walk names its first stage, the build is at the first of the model's own that
         # it walks: a supplied outline or an idealised pore runs no density.
         walked = self.walked()
         held.build = _Build(process, entry, folder, upto, walked[0] if walked else self.stages[0])
-        process.start()
+        self.queue.pump()
 
     def cancel(self) -> None:
-        """Ask a running build to stop at its next check."""
-        build = self._held.build
-        if build is not None:
-            build.process.cancel()
+        """Ask a running build to stop at its next check; a waiting one is dropped."""
+        held = self._held
+        build = held.build
+        if build is None:
+            return
+        if build.entry.status == "waiting":
+            self.queue.drop(build.entry)
+            held.build = None
+            shutil.rmtree(build.folder, ignore_errors=True)
+            return
+        build.process.cancel()

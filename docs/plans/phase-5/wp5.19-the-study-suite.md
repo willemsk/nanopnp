@@ -220,6 +220,12 @@ is refused, AP1's consequence names the largest shift measured, which passes.
 - Settings `solves_at_once`, `threads_per_solve`: `Annotated[int, Field(ge=1, le=64)]`, default 1, scope `user`,
   `applies="next run"`, section `compute`.
 
+> **Outcome — the queue holds slots; a run unfolds to its ladder.** A new module, `gui/web/runs.py`, holds a study's
+> run and sweep in the queue (`queue_run`, `write_sweep`, `queue_sweep`) and the unfolded run (`convergence_plane`,
+> `rung_rows`). `Entry` also takes `poll`, `cancel` and `after`; `pages.install` runs the 0.25 s pump, and the server
+> stops the queue when it stops. `run_point` takes a stage hook, so a member whose solve the store serves reads as
+> served. REV-251 is fixed: example 01's project opens with a walk to `mesh`, 0.8 s.
+
 **Item 7.** `plot/data.py:ResidueCharges.of(protonation, charge, resolved)`: `residues()`, `markers(key)`, `at(r_nm,
 z_nm, n=5)`, `Link`'s body moved; `residue_key` with it; `png` moves to `plane.py`, `_pdb_text` and `_chain_id` to `molview.py`. `gui/render.py:render_charge_elements(ChargeRequest)` writes
 each element's r-weighted mean of the deployed coefficient, ∫ρ r dA / ∫ r dA at the solve's order, so that the

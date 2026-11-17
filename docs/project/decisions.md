@@ -1349,7 +1349,7 @@ By decider: author 582; open 5; session, own call 835; session, put to the autho
 | REV-248 | author | `docs/project/review-findings.md` |  | WP5.17 | What the code review of the Continuum suite left open | ruled by the author, 13 November 2026 (WP5.17) | fixed |
 | REV-249 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A correction a physics model does not set reads none, and is not marked | WP5.18 | open |
 | REV-250 | author | `docs/project/review-findings.md` |  | WP5.18 | PHY-23's terms under a solid fraction and without the flow | ruled by the author, 16 November 2026 (WP5.18) | fixed |
-| REV-251 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A project whose first study deposits no charge opens with a failed walk | WP5.18 | open |
+| REV-251 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A project whose first study deposits no charge opens with a failed walk | WP5.18; WP5.19 | fixed |
 | REV-252 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | Where a value is exposed in the Molecular and Continuum suites | WP5.18 | open |
 | REV-253 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A plot's axes the user tunes | WP5.18 | open |
 | REV-254 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | The stages' diagnostics and the other suites' words in ASD-STE100 | WP5.18 | open |

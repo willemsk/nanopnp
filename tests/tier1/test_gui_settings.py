@@ -26,6 +26,8 @@ CHANGED: dict[str, Any] = {
     "recent_projects": 3,
     "open_last_project": False,
     "store_cap_gb": 2.5,
+    "solves_at_once": 2,
+    "threads_per_solve": 4,
     "significant_figures": 6,
     "number_style": "powers",
 }

@@ -3439,6 +3439,10 @@ the charged tube first.
 
 **Open**: the walk a project opens with is the Study suite's, WP5.19, which runs a study to the last stage it selects.
 
+**Fixed** at WP5.19's item 6: `states.boot_project` walks the first study to `charge` where its walk selects the stage,
+else to `mesh` (`states.opening_stage`). Example 01's project opens with *quickstart to mesh* done in 0.8 s, its case,
+region and mesh stored.
+
 ### REV-252: Where a value is exposed in the Molecular and Continuum suites
 
 At WP5.18's collect (`docs/design/reviews/2026-11-16-physics.md`) the author, on the refused Conditions shot: "I would

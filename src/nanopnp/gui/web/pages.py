@@ -261,6 +261,14 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
                 )
             )
 
+    def pump() -> None:
+        # The server's one queue: each build, run and sweep member waits for a slot here.
+        queue = shell.queue
+        queue.limit = int(str(shell.settings.value("solves_at_once")))
+        queue.tick()
+
+    nicegui_app.timer(0.25, pump)
+
     nicegui_app.add_static_files("/vendor/molstar", ASSETS / "molstar")
     nicegui_app.add_static_files("/vendor/katex", ASSETS / "katex")
     # Our own small files are not cached (max-age 0): NiceGUI's hour of caching would hide an edit

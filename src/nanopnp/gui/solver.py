@@ -339,6 +339,7 @@ def _member(
         directory=plan_file.parent,
         cancel=cancel,
         on_solve=QueueSolve(events),
+        on_stage=QueueStage(events),
     )
     if member.status == "ok" and member.directory is not None:
         return Finished(directory=member.directory)
