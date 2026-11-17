@@ -289,8 +289,8 @@ model that declares no `fixed_charge`, the structure is read by nothing, and `st
 `inputs.profile` SHALL be refused naming both, by the upstream rule. `geometry.density` and
 `geometry.contour` are refused where either is set away from its default; `geometry.membrane` and
 `geometry.reservoir` are read. With `charge.exclusion_offset_nm` set, the ion-exclusion shell takes
-its resolution `h_c` from the outline's recorded point spacing, never coarser than the coarsest
-density grid (§5.2's NOTE on the ion-exclusion shell; §8.2.40 AP5; §8.2.42 AR6). A section set to
+its resolution `h_c` from the outline's recorded point spacing, held within the density grid's range
+(§5.2's NOTE on the ion-exclusion shell; §8.2.40 AP5; §8.2.42 AR6). A section set to
 its defaults is not refused, because a case dumped from its resolved document writes every section
 out, and FR-26 requires that dump to load back.
 

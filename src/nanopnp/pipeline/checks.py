@@ -59,6 +59,7 @@ __all__ = [
     "APPLIED_WALLS",
     "ELEMENT_LABELS",
     "check_document",
+    "check_exclusion_offset",
     "check_operating_point",
     "check_referenced_files",
     "check_species",
@@ -637,15 +638,25 @@ def check_exclusion_offset(resolved: ResolvedCase) -> None:
     h_c = resolved.shell_spacing_nm
     if not 0.0 < offset <= 2.0 * h_c:
         return
-    if resolved.outline_spacing_nm is None:
+    recorded = resolved.outline_spacing_nm
+    if recorded is None:
         source = f"geometry.density.grid_spacing_nm = {h_c} nm"
     else:
         assert resolved.profile is not None
-        source = (
-            f"h_c = {h_c} nm, the point spacing that inputs.profile {resolved.profile.path} "
-            "records, never coarser than the coarsest geometry.density.grid_spacing_nm"
-        )
-    raise CaseValidationError(
+        source = f"h_c = {h_c} nm, the point spacing that inputs.profile {resolved.profile.path} "
+        if recorded == h_c:
+            source += "records"
+        else:
+            bound = "coarsest" if h_c < recorded else "finest"
+            source += (
+                f"records, {recorded:g} nm, held at the {bound} "
+                "geometry.density.grid_spacing_nm (section 8.2.42 AR6)"
+            )
+    raise CaseValidationError(_offset_refusal(offset, h_c, source))
+
+
+def _offset_refusal(offset: float, h_c: float, source: str) -> str:
+    return (
         f"charge.exclusion_offset_nm is {offset} nm, at most twice {source}. The shell is a face "
         "of width a. The feature-size criterion of section 5.2.1 admits nothing narrower than "
         f"2 h_c = {2.0 * h_c:g} nm (section 5.2.1 NOTE on the ion-exclusion shell). "

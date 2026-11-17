@@ -441,35 +441,51 @@ def test_ver59_a_supplied_outlines_shell_takes_the_outlines_recorded_spacing(
     tmp_path: Path, parallelogram_profile: Path
 ) -> None:
     # A shell built on a grid its outline never had moves the wall a saved edit offsets from.
-    fine = _outline(
-        tmp_path / "fine.yaml", [(2.0, -3.0), (2.03, -3.0), (3.0, -3.0), (6.0, 3.0), (5.0, 3.0)]
-    )
-    resolved = resolve(loads_case(case_text(fine, charge=_offset(0.2))))
+    corners = [(2.0, -3.0), (3.0, -3.0), (6.0, 3.0), (5.0, 3.0)]
+    fine = _outline(tmp_path / "fine.yaml", [corners[0], (2.03, -3.0), *corners[1:]])
+    resolved = resolve(loads_case(case_text(fine, charge=_offset(0.08))))
     assert resolved.shell_spacing_nm == pytest.approx(0.03, abs=1e-12)
-    key = RegionStage().key(StageInputs(resolved=resolved))
-    assert key.parameters["exclusion"]["h_c_nm"] == resolved.shell_spacing_nm  # type: ignore[index]
+    work = tmp_path / "work"
+    region = RegionStage(workspace=work / "region").run(StageInputs(resolved=resolved))
+    record = _record(region)
+    assert record.exclusion is not None
+    assert record.exclusion.h_c_nm == region.parameters["exclusion"]["h_c_nm"]  # type: ignore[index]
+    assert record.exclusion.h_c_nm == pytest.approx(0.03, abs=1e-12)
+    MeshStage(workspace=work / "mesh").run(
+        StageInputs(resolved=resolved, upstream={"region": region})
+    )
     with pytest.raises(CaseValidationError, match=r"2 h_c = 0\.06 nm") as refused:
         resolve(loads_case(case_text(fine, charge=_offset(0.05))))
     assert str(fine) in str(refused.value)
 
-    # Four corners and a 1 nm shortest edge: never coarser than the coarsest density grid.
+    # Four corners and a 1 nm shortest edge shell at the coarsest grid; one 0.01 nm edge, at the
+    # finest, so a short edited edge does not refine the whole ring.
     coarse = resolve(loads_case(case_text(parallelogram_profile, charge=_offset())))
-    assert (coarse.outline_spacing_nm, coarse.shell_spacing_nm) == (H_C_NM, H_C_NM)
+    assert (coarse.outline_spacing_nm, coarse.shell_spacing_nm) == (1.0, 0.05)
+    with pytest.raises(CaseValidationError, match=r"records, 1 nm, held at the coarsest"):
+        resolve(loads_case(case_text(parallelogram_profile, charge=_offset(0.1))))
+    finest = _outline(tmp_path / "finest.yaml", [corners[0], (2.01, -3.0), *corners[1:]])
+    edited = resolve(loads_case(case_text(finest, charge=_offset(0.2))))
+    assert edited.shell_spacing_nm == 0.025
 
+    # An outline the loader refuses is refused at resolve, naming its file.
     repeated = tmp_path / "repeated.yaml"
     text = fine.read_text(encoding="utf-8").replace("vertex_count: 5", "vertex_count: 6")
-    repeated.write_text(text.replace("- [5.0, 3.0]", "- [5.0, 3.0]\n- [2.0, -3.0]"), "utf-8")
-    with pytest.raises(CaseValidationError, match=re.escape(str(repeated))):
+    repeated.write_text(text.replace("- [3.0, -3.0]", "- [3.0, -3.0]\n- [3.0, -3.0]"), "utf-8")
+    with pytest.raises(CaseValidationError, match="(?s)" + re.escape(str(repeated)) + ".*coincide"):
         resolve(loads_case(case_text(repeated, charge=_offset(0.2))))
 
     # A derived outline's shell keys on its density grid, as before.
-    derived = resolve(
-        loads_case(
-            CASE_DERIVED.format(pdb=tmp_path / "absent.pdb", charge=_offset(0.2)),
-            base=tmp_path,
+    derived = CASE_DERIVED.format(pdb=tmp_path / "absent.pdb", charge=_offset(0.2))
+    found = resolve(loads_case(derived, base=tmp_path))
+    assert (found.outline_spacing_nm, found.shell_spacing_nm) == (None, 0.025)
+    with pytest.raises(CaseValidationError, match=r"geometry\.density\.grid_spacing_nm = 0\.025"):
+        resolve(
+            loads_case(
+                derived.replace("exclusion_offset_nm: 0.2", "exclusion_offset_nm: 0.05"),
+                base=tmp_path,
+            )
         )
-    )
-    assert (derived.outline_spacing_nm, derived.shell_spacing_nm) == (None, 0.025)
 
 
 CASE_DERIVED = """\

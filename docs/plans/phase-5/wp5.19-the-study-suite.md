@@ -53,6 +53,7 @@ matrix rows.
 | D9 Library steps | `upto` on reproduce; REV-206's export limits; AP5's shell spacing; REV-247 measured, AP1's consequence narrowed to its reach | REV-41, REV-206, AP5; AR5, ruled by the author |
 | D10 The round | The tools and graph on 2WCD, with REV-256's mockups; reviewed, published, collected with REV-240's, REV-252's and REV-255's points; finished | AJ8, REV-215, ruled by the author |
 | D11 The 200 ms line | `.claude/scripts/gui/redraw.cjs`, run by the author with a GPU: median and p95 of 20 picks, front end and whole repaint; a miss profiled | AG7, ruled by the author |
+| D12 The shell's finest `h_c` | A supplied outline's `h_c` is also held at the finest density grid, 0.025 nm, where an edited edge is shorter: one short edge would otherwise refine the whole ring and halve the closing that fills gaps no water enters | The `physics-reviewer`'s F1 at item 4; decided by the implementing session, for `/np-ship` to put to the author |
 
 ### Grounding
 
@@ -195,7 +196,9 @@ is refused, AP1's consequence names the largest shift measured, which passes.
 
 > **Outcome — a coarse outline shells at 0.05 nm; the charge check catches a gross frame error only.** A four-cornered
 > outline (the test tube's, 1 nm shortest edge) would have shelled at 1 nm and refused any offset under 2 nm; the
-> author capped the spacing at the coarsest density grid (§8.2.42 AR6), so no shelled case moved. The shares, measured
+> author capped the spacing at the coarsest density grid (§8.2.42 AR6), so no shelled case moved; the session also held
+> it at the finest, 0.025 nm, where an edit shortens one edge (D12). A five-vertex outline at 0.03 nm builds
+> and meshes through every gate (the item's test). The shares, measured
 > on example 07's `2wcd.case.yaml` (mesh `size_scale: 4`, shell off) with its stage-4 outline (161 vertices, 0.0726 nm
 > closest) shifted by d along z, its provenance recomputed, supplied beside the structure and walked to `charge`:
 > d = 0, 0.979; −0.5 nm, 0.921; −1 nm, refused by stage 5 (two membrane faces); −2, −3, −4 nm, 0.735, 0.619, 0.541;
