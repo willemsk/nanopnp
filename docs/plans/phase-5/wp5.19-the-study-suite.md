@@ -1,6 +1,6 @@
 # WP5.19 — The Study suite
 
-**Status: in progress, items 1 to 8 done.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
+**Status: in progress, items 1 to 10 done.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
 AN4, AP5, AQ1 and this plan's AR3 to AR6 (§8.2.31 to §8.2.42).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
@@ -270,7 +270,7 @@ layer's ∫ 2πr dA keeps `q_mesh_e`, with the vertices and triangles to `<run>/
 > its result). The [digest](https://claude.ai/artifact/HYGzi6jtJVgEJWGJF1oySe) holds 19 picks over 72 shots. The
 > render fills the 2WCD cache's store before its groups start, which a fresh cache raced.
 
-**Item 10** (Sonnet). `redraw.cjs <url>` drives `/study/charge` of a served 2WCD project: 20 picks on the map after a
+**Item 11** (Sonnet). `redraw.cjs <url>` drives `/study/charge` of a served 2WCD project: 20 picks on the map after a
 warm-up, 1.5 s apart; per pick the time to the markers' paint and to Mol*'s second frame after the selection; prints
 median and p95 of each, the browser's GPU string and `--json`. Check: it runs headless here (software GL).
 
@@ -291,18 +291,19 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
   `test_study_runs.py` and `test_gui_settings.py` pass. **Executor:** main
 - [x] 2412bcd 7. `plot/data.py:ResidueCharges`, `gui/render.py` (D5); done when `test_study_charge.py` passes. **Executor:** main
 - [x] 8. Compaction checkpoint, added at the author's request after item 7. **Executor:** main
-- [ ] 9. `gui/web/study.py`, `study_tools.py`, `screens.py`, `pages.py`, `shell.py`, `modularity-layering.yaml`;
+- [x] dd34e62 9. `gui/web/study.py`, `study_tools.py`, `screens.py`, `pages.py`, `shell.py`, `modularity-layering.yaml`;
   `link.py` and `st-charge` removed; `render_shell.py` group `study` with REV-256's mockups; `/np-gui render shell`, `review`, `publish` (D1, D3
   to D6, D10); done when the digest is published and VER-78 passes. **Executor:** main
-- [ ] 10. `.claude/scripts/gui/redraw.cjs` (D11); done when its check passes. **Executor:** general-purpose on Sonnet,
+- [x] 10. Compaction checkpoint, added at the author's request after item 9. **Executor:** main
+- [ ] 11. `.claude/scripts/gui/redraw.cjs` (D11); done when its check passes. **Executor:** general-purpose on Sonnet,
   high
-- [ ] 11. Compaction checkpoint; the author's verdicts; the author runs `redraw.cjs`. **Executor:** main
-- [ ] 12. `/np-gui collect`; REV-215, REV-240's, REV-252's, REV-255's and REV-256's points ruled or carried; the
+- [ ] 12. Compaction checkpoint; the author's verdicts; the author runs `redraw.cjs`. **Executor:** main
+- [ ] 13. `/np-gui collect`; REV-215, REV-240's, REV-252's, REV-255's and REV-256's points ruled or carried; the
   design document's rows (D10); done when the code and review say so. **Executor:** main
-- [ ] 13. The tools finished to the verdicts, REV-254's Study words (D10); done when VER-78, VER-60 and VER-44 pass.
+- [ ] 14. The tools finished to the verdicts, REV-254's Study words (D10); done when VER-78, VER-60 and VER-44 pass.
   **Executor:** main
-- [ ] 14. Compaction checkpoint. **Executor:** main
-- [ ] 15. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; AG7's numbers or a `REV-nn` row;
+- [ ] 15. Compaction checkpoint. **Executor:** main
+- [ ] 16. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; AG7's numbers or a `REV-nn` row;
   VER-78's text, FR-33's and FR-39's matrix rows; `current.md`; done when the code and review say so. **Executor:** main
 
 ### Verification
@@ -328,4 +329,4 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 
 ### Open questions
 
-None; the round's go to the author at item 11.
+None; the round's go to the author at item 12.
