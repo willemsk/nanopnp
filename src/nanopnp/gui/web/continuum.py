@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar
 
-from nanopnp.api.project import own_outline
+from nanopnp.api.project import BUILD_UPTO, own_outline
 from nanopnp.geometry.profile import PAYLOAD_NAME as PROFILE_PAYLOAD
 from nanopnp.geometry.profile import PoreProfile, load_profile
 from nanopnp.gui.geometry import ProfileEditor
@@ -32,6 +32,7 @@ class ContinuumModel(BuiltModel):
 
     kind: ClassVar[ModelKind] = "continuum"
     stages: ClassVar[tuple[str, ...]] = STAGES
+    upto: ClassVar[str] = BUILD_UPTO["continuum"]
     paths: ClassVar[re.Pattern[str]] = re.compile(
         # A bare "geometry", as in "a geometry: section" or "element geometry", names no value.
         r"\b(?:geometry(?=\.[a-z_])|numerics\.mesh|inputs\.profile|inputs\.mesh|"

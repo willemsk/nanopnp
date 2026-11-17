@@ -10,7 +10,7 @@
     membrane: ['--muted', 1.5, []], exclusion: ['--changed', 1.5, [5, 3]],
     reservoir: ['--muted', 1, [6, 4]], probe: ['--warn', 1.5, [4, 3]], lumen: ['--ok', 1.5, []],
     original: ['--muted', 1.5, [3, 3]], picked: ['--accent', 3, []], domain: ['--canvas-plot-ink', 1, []],
-    boundary: ['--canvas-plot-ink', 2.5, []],
+    boundary: ['--canvas-plot-ink', 2.5, []], worst: ['--warn', 1.5, [6, 4]],
   };
   // A plot: its ticks per axis, its curves' width, its rules' dash, its bands' fill, the legend's gap.
   const PLOT_TICKS = 5, CURVE_W = 2, RULE_DASH = [6, 4], BAND_ALPHA = 0.15, KEY_GAP = 12, MARK_R = 2.5;
@@ -21,6 +21,8 @@
   // The solids a drawing fills lightly under their outline, so a slab reads as one.
   const FILLED = ['membrane', 'pore', 'exclusion'];
   const PICK_PX = 8;
+  // A marked point's ring, in px: a residue's atoms over the charge map.
+  const POINT_R = 5;
   // The key's rows: a line or a swatch, a colour bar, and the bar's width, in px.
   const KEY_ROW = 18, KEY_BAR = 46, KEY_BAR_W = 120;
   const EDGES_FROM_PX = 7;
@@ -318,6 +320,22 @@
     },
 
     layer(ctx, layer, ratio) {
+      if (layer.kind === 'points') {
+        // Rings in px, each haloed in the canvas's colour so it reads over any picture.
+        const p = layer.points_nm;
+        for (let k = 0; k < p.length; k += 2) {
+          const [x, y] = this.toScreen(p[k], p[k + 1]);
+          for (const [width, colour] of [[4, token('--canvas-plot') || '#ffffff'], [2, layer.colours[k / 2]]]) {
+            ctx.beginPath();
+            ctx.arc(x, y, POINT_R, 0, 2 * Math.PI);
+            ctx.lineWidth = width;
+            ctx.strokeStyle = colour;
+            ctx.setLineDash([]);
+            ctx.stroke();
+          }
+        }
+        return;
+      }
       if (layer.kind === 'image') {
         const picture = this.images.get(layer.url);
         if (!picture) return;
@@ -762,6 +780,10 @@
               alpha: BAND_ALPHA,
             });
           }
+        } else if (layer.kind === 'points') {
+          if (layer.title) {
+            entries.push({ kind: 'line', text: layer.title, style: [layer.colours[0] || token('--canvas-plot-ink'), 2, []] });
+          }
         } else if (layer.title && layer.kind !== 'domain' && !titles.has(layer.title)) {
           titles.add(layer.title);
           entries.push({ kind: 'line', text: layer.title, style: this.lineStyle(layer) });
@@ -781,7 +803,8 @@
         }
       }
       width += 8;
-      return { entries, width, height, x: area.x + area.w - width - 6, top: area.y + 6 };
+      // A key wider than a narrow canvas starts at its left edge, so its titles read from their start.
+      return { entries, width, height, x: Math.max(4, area.x + area.w - width - 6), top: area.y + 6 };
     },
 
     legend(ctx) {
@@ -797,7 +820,11 @@
       ctx.strokeRect(x + 0.5, top + 0.5, width - 1, height - 1);
       const text = token('--ink') || '#16181d';
       const edge = token('--colourbar-outline') || token('--canvas-plot-ink') || '#16181d';
-      const shown = (value) => Number(value.toPrecision(3)).toString().replace('-', '−');
+      // A bar's ends in three figures; one far from unity in powers of ten, which fits its width.
+      const shown = (value) => {
+        const far = value !== 0 && (Math.abs(value) >= 1e4 || Math.abs(value) < 1e-3);
+        return (far ? value.toExponential(2) : Number(value.toPrecision(3)).toString()).replace('-', '−');
+      };
       // A key below a narrow plot lays its rows out in columns.
       const columns = this.key.columns || 1, across = this.key.columnWidth || width;
       let y = top + 4, column = 0;
@@ -945,6 +972,11 @@
         return;
       }
       const at = this.toData(x, y);
+      if (this.drawing.point_pick) {
+        // A map whose points are asked about, as the charge's residues: the point itself.
+        this.emit('plane_point', { r: at[0], z: at[1] });
+        return;
+      }
       const picked = this.nearestVertex(x, y) || this.triangleAt(...at) || this.domainAt(...at);
       this.picked = picked ? { layer: picked.layer, index: picked.index } : null;
       this.draw();

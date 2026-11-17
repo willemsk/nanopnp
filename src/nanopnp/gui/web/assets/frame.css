@@ -886,7 +886,8 @@ body a.tool-link.tool-link-open {
 /* Charge on the mesh: the molecule and the (r, z) canvas side by side, each kept. */
 .view-region.view-pair {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  /* The map holds the colour bar and the planes' key: it takes the larger share. */
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   gap: var(--gap);
 }
 /* A queued run unfolded: its convergence plot over its rung table. */
@@ -1335,4 +1336,65 @@ body .parts .parts-row[aria-pressed="true"] {
 }
 .exposed-hint {
   grid-column: 1 / -1;
+}
+
+/* The Study suite. Charge on the mesh's residues, a strip of small buttons that wraps. */
+.charge-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  max-height: 9rem;
+  overflow-y: auto;
+}
+.charge-strip .strip-item[aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+/* Overview's case file: the one complete case the run resolves to. */
+.case-file {
+  max-height: 60vh;
+  overflow: auto;
+  font-size: var(--text-sm);
+}
+/* Study setup's graph: mermaid's own colours give way to the theme's tokens. */
+.study-graph svg .node rect,
+.study-graph svg .node polygon,
+.study-graph svg .node path {
+  fill: var(--panel) !important;
+  stroke: var(--control-edge) !important;
+}
+/* The labels keep mermaid's own face: it sized each node to it. */
+.study-graph svg .nodeLabel,
+.study-graph svg .label,
+.study-graph svg .label text {
+  color: var(--ink) !important;
+  fill: var(--ink) !important;
+}
+.study-graph svg .flowchart-link {
+  stroke: var(--ink) !important;
+}
+.study-graph svg marker path {
+  fill: var(--ink) !important;
+  stroke: var(--ink) !important;
+}
+.study-graph svg .node {
+  cursor: pointer;
+}
+.field-warn-text {
+  color: var(--warn);
+}
+.study-adder {
+  padding: 2px 0;
+}
+.study-new {
+  min-width: 22rem;
+}
+[data-control=study-values] .field-label {
+  overflow-wrap: anywhere;
+}
+/* A card's button names a field and where it is: it wraps rather than cut the name. */
+.note-card .q-btn .q-btn__content {
+  flex-wrap: wrap;
+  white-space: normal;
+  text-align: left;
 }

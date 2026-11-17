@@ -16,6 +16,8 @@ _BASE: dict[str, tuple[str, float]] = {
     "nanosecond": ("s", 1e-9),
     "volt": ("V", 1.0),
     "molar": ("M", 1.0),
+    "ampere": ("A", 1.0),
+    "siemens": ("S", 1.0),
 }
 # A unit shown as it is, never prefixed.
 _SYMBOL: dict[str, str] = {

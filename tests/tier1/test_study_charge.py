@@ -8,20 +8,21 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from nanopnp import Case, Session
+from nanopnp import Case
+from nanopnp.api.project import Project
 from nanopnp.charge.stage import stored_lattice
 from nanopnp.core.constants import ELEMENTARY_CHARGE
-from nanopnp.gui.charge import charge_image
+from nanopnp.gui.charge import ConservationView, charge_image
 from nanopnp.gui.render import ChargeRequest, render_charge_elements
-from nanopnp.gui.web.plane import deployed_layer
-from nanopnp.io.store import Store
+from nanopnp.gui.web.plane import charge_plane, deployed_layer
+from nanopnp.gui.web.study import StudyModel
 from nanopnp.pipeline.run import RunResult
 from nanopnp.plot.data import ResidueCharges
 from nanopnp.post.export import FIXED_CHARGE_ATTRIBUTE
 
 
 @pytest.fixture(scope="module")
-def walked(charged_tube, tmp_path_factory: pytest.TempPathFactory) -> RunResult:
+def studied(charged_tube, tmp_path_factory: pytest.TempPathFactory) -> tuple[StudyModel, RunResult]:
     work = tmp_path_factory.mktemp("study-charge")
     case = charged_tube.write(work / "case")
     pqr = case.parent / "atoms.pqr"
@@ -31,8 +32,16 @@ def walked(charged_tube, tmp_path_factory: pytest.TempPathFactory) -> RunResult:
     lines[second] = lines[second].replace("GLU A  18", "GLU A  19")
     assert lines[first] != lines[second]
     pqr.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    store = Store(work / "store", runs=work / "runs")
-    return Session(store).run(Case.load(case), upto="charge")
+    project = Project.create(work / "project")
+    study = project.import_case(Case.load(case))
+    # The walk the Study suite's build runs: the study's own file, its record in runs/<study>/.
+    walked = project.session().run(project.study(study), upto="charge")
+    return StudyModel(project, study), walked
+
+
+@pytest.fixture(scope="module")
+def walked(studied: tuple[StudyModel, RunResult]) -> RunResult:
+    return studied[1]
 
 
 def _volumes_m3(vertices_nm: np.ndarray, triangles: np.ndarray) -> np.ndarray:
@@ -56,7 +65,8 @@ def test_ver60_the_studys_charge_on_the_mesh_shows_the_walks_record(walked, char
     assert walked.directory is not None
     rendered = render_charge_elements(ChargeRequest(run=str(walked.directory), elements=True))
     layer = deployed_layer(Path(rendered.path))
-    assert layer["bar"] == {"quantity": FIXED_CHARGE_ATTRIBUTE, "unit": "C/m^3"}
+    assert layer["colour"] == FIXED_CHARGE_ATTRIBUTE
+    assert layer["bar"]["unit"] == f"C/m³ ({FIXED_CHARGE_ATTRIBUTE})"
     assert layer["scale"] == [-rendered.limit, rendered.limit]
     vertices = np.reshape(layer["vertices_nm"], (-1, 2))
     triangles = np.reshape(layer["triangles"], (-1, 3))
@@ -79,3 +89,36 @@ def test_ver60_the_studys_charge_on_the_mesh_shows_the_walks_record(walked, char
         ranked = charges.at(r_nm, z_nm)
         assert ranked[0][0] == key
         assert math.copysign(1.0, ranked[0][1]) == math.copysign(1.0, q_e)
+
+
+def test_ver60_the_study_suite_draws_the_stages_and_planes_the_walk_recorded(studied) -> None:
+    # A study that keys its stages apart from its walk, or draws a worst plane the record does
+    # not name, shows a charge other than the one its run assembles.
+    model, walked = studied
+    stored = model.artefacts()
+    assert set(stored) == set(model.walked())
+    assert {stage: found.hash for stage, found in stored.items()} == {
+        stage: walked.artefacts[stage].hash for stage in stored
+    }
+    assert model.charge_record() == walked.directory
+    assert model.charges() is not None
+
+    recorded = ConservationView.from_record(walked.artefacts["charge"].summary["charge"])
+    shown = model.conservation()
+    assert shown == recorded
+    assert [leg.name for leg in recorded.legs][:3] == [
+        "producer",
+        "consumer",
+        "quadrature agreement",
+    ]
+
+    drawing = charge_plane(model.charge_map(), shown, image_url="/map.png").json()
+    (image,) = (layer for layer in drawing["layers"] if layer["kind"] == "image")
+    assert image["bar"]["low"] == -image["bar"]["high"]
+    rules = [layer for layer in drawing["layers"] if layer.get("role") == "worst"]
+    assert recorded.planes, "the record names no worst plane to draw"
+    assert [(rule["points_nm"][1], rule["points_nm"][3]) for rule in rules] == [
+        (pytest.approx(z_nm, abs=1e-5), pytest.approx(z_nm, abs=1e-5))
+        for _, z_nm in recorded.planes
+    ]
+    assert drawing["point_pick"] is True

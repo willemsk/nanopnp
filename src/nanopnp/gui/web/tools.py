@@ -11,7 +11,7 @@ from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, ClassVar, Generic, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, cast
 
 from nicegui import events, run, ui
 from nicegui.elements.mixins.text_element import TextElement
@@ -57,6 +57,9 @@ from nanopnp.structure.orient import (
 )
 from nanopnp.structure.protonated import parent_residue
 
+if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from nanopnp.io.models import ModelKind
+
 __all__ = [
     "FIELDS",
     "OVERLAY_MOST",
@@ -90,12 +93,15 @@ class Field:
     kind
         ``text``, ``number``, ``choice`` among the values the schema accepts at the path,
         ``chains``, a pick among the structure file's chains that also takes a typed group,
-        ``list``, which the pane shows and a tool of its own edits, ``switch``, on or off, or
-        ``materials``, a number per material the pane's ``solids`` names.
+        ``list``, which the pane shows and a tool of its own edits, ``switch``, on or off,
+        ``materials``, a number per material the pane's ``solids`` names, or ``several``, any
+        of the values the schema accepts at the path.
     """
 
     label: str
-    kind: Literal["text", "number", "choice", "chains", "list", "switch", "materials"] = "text"
+    kind: Literal[
+        "text", "number", "choice", "chains", "list", "switch", "materials", "several"
+    ] = "text"
     unit: str = ""
     hint: str = ""
 
@@ -173,6 +179,11 @@ FIELDS: dict[str, Field] = {
     "boundary_conditions.walls.slip": Field("Flow at walls", "choice"),
     "boundary_conditions.wall_charge_C_m2": Field("Wall charge", "number", unit="C/m²"),
     "physics.solid_permittivities": Field("Solid permittivities", "materials"),
+    "models.molecular": Field("Molecular model", "choice"),
+    "models.continuum": Field("Continuum model", "choice"),
+    "models.physics": Field("Physics model", "choice"),
+    "outputs": Field("Outputs", "several"),
+    "numerics.continuation": Field("Continuation", "choice"),
 }
 """Every value a suite's tool sets, by case path."""
 
@@ -191,6 +202,11 @@ BUILDS: dict[str, tuple[str | None, str, str]] = {
     "electrolyte": (None, "", ""),
     "conditions": (None, "", ""),
     "exposed": (None, "", ""),
+    "overview": (None, "", ""),
+    "setup": (None, "", ""),
+    "sweep": (None, "", ""),
+    "charge": ("charge", "Build charge on the mesh", ""),
+    "runs": (None, "", ""),
 }
 
 STAGE_TITLES = {
@@ -201,6 +217,7 @@ STAGE_TITLES = {
     "contour": "Contour",
     "region": "Region",
     "mesh": "Mesh",
+    "charge": "Charge on the mesh",
 }
 # Each state's glyph and word (the glyph never stands alone), and its colour class.
 STATES = {
@@ -407,6 +424,20 @@ class _Pane(Generic[ModelT]):
     def after_refresh(self) -> None:
         """Bring what the tool's own sections show up to date with the model."""
 
+    def put(self, path: str, value: Any) -> None:  # noqa: ANN401 - a field's value
+        """Write one value into the model's file, or with None remove it; raise if refused."""
+        if self.model is not None:
+            kind = cast("ModelKind", self.model.kind)
+            self.model.project.set_value(kind, self.model.name, path, value)
+
+    def options(self, path: str) -> list[Any]:
+        """Return the values a choice field offers: those the schema accepts at the path."""
+        return list(options_at(path) or ())
+
+    def shown_value(self, path: str, body: dict[str, Any]) -> Any:  # noqa: ANN401 - a field's value
+        """Return the value the model's file gives a field, or None where it sets none."""
+        return _value_of(body, path)
+
     async def show(self) -> None:
         """Show the model in the suite's view."""
 
@@ -432,8 +463,9 @@ class _Pane(Generic[ModelT]):
         if self.model is None:
             return set()
         try:
-            location = self.model.project.path(self.model.kind, self.model.name)
-            return {value.path for value in read_model_file(self.model.kind, location).exposed}
+            kind = cast("ModelKind", self.model.kind)
+            location = self.model.project.path(kind, self.model.name)
+            return {value.path for value in read_model_file(kind, location).exposed}
         except (ValueError, OSError):
             return set()
 
@@ -555,7 +587,7 @@ class _Pane(Generic[ModelT]):
 
     def field(self, path: str, body: dict[str, Any], changed: bool, exposed: bool) -> None:
         spec = FIELDS[path]
-        value = _value_of(body, path)
+        value = self.shown_value(path, body)
         shown = value if value is not None else _default_of(path)
         control_name = field_control(path)
         named = f'data-control={control_name} aria-label="{spec.label}"'
@@ -603,8 +635,17 @@ class _Pane(Generic[ModelT]):
                     f'dense outlined use-chips options-dense placeholder="{spec.hint}" {named} '
                     'title="Pick the chains, or type A+B and Enter for a group; none for all"'
                 )
+            elif spec.kind == "several":
+                options = self.options(path)
+                picked = [entry for entry in shown if entry in options] if shown else []
+                control = ui.select(
+                    options,
+                    value=picked,
+                    multiple=True,
+                    on_change=lambda e, p=path: self.write(p, list(e.value) or None),
+                ).props(f"dense outlined options-dense {named}")
             elif spec.kind == "choice":
-                options = list(options_at(path) or ())
+                options = self.options(path)
                 control = ui.select(
                     options,
                     value=shown if shown in options else None,
@@ -668,7 +709,7 @@ class _Pane(Generic[ModelT]):
         if value is None and _value_of(self.body(), path) is None:
             return
         try:
-            self.model.project.set_value(self.model.kind, self.model.name, path, value)
+            self.put(path, value)
         except ValueError as error:
             # Refused at its field: the rule, the value entered and the case path.
             said = str(error).replace(f"{self.model.project.root}/", "")
@@ -760,7 +801,7 @@ class _Pane(Generic[ModelT]):
         if self.model is None:
             return
         try:
-            self.model.project.set_value(self.model.kind, self.model.name, path, None)
+            self.put(path, None)
         except ValueError as error:
             ui.notify(str(error), type="negative")
             return
@@ -794,7 +835,8 @@ class _Pane(Generic[ModelT]):
         if self.model is None:
             return
         try:
-            self.model.project.set_exposed(self.model.kind, self.model.name, path, on)
+            kind = cast("ModelKind", self.model.kind)
+            self.model.project.set_exposed(kind, self.model.name, path, on)
         except ValueError as error:
             ui.notify(str(error), type="negative")
 

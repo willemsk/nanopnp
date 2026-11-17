@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import math
+import re
 import struct
 import threading
 import zlib
@@ -47,6 +48,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
     from nanopnp.api.case import Case
     from nanopnp.geometry.outlines import Stage5Region
+    from nanopnp.gui.charge import ChargeMap, ConservationView
     from nanopnp.io.artefact import Artefact
     from nanopnp.io.resolved import ResolvedCase
     from nanopnp.io.store import Store
@@ -62,6 +64,7 @@ __all__ = [
     "ROLE_TITLES",
     "SERIES",
     "Plane",
+    "charge_plane",
     "deployed_layer",
     "electrolyte_plane",
     "image_png",
@@ -72,6 +75,7 @@ __all__ = [
     "plane",
     "png",
     "shown_solids",
+    "unit_text",
 ]
 
 Frame = Literal["structure", "model", "plot"]
@@ -208,6 +212,9 @@ class Plane:
         A plot's graphs, one above the other, each with its ``axes``, ``extent_nm``, x
         ``scale`` (``linear`` or ``sqrt``) and, optionally, its x ``ticks``; a layer names its
         graph by ``panel``. Empty: one graph of ``axes`` and ``extent_nm``.
+    point_pick
+        Whether a click asks about the point itself, as the charge map's residues, in place of
+        picking a vertex, an element or a domain.
     """
 
     frame: Frame
@@ -216,6 +223,7 @@ class Plane:
     layers: tuple[dict[str, Any], ...]
     notes: tuple[str, ...] = ()
     panels: tuple[dict[str, Any], ...] = ()
+    point_pick: bool = False
 
     def json(self) -> dict[str, Any]:
         """Return the drawing as the canvas reads it."""
@@ -229,6 +237,7 @@ class Plane:
             "layers": list(self.layers),
             "notes": list(self.notes),
             **({"panels": list(self.panels)} if self.panels else {}),
+            **({"point_pick": True} if self.point_pick else {}),
         }
 
 
@@ -729,8 +738,112 @@ def deployed_layer(path: Path, *, positive: Literal["blue", "red"] = "blue") -> 
         "legend": [],
         "categorical": False,
         "outlined": [],
-        "bar": {"quantity": name, "unit": units},
+        # The quantity in words; the unit, then the name the exported field carries (IF-07).
+        "bar": (
+            {"quantity": "Fixed charge density", "unit": f"{unit_text(units)} ({name})"}
+            if charge
+            else {"quantity": name, "unit": unit_text(units)}
+        ),
     }
+
+
+CHARGE_AXES = ("r (nm)", "z (nm)")
+NO_LATTICE = "The study's charge stores no lattice to draw: it is supplied on the mesh."
+NO_DEPLOYED = (
+    "The deployed charge is read from the study's run record. Build the charge on the mesh to "
+    "write one."
+)
+
+
+def _charge_palette(positive: Literal["blue", "red"]) -> list[str]:
+    return _stops(lookup_table("diverging_r" if positive == "blue" else "diverging"))
+
+
+def charge_plane(
+    shown: ChargeMap | None,
+    conservation: ConservationView | None,
+    *,
+    image_url: str,
+    positive: Literal["blue", "red"] = "blue",
+    deployed: Path | None = None,
+    layer: Literal["lattice", "deployed"] = "lattice",
+    picked: tuple[str, Sequence[tuple[float, float, float]]] | None = None,
+) -> Plane:
+    """Return a study's charge on the mesh: the lattice or the deployed charge, with its bar.
+
+    Each worst plane of the conservation record is a dashed line across the map, and a picked
+    residue's charged atoms are rings in the charge's own colours. A click asks about its point.
+
+    Parameters
+    ----------
+    image_url
+        Where the canvas reads the lattice's picture.
+    deployed
+        The file of the deployed charge per element, where one is drawn.
+    picked
+        The picked residue's key and its charged atoms, each ``(r_nm, z_nm, q_e)``.
+    """
+    palette = _charge_palette(positive)
+    layers: list[dict[str, Any]] = []
+    notes: list[str] = []
+    extent: tuple[float, float, float, float] | None = None
+    if shown is not None:
+        r_low, r_high, z_low, z_high = shown.image.extent_nm
+        extent = (r_low, r_high, z_low, z_high)
+    if layer == "deployed":
+        if deployed is None:
+            notes.append(NO_DEPLOYED)
+        else:
+            drawn = deployed_layer(deployed, positive=positive)
+            layers.append(drawn)
+            if extent is None:
+                rs, zs = drawn["vertices_nm"][0::2], drawn["vertices_nm"][1::2]
+                extent = (min(rs), max(rs), min(zs), max(zs))
+    elif shown is None:
+        notes.append(NO_LATTICE)
+    else:
+        limit = shown.limit if shown.limit > 0.0 else 1.0
+        layers.append(
+            {
+                "id": "lattice",
+                "kind": "image",
+                "url": image_url,
+                "extent_nm": [round(v, ROUND_NM) for v in shown.image.extent_nm],
+                "scale": [-limit, limit],
+                "title": shown.image.title,
+                "bar": {
+                    "quantity": shown.quantity.replace("_", " ").capitalize(),
+                    "unit": unit_text(shown.units),
+                    "low": -limit,
+                    "high": limit,
+                    "palette": palette,
+                },
+            }
+        )
+    if extent is not None and layers:
+        for label, z_nm in () if conservation is None else conservation.planes:
+            side = label.removeprefix("worst plane (").rstrip(")")
+            layers.append(
+                _line(
+                    f"worst-{side}",
+                    "worst",
+                    [(extent[0], z_nm), (extent[1], z_nm)],
+                    f"{label.capitalize()}, z = {z_nm:.4g} nm",
+                )
+            )
+    if picked is not None and picked[1] and layers:
+        residue, markers = picked
+        layers.append(
+            {
+                "id": "residue",
+                "kind": "points",
+                "points_nm": _flat((r, z) for r, z, _ in markers),
+                "colours": [palette[-1] if q > 0 else palette[0] for _, _, q in markers],
+                "title": f"Residue {residue}, its charged atoms",
+            }
+        )
+    framed = _extent(layers, extent or (0.0, 1.0, -1.0, 1.0))
+    return Plane("model", CHARGE_AXES, framed, tuple(layers), tuple(notes), point_pick=bool(layers))
 
 
 def _edited(model: ContinuumModel, layers: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -863,6 +976,11 @@ def _curve(
 _SUPERSCRIPT = str.maketrans(
     "0123456789+-", "\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079\u207a\u207b"
 )
+
+
+def unit_text(units: str) -> str:
+    """Return a unit as the workbench writes it: each power raised, as ``C/m^3`` reads ``C/m³``."""
+    return re.sub(r"\^([+-]?\d+)", lambda found: found.group(1).translate(_SUPERSCRIPT), units)
 
 
 def ion_text(name: str) -> str:

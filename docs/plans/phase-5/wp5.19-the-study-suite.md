@@ -260,6 +260,16 @@ layer's ∫ 2πr dA keeps `q_mesh_e`, with the vertices and triangles to `<run>/
   `/study/<id>` light and dark, a residue picked, *New study*; the charged tube run once, its queue entry unfolded;
   REV-256's mockups under `docs/design/mockups/fields/`, shot by `/np-gui render mockups`.
 
+> **Outcome — the Study suite drawn, reviewed and published for round 1.** `gui/web/study.py:StudyModel` builds a
+> study to its charge and writes its run record; `study_tools.py` draws the five tools; `link.py` and `st-charge` are
+> gone. Charge on the mesh shows Mol* and the canvas side by side: the lattice map with axes, its bar named in words,
+> the record's worst planes, a residue linked both ways, and the deployed charge from the record. VER-78 passes over
+> the five tools in each state; `test_study_charge.py` adds the stage hashes, legs and worst planes. The `study` render
+> group and REV-256's mockups, at the pane's width, were reviewed: the reviewer's blocking finding (the map's key cut
+> off) and ten of its thirteen major ones are fixed; two are put to the author and one is WP5.20's (a record opening
+> its result). The [digest](https://claude.ai/artifact/HYGzi6jtJVgEJWGJF1oySe) holds 19 picks over 72 shots. The
+> render fills the 2WCD cache's store before its groups start, which a fresh cache raced.
+
 **Item 10** (Sonnet). `redraw.cjs <url>` drives `/study/charge` of a served 2WCD project: 20 picks on the map after a
 warm-up, 1.5 s apart; per pick the time to the markers' paint and to Mol*'s second frame after the selection; prints
 median and p95 of each, the browser's GPU string and `--json`. Check: it runs headless here (software GL).

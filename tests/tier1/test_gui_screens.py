@@ -242,7 +242,7 @@ def test_ver78_l_a_project_value_writes_the_project_file(browser: Browser, tmp_p
         process.wait(STOP_WITHIN_S)
 
 
-def test_ver78_m_a_suite_change_keeps_the_window_and_builds_the_molecule_once(
+def test_ver78_m_charge_on_the_mesh_shows_both_views_each_built_once(
     browser: Browser, tmp_path: Path
 ) -> None:
     process, found = _start("--state", "charged-tube", entry=CLI, config=tmp_path)
@@ -253,16 +253,21 @@ def test_ver78_m_a_suite_change_keeps_the_window_and_builds_the_molecule_once(
         page.goto(url)
         _ready(page, origin + "/study/charge")
         page.evaluate("window.marker = 'kept'")
-        page.locator("[data-control=suite-study]").click()
-        page.wait_for_url(origin + "/study", timeout=READY_WAIT_MS)
+        assert page.locator("[data-control=molecule]").is_visible()
+        assert page.locator("[data-control=plane]").is_visible()
+        page.locator("[data-control=suite-molecular]").click()
+        page.wait_for_url(origin + "/molecular/prepare", timeout=READY_WAIT_MS)
         page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
-        assert not page.locator("[data-control=molecule]").is_visible()
-        page.locator("[data-control=open-charge]").click()
+        assert not page.locator("[data-control=plane]").is_visible()
+        # The suite's icon opens the tool last used in it, both views as they were left.
+        page.locator("[data-control=suite-study]").click()
         page.wait_for_url(origin + "/study/charge", timeout=READY_WAIT_MS)
         page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
         assert page.evaluate("window.marker") == "kept"
         assert page.evaluate("window.nano.builds") == 1
+        assert page.evaluate("window.nano.canvas.builds") == 1
         assert page.locator("[data-control=molecule]").is_visible()
+        assert page.locator("[data-control=plane]").is_visible()
     finally:
         page.close()
         assert process.stdin is not None
@@ -288,7 +293,7 @@ def test_ver78_m_a_tool_change_keeps_the_window_and_builds_the_molecule_once(
             assert page.locator("[data-control=molecule]").is_visible()
         # The suite's icon opens the tool last used in it, in the same window.
         page.locator("[data-control=suite-study]").click()
-        page.wait_for_url(origin + "/study", timeout=READY_WAIT_MS)
+        page.wait_for_url(origin + "/study/overview", timeout=READY_WAIT_MS)
         page.locator("[data-control=suite-molecular]").click()
         page.wait_for_url(origin + "/molecular/prepare", timeout=READY_WAIT_MS)
         page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)

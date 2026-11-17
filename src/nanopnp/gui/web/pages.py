@@ -4,25 +4,30 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from dataclasses import replace
+from typing import TYPE_CHECKING, Literal, cast
 
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse, Response
 from nicegui import app as nicegui_app
-from nicegui import events, ui
+from nicegui import ui
 
 from nanopnp.gui.web.assets import ASSETS, TOKENS
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.gui.web.continuum_tools import continuum_page
 from nanopnp.gui.web.frame import Route, Views, current_suite, frame, heading
-from nanopnp.gui.web.link import Extent
 from nanopnp.gui.web.molecular import MolecularModel
 from nanopnp.gui.web.molview import (
     COLOURINGS,
     REPRESENTATIONS,
     annotation,
+    charge_rows,
+    first_frame_pdb,
     frame_count,
+    has_backbone,
+    pqr_frame,
+    pqr_pdb,
     scene,
     structure_text,
 )
@@ -31,15 +36,18 @@ from nanopnp.gui.web.physics_tools import physics_page
 from nanopnp.gui.web.plane import COLOURINGS as MESH_COLOURINGS
 from nanopnp.gui.web.plane import (
     IMAGES,
+    charge_plane,
     electrolyte_plane,
     image_png,
     physics_plane,
     plane,
     png,
 )
-from nanopnp.gui.web.screens import SUITES, TOOL_SUITES, VIEWS, Suite, Tool, screen, tool_view
+from nanopnp.gui.web.screens import SUITES, TOOL_SUITES, VIEWS, Suite, Tool, tool_view
 from nanopnp.gui.web.settings_page import SettingsPage
 from nanopnp.gui.web.shell import Shell
+from nanopnp.gui.web.study import StudyModel
+from nanopnp.gui.web.study_tools import study_page
 from nanopnp.gui.web.tools import OVERLAY_MOST, charge_colours, tool_page
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -49,8 +57,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 __all__ = ["ROUTES", "install"]
 
-MAP_WIDTH_PX = 330
-BLANK = Extent(0.0, 1.0, 0.0, 1.0, MAP_WIDTH_PX, 440)
 STYLESHEETS = (
     '<link rel="stylesheet" href="/tokens.css"><link rel="stylesheet" href="/workbench.css">'
 )
@@ -72,55 +78,13 @@ ROUTES: dict[str, Route] = {
         for suite in TOOL_SUITES
         for tool in suite.tools
     },
-    screen("st-charge").path: Route("study", "molecule"),
     "/settings": Route(None),
 }
 """Every path the frame routes: its suite, and the view the frame shows beside it."""
 
 
-def _blank_map() -> bytes:
-    return png(b"\xe6\xe8\xec\xff" * BLANK.width * BLANK.height, BLANK.width, BLANK.height)
-
-
-# The SVG of a residue's charged atoms, drawn over the map's picture.
-def _markers(extent: Extent, markers: list[tuple[float, float, float]]) -> str:
-    out = []
-    for r_nm, z_nm, charge in markers:
-        x, y = extent.pixel(r_nm, z_nm)
-        colour = "#b4231a" if charge > 0 else "#1d4ed8"
-        out.append(
-            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5" fill="none" stroke="#000" stroke-width="3"/>'
-            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5" fill="none" stroke="{colour}" '
-            'stroke-width="1.5"/>'
-        )
-    return "".join(out)
-
-
 def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
     """Register the screens and their data routes on ``app``, and attach NiceGUI to it."""
-
-    @app.get("/api/structure")
-    def structure() -> Response:
-        """Serve the first frame as PDB text, which the viewer reads."""
-        link = shell.bench.link
-        text = "" if link is None else link.structure_pdb
-        return Response(text, media_type="chemical/x-pdb")
-
-    @app.get("/api/map")
-    def charge_map() -> Response:
-        """Serve the charge map as a PNG."""
-        link = shell.bench.link
-        return Response(
-            _blank_map() if link is None else link.map_png(charge_colours(shell)),
-            media_type="image/png",
-        )
-
-    @app.get("/api/scene")
-    def charge_scene() -> JSONResponse:
-        """Serve the scene of the charge screen: the study's first frame, as Mol* styles it."""
-        if shell.bench.link is None:
-            return JSONResponse(None)
-        return JSONResponse(scene(None, structure_url="/api/structure", annotation_url=None))
 
     def molecular(name: str) -> MolecularModel:
         project = shell.bench.project
@@ -268,6 +232,98 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
                 )
             )
 
+    def study(name: str) -> StudyModel:
+        project = shell.bench.project
+        if project is None or name not in project.items("study"):
+            raise HTTPException(404, f"no study {name!r}")
+        return StudyModel(project, name, shell.queue)
+
+    def colours(positive: str) -> Literal["blue", "red"]:
+        if positive not in ("blue", "red"):
+            raise HTTPException(422, f"positive: {positive!r} is not blue or red")
+        return cast("Literal['blue', 'red']", positive)
+
+    @app.get("/api/study/{name}/charge/plane")
+    def study_charge(
+        name: str, layer: str = "lattice", residue: str = "", positive: str = "blue"
+    ) -> JSONResponse:
+        """Serve a study's charge on the mesh as the (r, z) view draws it, a residue marked."""
+        if layer not in ("lattice", "deployed"):
+            raise HTTPException(422, f"layer: {layer!r} is not lattice or deployed")
+        model = study(name)
+        with model.keyed_once():
+            charge = model.artefacts().get("charge")
+            charges = model.charges()
+            markers = charges.markers(residue) if charges is not None and residue in charges else []
+            digest = "" if charge is None else charge.hash[:12]
+            drawn = charge_plane(
+                model.charge_map(),
+                model.conservation(),
+                image_url=f"/api/study/{name}/charge/image?positive={positive}&v={digest}",
+                positive=colours(positive),
+                deployed=model.elements(),
+                layer="deployed" if layer == "deployed" else "lattice",
+                picked=(residue, markers) if markers else None,
+            )
+        return JSONResponse(drawn.json())
+
+    @app.get("/api/study/{name}/charge/image")
+    def study_charge_image(name: str, positive: str = "blue") -> Response:
+        """Serve a study's charge lattice as a PNG, a positive charge in the named colour."""
+        shown = study(name).charge_map()
+        if shown is None:
+            raise HTTPException(404, f"study {name!r} stores no charge lattice")
+        import numpy as np
+
+        blue = colours(positive) == "blue"
+        # Where the lattice carries no charge the canvas shows through, on either theme.
+        values = np.where(shown.image.values == 0.0, np.nan, shown.image.values)
+        image = replace(shown.image, values=values, palette="diverging_r" if blue else "diverging")
+        return Response(png(image.rgba(), image.width, image.height), media_type="image/png")
+
+    @app.get("/api/study/{name}/residues")
+    def study_residues(name: str, r: float, z: float) -> JSONResponse:
+        """Serve the residues that add most charge at a point of the map, the most first."""
+        charges = study(name).charges()
+        found = [] if charges is None else charges.at(r, z)
+        return JSONResponse([{"key": key, "e_per_nm3": value} for key, value in found])
+
+    @app.get("/api/study/{name}/structure")
+    def study_structure(name: str) -> Response:
+        """Serve the study's atoms as PDB text: its protonated first frame, else its PQR."""
+        model = study(name)
+        table = model.table()
+        pqr = None if table is not None else pqr_frame(model.pqr())
+        text = first_frame_pdb(table) if table is not None else "" if pqr is None else pqr_pdb(pqr)
+        return Response(text, media_type="chemical/x-pdb")
+
+    @app.get("/api/study/{name}/annotation")
+    def study_annotation(name: str, positive: str = "blue") -> JSONResponse:
+        """Serve one colour per residue by its net charge, as a MolViewSpec annotation."""
+        model = study(name)
+        table = model.table()
+        pqr = None if table is not None else pqr_frame(model.pqr())
+        return JSONResponse(charge_rows(table, pqr, positive=colours(positive)))
+
+    @app.get("/api/study/{name}/scene")
+    def study_scene(name: str, positive: str = "blue", v: str = "") -> JSONResponse:
+        """Serve the scene of a study's structure, its residues coloured by their charge."""
+        model = study(name)
+        table = model.table()
+        pqr = None if table is not None else pqr_frame(model.pqr())
+        if table is None and pqr is None:
+            return JSONResponse(None)
+        return JSONResponse(
+            scene(
+                None,
+                structure_url=f"/api/study/{name}/structure?v={v}",
+                annotation_url=f"/api/study/{name}/annotation?positive={colours(positive)}&v={v}",
+                # Atoms with no backbone, as a fixture's charges, draw as balls: a cartoon
+                # draws nothing of them.
+                representation="cartoon" if has_backbone(table, pqr) else "spacefill",
+            )
+        )
+
     def pump() -> None:
         # The server's one queue: each build, run and sweep member waits for a slot here.
         queue = shell.queue
@@ -291,7 +347,12 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         nicegui_app.add_static_file(local_file=local, url_path=url, max_cache_age=0)
 
     def page_of(suite: Suite, tool: Tool) -> Callable[..., None]:
-        pages = {"molecular": tool_page, "continuum": continuum_page, "physics": physics_page}
+        pages = {
+            "molecular": tool_page,
+            "continuum": continuum_page,
+            "physics": physics_page,
+            "study": study_page,
+        }
         return pages[suite.id](shell, tool)
 
     def suite_page(suite: Suite) -> Callable[..., None]:
@@ -305,7 +366,6 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             return last
 
         def page(built: Views) -> None:
-            bench = shell.bench
             with ui.column().props("data-control=suite-body"):
                 heading(f"{suite.title} suite", 1)
                 ui.label(f"This suite builds {suite.builds}.")
@@ -316,17 +376,6 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
                         )
                     else:
                         ui.label(f"{tool.title}: in a later package").classes("later")
-                if suite.id == "study":
-                    ui.label(f"State: {bench.name}").props("data-control=state")
-                    with ui.row().props("data-control=stages"):
-                        for stage in bench.stages:
-                            ui.badge(stage)
-                        if not bench.stages:
-                            ui.label("No stage has run.")
-                    if bench.refusal:
-                        ui.label(f"✕ blocked: {bench.refusal}").classes("refused")
-                    if bench.notice:
-                        ui.label(bench.notice)
 
             async def ready() -> None:
                 await built.settled()
@@ -335,80 +384,6 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             ui.timer(0.1, ready, once=True)
 
         return page
-
-    def charge(built: Views, residue: str = "", linked: int = 1) -> None:
-        bench = shell.bench
-        link = bench.link
-        extent = BLANK if link is None else link.extent
-        state = {"key": "", "linked": bool(linked)}
-        buttons: dict[str, ui.button] = {}
-
-        async def select(key: str, *, move_mol: bool = True) -> None:
-            if link is None or key not in link:
-                return
-            if state["key"] in buttons:
-                buttons[state["key"]].props("aria-pressed=false")
-            state["key"] = key
-            if key in buttons:
-                buttons[key].props("aria-pressed=true")
-            image.content = _markers(extent, link.residue_markers(key))
-            status.text = f"Residue {key}"
-            await ui.run_javascript(f"nano.show({key!r})" if move_mol else "nano.drawn()")
-
-        async def on_map(event: events.MouseEventArguments) -> None:
-            if link is None or not state["linked"]:
-                return
-            found = link.residues_at(*extent.point(event.image_x, event.image_y))
-            if found:
-                await select(found[0][0])
-
-        async def on_mol(event: events.GenericEventArguments) -> None:
-            if state["linked"]:
-                await select(event.args["key"], move_mol=False)
-
-        def toggle_link() -> None:
-            state["linked"] = not state["linked"]
-            chip.text = "Linked" if state["linked"] else "Unlinked"
-            unlink.text = "Unlink" if state["linked"] else "Link"
-
-        built.listen("mol_pick", on_mol)
-        with ui.column().classes("items-start"):
-            heading("Charge on the mesh", 1)
-            with ui.row().props("data-control=strip").style(f"width:{MAP_WIDTH_PX}px;gap:2px"):
-                for key, name, _ in [] if link is None else link.residues():
-                    buttons[key] = (
-                        ui.button(f"{key} {name}", on_click=lambda _, k=key: select(k))
-                        .props(
-                            "flat dense no-caps size=sm aria-pressed=false "
-                            f"data-control=strip-item data-residue={key}"
-                        )
-                        .classes("strip-item")
-                    )
-            with ui.column():
-                with ui.row().classes("items-center"):
-                    chip = ui.badge("Linked" if linked else "Unlinked").props(
-                        "data-control=link-chip"
-                    )
-                    unlink = ui.button("Unlink" if linked else "Link", on_click=toggle_link).props(
-                        "flat dense no-caps data-control=unlink"
-                    )
-                    status = ui.label(
-                        bench.refusal
-                        or bench.notice
-                        or ("Pick a residue." if link else "No case is loaded.")
-                    ).props("data-control=status")
-                image = (
-                    ui.interactive_image("/api/map", on_mouse=on_map, events=["click"], cross=False)
-                    .props("data-control=map")
-                    .style(f"width:{MAP_WIDTH_PX}px")
-                )
-
-        async def start() -> None:
-            await built.show_molecule(None if link is None else "/api/scene", "study")
-            if residue:
-                await select(residue)
-
-        ui.timer(0.1, start, once=True)
 
     def settings_page(built: Views, setting: str = "") -> None:
         SettingsPage(shell, built, setting).build()
@@ -430,7 +405,6 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             for suite in TOOL_SUITES
             for tool in suite.tools
         },
-        screen("st-charge").path: charge,
         "/settings": settings_page,
     }
 

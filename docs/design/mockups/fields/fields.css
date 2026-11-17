@@ -1,0 +1,46 @@
+/* REV-256's field mockups: today's field beside the proposed one, in each suite (WP5.19 D10). */
+@import url("../../tokens.css");
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: var(--text-md)/1.4 var(--font-ui); }
+section[data-screen] { display: grid; grid-template-columns: 22rem 22rem; gap: 16px 32px; align-content: start; justify-content: start; padding: 20px; min-height: 100vh; }
+/* Each pane at the tool pane's own width (21rem in frame.css), so a box is as narrow as the shell's. */
+h1 { grid-column: 1 / -1; margin: 0; font-size: var(--text-xl); }
+.lede { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: var(--text-sm); max-width: 70ch; }
+.pane { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; display: grid; gap: 8px; align-content: start; }
+.pane h2 { margin: 0 0 4px; font-size: var(--text-lg); }
+.pane h3 { margin: 8px 0 0; font-size: var(--text-md); }
+.tag { justify-self: start; padding: 1px 8px; border-radius: var(--radius); font-size: var(--text-xs); font-weight: 600; background: var(--bg); border: 1px solid var(--control-edge); }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* A field row: the changed mark, the label, the box, the reset. */
+.row { display: grid; grid-template-columns: 0.8rem 6.75rem minmax(0, 1fr) 28px; align-items: center; column-gap: 8px; }
+.row .mark { color: var(--changed); font-size: var(--text-sm); }
+.row .label { font-size: var(--text-sm); }
+.row .reset { width: 28px; height: 28px; border: 0; background: none; color: var(--muted); font-size: 16px; }
+.box { position: relative; display: flex; align-items: center; min-height: 32px; padding: 0 8px; border: 1px solid var(--control-edge); border-radius: var(--radius); background: var(--panel); }
+.box .unit { margin-left: auto; color: var(--muted); }
+.box.err { border-color: var(--err); border-width: 2px; }
+.box.warn { border-color: var(--warn); border-width: 2px; }
+.msg-err { color: var(--err); }
+.msg-warn { color: var(--warn); }
+
+/* Today: the box's text larger than its label, the message under the box, several boxes stacked. */
+.today .box { font-size: 16px; }
+.today .under { grid-column: 3 / -1; font-size: var(--text-xs); margin-top: -4px; }
+.today .stack { display: grid; gap: 4px; }
+.today .stack .part { display: grid; grid-template-columns: 6rem 1fr; align-items: center; gap: 6px; font-size: var(--text-sm); }
+
+/* Proposed: the box's text at its label's size, the message inside the box at its right, and a
+   field of several boxes one box of shaded rows. */
+.proposed .box { font-size: var(--text-sm); }
+.proposed .box .said { margin-left: auto; padding-left: 8px; font-size: var(--text-xs); white-space: nowrap; }
+.proposed .box .said + .unit { margin-left: 8px; }
+.proposed .group { border: 1px solid var(--control-edge); border-radius: var(--radius); overflow: hidden; }
+.proposed .group .part { display: grid; grid-template-columns: 5.5rem auto 1fr; justify-items: start; align-items: center; gap: 8px; min-height: 30px; padding: 0 8px; font-size: var(--text-sm); }
+.proposed .group .part:nth-child(even) { background: var(--bg); }
+.proposed .group .part + .part { border-top: 1px solid var(--line); }
+.proposed .group .part .unit { color: var(--muted); }
+.proposed .group .part.err { box-shadow: inset 3px 0 0 var(--err); }
+.proposed .group .said { white-space: nowrap; font-size: var(--text-xs); }
