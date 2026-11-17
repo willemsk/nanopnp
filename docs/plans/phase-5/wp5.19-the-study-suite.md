@@ -1,6 +1,6 @@
 # WP5.19 — The Study suite
 
-**Status: planned, not started.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
+**Status: in progress, items 1 to 5 done.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
 AN4, AP5, AQ1 and this plan's AR3 to AR6 (§8.2.31 to §8.2.42).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
@@ -260,10 +260,10 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
   `test_gui_solver_process.py` pass. **Executor:** main
 - [x] 51f8a8f 3. `api/reproduce.py`, `cli/running.py` (D9); done when its check passes. **Executor:** general-purpose on
   Sonnet, high; QR-08's NOTE main
-- [ ] 4. `io/resolved.py`, `geometry/region.py`, `pipeline/checks.py`, AP5's NOTEs; REV-247's shares, AP1's
+- [x] 8d6939f 4. `io/resolved.py`, `geometry/region.py`, `pipeline/checks.py`, AP5's NOTEs; REV-247's shares, AP1's
   consequence and VER-55's NOTE (D9); done when `test_exclusion_shell.py` passes and the `physics-reviewer` has read it.
   **Executor:** main
-- [ ] 5. Compaction checkpoint. **Executor:** main
+- [x] 5. Compaction checkpoint. **Executor:** main
 - [ ] 6. `gui/web/queue.py`, `frame.py`, `builds.py`, `settings.py`, `states.py`, `assets/plane.js` (D6 to D8); done when
   `test_study_runs.py` and `test_gui_settings.py` pass. **Executor:** main
 - [ ] 7. `plot/data.py:ResidueCharges`, `gui/render.py` (D5); done when `test_study_charge.py` passes. **Executor:** main
