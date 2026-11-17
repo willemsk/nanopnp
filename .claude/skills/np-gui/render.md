@@ -80,6 +80,10 @@ most two seconds more. The longest chain, `extra`, takes about a minute alone.
 `shoot.cjs` finds Playwright through `NODE_PATH`; `node .claude/scripts/gui/shoot.cjs --self-check
 <s>/selfcheck` checks the browser renders a WebGL page.
 
+`redraw.cjs <address>` times the charge screen's redraw after a pick on the (r, z) map (D11, the 200 ms line;
+WB-23): median and p95 of the markers' paint and of the whole repaint over 20 picks. The author runs it on a
+machine with a GPU (`--headed`); headless here it measures software GL, where Mol* alone takes about 800 ms.
+
 ## Read and report
 
 1. Read the PNGs the change touched (`Read` shows an image), and each one named in a finding.
