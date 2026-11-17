@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar
 
+from nanopnp.api.project import BUILD_UPTO
 from nanopnp.gui.web.builds import REFUSED, BuiltModel
 from nanopnp.io.case import Membrane
 from nanopnp.io.models import ModelKind
@@ -23,6 +24,7 @@ class MolecularModel(BuiltModel):
 
     kind: ClassVar[ModelKind] = "molecular"
     stages: ClassVar[tuple[str, ...]] = STAGES
+    upto: ClassVar[str] = BUILD_UPTO["molecular"]
     paths: ClassVar[re.Pattern[str]] = re.compile(r"\b(?:structure|charge)(?:\.[a-z_]+)+")
     gate_paths: ClassVar[tuple[tuple[str, str], ...]] = (
         ("axis: z", "structure.symmetry.axis"),

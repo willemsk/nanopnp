@@ -58,11 +58,11 @@ class Route:
         The suite the path belongs to, or None for a page of no suite, such as the settings.
     view
         ``molecule`` for the Mol* host the frame owns, ``plane`` for its (r, z) canvas, each
-        built once and never rebuilt; else None.
+        built once and never rebuilt, ``pair`` for the two side by side; else None.
     """
 
     suite: Suite | None
-    view: Literal["molecule", "plane"] | None = None
+    view: Literal["molecule", "plane", "pair"] | None = None
 
 
 KINDS: tuple[tuple[ItemKind, str], ...] = (

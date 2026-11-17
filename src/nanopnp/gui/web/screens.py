@@ -20,6 +20,7 @@ __all__ = [
     "Screen",
     "Suite",
     "Tool",
+    "View",
     "field_control",
     "screen",
     "tool_controls",
@@ -56,6 +57,10 @@ class Screen:
     controls: tuple[str, ...]
 
 
+View = Literal["molecule", "plane", "pair", "page"]
+"""What a tool shows beside its pane."""
+
+
 @dataclass(frozen=True)
 class Tool:
     """One tool of a suite: its identifier, its title and the case values it sets.
@@ -73,8 +78,9 @@ class Tool:
         The case paths the tool's pane sets for some models alone, such as an idealised pore's
         radius, which a problem or a change naming them opens it at.
     view
-        What the tool shows beside its pane: ``molecule``, ``plane``, or ``page``, a view the
-        page draws itself in place of the frame's; None takes its suite's ``VIEWS``.
+        What the tool shows beside its pane: ``molecule``, ``plane``, ``pair``, the two side by
+        side, or ``page``, a view the page draws itself in place of the frame's; None takes its
+        suite's ``VIEWS``.
     """
 
     id: str
@@ -82,7 +88,7 @@ class Tool:
     fields: tuple[str, ...] = ()
     parts: tuple[str, ...] = ()
     conditional: tuple[str, ...] = ()
-    view: Literal["molecule", "plane", "page"] | None = None
+    view: View | None = None
 
 
 def _later(*titles: str) -> tuple[Tool, ...]:
@@ -261,9 +267,22 @@ SUITES: tuple[Suite, ...] = (
         "Study",
         "a study",
         (
-            *_later("Overview", "Study setup", "Sweep"),
-            Tool("charge", "Charge on the mesh"),
-            *_later("Runs"),
+            Tool("overview", "Overview", view="page"),
+            Tool(
+                "setup",
+                "Study setup",
+                (
+                    "models.molecular",
+                    "models.continuum",
+                    "models.physics",
+                    "outputs",
+                    "numerics.continuation",
+                ),
+                view="page",
+            ),
+            Tool("sweep", "Sweep", view="page"),
+            Tool("charge", "Charge on the mesh", view="pair"),
+            Tool("runs", "Runs", view="page"),
         ),
         "use",
         "sym_o_science",
@@ -296,15 +315,16 @@ FRAME_CONTROLS: tuple[str, ...] = (
 TOOL_SUITES: tuple[Suite, ...] = tuple(suite for suite in SUITES if suite.tools[0].id)
 """The suites whose tools have pages: each opens its last tool used, beside its view."""
 
-VIEWS: dict[SuiteId, Literal["molecule", "plane"]] = {
+VIEWS: dict[SuiteId, Literal["molecule", "plane", "pair"]] = {
     "molecular": "molecule",
     "continuum": "plane",
     "physics": "plane",
+    "study": "pair",
 }
-"""The ``data-control`` of each tool suite's view: the 3D molecule, or the (r, z) plane."""
+"""Each tool suite's view: the 3D molecule, the (r, z) plane, or the two side by side."""
 
 
-def tool_view(suite: Suite, tool: Tool) -> Literal["molecule", "plane", "page"]:
+def tool_view(suite: Suite, tool: Tool) -> View:
     """Return what a tool shows beside its pane: its own view, else its suite's."""
     return tool.view or VIEWS[suite.id]
 
@@ -314,12 +334,14 @@ def tool_controls(suite: Suite, tool: Tool) -> tuple[str, ...]:
 
     Every tool's page has its view, its pane, its status and its suite's tool list; a tool that
     sets values filters to the modified ones and has a field per value, and a tool that sets
-    parts has their list. A view the page draws itself is its ``tool-view``.
+    parts has their list. A view the page draws itself is its ``tool-view``, and a pair is both
+    the frame's views.
     """
     own = ("tool-modified",) if tool.fields or tool.parts else ()
     view = tool_view(suite, tool)
+    shown = {"page": ("tool-view",), "pair": ("molecule", "plane")}.get(view, (view,))
     return (
-        "tool-view" if view == "page" else view,
+        *shown,
         "tool-pane",
         "tool-status",
         *(f"tool-link-{entry.id}" for entry in suite.tools),
@@ -397,11 +419,6 @@ SCREENS: tuple[Screen, ...] = (
     ),
     Screen(
         "palette", "/molecular?palette=suite", (*FRAME_CONTROLS, "palette-input", "palette-item")
-    ),
-    Screen(
-        "st-charge",
-        "/study/charge",
-        (*FRAME_CONTROLS, "molecule", "strip", "map", "link-chip", "unlink", "status"),
     ),
 )
 

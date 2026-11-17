@@ -28,7 +28,11 @@ __all__ = [
     "Colouring",
     "Representation",
     "annotation",
+    "charge_rows",
     "first_frame_pdb",
+    "has_backbone",
+    "pqr_frame",
+    "pqr_pdb",
     "scene",
     "structure_text",
 ]
@@ -64,6 +68,29 @@ def _pdb_text(
             f"  1.00  0.00          {atom[:1]:>2s}"
         )
     return "\n".join([*lines, "END"]) + "\n"
+
+
+def pqr_pdb(frame: PQRFrame) -> str:
+    """Return a PQR file's atoms as PDB text, which Mol* reads."""
+    return _pdb_text(
+        frame.positions_A / 10.0,
+        frame.name.tolist(),
+        frame.resname.tolist(),
+        frame.chain.tolist(),
+        frame.resid.tolist(),
+        frame.icode.tolist(),
+    )
+
+
+def has_backbone(table: ProtonationTable | None, pqr: PQRFrame | None = None) -> bool:
+    """Say whether the atoms hold a protein backbone, an alpha carbon, which a cartoon draws."""
+    if table is not None:
+        names = table.name[: int(table.frame_offsets[1])].tolist()
+    elif pqr is not None:
+        names = pqr.name.tolist()
+    else:
+        return False
+    return any(str(name).strip() == "CA" for name in names)
 
 
 def first_frame_pdb(table: ProtonationTable) -> str:
@@ -139,7 +166,11 @@ _PQR: dict[tuple[Path, int], PQRFrame] = {}
 
 
 def _pqr(model: MolecularModel) -> PQRFrame | None:
-    path = model.pqr()
+    return pqr_frame(model.pqr())
+
+
+def pqr_frame(path: Path | None) -> PQRFrame | None:
+    """Return a PQR file's first frame, read once per change of it; None where it reads none."""
     if path is None or not path.is_file():
         return None
     key = (path, path.stat().st_mtime_ns)
@@ -253,17 +284,7 @@ def structure_text(model: MolecularModel, frame: int = 0) -> tuple[str, str]:
         )
     pqr = _pqr(model)
     if pqr is not None:
-        return (
-            _pdb_text(
-                pqr.positions_A / 10.0,
-                pqr.name.tolist(),
-                pqr.resname.tolist(),
-                pqr.chain.tolist(),
-                pqr.resid.tolist(),
-                pqr.icode.tolist(),
-            ),
-            "pdb",
-        )
+        return pqr_pdb(pqr), "pdb"
     case = model.case()
     if case is None or case.structure is None:
         return "", "pdb"
@@ -307,18 +328,7 @@ def annotation(
     table = _table(model)
     pqr = None if table is not None else _pqr(model)
     if by == "charge":
-        totals = _residue_charges(table, pqr)
-        if not totals:
-            return []
-        colours = lookup_table("diverging")
-        if positive == "blue":
-            colours = colours[::-1]
-        middle = (len(colours) - 1) // 2
-        rows = []
-        for (chain, resid, icode), total in totals.items():
-            step = round(max(-1.0, min(1.0, total / CHARGE_SCALE_E)) * middle)
-            rows.append(_row(chain, resid, icode, _hex(colours[middle + step])))
-        return rows
+        return _charge_rows(_residue_charges(table, pqr), positive)
     ensemble = None if table is not None else _ensemble(model)
     held = table if table is not None else ensemble if ensemble is not None else pqr
     if held is None:
@@ -348,6 +358,34 @@ def annotation(
         for chain, resid, icode, resname in residues
         if (parent_residue(resname), f"{resid}{icode.strip()}") in edited
     ]
+
+
+def charge_rows(
+    table: ProtonationTable | None,
+    pqr: PQRFrame | None = None,
+    *,
+    positive: ChargeColours = "blue",
+) -> list[dict[str, object]]:
+    """Return one colour per residue by its net charge: the table's, else the PQR's.
+
+    The scale is diverging about zero and saturates at one elementary charge, a positive residue
+    in the named colour, as the charge map's.
+    """
+    return _charge_rows(_residue_charges(table, pqr), positive)
+
+
+def _charge_rows(
+    totals: dict[tuple[str, int, str], float], positive: ChargeColours
+) -> list[dict[str, object]]:
+    colours = lookup_table("diverging")
+    if positive == "blue":
+        colours = colours[::-1]
+    middle = (len(colours) - 1) // 2
+    rows = []
+    for (chain, resid, icode), total in totals.items():
+        step = round(max(-1.0, min(1.0, total / CHARGE_SCALE_E)) * middle)
+        rows.append(_row(chain, resid, icode, _hex(colours[middle + step])))
+    return rows
 
 
 def _residue_charges(

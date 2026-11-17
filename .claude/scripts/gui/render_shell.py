@@ -15,6 +15,10 @@ Groups, each shot light and dark:
 - ``physics``: the Physics tools on example 01's project with the charged tube beside it, its
   study walked to its charge: each tool, a role picked, a change of model's note, a new model with
   no salt, and the shown study refusing the model (``shell-physics-<name>-<scheme>``).
+- ``study``: the Study tools on a copy of the 2WCD project, its study walked to its charge with a
+  run record and its deployed charge drawn, and a sweep over the bias: each tool, a residue picked,
+  the deployed charge and *New study*; then the charged tube run once from Study setup and its
+  queue entry unfolded (``shell-study-<name>-<scheme>``).
 
 The 2WCD project is built once into ``cache/2wcd-<key>/`` beside ``<out-dir>``, ``key`` being 12 hex
 digits of the SHA-256 of the case file and the deposited structure; its first walk fills the
@@ -40,11 +44,14 @@ import yaml
 
 from nanopnp.api.case import Case
 from nanopnp.api.project import Project
+from nanopnp.gui.render import ChargeRequest, render_charge_elements
 from nanopnp.gui.web import server, theme
+from nanopnp.gui.web.runs import write_sweep
 from nanopnp.gui.web.screens import SCREENS
 from nanopnp.gui.web.settings import SETTINGS_FILENAME
 from nanopnp.gui.web.states import STATES
 from nanopnp.io.project import STORE_FOLDER
+from nanopnp.sweep.document import Axis
 from nanopnp.validation.charged_tube import write_charged_tube
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -56,7 +63,7 @@ DEPOSITED = ROOT / "tests" / "data" / "structures" / "2wcd.pdb.gz"
 VIEWPORT = [1280, 800]
 SCHEMES = ("light", "dark")
 READY = 'body[data-screen-ready="1"]'
-GROUPS = ("states", "2wcd", "extra", "compact", "molecular", "continuum", "physics")
+GROUPS = ("states", "2wcd", "extra", "compact", "molecular", "continuum", "physics", "study")
 THEME_NAME = "dusk"
 START_S = 1800
 """How long a server may take to print its ready line: the 2WCD walk comes before it."""
@@ -169,6 +176,20 @@ def cached_project(out: Path) -> Path:
         finally:
             shutil.rmtree(pending, ignore_errors=True)
     return cache / "project"
+
+
+def filled_cache(out: Path) -> Path:
+    """Return the cached 2WCD project with its study walked to its charge in its store.
+
+    The groups that copy the cache's stages read them from its store, so it is filled before they
+    start side by side; a later render finds them there and walks nothing.
+    """
+    folder = cached_project(out)
+    project = Project.open(folder)
+    session = project.session()
+    session.write = False
+    session.run(project.study(project.items("study")[0]), upto="charge")
+    return folder
 
 
 def write_config(folder: Path) -> None:
@@ -499,6 +520,80 @@ def physics_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dic
     return manifest
 
 
+STUDY_TOOLS = ("overview", "setup", "sweep", "charge", "runs")
+STUDY_EXTRAS: tuple[tuple[str, str, list[str]], ...] = (
+    ("charge-picked", "/study/charge", ["[data-control=charge-strip-item]"]),
+    ("charge-deployed", "/study/charge", ["[data-control=charge-layer] button:nth-child(2)"]),
+    ("new", "/study/setup", ["[data-control=study-new]"]),
+)
+"""The 2WCD study's tools in states of their own: a residue picked from the list, the deployed
+charge on the mesh, and the *New study* window."""
+SWEPT_BIAS_V = [-0.05, 0.05]
+"""The bias the 2WCD study's sweep varies over: two points, so its forecast stays quick."""
+
+
+def study_project(out: Path) -> Path:
+    """Return a copy of the 2WCD project, its study walked to its charge with a run record.
+
+    The deployed charge is drawn for the record, as Charge on the mesh asks the render child for,
+    and the study holds a sweep over the bias.
+    """
+    source = cached_project(out)
+    folder = out.resolve() / "projects" / "study-2wcd"
+    if folder.exists():
+        shutil.rmtree(folder)
+    shutil.copytree(source, folder)
+    project = Project.open(folder)
+    (study,) = project.items("study")
+    walked = project.session().run(project.study(study), upto="charge")
+    assert walked.directory is not None
+    render_charge_elements(ChargeRequest(run=str(walked.directory), elements=True))
+    axis = Axis(name="bias", path="boundary_conditions.bias_V", values=list(SWEPT_BIAS_V))
+    write_sweep(project, study, [axis])
+    return folder
+
+
+def study_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[str, Any]]:
+    """Return the Study tools on the 2WCD project, then the charged tube run and unfolded."""
+    launched = {
+        "2wcd": launch("--project", str(study_project(out))),
+        "tube": launch("--state", "charged-tube"),
+    }
+    servers.extend(launched.values())
+    first = {name: first_address(process, name) for name, process in launched.items()}
+    manifest = [
+        entry(f"shell-study-{tool}", first["2wcd"], f"/study/{tool}", scheme)
+        for tool in STUDY_TOOLS
+        for scheme in SCHEMES
+    ]
+    for name, path, click in STUDY_EXTRAS:
+        for scheme in SCHEMES:
+            shot = entry(f"shell-study-{name}", first["2wcd"], path, scheme, click)
+            shot["wait_ms"] = 2500
+            manifest.append(shot)
+    # The tube is run once, from the light shot; its queue entry, the second after the opening
+    # walk's, is unfolded once the 8 s solve has ended.
+    for index, scheme in enumerate(SCHEMES):
+        run = entry(
+            "shell-study-tube-run",
+            first["tube"],
+            "/study/setup",
+            scheme,
+            [] if index else ["[data-control=study-run]"],
+        )
+        run["wait_ms"] = 12000 if not index else 500
+        unfolded = entry(
+            "shell-study-tube-unfolded",
+            first["tube"],
+            "/study/runs?panel=queue",
+            scheme,
+            ["[data-control=queue-entry-2]"],
+        )
+        unfolded["wait_ms"] = 2500
+        manifest += [run, unfolded]
+    return manifest
+
+
 GROUP_ENTRIES = {
     "states": states_entries,
     "2wcd": project_entries,
@@ -507,6 +602,7 @@ GROUP_ENTRIES = {
     "molecular": molecular_entries,
     "continuum": continuum_entries,
     "physics": physics_entries,
+    "study": study_entries,
 }
 
 
@@ -528,9 +624,10 @@ def main(argv: list[str]) -> int:
     try:
         # The groups start their servers side by side: a server's start is its imports, and the
         # 2WCD project's is its walk.
-        # Two groups read the 2WCD cache, so it is built before they start side by side.
-        if {"2wcd", "molecular", "continuum"} & set(groups):
-            cached_project(out)
+        # Four groups read the 2WCD cache, so it is built and its store filled before they start
+        # side by side.
+        if {"2wcd", "molecular", "continuum", "study"} & set(groups):
+            filled_cache(out)
         with ThreadPoolExecutor(len(groups)) as pool:
             pending = [pool.submit(GROUP_ENTRIES[group], out, servers) for group in groups]
             for future in pending:

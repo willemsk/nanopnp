@@ -24,6 +24,8 @@ class Shell:
     """How the Changes tab shows the changed values: ``list``, a line each, or ``table``."""
     shown_in: dict[str, str] = field(default_factory=dict)
     """The study each physics model is shown in, by model, as its tools' *Shown in* chose."""
+    study: str | None = None
+    """The study the Study suite's tools show, as their pane's *Study* chose; None for the first."""
 
     @property
     def keys(self) -> dict[str, str]:

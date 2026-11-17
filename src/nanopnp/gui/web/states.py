@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from nanopnp.api.case import Case
 from nanopnp.api.project import Project
@@ -17,9 +16,6 @@ from nanopnp.io.store import StaleEntry, Store, StoreError
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import selected_stages
 from nanopnp.validation.charged_tube import write_charged_tube, write_dielectric_tube
-
-if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from nanopnp.gui.web.link import Link
 
 __all__ = [
     "STATES",
@@ -37,10 +33,6 @@ STATES: tuple[str, ...] = ("empty", "charged-tube", "uncharged", "refused")
 """The names ``--state`` takes: no case, a case walked to its charge, one walked to a stage 7 that
 carries no charge from a structure, and a case refused."""
 
-NO_STRUCTURE_CHARGE = (
-    "The charge of this case does not come from a structure, so there is no residue to link."
-)
-
 
 @dataclass(frozen=True)
 class Workbench:
@@ -49,9 +41,7 @@ class Workbench:
     name: str
     case: Path | None = None
     stages: tuple[str, ...] = ()
-    link: Link | None = None
     refusal: str | None = None
-    notice: str | None = None
     project: Project | None = None
     queue: Queue = field(default_factory=Queue, compare=False)
     held: frozenset[str] = frozenset()
@@ -79,8 +69,6 @@ def cap_store(project: Project, held: frozenset[str] = frozenset()) -> tuple[Sta
 
 def boot_case(case: Path, work: Path, *, name: str | None = None) -> Workbench:
     """Walk a case file to the charge stage in a store under ``work``; a refusal is kept as text."""
-    from nanopnp.gui.web.link import Link
-
     label = name or case.stem
     try:
         result = Session(Store(work / "store"), write=False).run(Case.load(case), upto="charge")
@@ -90,14 +78,7 @@ def boot_case(case: Path, work: Path, *, name: str | None = None) -> Workbench:
         if classify(error) not in {EXIT_CASE, EXIT_GATE}:
             raise
         return Workbench(label, case=case, refusal=str(error))
-    link = Link.from_run(result)
-    return Workbench(
-        label,
-        case=case,
-        stages=tuple(result.artefacts),
-        link=link,
-        notice=None if link is not None else NO_STRUCTURE_CHARGE,
-    )
+    return Workbench(label, case=case, stages=tuple(result.artefacts))
 
 
 def opening_stage(project: Project, study: str) -> str:
@@ -138,19 +119,10 @@ def boot_project(project: Project, queue: Queue | None = None) -> Workbench:
         said = str(error).replace(f"{project.root}/", "")
         return Workbench(project.name, project=project, refusal=said, queue=queue)
     queue.set(entry, "done")
-    from nanopnp.gui.web.link import Link
-
     held = frozenset(artefact.hash for artefact in result.artefacts.values())
     cap_store(project, held)
-    link = Link.from_run(result)
     return Workbench(
-        project.name,
-        project=project,
-        stages=tuple(result.artefacts),
-        link=link,
-        notice=None if link is not None else NO_STRUCTURE_CHARGE,
-        queue=queue,
-        held=held,
+        project.name, project=project, stages=tuple(result.artefacts), queue=queue, held=held
     )
 
 

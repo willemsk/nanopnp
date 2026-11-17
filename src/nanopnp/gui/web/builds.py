@@ -11,12 +11,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, Protocol, TypeVar, cast
 
-from nanopnp.api.project import BUILD_UPTO, Problem, Project
+from nanopnp.api.project import Problem, Project
 from nanopnp.core.stages import describe
 from nanopnp.gui.solver import Cancelled, Failed, Finished, RunRequest, SolverProcess, Stage
 from nanopnp.gui.web.queue import Entry, Queue
 from nanopnp.io.models import read_model_file
-from nanopnp.io.project import ITEM_SUITES, STORE_FOLDER
+from nanopnp.io.project import ITEM_SUITES, STORE_FOLDER, ItemKind
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import keyed_walk, selected_stages
 
@@ -61,7 +61,7 @@ _KINDS: dict[str, type[BuiltModel]] = {}
 class ToolModel(Protocol):
     """What a suite's tools ask of the model they build: its stages' states and its build."""
 
-    kind: ModelKind
+    kind: ItemKind
     name: str
     project: Project
 
@@ -124,9 +124,11 @@ class BuiltModel:
     queue: Queue = field(default_factory=Queue)
     _keyed: dict[str, object] | None = field(default=None, init=False, repr=False, compare=False)
 
-    kind: ClassVar[ModelKind]
+    kind: ClassVar[ItemKind]
     stages: ClassVar[tuple[str, ...]]
     """The model's own stages, in the order the walk runs them."""
+    upto: ClassVar[str] = ""
+    """The stage the model's build walks to, the last of its own."""
     paths: ClassVar[re.Pattern[str]]
     """The case paths of the model's own values, as a refusal names them."""
     gate_paths: ClassVar[tuple[tuple[str, str], ...]] = ()
@@ -164,15 +166,16 @@ class BuiltModel:
 
     def body(self) -> dict[str, Any]:
         """Return the model file's own values, or none where it does not load."""
+        kind = cast("ModelKind", self.kind)
         try:
-            location = self.project.path(self.kind, self.name)
-            return dict(read_model_file(self.kind, location, rebase=False).body)
+            location = self.project.path(kind, self.name)
+            return dict(read_model_file(kind, location, rebase=False).body)
         except REFUSED:
             return {}
 
     def _built_case(self) -> Case | str:
         try:
-            return self.project.build_case(self.kind, self.name)
+            return self.project.build_case(cast("ModelKind", self.kind), self.name)
         except REFUSED as error:
             return str(error).replace(f"{self.project.root}/", "")
 
@@ -206,7 +209,7 @@ class BuiltModel:
         if case is None:
             return self.stages
         try:
-            wanted = selected_stages(resolve(case, base=case.source.base), BUILD_UPTO[self.kind])
+            wanted = selected_stages(resolve(case, base=case.source.base), self.upto)
         except REFUSED:
             return self.stages
         return tuple(stage for stage in self.stages if stage in wanted)
@@ -223,7 +226,7 @@ class BuiltModel:
         try:
             resolved = resolve(case, base=case.source.base)
             identities = keyed_walk(resolved, store=store, planned=set())
-            wanted = selected_stages(resolved, BUILD_UPTO[self.kind])
+            wanted = selected_stages(resolved, self.upto)
         except REFUSED:
             return {}
         found: dict[str, Artefact] = {}
@@ -324,18 +327,13 @@ class BuiltModel:
         self.poll()
         if held.build is not None:
             return
-        case = self.project.build_case(self.kind, self.name)
+        case = self.case()
+        if case is None:
+            raise ValueError(self.problem() or f"{self.kind} {self.name!r} forms no case")
         folder = Path(tempfile.mkdtemp(prefix="nanopnp-build-"))
         written = folder / f"{self.name}.case.yaml"
         written.write_text(case.dumps(), encoding="utf-8")
-        process = SolverProcess(
-            RunRequest(
-                case=str(written),
-                store=str(self.project.root / STORE_FOLDER),
-                upto=upto,
-                write=False,
-            )
-        )
+        process = SolverProcess(self.request(written, upto))
         entry = self.queue.add(
             f"{self.name} to {upto}",
             suite=self.kind,
@@ -349,6 +347,12 @@ class BuiltModel:
         walked = self.walked()
         held.build = _Build(process, entry, folder, upto, walked[0] if walked else self.stages[0])
         self.queue.pump()
+
+    def request(self, case: Path, upto: str) -> RunRequest:
+        """Return what the build's child is asked to walk: the case file, to a stage, unrecorded."""
+        return RunRequest(
+            case=str(case), store=str(self.project.root / STORE_FOLDER), upto=upto, write=False
+        )
 
     def cancel(self) -> None:
         """Ask a running build to stop at its next check; a waiting one is dropped."""
