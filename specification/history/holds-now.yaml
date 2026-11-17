@@ -346,11 +346,12 @@ AP1: '§5.3.1''s NOTEs on inputs: and inputs.profile; VER-55''s restated NOTE; F
 AP2: the design document's Continuum rows; §5.3.1's NOTE on model files; §5.3.5's project file
 AP3: the design document's Mesh row; §5.2.2's NOTE on typed sizes; §5.3.1's NOTE on numerics.mesh
 AP4: the design document's Mesh row; §5.2.2's NOTE on typed sizes; §5.3.1's NOTE on numerics.mesh
-AP5: 'open: WP5.19 (§5.2''s NOTE on the ion-exclusion shell, §5.3.1''s NOTE on inputs.profile); REV-246'
+AP5: '§5.2''s NOTE on the ion-exclusion shell; §5.3.1''s NOTE on inputs.profile; amended by AR6'
 AQ1: 'the design document''s Physics rows; open: WP5.18 (§5.3.1''s NOTE on model files)'
 AQ2: 'the design document''s Equations row; open: WP5.18 (§5.3.1''s NOTE on model files)'
 AR1: PHY-23 NOTE, the design document's Equations row
 AR2: PHY-23 NOTE
-AR3: 'open: WP5.19 (FR-25''s run record, §5.3.3''s solver group)'
+AR3: 'FR-25; §5.3.3''s Solver group'
 AR4: 'the Phase 5 plan''s WP5.19 entry; open: WP5.19 (the design document''s Study rows)'
-AR5: 'open: WP5.19 (AP1''s consequence, VER-55''s restated NOTE); REV-247'
+AR5: 'AP1''s consequence; VER-55''s restated NOTE; §5.3.1''s NOTE on inputs.profile; PHY-16''s deposit gate'
+AR6: '§5.2''s NOTE on the ion-exclusion shell; §5.3.1''s NOTE on inputs.profile'

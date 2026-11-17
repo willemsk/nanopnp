@@ -18,6 +18,7 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.density.map import GRID_SPACING_RANGE_NM
+from nanopnp.geometry.profile import load_profile
 from nanopnp.io import case as schema
 from nanopnp.io.artefact import CaseArtefact, StageInputs
 from nanopnp.io.case import (
@@ -44,6 +45,7 @@ from nanopnp.numerics.newton import DEFAULT_SETTINGS, NewtonSettings
 from nanopnp.physics.models import build_case_model, declaration
 from nanopnp.pipeline.checks import (
     check_document,
+    check_exclusion_offset,
     check_operating_point,
     check_species,
     element_orders,
@@ -399,9 +401,34 @@ def resolve(document: CaseDocument, *, base: Path | None = None) -> ResolvedCase
         pore=geometry.pore if mesh is None else None,
         wall_charge_C_m2=document.boundary_conditions.wall_charge_C_m2,
         correction_files=files,
+        outline_spacing_nm=_outline_spacing(document, where),
     )
     _check_structure_beside_profile(resolved)
+    check_exclusion_offset(resolved)
     return resolved
+
+
+def _outline_spacing(document: CaseDocument, base: Path) -> float | None:
+    # A supplied outline's shell is built at the outline's own resolution, never coarser than the
+    # coarsest density grid, so a few long straight edges shell as the grid's (§8.2.42 AR6).
+    profile = _rebased(document.inputs.profile, base)
+    offset = (document.charge or Charge()).exclusion_offset_nm
+    if profile is None or profile.path is None or not offset > 0.0:
+        return None
+    try:
+        recorded = load_profile(profile.path).provenance.min_vertex_spacing_nm
+    except (OSError, ValueError) as error:
+        raise CaseValidationError(
+            f"inputs.profile: {profile.path} is not an outline the ion-exclusion shell can be "
+            f"built on: {error}"
+        ) from None
+    if not recorded > 0.0:
+        raise CaseValidationError(
+            f"inputs.profile: {profile.path} records min_vertex_spacing_nm = {recorded} nm. The "
+            "ion-exclusion shell is built at the outline's point spacing, which must be "
+            "positive (section 5.2 NOTE on the ion-exclusion shell). Remove the repeated vertex."
+        )
+    return min(recorded, GRID_SPACING_RANGE_NM[1])
 
 
 def _check_structure_beside_profile(resolved: ResolvedCase) -> None:

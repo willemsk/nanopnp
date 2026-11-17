@@ -38,7 +38,7 @@ from nanopnp.io.case_paths import (
     schema_default,
     value_at,
 )
-from nanopnp.io.resolved import contour_spacing_nm
+from nanopnp.io.resolved import ResolvedCase, contour_spacing_nm
 from nanopnp.materials.electrolyte import NO_STERIC_MODEL, Electrolyte
 from nanopnp.materials.models import PropertyKind, applies_part
 from nanopnp.mesh.ingest import SOLID_MATERIALS, fluid_permittivity_refusal
@@ -622,15 +622,35 @@ def _check_profile_keys(document: CaseDocument, charge: Charge) -> None:
             "grid that places the contour (section 4.4 NOTE on the derived solid fraction). "
             f"Set it to {h_c} nm or more."
         )
-    offset = charge.exclusion_offset_nm
-    if 0.0 < offset <= 2.0 * h_c:
-        raise CaseValidationError(
-            f"charge.exclusion_offset_nm is {offset} nm, at most twice "
-            f"geometry.density.grid_spacing_nm = {h_c} nm. The shell is a face of width a. "
-            f"The feature-size criterion of section 5.2.1 admits nothing narrower than "
-            f"2 h_c = {2.0 * h_c:g} nm (section 5.2.1 NOTE on the ion-exclusion shell). "
-            f"Set it above {2.0 * h_c:g} nm."
+
+
+def check_exclusion_offset(resolved: ResolvedCase) -> None:
+    """Refuse an ion-exclusion offset of at most twice the shell's resolution ``h_c``.
+
+    Raises
+    ------
+    CaseValidationError
+        Naming the offset, ``h_c`` and where ``h_c`` comes from: the density grid, or a supplied
+        outline's recorded point spacing.
+    """
+    offset = resolved.exclusion_offset_nm
+    h_c = resolved.shell_spacing_nm
+    if not 0.0 < offset <= 2.0 * h_c:
+        return
+    if resolved.outline_spacing_nm is None:
+        source = f"geometry.density.grid_spacing_nm = {h_c} nm"
+    else:
+        assert resolved.profile is not None
+        source = (
+            f"h_c = {h_c} nm, the point spacing that inputs.profile {resolved.profile.path} "
+            "records, never coarser than the coarsest geometry.density.grid_spacing_nm"
         )
+    raise CaseValidationError(
+        f"charge.exclusion_offset_nm is {offset} nm, at most twice {source}. The shell is a face "
+        "of width a. The feature-size criterion of section 5.2.1 admits nothing narrower than "
+        f"2 h_c = {2.0 * h_c:g} nm (section 5.2.1 NOTE on the ion-exclusion shell). "
+        f"Set it above {2.0 * h_c:g} nm."
+    )
 
 
 def _check_smearing(document: CaseDocument, smearing: Smearing, defaults: Smearing) -> None:

@@ -455,6 +455,11 @@ no later owner.
 
 **Fixed in part** at WP5.16's item 3: `nanopnp prepare` wraps `orient_pore` and writes the preparation record; `upto` on reproduce and the region export stay as placed.
 
+**Fixed in part** at WP5.19's item 3: `reproduce(directory, upto=…)` and `nanopnp reproduce --upto` reproduce a run
+stopped early to its last stage, each reached stage's key compared exactly
+(`tests/tier2/test_reproducibility.py::test_ver35_a_run_stopped_at_its_charge_reproduces_to_that_stage`). The region
+export stays with FR-28, v0.7.
+
 ### REV-42 — pnp carries inert flow keys
 
 *Area:* interface. *Severity:* low. *Found:* PR #53 (WP26).
@@ -3323,6 +3328,12 @@ value by value, not as a case.
 outline's shell takes `h_c` from the outline's own point spacing, which its file records. WP5.19, which pairs a
 saved edit in a study, builds it and amends the NOTEs.
 
+**Fixed** at WP5.19's item 4. A supplied outline's shell takes `h_c` from the point spacing its file records, read when
+the case is resolved, and the stage-5 key, the shell and the `2 h_c` bound on the offset all read it. Building it
+found that a few-cornered outline would shell at its longest-edge resolution; the author capped the spacing at the
+coarsest density grid, 0.05 nm (§8.2.42 AR6), so no outline that shelled before is refused
+(`tests/tier1/test_exclusion_shell.py::test_ver59_a_supplied_outlines_shell_takes_the_outlines_recorded_spacing`).
+
 ### REV-247: The solid-share gate's reach against an outline in another frame is not measured
 
 The `physics-reviewer`'s pass before CODE_REVIEW_056. AP1's consequence says the deposit's solid-share gate refuses
@@ -3339,6 +3350,12 @@ check, or AP1's consequence is restated to the reach the gate has.
 
 **Ruled** (§8.2.42 AR5, 16 November 2026, at WP5.19's plan): should the shifted outline pass, AP1's consequence and
 VER-55's restated NOTE state the smallest shift the gate refuses; no frame check is added.
+
+**Fixed** at WP5.19's item 4, measured as AR5 ruled. On 2WCD the deposit's gate refuses the outline shifted 5 nm
+toward *trans* (share 0.479) and passes it shifted up to 4 nm (0.979 to 0.541, the charge displaced); stage 5's
+junction gate refuses any shift toward *cis* above 0.39 nm. AP1's consequence, VER-55's restated NOTE, §5.3.1's NOTE
+on `inputs.profile` and PHY-16 state this reach
+(`knowledge/04-clya-geometry-and-charge/16-the-charge-checks-reach-against-a-shifted-outline.md`).
 
 ### REV-248: What the code review of the Continuum suite left open
 

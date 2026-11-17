@@ -11,7 +11,16 @@ import numpy as np
 import pytest
 
 from nanopnp import Case, Session
-from nanopnp.geometry.profile import load_profile
+from nanopnp.geometry.profile import (
+    PROFILE_SCHEMA,
+    PoreProfile,
+    ProfileProvenance,
+    load_profile,
+    min_feature_size,
+    min_vertex_spacing,
+    signed_area,
+    write_profile,
+)
 from nanopnp.geometry.region import (
     EXCLUSION,
     RegionGateError,
@@ -407,3 +416,70 @@ def test_ver59_the_keys_beside_a_supplied_mesh_or_without_a_profile_are_refused(
         message = str(raised.value)
         assert "beside inputs.mesh" in message
         assert re.search(r"charge\.(exclusion_offset|dielectric_transition)_nm", message)
+
+
+def _outline(path: Path, vertices: list[tuple[float, float]]) -> Path:
+    points = np.asarray(vertices, dtype=np.float64)
+    profile = PoreProfile(
+        schema=PROFILE_SCHEMA,
+        name="outline",
+        provenance=ProfileProvenance(
+            source="test",
+            citation="tests/tier1/test_exclusion_shell.py",
+            sha256="0" * 64,
+            vertex_count=len(points),
+            min_vertex_spacing_nm=min_vertex_spacing(points),
+            min_feature_size_nm=min_feature_size(points),
+            signed_area_nm2=signed_area(points),
+        ),
+        vertices=vertices,
+    )
+    return write_profile(profile, path)
+
+
+def test_ver59_a_supplied_outlines_shell_takes_the_outlines_recorded_spacing(
+    tmp_path: Path, parallelogram_profile: Path
+) -> None:
+    # A shell built on a grid its outline never had moves the wall a saved edit offsets from.
+    fine = _outline(
+        tmp_path / "fine.yaml", [(2.0, -3.0), (2.03, -3.0), (3.0, -3.0), (6.0, 3.0), (5.0, 3.0)]
+    )
+    resolved = resolve(loads_case(case_text(fine, charge=_offset(0.2))))
+    assert resolved.shell_spacing_nm == pytest.approx(0.03, abs=1e-12)
+    key = RegionStage().key(StageInputs(resolved=resolved))
+    assert key.parameters["exclusion"]["h_c_nm"] == resolved.shell_spacing_nm  # type: ignore[index]
+    with pytest.raises(CaseValidationError, match=r"2 h_c = 0\.06 nm") as refused:
+        resolve(loads_case(case_text(fine, charge=_offset(0.05))))
+    assert str(fine) in str(refused.value)
+
+    # Four corners and a 1 nm shortest edge: never coarser than the coarsest density grid.
+    coarse = resolve(loads_case(case_text(parallelogram_profile, charge=_offset())))
+    assert (coarse.outline_spacing_nm, coarse.shell_spacing_nm) == (H_C_NM, H_C_NM)
+
+    repeated = tmp_path / "repeated.yaml"
+    text = fine.read_text(encoding="utf-8").replace("vertex_count: 5", "vertex_count: 6")
+    repeated.write_text(text.replace("- [5.0, 3.0]", "- [5.0, 3.0]\n- [2.0, -3.0]"), "utf-8")
+    with pytest.raises(CaseValidationError, match=re.escape(str(repeated))):
+        resolve(loads_case(case_text(repeated, charge=_offset(0.2))))
+
+    # A derived outline's shell keys on its density grid, as before.
+    derived = resolve(
+        loads_case(
+            CASE_DERIVED.format(pdb=tmp_path / "absent.pdb", charge=_offset(0.2)),
+            base=tmp_path,
+        )
+    )
+    assert (derived.outline_spacing_nm, derived.shell_spacing_nm) == (None, 0.025)
+
+
+CASE_DERIVED = """\
+schema: nanopnp/case/v0.6
+name: derived
+structure: {{source: {{path: {pdb}}}, symmetry: {{point_group: C12}}}}
+geometry: {{density: {{grid_spacing_nm: 0.025}}}}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 1.0
+boundary_conditions: {{bias_V: 0.05, ground: cis}}
+physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+{charge}"""
