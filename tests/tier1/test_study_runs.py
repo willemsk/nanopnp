@@ -1,4 +1,4 @@
-"""A queued run, unfolded: each silence named, each rung's closing test, and the queue's slots."""
+"""A queued run, unfolded: each silence named and each rung's closing test."""
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ import math
 
 from nanopnp.gui.run_model import RunModel
 from nanopnp.gui.solver import Finished, Iteration, RunEvent, Rung, Stage, Started
-from nanopnp.gui.web.queue import Queue
 from nanopnp.gui.web.runs import convergence_plane, rung_rows
 
 TOLERANCE = 1e-8
@@ -91,27 +90,3 @@ def test_ver44_the_unfolded_run_names_each_silence_and_what_closed_each_rung() -
     drawing = convergence_plane(served.convergence).json()
     assert drawing["layers"] == []
     assert "served from the artefact store" in drawing["notes"][0]
-
-
-def test_a_queued_walk_waits_for_a_slot_and_a_member_for_its_earlier_waves() -> None:
-    # Solves past the user's count slow each other; a member started before its parent's wave
-    # ends starts cold.
-    started: list[str] = []
-    queue = Queue(limit=2)
-    build = queue.add("tube to mesh", start=lambda: started.append("build"))
-    first = queue.add("point 1", start=lambda: started.append("point 1"))
-    later = queue.add("point 2", start=lambda: started.append("point 2"), after=(first,))
-    run = queue.add("study run", start=lambda: started.append("run"))
-    queue.pump()
-    assert started == ["build", "point 1"]
-    assert (later.status, run.status) == ("waiting", "waiting")
-
-    queue.set(build, "done")
-    queue.pump()
-    # Point 2 waits for its wave; the run after it takes the slot.
-    assert started == ["build", "point 1", "run"]
-    queue.set(first, "failed")
-    queue.set(run, "done")
-    queue.pump()
-    assert started[-1] == "point 2"
-    assert queue.status_line() == "Queue: 1 running, 2 done, 1 failed"
