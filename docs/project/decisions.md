@@ -1445,5 +1445,5 @@ By decider: author 594; open 5; session, own call 837; session, put to the autho
 | current.md bullet | author | `docs/plans/current.md` |  |  | A `Case` is the case document; a `Session` runs it for every caller** (§8.2.23). **The front end is NiceGUI; Mol | §8.2.23 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | One shell package per suite; variables keyed by resolved values** (§8.2.31). **A study overrides any model value | §8.2.31 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | Physics is a third model with its own suite; models declare exposed values; suites are prototyped on 2WCD first | unstated | in force (cache) |
-| current.md bullet | author | `docs/plans/current.md` |  |  | An edited outline keeps its charge; a continuum model builds alone** (§8.2.40). **Red blocks, blue informs; | §8.2.40 | in force (cache) |
+| current.md bullet | author | `docs/plans/current.md` |  |  | An edited outline keeps its charge; a continuum model builds alone** (§8.2.40). **A physics model is shown | §8.2.40 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | The meso suite is next, WP5.20, holding Density, Outline and Charge map and named at its round; the 200 ms line is | unstated | in force (cache) |

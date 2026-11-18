@@ -355,7 +355,9 @@ its conservation checks, from Study › Charge on the mesh. Each pairs Mol*, sid
 subunit* (WB-44), with the (r, z) view, linked both ways: a residue finds its patch, a point its residue, an edited
 outline the atoms it cuts (FR-33). Its values stay the continuum model's `geometry` section over a molecular model picked
 in the pane; it adds no kind of model (AR8). Continuum keeps Region, Mesh and Exposed values; Study keeps Overview, Study
-setup, Sweep and Runs. FR-31's suites, §2's v0.6 row, WB-34 and WB-41 are amended (AR8). Q14 to Q20 and Q28 to Q30 move
+setup, Sweep and Runs. FR-31's suites, §2's v0.6 row, §8.1's Phase 5 deliverable, WB-34 and WB-41 are amended
+(AR8). What names the tools' old places follows them: VER-78's suites in (a) and `/study/charge` in (m), the
+capability list's rows for Q14 to Q20 and Q24 to Q30, and `redraw.cjs`'s address. Q14 to Q20 and Q28 to Q30 move
 here; VER-60 as restated. Tag `v0.6.0-alpha.20`.
 
 ### WP5.21 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
@@ -368,10 +370,11 @@ one scale or as their difference. A run whose solution the store's clean-up remo
 
 ### WP5.22 — The performance package (WB-23; REV-258; §8.2.31 AG7; §8.2.42 AR7; §8.2.43 AS2)
 
-In a local session of the author's, on a machine with a GPU: `redraw.cjs --headed` times, on 2WCD, a residue picked on
-the meso suite's charge map redrawing the whole picture (WB-23; criterion 6), and Analysis's field and plot views. The
-front end's share is fixed first: one keyed walk per pick, the route reusing the pane's read (REV-258); each miss left
-is profiled with `--trace`. Where the renderer's own repaint is the cost, the line binds the front end's share and the
+First, `redraw.cjs` gains the timing of Analysis's field and plot views beside its charge-map picks. Then, in a local
+session of the author's, on a machine with a GPU, `redraw.cjs --headed` times on 2WCD a residue picked on the meso
+suite's charge map redrawing the whole picture (WB-23; criterion 6), and Analysis's views. The front end's share is then
+fixed, one keyed walk per pick first, the route reusing the pane's read (REV-258), and timed again; each miss left is
+profiled with `--trace`. Where the renderer's own repaint is the cost, the line binds the front end's share and the
 renderer's time is recorded (AG7). No stored key moves (VER-62). Tag `v0.6.0-alpha.22`.
 
 ### WP5.23 — The guided route, Qt's removal and documentation increment 5 (FR-36; REV-134; S13, S17)
@@ -396,7 +399,6 @@ and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
 | 5 | The order of the tool phases against Phase 6 | **Author**, at the close (S7) |
 | 8 | Who observes QR-10 | **Author**, by the close (S24) |
 | 14 | Whether xenon or import-linter is adopted | **Author**, on WP5.10's report (AL7, AL27), [delivered](../../../knowledge/07-software-stack/25-complexity-and-import-contract-tools.md): it recommends neither |
-
 | 15 | The meso suite's name: *Meso*, *Reduction*, *Bridge* or another | **Author**, at WP5.20's round (§8.2.43 AS3) |
 
 Settled rows: see §8.2.17 to §8.2.43 and [the record](phase-5-record.md).
@@ -441,7 +443,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.17, Continuum | 1, 2 | VER-55 as restated, an unedited outline beside its structure depositing the same charge (AP1); VER-62's mesh hash unmoved by REV-170 and by untyped part sizes; MOD-03's edge gone (VER-61); a continuum model built alone keys as a study at its salt (FR-39); typed part sizes key as the table (VER-53); VER-78 |
 | WP5.18, Physics | 1 | A physics model edited in the suite resolves to the case it shows; VER-78 |
 | WP5.19, Study | 1, 2 | VER-44 and VER-60 as restated; FR-39's study and its sweep; VER-36's pair by resolved bias; VER-35 to a stage; VER-59's supplied spacing; a run's thread count keying nothing (VER-62); VER-78; the 200 ms measure (criterion 6) |
-| WP5.20, the meso suite | 1, 2 | VER-60 as restated: a point names a residue once on a C<sub>n</sub> structure, an edited outline names the atoms it cuts; VER-62 unmoved by the moved tools; VER-78 |
+| WP5.20, the meso suite | 1, 2 | VER-60 as restated: a point names a residue once on a C<sub>n</sub> structure, an edited outline names the atoms it cuts; VER-62 unmoved by the moved tools; VER-78 as amended, each moved tool's page at its new address |
 | WP5.21, Analysis | 1 | AG6's difference: exact for a linear field, zero for identical runs; VER-78 |
 | WP5.22, performance | 1 | VER-62 and VER-78 unmoved by the pick path's fix; criterion 6, timed by `redraw.cjs --headed` on a GPU |
 | WP5.23, route and Qt's removal; WP5.24, the close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 |
