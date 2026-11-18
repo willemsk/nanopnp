@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.18 merged (`v0.6.0-alpha.18`); WP5.19, the Study suite, planned, then WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.18 merged (`v0.6.0-alpha.18`); WP5.19, the Study suite, delivered for review, then WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -325,6 +325,20 @@ takes the outline's own spacing (AP5); the charge check's reach against a shifte
 (REV-247; AR5). The 200 ms redraw is timed headless by `redraw.cjs`; its GPU measurement and the front end's fix move to
 a performance package (AR7; criterion 6; REV-258). Q24 to Q26 and Q28
 to Q36 move here; VER-44 and VER-60 as restated. Tag `v0.6.0-alpha.19`.
+
+**Delivered 18 November 2026** ([the plan](wp5.19-the-study-suite.md)). `Project.new_study`, `set_study_value`,
+`set_variable` and `study_values` set a study, its exposed values first (FR-39 (a); AG12). A sweep pairs a bias set
+through a variable by its resolved value (VER-36). A run states its thread count, which keys nothing (FR-25; AR3).
+`reproduce --upto` stops at a stage (QR-08; VER-35). A supplied outline shells at its own spacing, held between
+0.025 and 0.05 nm (VER-59; AP5, AR6, D12). The charge check's reach against a shifted outline is measured (AP1; AR5).
+After the round on 2WCD ([the record](../../design/reviews/2026-11-18-study.md); WB-43 to WB-48), the five Study tools
+stand at `/study/<tool>`: Overview, Study setup with its graph and *New study*, Sweep in two modes, Charge on the mesh
+linking a residue and the map both ways (FR-33; VER-60), and Runs drawing a run's convergence (VER-44). Every Build
+suite has Exposed values (VER-78).
+
+Live constraints: AR7 moves the 200 ms line to a performance package (REV-258); AR8 puts Charge on the mesh in a
+bridge suite with its own package (REV-259). A recorded run picked in Runs is WP5.20's (REV-260); the review's polish
+is WP5.21's (REV-261); an exposed value's first name is the author's (REV-262). D12 goes to the author at `/np-ship`.
 
 ### WP5.20 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
 

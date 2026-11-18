@@ -22,6 +22,51 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.6.0-alpha.19]
+
+WP5.19: the Study suite, Phase 5's nineteenth package; tag `v0.6.0-alpha.19` once merged (§8.2.42 AR3 to AR8; WB-43 to
+WB-48; REV-205, REV-206, REV-209, REV-215, REV-247, REV-251, REV-252, REV-256). A study is made, set, swept, checked and
+run in the workbench; a run records its thread count, which keys no result; `reproduce` stops at a stage; and a
+supplied outline's exclusion shell takes the outline's own spacing. No golden moves. The
+[plan](docs/plans/phase-5/wp5.19-the-study-suite.md) records the work.
+
+- **Added**:
+  - The Study tools, each a page at `/study/<tool>` (FR-39):
+    - *Overview*: the study as its files set it, the whole case in its place on request, its three models, its physics
+      with who sets each value, and its runs;
+    - *Study setup*: each model's exposed values first, then the rest, as a form and as a graph, and *New study*,
+      pairing three of the project's models;
+    - *Sweep*: axes over a value, a variable or a model, as *Every combination* or a *Stepped list*, its points as a
+      table with each point's wave, the stages it builds and its run's state in the queue;
+    - *Charge on the mesh*: Mol* side on and cut at the axis, with *One subunit*, beside the lattice map with its bar,
+      axes and worst planes and the deployed charge, a residue linked both ways (FR-33; VER-60);
+    - *Runs*: a run's convergence drawn across the view, its rungs listed in the pane, and the project's records
+      (VER-44).
+  - *Exposed values* in Molecular and Continuum, as in Physics: each suite's list, each entry named, ranged, removed,
+    or added from its numeric fields (FR-39).
+  - `Project.new_study`, `set_study_value`, `set_variable` and `study_values` (FR-39 (a)).
+  - The queue's slots: *Solves at once* and *Threads per solve*, user settings; builds, runs and a sweep's members
+    wait for a slot, a member for its earlier waves; a queue line's *Open* shows its run in Runs (AN1, AN6).
+  - `plot/data.py:ResidueCharges`, the residue under a point of the map; `gui/render.py:render_charge_elements`, the
+    deployed charge per element, its integral the record's `q_mesh_e`.
+  - `nanopnp reproduce --upto <stage>`, reproducing a record that stopped at a stage (REV-41; QR-08).
+  - `.claude/scripts/gui/redraw.cjs`, which times the charge screen's redraw after a pick.
+- **Changed**:
+  - A solve and its run record state the thread count they ran with; no key moves with it (FR-25; §5.3.3; AR3).
+  - A sweep pairs a bias set through a variable for its rectification, by the resolved bias (VER-36).
+  - A supplied outline's exclusion shell takes the outline's recorded spacing, held between 0.025 and 0.05 nm; a
+    repeated vertex is refused at resolve (VER-59; AP5; AR6).
+  - The charge check's reach against a shifted outline is measured and stated (AP1; VER-55; AR5).
+  - `Project.export` keeps every result and points its records at the copy (FR-32; REV-206).
+  - A project opens with a walk of its first study to its charge, else to its mesh (REV-251).
+  - Every box in a tool pane draws its text at its label's size; a field of several boxes is one box of shaded rows,
+    each with its own mark and reset; the per-field *Expose* checkbox is gone (WB-47, WB-48).
+  - A run's queue entry keeps its line; its convergence is drawn in Runs (WB-45).
+  - A study's own keys, such as `outputs`, are counted and listed with the changes (WB-28).
+  - Each part of a switch has the controls' edge.
+- **Removed**:
+  - The link window `gui/web/link.py` and its `st-charge` screen, replaced by Charge on the mesh.
+
 ## [0.6.0-alpha.18]
 
 WP5.18: the Physics suite, Phase 5's eighteenth package; tag `v0.6.0-alpha.18` once merged (§8.2.41 AQ1, AQ2; WB-42;

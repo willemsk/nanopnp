@@ -1,6 +1,6 @@
 # Current work
 
-Updated 18 November 2026 (WP5.19 in progress). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 18 November 2026 (WP5.19 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
@@ -17,8 +17,8 @@ short edge would otherwise refine the whole ring.
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.18 merged
   (`v0.6.0-alpha.18`).
-  **WP5.19** [in progress](phase-5/wp5.19-the-study-suite.md) on `ccr-ff91f6e7-ohlzgc`: items 1 to 17 done, the Study
-  tools built to the round's rulings (WB-43 to WB-48). Next, its PR; `/np-ship` puts D12 to the author.
+  **WP5.19** [delivered](phase-5/wp5.19-the-study-suite.md) on `ccr-ff91f6e7-ohlzgc`, the Study tools built to the
+  round's rulings (WB-43 to WB-48); its PR waits for `/np-ship`, which puts D12 to the author.
   host: claude-code.
 
 ## Not to be re-decided
