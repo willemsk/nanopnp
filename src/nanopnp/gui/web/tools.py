@@ -345,8 +345,15 @@ def _registration(text: str) -> tuple[int, int] | None:
 ModelT = TypeVar("ModelT", bound=BuiltModel)
 
 
-UNITS = {"molar": "M", "volt": "V", "kelvin": "K", "nanometre": "nm", "nanometer": "nm"}
-"""The symbol the panes write for each unit an exposed value names in words."""
+UNITS = {
+    "molar": "M",
+    "volt": "V",
+    "kelvin": "K",
+    "nanometre": "nm",
+    "nanometer": "nm",
+    "dimensionless": "",
+}
+"""The symbol the panes write for each unit an exposed value names in words; none for a ratio."""
 
 
 def _unit(unit: str | None) -> str:
@@ -755,6 +762,8 @@ class _Pane(Generic[ModelT]):
             ui.label(solid).classes("material-name")
             number = ui.number(
                 value=held.get(solid),
+                # A solid the model does not set says so: it has no default (WB-47).
+                placeholder="not set",
                 on_change=lambda e, p=path, m=solid: self.write_material(p, m, e.value),
             ).props(
                 "dense borderless debounce=500 no-error-icon "
@@ -875,7 +884,7 @@ class _Pane(Generic[ModelT]):
                 if path not in {entry.path for entry in listed}
             }
             with self.named("Expose"):
-                adding = ui.select(offered, value=None).props(
+                adding = ui.select(offered, value=None, label="A value to expose").props(
                     "dense outlined options-dense data-control=exposed-add "
                     'aria-label="A value to expose"'
                 )
@@ -895,7 +904,7 @@ class _Pane(Generic[ModelT]):
             for entry in shown:
                 self.exposed_row(entry, self.fitted_for(entry.path))
             if not listed:
-                ui.label("The model exposes no value.").classes("later")
+                ui.label(self.none_exposed()).classes("later")
 
     def exposed_row(self, entry: Any, fitted: tuple[float, float] | None) -> None:  # noqa: ANN401 - an exposed value
         label = FIELDS[entry.path].label if entry.path in FIELDS else entry.path
@@ -967,6 +976,16 @@ class _Pane(Generic[ModelT]):
         except REFUSED:
             return ()
 
+    def none_exposed(self) -> str:
+        """Say why the list is empty: the model exposes nothing, or its file is not read."""
+        if self.model is not None:
+            kind = cast("ModelKind", self.kind)
+            try:
+                read_model_file(kind, self.model.project.path(kind, self.model.name))
+            except REFUSED:
+                return "The model's file forms no case, so its list is not read."
+        return "The model exposes no value."
+
     def expose_as(self, path: str, label: str | None, span: tuple[object, object] | None) -> None:
         model = self.model
         if model is None:
@@ -1019,15 +1038,21 @@ class _Pane(Generic[ModelT]):
             heading("As a study lists it", 2)
             listed = self.exposed_entries()
             if not listed:
-                ui.label("The model exposes no value.").classes("later")
+                ui.label(self.none_exposed()).classes("later")
                 return
+            # The model's value, as Study setup names it; a number in the pane's figures (WB-21).
             _view_table(
-                ("Name", "Default", "Unit", "Range"),
+                ("Name", "Model's value", "Unit", "Range"),
                 [
                     (
                         entry.name,
-                        "unset" if entry.default is None else self.text(entry.default, None),
-                        _unit(entry.unit) or "none",
+                        "unset"
+                        if entry.default is None
+                        else self.text(entry.default, "dimensionless")
+                        if isinstance(entry.default, int | float)
+                        and not isinstance(entry.default, bool)
+                        else self.text(entry.default, None),
+                        _unit(entry.unit),
                         _range(entry.low, entry.high),
                     )
                     for entry in listed

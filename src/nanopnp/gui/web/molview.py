@@ -443,13 +443,16 @@ class SideView:
     extent_a
         The structure's lowest and highest z, in Å.
     cut_deg
-        The azimuth of the cut through the axis, chosen so the first chain stands whole behind it.
+        The azimuth of the cut through the axis, chosen so the first chain stands whole behind it;
+        for fewer than two chains, the atoms' mean azimuth, which the view looks across uncut.
     chain
-        The first chain, which the view draws alone as one subunit; None for fewer than two chains.
+        The first chain, which the view draws alone as one subunit; None for fewer than two chains,
+        which are not cut.
     chain_deg
         The azimuth of the first chain's centre.
     reach_a
-        The first chain's farthest atom from the axis, in Å.
+        The first chain's farthest atom from the axis, in Å; for fewer than two chains, the
+        farthest atom's.
     alone
         Draw the first chain alone, seen across its centre, in place of the cut.
     """
@@ -471,7 +474,9 @@ def side_view(positions_nm: np.ndarray, chains: Sequence[str]) -> SideView:
     ids = [_chain_id(str(chain)).strip() for chain in chains]
     order = [chain for chain in dict.fromkeys(ids) if chain]
     if len(order) < 2:
-        return SideView(extent, 0.0, None, 0.0)
+        # Seen across the atoms' mean azimuth, no atom stands behind the axis's tube.
+        mean = math.degrees(math.atan2(xyz[:, 1].mean(), xyz[:, 0].mean()))
+        return SideView(extent, mean, None, 0.0, float(np.hypot(xyz[:, 0], xyz[:, 1]).max()) * 10.0)
     first = np.array([chain == order[0] for chain in ids])
     centre = math.degrees(math.atan2(xyz[first, 1].mean(), xyz[first, 0].mean()))
     reach = float(np.hypot(xyz[first, 0], xyz[first, 1]).max()) * 10.0
@@ -630,9 +635,13 @@ def scene(
             )
     if side_on is not None and extent is not None:
         middle = (extent[0] + extent[1]) / 2.0
-        away = SIDE_DISTANCE * (extent[1] - extent[0])
-        # One subunit is aimed at midway out to its reach, so the axis stays at its left.
-        out = side.reach_a / 2.0 if side is not None and chain is not None else 0.0
+        # Fewer than two chains need not stand about the axis: framed to their reach as well.
+        few = side is not None and side.chain is None
+        across = 2.0 * side.reach_a if side is not None and few else 0.0
+        away = SIDE_DISTANCE * max(extent[1] - extent[0], across)
+        # One subunit, or fewer than two chains, is aimed midway out to its reach, the axis at
+        # its left.
+        out = side.reach_a / 2.0 if side is not None and (chain is not None or few) else 0.0
         target = [out * math.cos(azimuth), out * math.sin(azimuth), middle]
         children.append(
             {

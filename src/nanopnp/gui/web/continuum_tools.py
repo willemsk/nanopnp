@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, ClassVar, Concatenate, ParamSpec, TypeVar
 from urllib.parse import urlencode
 
-from nicegui import events, ui
+from nicegui import context, events, ui
 
 from nanopnp.gui.assess import (
     Assessed,
@@ -433,9 +433,11 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         except ValueError as error:
             ui.notify(str(error), type="negative", multi_line=True)
             return
+        # The refresh deletes the button this click came from, and with it the slot's client.
+        client = context.client
         await self.edited()
         # The editor opens at the pane's foot: bring it into view.
-        ui.run_javascript(
+        client.run_javascript(
             "document.querySelector('[data-control=contour-edit]')"
             "?.scrollIntoView({block: 'start', behavior: 'smooth'})"
         )

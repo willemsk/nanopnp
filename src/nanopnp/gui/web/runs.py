@@ -30,6 +30,7 @@ __all__ = [
     "queue_sweep",
     "rung_rows",
     "sweep_file",
+    "sweep_label",
     "write_sweep",
 ]
 
@@ -117,6 +118,11 @@ def queue_run(
     return entry
 
 
+def sweep_label(study: str, index: int, total: int) -> str:
+    """Return the queue's label of a sweep's point, its index counted from 0."""
+    return f"{study} sweep, point {index + 1} of {total}"
+
+
 def sweep_file(project: Project, study: str) -> Path:
     """Return the file a study's sweep is kept in."""
     return project.root / SWEEPS_FOLDER / f"{study}.sweep.yaml"
@@ -182,7 +188,7 @@ def queue_sweep(
     for point in plan.points:
         after = tuple(e for wave, held in earlier.items() if wave < point.wave for e in held)
         request = _request(project, plan_file, threads=threads, plan=plan_file, index=point.index)
-        label = f"{study} sweep, point {point.index + 1} of {total}"
+        label = sweep_label(study, point.index, total)
         entry = _queued(queue, label, request, after=after, then=gather, study=study)
         entries.append(entry)
         earlier.setdefault(point.wave, []).append(entry)

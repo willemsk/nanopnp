@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import math
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any, ClassVar, Literal, cast
@@ -31,12 +31,20 @@ from nanopnp.gui.web.runs import (
     queue_sweep,
     rung_rows,
     sweep_file,
+    sweep_label,
     write_sweep,
 )
 from nanopnp.gui.web.screens import Tool, field_control
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.study import StudyModel, reached
-from nanopnp.gui.web.tools import FIELDS, UNITS, _Pane, charge_colours, current_name
+from nanopnp.gui.web.tools import (
+    FIELDS,
+    STAGE_TITLES,
+    UNITS,
+    _Pane,
+    charge_colours,
+    current_name,
+)
 from nanopnp.io.case_paths import case_fields, schema_default, value_at
 from nanopnp.io.models import MODEL_KINDS, owner_of
 from nanopnp.physics.models import case_model, role_conditions
@@ -92,6 +100,40 @@ def _text(value: object) -> str:
     if isinstance(value, list | tuple):
         return ", ".join(_text(entry) for entry in value) or "none"
     return str(value)
+
+
+_SUPERSCRIPT = str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹")
+
+
+def _science(value: float, figures: int = 3) -> str:
+    """Return a small number as a mantissa times a power of ten, its minus signs U+2212."""
+    if value == 0:
+        return "0"
+    mantissa, exponent = f"{value:.{figures - 1}e}".split("e")
+    power = f"10{str(int(exponent)).translate(_SUPERSCRIPT)}"
+    text = power if float(mantissa) == 1.0 else f"{mantissa}\u2009\u00d7\u200910" + power[2:]
+    return text.replace("-", "\u2212")
+
+
+def _sets(body: Mapping[str, Any], path: str) -> bool:
+    """Return whether a file's body sets a dotted case path."""
+    node: Any = body
+    for part in path.split("."):
+        if not isinstance(node, Mapping) or part not in node:
+            return False
+        node = node[part]
+    return True
+
+
+_STAGE_WORDS = {
+    **{stage: title[0].lower() + title[1:] for stage, title in STAGE_TITLES.items()},
+    "case": "case",
+    "materials": "materials",
+    "solve": "solve",
+    "qoi": "quantities",
+    "report": "report",
+}
+"""Each stage's name in words, as a sweep's table of points lists what a point builds."""
 
 
 def _default(path: str) -> object:
@@ -330,7 +372,7 @@ class _StudyPane(_Pane[StudyModel]):
             return
         threads = int(str(self.shell.settings.value("threads_per_solve")))
         queue_run(self.shell.queue, self.model.project, self.model.name, threads=threads)
-        ui.notify(f"Study {self.model.name} is queued. Its convergence is in the queue's entry.")
+        ui.notify(f"Study {self.model.name} is queued. Runs draws its convergence.")
         self.built.queue_moved()
 
     def own_actions(self, ready: bool, building: bool) -> None:
@@ -347,7 +389,11 @@ class _StudyPane(_Pane[StudyModel]):
             run = ui.button("Run sweep", on_click=self.run_sweep).props(
                 "unelevated dense no-caps color=primary data-control=sweep-run"
             )
-            run.set_enabled(bool(self.axes()) and self.usable())
+            sweepable = bool(self.axes()) and self.usable()
+            run.set_enabled(sweepable)
+            if not sweepable:
+                said = "No study to sweep" if self.model is None else "Add an axis to sweep"
+                run.props(f'title="{said}"')
 
     def show_status(self) -> None:
         self.status.clear()
@@ -434,15 +480,25 @@ class _StudyPane(_Pane[StudyModel]):
             ui.label("The study forms no case, so its physics is not shown.").classes("later")
         else:
             overridden = set(case.overrides)
-            physics = self.models().get("physics", "")
+            record = case.models_record
+            files = () if record is None else record.files
+            own = model.body()
             rows: list[tuple[str, ...]] = []
             for path, label in PHYSICS_SHOWN:
                 try:
                     value = value_at(case, path)
                 except (KeyError, ValueError):
                     continue
-                # Who sets it, said in words: the study's override, else its physics model.
-                owner = "\u25c7 the study" if path in overridden else f"physics {physics}"
+                # Who sets it, said in words: the study, a model's file, else the default.
+                if path in overridden:
+                    owner = "\u25c7 the study"
+                elif _sets(own, path):
+                    owner = "the study"
+                else:
+                    owner = next(
+                        (f"{file.kind} {file.name}" for file in files if _sets(file.body, path)),
+                        "default",
+                    )
                 rows.append((label, _text(value), owner))
             _table(("Value", "Set to", "Set by"), rows, "overview-physics")
         heading("Sweep", 2)
@@ -478,15 +534,13 @@ class _StudyPane(_Pane[StudyModel]):
         ui.label(
             "The values the models and the study set. The whole case adds each default."
         ).classes("field-hint")
-        ui.code(case.dumps(set_only=True), language="yaml").classes("case-file").props(
-            "data-control=overview-case"
-        )
-        with (
-            ui.expansion("Show the whole case")
-            .classes("w-full")
-            .props("dense data-control=overview-whole-case")
-        ):
-            ui.code(case.dumps(), language="yaml").classes("case-file")
+        # One block at a time: the whole case shows in place of the set values.
+        whole = ui.switch("Show the whole case").props("dense data-control=overview-whole-case")
+        set_only = ui.code(case.dumps(set_only=True), language="yaml").classes("case-file")
+        set_only.props("data-control=overview-case")
+        every = ui.code(case.dumps(), language="yaml").classes("case-file")
+        every.bind_visibility_from(whole, "value")
+        set_only.bind_visibility_from(whole, "value", backward=lambda shown: not shown)
         resolved = None if model is None else model.resolved()
         if resolved is None:
             return
@@ -813,6 +867,9 @@ class _StudyPane(_Pane[StudyModel]):
         heading("Axes", 2)
         self.axes_box = ui.column().classes("w-full gap-1").props("data-control=sweep-axes")
         self.show_axes()
+        # The table of points follows its points' runs in the queue (WB-46).
+        self.sweep_seen: tuple[tuple[int, str], ...] | None = None
+        ui.timer(1.0, self.follow_sweep)
 
     def axis_paths(self) -> dict[str, str]:
         """Return what an axis can vary: each value the study lists, each variable, each model."""
@@ -868,7 +925,9 @@ class _StudyPane(_Pane[StudyModel]):
                 dict(SWEEP_MODES),
                 value=self.sweep_mode,
                 on_change=lambda e: self.set_mode(cast("SweepMode", e.value)),
-            ).props('dense no-caps data-control=sweep-mode aria-label="How the rows make points"')
+            ).props(
+                'dense no-caps data-control=sweep-mode aria-label="How the rows make points"'
+            ).classes("sweep-mode")
         hint = (
             "Each combination of the rows' values is a point."
             if self.sweep_mode == "every"
@@ -905,14 +964,14 @@ class _StudyPane(_Pane[StudyModel]):
     def axis_adder(self, offered: dict[str, str]) -> None:
         with ui.column().classes("study-adder w-full gap-1"):
             ui.label("Add axis").classes("field-label")
-            adding = ui.select(offered, value=None).classes("w-full")
+            adding = ui.select(offered, value=None, label="What to vary").classes("w-full")
             adding.props(
                 'dense outlined options-dense data-control=sweep-add aria-label="What to vary"'
             )
             row = ui.row().classes("items-center no-wrap w-full")
         with row:
             values = (
-                ui.input(placeholder="values, by commas")
+                ui.input(label="Its values, by commas")
                 .classes("col")
                 .props('dense outlined data-control=sweep-add-values aria-label="Its values"')
             )
@@ -995,14 +1054,24 @@ class _StudyPane(_Pane[StudyModel]):
         names = list(plan.points[0].assignments) if plan.points else []
         built = found.points if found is not None else ()
         offered = self.axis_paths()
+        states = self.point_states(len(plan.points))
         _table(
-            ("Point", *(offered.get(name, name) for name in names), "Wave", "Stages it builds"),
+            (
+                "Point",
+                *(offered.get(name, name) for name in names),
+                "Wave",
+                "Stages it builds",
+                "State",
+            ),
             [
                 (
                     str(point.index + 1),
                     *(_text(point.assignments.get(name)) for name in names),
-                    str(point.wave),
-                    ", ".join(built[point.index]) if point.index < len(built) else "",
+                    str(point.wave + 1),
+                    ", ".join(_STAGE_WORDS.get(stage, stage) for stage in built[point.index])
+                    if point.index < len(built)
+                    else "",
+                    states[point.index],
                 )
                 for point in plan.points
             ],
@@ -1010,12 +1079,43 @@ class _StudyPane(_Pane[StudyModel]):
         )
         ui.label(
             "Wave: a point starts from the solution of a point in the wave before it, "
-            "so it waits for that wave."
+            "so it waits for that wave. State: the point's run in the queue."
         ).classes("field-hint").props("data-control=sweep-wave-hint")
         if plan.rectification:
             ui.label(
                 f"Rectification pairs {len(plan.pairs)} points by their resolved bias."
             ).classes("field-hint")
+
+    def point_states(self, total: int) -> list[str]:
+        """Return each point's state: the last queue entry that ran it, else not queued."""
+        model = self.model
+        latest = {
+            entry.label: entry
+            for entry in self.shell.queue.entries
+            if model is not None and entry.study == model.name
+        }
+        return [
+            latest[label].state() if label in latest else "\u25cb not queued"
+            for label in (
+                sweep_label("" if model is None else model.name, index, total)
+                for index in range(total)
+            )
+        ]
+
+    def follow_sweep(self) -> None:
+        """Draw the sweep's points again when a point's run moves in the queue."""
+        if self.tool.id != "sweep" or self.model is None:
+            return
+        seen = tuple(
+            (entry.number, entry.status)
+            for entry in self.shell.queue.entries
+            if entry.study == self.model.name
+        )
+        if seen != self.sweep_seen:
+            changed = self.sweep_seen is not None
+            self.sweep_seen = seen
+            if changed:
+                self.show_view()
 
     # -- Charge on the mesh ---------------------------------------------------------------------
 
@@ -1053,7 +1153,9 @@ class _StudyPane(_Pane[StudyModel]):
                     )
             if charges is None:
                 said = (
-                    "Build the charge on the mesh to see it."
+                    "Correct the value the message above names, then build the charge."
+                    if model.problem() is not None
+                    else "Build the charge on the mesh to see it."
                     if model.artefacts().get("charge") is None
                     else "The charge does not come from a structure, so no residue is linked."
                 )
@@ -1096,9 +1198,9 @@ class _StudyPane(_Pane[StudyModel]):
             )
             ui.label(said).classes("later")
             return
-        with ui.element("table").classes("view-table").props("data-control=charge-legs"):
+        with ui.element("table").classes("view-table legs").props("data-control=charge-legs"):
             with ui.element("thead"), ui.element("tr"):
-                for text in ("Leg", "Relative error", "Tolerance", "Verdict", "Where"):
+                for text in ("Leg", "Relative error", "Tolerance", "Verdict"):
                     TextElement(tag="th", text=text).props("scope=col")
             with ui.element("tbody"):
                 for leg in view.legs:
@@ -1112,13 +1214,17 @@ class _StudyPane(_Pane[StudyModel]):
                         else ("\u2715", "over", "state-err")
                     )
                     with ui.element("tr"):
-                        TextElement(tag="td", text=leg.name)
-                        TextElement(tag="td", text="" if leg.value is None else f"{leg.value:.2e}")
+                        # Where the leg is worst, under its name: the pane holds four columns.
+                        with ui.element("td"):
+                            ui.label(leg.name)
+                            if leg.location:
+                                ui.label(leg.location).classes("field-hint")
+                        TextElement(tag="td", text="" if leg.value is None else _science(leg.value))
                         TextElement(
-                            tag="td", text="" if leg.tolerance is None else f"{leg.tolerance:.0e}"
+                            tag="td",
+                            text="" if leg.tolerance is None else _science(leg.tolerance, 1),
                         )
                         TextElement(tag="td", text=f"{glyph} {word}".strip()).classes(look)
-                        TextElement(tag="td", text=leg.location)
         figures = view.figures
         shown = [
             (name, figures.get(key))
@@ -1316,11 +1422,23 @@ class _StudyPane(_Pane[StudyModel]):
         self.rungs_box.clear()
         if picked is None or picked.run is None:
             return
+        # A rung to a block: its number and name, then each column's value, all in the pane's width.
+        facts = [
+            column for column in RUNG_COLUMNS if column["field"] not in ("number", "rung", "note")
+        ]
         with self.rungs_box:
             heading("Its rungs", 2)
-            ui.table(
-                columns=RUNG_COLUMNS, rows=rung_rows(picked.run.convergence), row_key="key"
-            ).props("dense flat data-control=run-rungs").classes("run-rungs w-full")
+            with ui.element("div").classes("run-rungs").props("data-control=run-rungs role=list"):
+                for row in rung_rows(picked.run.convergence):
+                    with ui.element("div").classes("rung").props("role=listitem"):
+                        ui.label(f"{row['number']}. {row['rung']}").classes("rung-name")
+                        ui.label(
+                            " \u00b7 ".join(
+                                f"{column['label']} {row[column['field']]}" for column in facts
+                            )
+                        ).classes("rung-facts")
+                        if row["note"]:
+                            ui.label(row["note"]).classes("field-hint")
 
     def pick_run(self, entry: Entry) -> None:
         self.shell.run_shown = entry.number
@@ -1354,6 +1472,7 @@ class _StudyPane(_Pane[StudyModel]):
             self.show_rungs(picked)
         if picked is None or run is None or self.run_summary is None:
             return
+        self.runs_plot.classes(remove="runs-plot-none")
         self.run_summary.text = f"{picked.label}: {run.convergence.summary}"
         drawing = json.dumps(convergence_plane(run.convergence).json())
         ui.run_javascript(f"nano.plot('runs-plot', {drawing})")
@@ -1368,16 +1487,21 @@ class _StudyPane(_Pane[StudyModel]):
         model = self.model
         heading("Convergence", 2)
         self.run_summary = ui.label("").classes("run-summary").props("data-control=runs-summary")
+        named = 'aria-label="The convergence of the run"'
+        self.runs_plot = (
+            ui.element("div")
+            .props(f"id=runs-plot data-control=runs-plot role=img {named}")
+            .classes("run-plot runs-plot")
+        )
         if self.picked_run() is None:
             self.run_summary.text = "No run of the study is in the queue. Run study starts one."
-        ui.element("div").props(
-            'id=runs-plot data-control=runs-plot role=img aria-label="The convergence of the run"'
-        ).classes("run-plot runs-plot")
+            # No frame stands empty: the plot's host shows once a run is picked.
+            self.runs_plot.classes("runs-plot-none")
         self.run_seen = None
         heading("Recorded runs", 2)
         records = () if model is None else model.records()
         if not records:
-            ui.label("No run is recorded yet. Run study writes one into runs/.").classes("later")
+            ui.label("No run is recorded yet. Run study records one.").classes("later")
             return
         rows: list[tuple[str, ...]] = []
         for directory in records[:RUNS_LISTED]:
@@ -1403,7 +1527,11 @@ class _StudyPane(_Pane[StudyModel]):
                     written.strftime("%d %b %Y, %H:%M"),
                     "solved" if done else f"to its {stages[-1] if stages else 'start'}",
                     said or "none",
-                    _text(record.get("threads")) if isinstance(record, dict) else "",
+                    "no solve"
+                    if "solve" not in stages
+                    else _text(record.get("threads"))
+                    if isinstance(record, dict)
+                    else "",
                     directory.name,
                 )
             )

@@ -333,6 +333,26 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 > `test_gui_settings.py`, `test_study_runs.py` and `test_figures.py` pass, 159 tests. The 2WCD and Physics renders
 > have no contrast, non-text or target finding after the fixes.
 
+> **Outcome — every screen rendered and reviewed.** The full render, 392 shots, had no page error and no contrast,
+> non-text or target finding. The `gui-reviewer` found 9 major and 15 minor points and 7 doubts, none blocking;
+> `impeccable`'s critique scored 26/40, up from the first draft's 23/40. Item 17 fixed:
+>
+> - Overview's *Set by* now names the setter: the study, the model file, or *default*. The whole case shows in place
+>   of the set values.
+> - A study's own keys, such as *Outputs*, are counted with the changes.
+> - The sweep's table states each point's run.
+> - The rungs are a list in the pane.
+> - The conservation legs are unbroken powers of ten.
+> - A structure of fewer than two chains is not cut: the charged tube's atoms showed nothing.
+> - The correction models' whole names show again.
+> - Switches have edges, and the group box shows its shading.
+> - Pore geometry's edit no longer raises after its refresh.
+>
+> The rest are open: a recorded run picked in Runs is WP5.20's (REV-260); the polish is WP5.21's (REV-261); an
+> exposed value's first name is a question for the author (REV-262); the charge screen's points join REV-259's round.
+> AG7's line is REV-258's. VER-78's text names the Study pages and each Build suite's Exposed values; FR-33's and
+> FR-39's matrix rows name their tests and review.
+
 ### Work items
 
 - [x] 229439d 1. `api/project.py` (D2's methods, REV-206), §5.3.5's NOTE (D2, D9); done when `test_study.py` and

@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,435. By source: history ruling 357; plan decision row 717; REV row 259; MOD row 18; OPN row 9; WB row 48; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
+Rows: 1,438. By source: history ruling 357; plan decision row 717; REV row 262; MOD row 18; OPN row 9; WB row 48; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
 
-By decider: author 592; open 5; session, own call 835; session, put to the author 3.
+By decider: author 592; open 5; session, own call 838; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1360,6 +1360,9 @@ By decider: author 592; open 5; session, own call 835; session, put to the autho
 | REV-257 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | The blend's nearest-solid jump carries no dielectric force | WP5.18 | open |
 | REV-258 | author | `docs/project/review-findings.md` |  | WP5.19 | The 200 ms redraw, measured on a GPU, and the front end's share fixed | §8.2.42 AR7: a performance package (WP5.19) | deferred |
 | REV-259 | author | `docs/project/review-findings.md` |  | WP5.19 | A bridge suite between Molecular and Continuum | ruled by the author, 18 November 2026: its own package, §8.2.42 AR8 (WP5.19) | open |
+| REV-260 | session, own call | `docs/project/review-findings.md` |  | WP5.20 | A recorded run's convergence, picked in Runs | WP5.20 (WP5.19) | open |
+| REV-261 | session, own call | `docs/project/review-findings.md` |  | WP5.21 | What the Study suite's final review left open | WP5.21 (WP5.19) | open |
+| REV-262 | session, own call | `docs/project/review-findings.md` |  | WP5.21 | An exposed value's first name, and Exposed values' list as Study setup draws it | a question for the author, WP5.21 (WP5.19) | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |
@@ -1434,7 +1437,7 @@ By decider: author 592; open 5; session, own call 835; session, put to the autho
 | current.md bullet | author | `docs/plans/current.md` |  |  | The `MOD-nn` rulings stand** (§8.2.8). **A moved edge edits `modularity-layering.yaml` in its commit (VER-61)**; a VER-62 miss | §8.2.8, VER-61, VER-62 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | An open item is a `REV-nn` row** until resolved (H12). | unstated | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | An idealised pore is geometry the case declares; a wall charge is a boundary condition** (§8.2.22 X1 to X4). | §8.2.22 X1 | in force (cache) |
-| current.md bullet | author | `docs/plans/current.md` |  |  | Text output is a reading, `--json` the record** (W2). **A non-finite Newton trial residual aborts** (AC2). | unstated | in force (cache) |
+| current.md bullet | author | `docs/plans/current.md` |  |  | Text is a reading, `--json` the record** (W2). **A non-finite trial residual aborts** (AC2). | unstated | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | A desktop wrapper stays possible** (§8.2.30 AF1). **The front end is NiceGUI; Mol* draws the molecule** (AF4). | §8.2.30 AF1 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | One shell package per suite; variables may be expressions, units through `pint`, keyed by resolved values | unstated | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | Physics is a third model with its own suite; models declare exposed values; Quasar's components build the | unstated | in force (cache) |

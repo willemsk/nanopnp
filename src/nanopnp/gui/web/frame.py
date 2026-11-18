@@ -85,7 +85,7 @@ BOTTOM_PX = BOTTOM_PX_LIMITS
 def listed_changes(
     project: Project, refused: frozenset[str] = frozenset()
 ) -> list[tuple[str, tuple[Change, ...] | None]]:
-    """Return each item's changed values, a study's own overrides but not its models' values.
+    """Return each item's changed values: a study's overrides and own keys, not its models'.
 
     An item that does not load, or one of ``refused`` (``<kind>/<name>``, the items the problems
     list holds), is listed with None: its values are not counted.
@@ -99,7 +99,9 @@ def listed_changes(
             try:
                 found = project.changes(kind, name)
                 if kind == "study" and project.study(name).models_record is not None:
-                    found = tuple(c for c in found if c.kind == "override")
+                    # Its models' values are listed under each model; its own keys here, as
+                    # Study setup marks them (WB-28).
+                    found = tuple(c for c in found if c.kind == "override" or c.owner == "study")
             except Exception:  # an item that does not load is listed as a problem
                 listed.append((f"{kind}/{name}", None))
                 continue
