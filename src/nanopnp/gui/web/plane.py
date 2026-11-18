@@ -1019,8 +1019,18 @@ def electrolyte_plane(electrolyte: Electrolyte, concentration_M: float | None) -
 
     operating = concentration_M is not None
     curves = case_curves(electrolyte, STAND_IN_M if concentration_M is None else concentration_M)
-    symbol = "I" if electrolyte.driver == "ionic_strength" else "\u27e8c\u27e9"
-    driver_axis = f"{curves[0].driver_label if curves else symbol} (M)"
+    named = (
+        curves[0].driver_label
+        if curves
+        else "ionic strength I"
+        if electrolyte.driver == "ionic_strength"
+        else "average concentration"
+    )
+    # The canvas draws in the interface's face, which has no angle brackets: the axis names the
+    # average in words, and the marks write it c.
+    symbol = "I" if electrolyte.driver == "ionic_strength" else "c"
+    bracketed = " \u27e8c\u27e9"
+    driver_axis = f"{named.replace(bracketed, '')} (M)"
     if not curves:
         flat = ("Each correction is the none model, so each factor is 1.",)
         return Plane("plot", (driver_axis, "correction factor"), (0.0, 1.0, 0.0, 2.0), (), flat)

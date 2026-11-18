@@ -1,6 +1,6 @@
 # WP5.19 — The Study suite
 
-**Status: in progress, items 1 to 13 done.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
+**Status: in progress, items 1 to 14 done.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
 AN4, AP5, AQ1 and this plan's AR3 to AR6 (§8.2.31 to §8.2.42).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
@@ -324,6 +324,15 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
   `_Pane.field`'s *Expose* removed. VER-78's screen list gains both.
 - The Physics pane: REV-255's *The pane's layout* and *Words*.
 
+> **Outcome — the shared pane finished to the round.** Every box in a tool pane draws its text at its label's size.
+> The solid permittivities are one box of shaded rows, each with its own mark, reset and focus ring. The Exposed
+> values tool moved from the Physics pane to the shared pane, keyed by the model's kind. Molecular and Continuum gain
+> one each, and the per-field *Expose* is gone. Its boxes are labelled in themselves: five columns left the name 8 px
+> wide at the pane's width. Physics' *Shown in* stands above the card, the change note under *Model*. REV-255's other
+> layout points and its words are fixed. `test_gui_screens.py` (now with `m-exposed` and `c-exposed`),
+> `test_gui_settings.py`, `test_study_runs.py` and `test_figures.py` pass, 159 tests. The 2WCD and Physics renders
+> have no contrast, non-text or target finding after the fixes.
+
 ### Work items
 
 - [x] 229439d 1. `api/project.py` (D2's methods, REV-206), §5.3.5's NOTE (D2, D9); done when `test_study.py` and
@@ -350,7 +359,7 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 - [x] 12. Compaction checkpoint; the author's verdicts; the author runs `redraw.cjs`. **Executor:** main
 - [x] eece2ae 13. `/np-gui collect`; REV-215, REV-240's, REV-252's, REV-255's and REV-256's points ruled or carried; the
   design document's rows (D10); done when the code and review say so. **Executor:** main
-- [ ] 14. The Study tools finished to the verdicts: Mol*'s view, Runs' view, Overview, Sweep's modes, REV-254's Study
+- [x] 156948d 14. The Study tools finished to the verdicts: Mol*'s view, Runs' view, Overview, Sweep's modes, REV-254's Study
   words (D10; WB-44 to WB-46); done when VER-78, VER-60 and VER-44 pass. **Executor:** main
 - [ ] 15. The shared field, an Exposed values tool in Molecular and Continuum, the Physics pane's layout and words (D10;
   WB-47, WB-48; REV-252, REV-255, REV-256); done when VER-78 passes and the render shows them. **Executor:** main

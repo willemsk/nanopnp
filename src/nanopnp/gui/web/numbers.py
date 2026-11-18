@@ -23,7 +23,7 @@ _BASE: dict[str, tuple[str, float]] = {
 _SYMBOL: dict[str, str] = {
     "kelvin": "K",
     "elementary_charge": "e",
-    "coulomb / meter ** 2": "C/m²",
+    "coulomb / meter ** 2": "C m⁻²",
     "dimensionless": "",
 }
 _GAP = "\u202f"

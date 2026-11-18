@@ -1297,8 +1297,50 @@ body .parts .parts-row[aria-pressed="true"] {
   align-items: center;
   column-gap: var(--gap);
 }
-.field-row:has(> .materials) > .q-btn {
+.field-row:has(> .materials) > .q-btn,
+.field-row:has(> .materials) > .mark {
   display: none;
+}
+/* A field's box draws its text at its label's size (WB-47). */
+.tool-pane .q-field__native,
+.tool-pane .q-field__input,
+.tool-pane .q-field__prefix,
+.tool-pane .q-field__suffix {
+  font-size: var(--text-sm);
+}
+/* A unit sits on its value's baseline. */
+.tool-pane .q-field__suffix {
+  align-self: center;
+  line-height: inherit;
+}
+/* A field of several boxes is one box of shaded rows, each row with its own mark and reset
+   (WB-47; REV-256). The box's edge is the controls' edge; a row with focus draws the focus ring. */
+.tool-pane .field-row:has(> .materials) > .field-label,
+.tool-pane .field-row > .materials {
+  grid-column: 2 / -1;
+}
+.tool-pane .materials {
+  gap: 0 !important;
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.tool-pane .materials .material-row {
+  min-height: 2rem;
+  padding: 0 0 0 0.5rem;
+}
+.tool-pane .materials .material-row:nth-child(even) {
+  background: var(--bg);
+}
+.tool-pane .materials .material-row + .material-row {
+  border-top: 1px solid var(--line);
+}
+.tool-pane .materials .material-row:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.tool-pane .materials .material-row:has(.q-field--error) {
+  box-shadow: inset 3px 0 0 var(--err);
 }
 .note-ok {
   color: var(--ok);

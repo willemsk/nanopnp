@@ -21,7 +21,7 @@ from nanopnp.gui.render import ChargeRequest, RenderedElements, RenderFailed, Re
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.frame import Views, heading
 from nanopnp.gui.web.molview import pqr_frame, study_side_view
-from nanopnp.gui.web.physics_tools import UNITS, _field_tex, _mtext, _tex
+from nanopnp.gui.web.physics_tools import _field_tex, _mtext, _tex
 from nanopnp.gui.web.plane import ROLE_TITLES
 from nanopnp.gui.web.queue import Entry
 from nanopnp.gui.web.runs import (
@@ -36,7 +36,7 @@ from nanopnp.gui.web.runs import (
 from nanopnp.gui.web.screens import Tool, field_control
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.study import StudyModel, reached
-from nanopnp.gui.web.tools import FIELDS, _Pane, charge_colours, current_name
+from nanopnp.gui.web.tools import FIELDS, UNITS, _Pane, charge_colours, current_name
 from nanopnp.io.case_paths import case_fields, schema_default, value_at
 from nanopnp.io.models import MODEL_KINDS, owner_of
 from nanopnp.physics.models import case_model, role_conditions
@@ -183,7 +183,6 @@ def _written(
 
 class _StudyPane(_Pane[StudyModel]):
     kind: ClassVar[str] = "study"
-    exposes: ClassVar[bool] = False
 
     def __init__(self, shell: Shell, tool: Tool, built: Views, focus: str) -> None:
         super().__init__(shell, tool, built, focus, current_study(shell))

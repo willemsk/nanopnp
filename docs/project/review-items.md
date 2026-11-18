@@ -3481,6 +3481,9 @@ kind gets its own list tool, *Expose* goes on every number, or it stays as it is
 Continuum each get the Physics suite's Exposed values tool, with *Expose* at its head, and the checkbox beside each
 number goes (WB-48). WP5.19's item 14 builds it.
 
+**Fixed** in WP5.19's item 15. The Exposed values tool is the shared pane's, keyed by the model's kind: Molecular and
+Continuum each have one (`m-exposed`, `c-exposed`), and no field carries an *Expose* checkbox.
+
 ### REV-253: A plot's axes the user tunes
 
 At WP5.18's collect the author chose a square-root concentration axis for Electrolyte's curves from four drawn
@@ -3595,6 +3598,18 @@ These stay:
 fixes *The pane's layout* and *Words* above. The view and the region stay with WP5.21, and CODE_REVIEW_058's two with
 the view's package.
 
+*The layout and the words, fixed at WP5.19's item 15.*
+- *Shown in* stands above the study's card, and a change of model's note under the *Model* row.
+- The status line says whether the study uses the model, without the study's name again.
+- A link at the head of Equations reaches the symbols' table.
+- Exposed values labels each box in itself: Name, From, To.
+- A solid's rows carry the marks, not the field.
+- The corrections' selects show their arrow.
+- A unit sits on its value's line.
+- The pane writes C m⁻², as the table does.
+- The plots name the average concentration in words, and their marks write c.
+- The momentum and continuity notes are one plain sentence each.
+
 ### REV-256: A field's message, its text size and a field of several boxes, in every suite
 
 At WP5.18's round 2 ([the record](../design/reviews/2026-11-16-physics-2.md)) the author, on the in-tube Conditions
@@ -3614,6 +3629,10 @@ of several boxes drawn as one box with shaded rows. Each is drawn in the three s
 Proposed for the box." A field's message stays under its box (WB-12 unchanged). The box's text is drawn at its label's
 size, and a field of several boxes is one box with shaded rows. Each row keeps its own changed mark, reset and
 default, and the box keeps a 3:1 edge (WB-47). WP5.19's item 14 builds it in every suite.
+
+**Fixed** in WP5.19's item 15. Every box in a tool pane draws its text at its label's size. The solid permittivities
+are one box of shaded rows under their label. Each row has its own mark and reset and draws the focus ring, and a
+blocked row has a red edge. The box's edge is the controls' edge, at 3.9:1 on the pane.
 
 ### REV-257: The blend's nearest-solid jump carries no dielectric force
 

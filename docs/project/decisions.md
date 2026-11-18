@@ -4,7 +4,7 @@ Every decision the records hold, one row each, written by `.claude/scripts/decis
 
 Rows: 1,435. By source: history ruling 357; plan decision row 717; REV row 259; MOD row 18; OPN row 9; WB row 48; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
 
-By decider: author 594; open 5; session, own call 833; session, put to the author 3.
+By decider: author 592; open 5; session, own call 835; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1352,11 +1352,11 @@ By decider: author 594; open 5; session, own call 833; session, put to the autho
 | REV-249 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A correction a physics model does not set reads none, and is not marked | WP5.18 | open |
 | REV-250 | author | `docs/project/review-findings.md` |  | WP5.18 | PHY-23's terms under a solid fraction and without the flow | ruled by the author, 16 November 2026 (WP5.18) | fixed |
 | REV-251 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A project whose first study deposits no charge opens with a failed walk | WP5.18; WP5.19 | fixed |
-| REV-252 | author | `docs/project/review-findings.md` |  | WP5.19 | Where a value is exposed in the Molecular and Continuum suites | ruled by the author, 18 November 2026: WP5.19 (WP5.18) | open |
+| REV-252 | session, own call | `docs/project/review-findings.md` |  | WP5.19 | Where a value is exposed in the Molecular and Continuum suites | WP5.19 | fixed |
 | REV-253 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A plot's axes the user tunes | WP5.18 | open |
 | REV-254 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | The stages' diagnostics and the other suites' words in ASD-STE100 | WP5.18 | open |
 | REV-255 | author | `docs/project/review-findings.md` |  | WP5.19 | What the Physics suite's final review left open | ruled by the author, 18 November 2026: WP5.19 and WP5.21 (WP5.18) | open |
-| REV-256 | author | `docs/project/review-findings.md` |  | WP5.19 | A field's message, its text size and a field of several boxes, in every suite | ruled by the author, 16 November 2026: WP5.19 (WP5.18) | open |
+| REV-256 | session, own call | `docs/project/review-findings.md` |  | WP5.19 | A field's message, its text size and a field of several boxes, in every suite | WP5.19 | fixed |
 | REV-257 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | The blend's nearest-solid jump carries no dielectric force | WP5.18 | open |
 | REV-258 | author | `docs/project/review-findings.md` |  | WP5.19 | The 200 ms redraw, measured on a GPU, and the front end's share fixed | §8.2.42 AR7: a performance package (WP5.19) | deferred |
 | REV-259 | author | `docs/project/review-findings.md` |  | WP5.19 | A bridge suite between Molecular and Continuum | ruled by the author, 18 November 2026: its own package, §8.2.42 AR8 (WP5.19) | open |
