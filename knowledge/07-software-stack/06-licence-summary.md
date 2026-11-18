@@ -34,7 +34,7 @@ each dependency's role and licence.
 | MDAnalysis | LGPLv3+ | CON-09 | |
 | GridDataFormats | LGPL-3.0-or-later | CON-09 | |
 | PROPKA | LGPL v2.1 | CON-09 | Run by PDB2PQR |
-| PySide6 | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only | CON-09 | The Qt shell, until WP5.21 removes it |
+| PySide6 | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only | CON-09 | The Qt shell, until WP5.23 removes it |
 | `webgui` (NGSolve's renderer) | LGPL-2.1-or-later | CON-09 | Loaded as a separate file (`05-gui-and-packaging.md`) |
 | gemmi | MPL-2.0 | CON-09 | File-level copyleft, used unmodified as a separate package (CON-09, amended 25 September 2026) |
 | NiceGUI, FastAPI, pydantic, PyYAML, meshio | MIT | CON-09 NOTE | The front end's dependencies are permissive |

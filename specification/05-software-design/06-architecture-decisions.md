@@ -74,10 +74,10 @@ pointing at the Nanoscale paper and the software DOI (CON-14).
 #### ADR-004 Desktop application
 
 Decision (§8.2.12 M3; §8.2.30 AF4): a browser workbench, NiceGUI on FastAPI in `gui/web/`,
-distributed as the `gui` extra. The PySide6 shell and its packaging NOTE stand until WP5.21, which
+distributed as the `gui` extra. The PySide6 shell and its packaging NOTE stand until WP5.23, which
 removes Qt, lands (§8.2.17 S17). The consequences below hold for either shell.
 
-Superseded at WP5.21 (the Qt shell): Python core, PySide6 (LGPL-3) shell, NGSolve webgui in a `QWebEngineView` for field
+Superseded at WP5.23 (the Qt shell): Python core, PySide6 (LGPL-3) shell, NGSolve webgui in a `QWebEngineView` for field
 rendering, and a background solver process communicating over a queue so the interface stays
 responsive and can show live convergence. Packaged with PyInstaller, briefcase or
 conda-constructor. The graphical surface grows from Phase 1 onward.
@@ -88,7 +88,7 @@ conda-constructor. The graphical surface grows from Phase 1 onward.
 | Local web application: FastAPI plus browser frontend wrapped in `pywebview` | Superseded: rejected for the Qt shell, then chosen for Phase 5 as the decision above, without `pywebview` (§8.2.12 M3; the desktop-wrapper NOTE) |
 | Defer the interface to a terminal phase | Rejected on two failure modes: an interface bolted on at the end exposes the API's accidental structure rather than the user's workflow, and a nine-month gap before any non-programmer touches the tool is a nine-month gap in shaping feedback |
 
-NOTE (packaging, the Qt shell until WP5.21). The redistributable bundle SHALL be built one-**dir**
+NOTE (packaging, the Qt shell until WP5.23). The redistributable bundle SHALL be built one-**dir**
 rather than one-file, for two independent reasons. PySide6 and Qt are used under the LGPL option
 (CON-09), which requires that a recipient be able to replace the covered libraries; a directory of
 shared libraries satisfies that plainly. And Qt WebEngine runs a separate helper executable, which a
@@ -119,7 +119,7 @@ is a thin shell over the stage objects the CLI drives (IF-09). Each release from
 a usable graphical surface over the functionality existing at that release (QR-11); the per-phase
 increments are in §8.1.
 
-NOTE (packaging; lands with WP5.21, Qt's removal). When it lands, the packaging NOTE above reads: "The workbench SHALL be distributed as the package with its `gui` extra, installed
+NOTE (packaging; lands with WP5.23, Qt's removal). When it lands, the packaging NOTE above reads: "The workbench SHALL be distributed as the package with its `gui` extra, installed
 by one documented `uv` command, with no bundle (§8.2.17 S12). Its front end SHALL ship prebuilt inside
 the wheel, so no user builds it (CON-07), and the shipped renderer SHALL stay an unmodified, separate
 file (CON-09). The server's self-test SHALL exercise once each, failing naming the payload: NGSolve,

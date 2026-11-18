@@ -51,7 +51,7 @@ ClyA's C₁₂ symmetry.
 | P2 | Collaborating computational scientists | Linux/macOS, Python-literate | Config-file-driven CLI runs, reproducible cases, sensible defaults |
 | P3 | Experimental nanopore laboratories | Windows/macOS laptop, no Python | Desktop application: select a PDB, set salt and voltage, obtain a prediction and a visualisation |
 
-NOTE (P3; lands with WP5.21, Qt's removal). When it lands, P3's primary need
+NOTE (P3; lands with WP5.23, Qt's removal). When it lands, P3's primary need
 reads: "The workbench, installed with one documented command and opened in the browser: select a
 PDB, set salt and voltage, obtain a prediction and a visualisation." Until then the text above gates
 the Qt shell (§8.2.17 S2, S12, S17).
@@ -84,7 +84,7 @@ the Qt shell (§8.2.17 S2, S12, S17).
 | scipy SuperLU | BSD | Direct linear solver, selectable fallback |
 | PySide6 | LGPL-3 | Desktop shell (ADR-004) |
 
-NOTE (§2.5, §2.6; lands with WP5.21, Qt's removal): §2.5's execution modes read "Headless library and
+NOTE (§2.5, §2.6; lands with WP5.23, Qt's removal): §2.5's execution modes read "Headless library and
 CLI; HPC job arrays; the browser workbench"; the PySide6 row goes, and NiceGUI and FastAPI (MIT, BSD-3,
 the workbench's server and front end) join.
 

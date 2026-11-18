@@ -290,7 +290,7 @@ no user meets (a wrong argument type in code) stays.
 > says what to do there; a solid's row takes its own mark, reset and refusal; a preview takes the warning colour.
 > `Project.problems` resolves each study and finds a worded refusal's case path (F1). A model with no salt forms no
 > case, so Electrolyte draws its own block's curves against the driver (`pipeline/case.py:block_electrolyte`; F6). *Expose* leaves the Physics panes (`_Pane.exposes`). A switch the model cannot run with stays free, so the
-> refusal's remedy can be made. F13's pick from the boundaries waits for WP5.21.
+> refusal's remedy can be made. F13's pick from the boundaries waits for WP5.23.
 
 **Item 12.**
 
@@ -365,9 +365,9 @@ no user meets (a wrong argument type in code) stays.
 ### Out of scope
 
 - The composer (FR-40), its own phase (AJ4); walls other than no-flux and no-slip, which no release schedules.
-- A new-model action, with REV-242's ruling and REV-249; the guided route's card at the salt step, WP5.21.
+- A new-model action, with REV-242's ruling and REV-249; the guided route's card at the salt step, WP5.23.
 - A study's own values (continuation, outputs) and its overrides, WP5.19; handles and the canvas's keyboard pass,
-  WP5.21.
+  WP5.23.
 
 ### Open questions
 

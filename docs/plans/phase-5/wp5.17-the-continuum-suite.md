@@ -301,7 +301,7 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 > read from the built mesh, "default" for the table with a glossary entry, the rows blocked while a file forms no
 > case, the refused shot (its store seeded with stages 1 to 3), one note while building, the editor scrolled into
 > view, the canvas's text and keys, *Mesh* as the tool's name, and the design document's renderer row. The rest is
-> REV-245: the canvas's labels and keys with WP5.21, the pane's layout, colours and words at the next round.
+> REV-245: the canvas's labels and keys with WP5.23, the pane's layout, colours and words at the next round.
 
 > **Outcome — the review.** `/np-ship`'s pre-review pass dropped no test; the `physics-reviewer` found no sign, unit
 > or gate error in the library, and the Mesh tool's electrolyte row on an idealised pore. [CODE_REVIEW_056](../../code_reviews/CODE_REVIEW_056.md)
@@ -356,10 +356,10 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 
 ### Out of scope
 
-- Handles dragged in the (r, z) view and the canvases' keyboard pass: WP5.21 (QR-16). Refinement regions, boundary
+- Handles dragged in the (r, z) view and the canvases' keyboard pass: WP5.23 (QR-16). Refinement regions, boundary
   layers: later phases (FR-11).
 - The sketcher (FR-42); a new-model action, for REV-242's two points and REV-241's PQR point.
-- The Physics, Study and Analysis tools, WP5.18 to WP5.20; pairing a saved edit in a study is WP5.19's.
+- The Physics, Study and Analysis tools, WP5.18 to WP5.21; pairing a saved edit in a study is WP5.19's.
 
 ### Open questions
 

@@ -12,10 +12,10 @@ and review in `docs/design/reviews/`, and WP5.02's framework spike in `docs/desi
 `report.md`, and the two windows' pictures). The tokens are `docs/design/tokens.css`.
 
 **What is live and what is record.** Live design: *Purpose and users*, *The areas* to *The shell's
-reading of artefacts*, the *Decision log* and the *Glossary*. The gate until WP5.21: *Today's shell*'s
+reading of artefacts*, the *Decision log* and the *Glossary*. The gate until WP5.23: *Today's shell*'s
 capability list, Q01 to Q41, which the Phase 5 close reads. Record: the rest of *Today's shell* (the
 critique and the verdicts), *Restated clauses*, whose home is the NOTE beside each clause in the
-specification, and *Inherited rows*. WP5.21 moves the records out.
+specification, and *Inherited rows*. WP5.23 moves the records out.
 
 ## Purpose and users
 
@@ -241,7 +241,7 @@ list has a place in the workbench before Qt leaves (S13):
 | Q10 to Q12, Q23 | Geometry | Each Continuum tool's *Build*, queued; the tool list's status per tool; *Cancel* in the queue; a tool's record under its *Checks*, the log in the bottom panel |
 | Q13 | Geometry | Prepare structure's orientation gate and its checks |
 | Q14, Q15 | Geometry | Pore geometry's layers: the density map and the azimuthal variance, each with its colour bar, and the key of the lines drawn over them |
-| Q16 to Q20 | Geometry | Pore geometry's *Edit outline*: move (by its typed r and z; dragging with WP5.21), insert and delete vertices, *Undo*, *Redo*, *Measure*, *Seed from the map*, *Save edit…* |
+| Q16 to Q20 | Geometry | Pore geometry's *Edit outline*: move (by its typed r and z; dragging with WP5.23), insert and delete vertices, *Undo*, *Redo*, *Measure*, *Seed from the map*, *Save edit…* |
 | Q21 | Geometry | The Region tool, each domain picked in the view |
 | Q22 | Geometry | Mesh, sizes and quality: the parts' tree, the element count, the quality gate and its histogram, the worst elements located |
 | Q24 to Q26, Q30 | Charge | The study's *Charge on the mesh*, queued by *Run study*, with its conservation checks |
