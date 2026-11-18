@@ -17,11 +17,13 @@ close follow, about 35 sessions.
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.18 merged
   (`v0.6.0-alpha.18`).
-  **WP5.19** [in progress](phase-5/wp5.19-the-study-suite.md) on `ccr-ff91f6e7-ohlzgc`: items 1 to 12 done (the study's
+  **WP5.19** [in progress](phase-5/wp5.19-the-study-suite.md) on `ccr-ff91f6e7-ohlzgc`: items 1 to 16 done (the study's
   library steps, the thread count, `reproduce --upto`, the outline's shell spacing, the queue's slots and a run's
   ladder, the residue link and the deployed charge, the five Study tools published for round 1, `redraw.cjs`). Item 13
   ruled the round: a bridge suite between Molecular and Continuum in its own package (AR8), the 200 ms line to a
-  performance package (AR7). Next, item 14, the Study tools finished to the verdicts.
+  performance package (AR7). Items 14 and 15 built the rulings: Mol* side on with *One subunit*, a run's convergence
+  in Runs, Overview's set values, the sweep's two modes, the shared field's box, Exposed values in every Build suite.
+  Next, item 17, the final render and review.
   host: claude-code.
 
 ## Not to be re-decided
