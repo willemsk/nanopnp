@@ -3695,5 +3695,86 @@ Its round takes the charge screen's questions the author left open at WP5.19:
 - the residues as a strip of buttons or a table sorted by charge;
 - REV-240's overlay of the 3D structure, the 3D charge and the (r, z) map turned about the axis.
 
+WP5.19's final review ([REV-261](#rev-261-what-the-study-suites-final-review-left-open)) left these points of the
+charge screen to the same round:
+
+- the map's key covers the plot's top and its "20" tick, and the bar's end values touch the bar and its unit;
+- the deployed layer's key names the field by its identifier, `rho_fixed_C_m3`, and the map writes C/m² and C/m³
+  where the panes write C m⁻²;
+- the worst planes are dashed in the warning colour though every leg is within its tolerance (WB-42);
+- the link's chip says *Linked* without naming what it links (WB-06);
+- a picked residue's key line is red while its markers are blue rings, a positive residue being blue (WB-39);
+- whether Mol* marks the picked residue in the side view, where the review could not see a mark;
+- *One subunit* draws the chain small, beside Mol*'s toolbar: frame the chain.
+
 **Open**, ruled by the author on 18 November 2026: a package of its own, which `/np-plan` places. It amends FR-31's
 five suites, §2's v0.6 row, WB-34 and WB-41 when it lands.
+
+### REV-260: A recorded run's convergence, picked in Runs
+
+Study › Runs draws the convergence of a run picked in the queue: this session's runs. A run recorded before, as after a
+restart, is listed under *Recorded runs* as a table that cannot be picked, though the design's Runs row puts the
+records in the pane and WB-45 a run picked there. The solve stage keeps its Newton history in `newton_history.json`:
+each rung's name, stage and steps. It does not keep whether a rung's model reports its steps, which tells "converged
+on entry" from "no Newton steps" (VER-44), nor the tolerance; both come from the record's resolved case. WP5.19's
+final review found it (the `gui-reviewer`'s M6; the critique's third P1, which also asks that the view lead with the
+run's answer, its conductance at its bias).
+
+**Open**: WP5.20, which links a run to its result (FR-33): the records in the pane, picked with `aria-pressed`, each
+drawn from its stored history.
+
+### REV-261: What the Study suite's final review left open
+
+WP5.19's final render (392 shots; no page error and no contrast, non-text or target finding) was reviewed by the
+`gui-reviewer` (9 major, 15 minor, 7 doubts; none blocking) and by `impeccable`'s critique (26/40, up from the first
+draft's 23/40). Item 17 fixed:
+
+- Overview's *Set by*: the study, the model file that sets the value, or *default*; the whole case shown in place of
+  the set values; the case's keys in ink, not the green of a passed state;
+- Study setup's *Outputs*, a study's own key, counted and listed with the changes;
+- Exposed values' view: *Model's value*, as Study setup names it, in the pane's figures; no unit written for a ratio;
+  why its list is empty when the model's file forms no case; the select's prompt;
+- the sweep's points: each point's state in the queue, its wave counted from 1, its stages in words; *Run sweep*'s
+  reason when it is off; the adder's prompts;
+- the run's rungs as a list in the pane, every column shown; no empty plot frame; *Run study*'s notice naming Runs;
+  "no solve" for a record's threads where the run stopped before its solve;
+- the conservation legs: each number unbroken, as a power of ten with the minus sign, the place under the leg;
+- the charged tube's two atoms: a structure of fewer than two chains is not cut, and is framed to its width;
+- the correction models' whole names in Electrolyte (REV-255's fix, lost at item 15);
+- each part of a switch with the controls' edge; the group box on the panel, so its even rows' shading shows; a solid
+  with no value saying *not set*; *One subunit* filled when pressed.
+
+The charge screen's points go to REV-259's round. These stay, for WP5.21's pass over every suite:
+
+- **The convergence plot.** Its legend takes a third of the view beside the plot; only some bands carry their
+  number, one label meets the first marker, the x ticks step by 11 and the top decades crowd. The plot frame's labels
+  and keys go with REV-245's, in `plane.js`.
+- **Numbers in words and units.** Overview's physics table writes the unit in the label (*Bias, V* with 0.05), not
+  50 mV; the sweep's values keep the hyphen-minus; a concentration's exposed range reads *any* where the schema
+  refuses a negative value (WB-21).
+- **Repeated words.** Every Study tool opens with the study's name and its pairing, above the picker that names it
+  again; on a long name three lines. Exposed values' *Modified only* means "named or ranged", a second sense.
+- **Layout.** The group box spans the label column where other boxes start at the value column, its marks inside it
+  at the right; the sweep pane has three left edges; the *Go to* button cuts "in Conditions" to an ellipsis; with no
+  project, Study setup's *Values* and *Variables* stand empty; New study's dialog uses floating labels where the pane
+  uses labels at the left; mermaid's graph keeps its own face (WB-21).
+- **Guards.** The axis's and an exposed value's × act at one click with no undo (WB-32), and *Create study* is
+  enabled with an empty name.
+- **Status colour.** A picked queue line draws its ✓ in the accent, not the state's colour; a field hint that names a
+  blocking switch in Equations is grey (WB-42).
+
+**Open**: WP5.21.
+
+### REV-262: An exposed value's first name, and Exposed values' list as Study setup draws it
+
+An exposed value's name is an identifier (`[A-Za-z][A-Za-z0-9_]*`, §5.3.1's NOTE on model files): the library's
+lists name them after their leaves, `size_scale`, `concentration`, `bias`, and Study setup and Sweep show that name.
+The critique asks for the field's label, *Size scale*, which the rule refuses. Two questions for the author:
+
+1. An exposed value's name when first exposed: its leaf as now, with the panes showing the field's label beside a
+   name left as the leaf; a name of words, which changes the rule; or asked for when the value is exposed.
+2. Exposed values' view: the table it draws now, or Study setup's rows read-only, as WB-48's "the list as the Study
+  suite shows it" may mean; with that, whether a value's name, *From* and *To* boxes become one box as WB-47's
+  materials did.
+
+**Open**: a question for the author, at WP5.21's round.

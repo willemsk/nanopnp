@@ -1,29 +1,24 @@
 # Current work
 
-Updated 17 November 2026 (WP5.19 in progress). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 18 November 2026 (WP5.19 in progress). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 5 is merged through the Physics suite. The Study suite is planned: making, setting, sweeping, checking
-and running a study in the workbench. As you ruled, the thread count is recorded and keys no result, a new
-study and its graph come now, and a shifted outline's reach is stated, not refused. Two suites, the route and the
-close follow, about 35 sessions.
+Phase 5 is merged through the Physics suite. The Study suite is built to your round's rulings: a study is made,
+set, swept, checked and run in the workbench. A performance package takes the 200 ms redraw; a new suite between
+Molecular and Continuum gets its own. Two suites, the route and the close follow.
 
-**Your call.** Approve the Study suite's plan after its review? Recommendation: yes; your three rulings are in it.
+**Your call.** At the review: hold an edited outline's shell no finer than the density grid? Recommendation: yes; one
+short edge would otherwise refine the whole ring.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.18 merged
   (`v0.6.0-alpha.18`).
-  **WP5.19** [in progress](phase-5/wp5.19-the-study-suite.md) on `ccr-ff91f6e7-ohlzgc`: items 1 to 16 done (the study's
-  library steps, the thread count, `reproduce --upto`, the outline's shell spacing, the queue's slots and a run's
-  ladder, the residue link and the deployed charge, the five Study tools published for round 1, `redraw.cjs`). Item 13
-  ruled the round: a bridge suite between Molecular and Continuum in its own package (AR8), the 200 ms line to a
-  performance package (AR7). Items 14 and 15 built the rulings: Mol* side on with *One subunit*, a run's convergence
-  in Runs, Overview's set values, the sweep's two modes, the shared field's box, Exposed values in every Build suite.
-  Next, item 17, the final render and review.
+  **WP5.19** [in progress](phase-5/wp5.19-the-study-suite.md) on `ccr-ff91f6e7-ohlzgc`: items 1 to 17 done, the Study
+  tools built to the round's rulings (WB-43 to WB-48). Next, its PR; `/np-ship` puts D12 to the author.
   host: claude-code.
 
 ## Not to be re-decided
@@ -35,7 +30,7 @@ close follow, about 35 sessions.
 - **An open item is a `REV-nn` row** until resolved (H12).
 - **An idealised pore is geometry the case declares; a wall charge is a boundary condition** (§8.2.22 X1 to X4).
   **A `Case` is the case document; a `Session` runs it for every caller** (§8.2.23 Y1 to Y11).
-- **Text output is a reading, `--json` the record** (W2). **A non-finite Newton trial residual aborts** (AC2).
+- **Text is a reading, `--json` the record** (W2). **A non-finite trial residual aborts** (AC2).
 - **A desktop wrapper stays possible** (§8.2.30 AF1). **The front end is NiceGUI; Mol* draws the molecule** (AF4).
 - **One shell package per suite; variables may be expressions, units through `pint`, keyed by resolved values**
   (§8.2.31 AG1 to AG5). **Example 07 is re-pinned** (AG8). **A charge edit sits on the titratable group;
@@ -52,16 +47,15 @@ close follow, about 35 sessions.
 - **A pore's axis is found; a variant follows its parent** (§8.2.39). **An edited outline keeps its charge; a
   continuum model builds alone; mesh parts are typed** (§8.2.40). **A physics model is shown in a picked study; a
   change of model sets its switches** (§8.2.41). **Red blocks, blue informs; refusals are
-  ASD-STE100** (WB-42; FR-35). **A thread count is recorded, never keyed** (AR3). **The 200 ms line goes to a performance package; a bridge suite
-  joins Molecular and Continuum, in its own package** (AR7, AR8).
+  ASD-STE100** (WB-42; FR-35). **A thread count is recorded, never keyed** (AR3). **A performance package takes the 200 ms line; a
+  bridge suite has its own** (AR7, AR8).
 
 ## Somebody else's
 
 - **The paper's figure data** for VAL-16 and VAL-17 (D6); E1's ensemble legs; **Read the Docs**;
   **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
-- **The 200 ms redraw** on the author's GPU, in a performance package (AR7; REV-258); **verdicts on each suite's
-  prototype** (AJ8).
+- **The 200 ms redraw**'s GPU run (REV-258); **verdicts on each suite's prototype** (AJ8).
 - **Rulings on a cycle (H6) or drift (I4)**; **Tier 3's PQRs**.
 - **REV-156**'s speed-up is Phase 6's (Z6); a cleaned run's rebuild WP5.20's (AN5).
 

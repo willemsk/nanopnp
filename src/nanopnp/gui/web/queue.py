@@ -53,9 +53,13 @@ class Entry:
     after: tuple[Entry, ...] = field(default=(), repr=False)
     study: str = ""
 
+    def state(self) -> str:
+        """Return the entry's state as its glyph and word."""
+        return f"{_GLYPH[self.status]} {self.status}"
+
     def line(self) -> str:
         """Return the entry as a glyph, a word and its label."""
-        return f"{_GLYPH[self.status]} {self.status}  {self.label}"
+        return f"{self.state()}  {self.label}"
 
     @property
     def ended(self) -> bool:

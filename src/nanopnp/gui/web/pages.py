@@ -329,7 +329,8 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
                 # Atoms with no backbone, as a fixture's charges, draw as balls: a cartoon
                 # draws nothing of them.
                 representation="cartoon" if has_backbone(table, pqr) else "spacefill",
-                clip=not alone,
+                # A pore of two chains or more is cut at its axis; fewer are seen whole.
+                clip=not alone and seen.chain is not None,
                 side_on=replace(seen, alone=alone),
             )
         )
