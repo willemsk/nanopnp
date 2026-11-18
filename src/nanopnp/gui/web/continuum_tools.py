@@ -981,6 +981,9 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         return f"/api/continuum/{self.model.name}/plane?{query}"
 
     async def show(self) -> None:
+        if self.tool.view == "page":
+            await self.show_page()
+            return
         note = "" if self.model is not None else self.subject()
         await self.built.show_plane(self.plane_url(), note)
 

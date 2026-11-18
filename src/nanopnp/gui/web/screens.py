@@ -155,6 +155,8 @@ SUITES: tuple[Suite, ...] = (
             ),
             Tool("edit", "Charge edit", ("charge.edits",)),
             Tool("view", "View"),
+            # A molecular model's exposed values are chosen here alone (WB-48).
+            Tool("exposed", "Exposed values", view="page"),
         ),
         "build",
         "sym_o_hub",
@@ -200,6 +202,8 @@ SUITES: tuple[Suite, ...] = (
                     "numerics.mesh.wall_h_nm",
                 ),
             ),
+            # A continuum model's exposed values are chosen here alone (WB-48).
+            Tool("exposed", "Exposed values", view="page"),
         ),
         "build",
         "sym_o_grid_on",

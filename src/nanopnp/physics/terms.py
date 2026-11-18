@@ -324,9 +324,8 @@ def _inertia(density: str) -> Term:
         # With the density held constant the two inertias are one, and nothing is said.
         note=""
         if density == r"\varrho^0"
-        else rf"The inertia ${density} (\mathbf{{u}} \cdot \nabla) \mathbf{{u}}$ equals PHY-07's "
-        rf"$(\mathbf{{u}} \cdot \nabla)({density} \mathbf{{u}})$ only where "
-        rf"$\mathbf{{u}} \cdot \nabla {density} = 0$.",
+        else rf"PHY-07 writes $(\mathbf{{u}} \cdot \nabla)({density} \mathbf{{u}})$. "
+        "The two differ where the density changes along the flow.",
     )
 
 
@@ -343,8 +342,7 @@ EPNP_NS_TERMS: tuple[Term, ...] = (
         "NUM-04",
         r"\varrho\, \nabla \cdot \mathbf{u} = 0",
         ("flow",),
-        note=r"The model does not assemble the density continuity of PHY-07, "
-        r"$\mathbf{u} \cdot \nabla \varrho = 0$.",
+        note=r"The model leaves out PHY-07's term $\mathbf{u} \cdot \nabla \varrho$.",
     ),
     Term(
         "Variable density",

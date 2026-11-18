@@ -18,7 +18,7 @@ from nanopnp.gui.web.plane import ROLE_TITLES, ion_text, mesh_stored, shown_soli
 from nanopnp.gui.web.screens import CORRECTED, Tool, field_control
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import FIELDS, _Pane, _value_of, current_name
-from nanopnp.io.models import exposable_paths, owner_of, read_model_file
+from nanopnp.io.models import owner_of
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.mesh.ingest import SOLID_MATERIALS
 from nanopnp.mesh.primitives import PERMITTIVITY_EXEMPT
@@ -73,7 +73,6 @@ def current_physics(shell: Shell) -> PhysicsModel | None:
 
 class _PhysicsPane(_Pane[PhysicsModel]):
     kind: ClassVar[str] = "physics"
-    exposes: ClassVar[bool] = False
 
     def __init__(self, shell: Shell, tool: Tool, built: Views, focus: str) -> None:
         super().__init__(shell, tool, built, focus, current_physics(shell))
@@ -83,7 +82,6 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         self.later_box: ui.element
         self.view_box: ui.element
         self.roles_box: ui.element
-        self.exposed_box: ui.column
 
     # -- the model and the study it is shown in ---------------------------------------------
 
@@ -148,7 +146,8 @@ class _PhysicsPane(_Pane[PhysicsModel]):
             return "The project has no physics model. Import a case to add one."
         return super().subject()
 
-    def before_fields(self) -> None:
+    def before_cards(self) -> None:
+        # The study the model is shown in comes first: the cards below it speak of that study.
         model = self.model
         if model is None or self.project is None:
             return
@@ -163,7 +162,6 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 )
             else:
                 ui.label("No study. The model is shown over the continuum model.").classes("later")
-        self.chosen_note()
 
     def show_in(self, study: str) -> None:
         if self.model is None:
@@ -178,12 +176,9 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         if study is None:
             ui.label("The project has no study. The model is shown over its continuum model.")
         elif self.model.names_this(study):
-            ui.label(f"Shown in study {study}, which uses this model.")
+            ui.label("The study uses this model.")
         else:
-            ui.label(
-                f"Preview in study {study}, in place of its own model. This changes nothing in "
-                "the study."
-            )
+            ui.label("A preview in place of the study's own model. Nothing in the study changes.")
 
     def show_status(self) -> None:
         self.status.clear()
@@ -225,6 +220,9 @@ class _PhysicsPane(_Pane[PhysicsModel]):
 
     def field(self, path: str, body: dict[str, Any], changed: bool, exposed: bool) -> None:
         super().field(path, body, changed, exposed)
+        if path == MODEL:
+            # A change of model's note stands under the row that made it.
+            self.chosen_note()
         model = self.model
         control = self.controls[path]
         if path in APPLIED_WALLS and isinstance(control, ui.select):
@@ -583,8 +581,8 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 value=chosen if chosen in options else None,
                 on_change=lambda e, p=paths[0]: self.write(p, e.value),
             ).props(
-                # No arrow and the small face, so the model's whole name shows in the column.
-                f"dense outlined options-dense hide-dropdown-icon "
+                # The small face, so most of the model's name shows beside its arrow.
+                f"dense outlined options-dense "
                 f"data-control={field_control(paths[0])} "
                 f'aria-label="{FIELDS[paths[0]].label} correction"'
             )
@@ -724,153 +722,9 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         await self.show()
         self.show_roles()
 
-    def exposed_section(self) -> None:
-        self.exposed_box = ui.column().classes("w-full gap-1").props("data-control=exposed-list")
-        self.show_exposed()
-
-    def show_exposed(self) -> None:
-        self.exposed_box.clear()
-        model = self.model
-        with self.exposed_box:
-            if model is None:
-                return
-            listed = self.listed()
-            fitted = self.fitted()
-            # The value to add first, so it stays in place while the list grows.
-            offered = {
-                path: FIELDS[path].label if path in FIELDS else path
-                for path in exposable_paths("physics")
-                if path not in {entry.path for entry in listed}
-            }
-            with self.named("Expose"):
-                adding = ui.select(offered, value=None).props(
-                    "dense outlined options-dense data-control=exposed-add "
-                    'aria-label="A value to expose"'
-                )
-                adding.set_enabled(self.usable() and bool(offered))
-                ui.button(
-                    icon="sym_o_add",
-                    on_click=lambda: (
-                        self.expose_as(str(adding.value), None, None) if adding.value else None
-                    ),
-                ).props('flat dense aria-label="Expose the value chosen"')
-            ui.checkbox(
-                "Modified only", value=self.modified_only, on_change=self.on_exposed_modified
-            ).props("dense data-control=tool-modified")
-            shown = [
-                entry for entry in listed if self.entry_changed(entry) or not self.modified_only
-            ]
-            if shown:
-                with (
-                    ui.element("div").classes("exposed-row exposed-head").props("aria-hidden=true")
-                ):
-                    for text in ("Name", "From", "To", ""):
-                        ui.label(text)
-            for entry in shown:
-                self.exposed_row(entry, fitted if entry.path == CONCENTRATION else None)
-            if not listed:
-                ui.label("The model exposes no value.").classes("later")
-
-    def exposed_row(self, entry: Any, fitted: tuple[float, float] | None) -> None:  # noqa: ANN401 - an exposed value
-        label = FIELDS[entry.path].label if entry.path in FIELDS else entry.path
-        unit = _unit(entry.unit)
-        with (
-            ui.element("div")
-            .classes("exposed-row")
-            .props(f'data-field="{entry.path}" data-control={field_control(entry.path)}')
-        ):
-            # The value first, on a line of its own; then its name, range and removal.
-            ui.label(f"{label}, {unit}" if unit else label).classes("exposed-path")
-            name = ui.input(value=entry.name).props(
-                f'dense outlined debounce=800 aria-label="Name of {label}"'
-            )
-            low = ui.number(value=entry.low, placeholder="any").props(
-                f'dense outlined debounce=800 aria-label="Lowest {label}"'
-            )
-            high = ui.number(value=entry.high, placeholder="any").props(
-                f'dense outlined debounce=800 aria-label="Highest {label}"'
-            )
-
-            # A range is written from both ends as they now read, so an end typed first waits
-            # for the other; a new name keeps the stored range while the typed one is partial.
-            def typed() -> tuple[object, object]:
-                return low.value, high.value
-
-            def named(v: Any = entry) -> tuple[object, object]:  # noqa: ANN401 - an exposed value
-                ends = typed()
-                return ends if (ends[0] is None) == (ends[1] is None) else (v.low, v.high)
-
-            name.on_value_change(
-                lambda _, v=entry: self.expose_as(v.path, str(name.value or ""), named(v))
-            )
-            for control in (low, high):
-                control.on_value_change(
-                    lambda _, v=entry: self.expose_as(v.path, str(name.value or ""), typed())
-                )
-            for control in (low, high):
-                control.set_enabled(self.usable())
-            ui.button(icon="sym_o_close", on_click=lambda _, v=entry: self.unexpose(v.path)).props(
-                f'flat dense aria-label="Stop exposing {label}"'
-            )
-            if fitted is not None:
-                ui.label(
-                    f"The corrections are fitted from {fitted[0]:g} to {fitted[1]:g} {unit}."
-                ).classes("field-hint exposed-hint")
-
-    @staticmethod
-    def entry_changed(entry: Any) -> bool:  # noqa: ANN401 - an exposed value
-        """Return whether an exposed value has a name or a range of its own."""
-        return entry.name != entry.path.rpartition(".")[2] or (entry.low, entry.high) != (
-            None,
-            None,
-        )
-
-    def on_exposed_modified(self, event: Any) -> None:  # noqa: ANN401 - the checkbox's event
-        self.modified_only = bool(event.value)
-        self.show_exposed()
-
-    def listed(self) -> tuple[Any, ...]:
-        if self.model is None:
-            return ()
-        try:
-            location = self.model.project.path("physics", self.model.name)
-            return read_model_file("physics", location).exposed
-        except REFUSED:
-            return ()
-
-    def expose_as(self, path: str, label: str | None, span: tuple[object, object] | None) -> None:
-        model = self.model
-        if model is None:
-            return
-        low, high = span if span is not None else (None, None)
-        ranged = (
-            (float(low), float(high))
-            if isinstance(low, int | float) and isinstance(high, int | float)
-            else None
-        )
-        partial = ranged is None and (low is not None or high is not None)
-        if span is not None and (partial or label == ""):
-            # A range is written whole and a name is never blank: wait for the rest.
-            return
-        try:
-            model.project.set_exposed("physics", model.name, path, True, label=label, span=ranged)
-        except ValueError as error:
-            ui.notify(str(error).replace(f"{model.project.root}/", ""), type="negative")
-            return
-        self.show_exposed()
-        self.after_refresh()
-
-    def unexpose(self, path: str) -> None:
-        model = self.model
-        if model is None:
-            return
-        try:
-            model.project.set_exposed("physics", model.name, path, False)
-        except ValueError as error:
-            ui.notify(str(error), type="negative")
-            return
-        self.show_exposed()
-        self.after_refresh()
+    def fitted_for(self, path: str) -> tuple[float, float] | None:
+        """Return the range the corrections are fitted over, beside the concentration."""
+        return self.fitted() if path == CONCENTRATION else None
 
     # -- the view -----------------------------------------------------------------------------
 
@@ -883,8 +737,6 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 ui.label(self.subject()).classes("later")
             elif self.tool.id == "equations":
                 self.draw_equations()
-            else:
-                self.draw_exposed()
 
     def term_state(self, term: Term) -> str | None:
         """Return why a term is not in force, or None where it is."""
@@ -910,6 +762,10 @@ class _PhysicsPane(_Pane[PhysicsModel]):
             return
         shown = written(declared.terms, lambda term: self.term_state(term) is None)
         heading("Equations", 2)
+        # The symbols' table stands below the equations: one link reaches it (REV-255).
+        ui.link("What each symbol means", "#equations-symbols").classes("field-hint").props(
+            "data-control=equations-symbols-link"
+        )
         with ui.element("div").classes("terms").props("data-control=equations-terms"):
             for item in shown:
                 with ui.element("section").classes("term"):
@@ -929,7 +785,7 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 for term, why in off:
                     if why:
                         TextElement(tag="li", text=f"{term.name} ({term.clause}). {why}")
-        heading("Symbols", 3)
+        heading("Symbols", 3).props("id=equations-symbols")
         texts = [item.equation for item in shown]
         texts += [each for item in shown for each in (*item.defines, *item.notes)]
         _symbols(symbols_in(texts))
@@ -963,25 +819,6 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         _corrections_in_force(resolved)
         heading("Stabilisation", 3)
         ui.label(resolved.stabilisation)
-
-    def draw_exposed(self) -> None:
-        heading("As a study lists it", 2)
-        listed = self.listed()
-        if not listed:
-            ui.label("The model exposes no value.").classes("later")
-            return
-        _table(
-            ("Name", "Default", "Unit", "Range"),
-            [
-                (
-                    entry.name,
-                    "unset" if entry.default is None else self.text(entry.default, None),
-                    _unit(entry.unit) or "none",
-                    _range(entry.low, entry.high),
-                )
-                for entry in listed
-            ],
-        )
 
     def plane_url(self) -> str | None:
         if self.model is None:
@@ -1068,22 +905,6 @@ def _symbols(symbols: tuple[Symbol, ...]) -> None:
                     with ui.element("td"):
                         _mtext(symbol.meaning)
                     TextElement(tag="td", text=symbol.unit)
-
-
-UNITS = {"molar": "M", "volt": "V", "kelvin": "K", "nanometre": "nm", "nanometer": "nm"}
-"""The symbol the panes write for each unit an exposed value names in words."""
-
-
-def _unit(unit: str | None) -> str:
-    return UNITS.get(unit or "", unit or "")
-
-
-def _range(low: float | None, high: float | None) -> str:
-    if low is None and high is None:
-        return "any"
-    if high is None:
-        return f"from {low:g}"
-    return f"up to {high:g}" if low is None else f"{low:g} to {high:g}"
 
 
 def _table(
