@@ -246,7 +246,7 @@ AG3: FR-39; §5.3.1's NOTE on `variables:`
 AG4: FR-39; §5.3.1's NOTE on `variables:`; §5.3.3's inputs group
 AG5: FR-39; §5.3.4; §5.5's NOTE on the rebuild forecast
 AG6: 'FR-32; REV-136; open: WP5.20 (AJ10)'
-AG7: 'the Phase 5 plan''s criterion 6; open: WP5.19 (AJ10)'
+AG7: 'the Phase 5 plan''s criterion 6; amended by AR7'
 AG8: VER-62; the NOTE beside PHY-16 step 3
 AG9: FR-38; REV-183
 AG10: FR-38
@@ -355,3 +355,5 @@ AR3: 'FR-25; §5.3.3''s Solver group'
 AR4: 'the Phase 5 plan''s WP5.19 entry; open: WP5.19 (the design document''s Study rows)'
 AR5: 'AP1''s consequence; VER-55''s restated NOTE; §5.3.1''s NOTE on inputs.profile; PHY-16''s deposit gate'
 AR6: '§5.2''s NOTE on the ion-exclusion shell; §5.3.1''s NOTE on inputs.profile'
+AR7: 'the Phase 5 plan''s criterion 6 and supply row; open: a performance package (REV-258)'
+AR8: 'open: the bridge suite''s package (FR-31; REV-259)'

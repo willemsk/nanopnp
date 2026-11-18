@@ -19,8 +19,9 @@ close follow, about 35 sessions.
   (`v0.6.0-alpha.18`).
   **WP5.19** [in progress](phase-5/wp5.19-the-study-suite.md) on `ccr-ff91f6e7-ohlzgc`: items 1 to 12 done (the study's
   library steps, the thread count, `reproduce --upto`, the outline's shell spacing, the queue's slots and a run's
-  ladder, the residue link and the deployed charge, the five Study tools published for round 1, `redraw.cjs`). Next,
-  item 13, the round's verdicts collected.
+  ladder, the residue link and the deployed charge, the five Study tools published for round 1, `redraw.cjs`). Item 13
+  ruled the round: a bridge suite between Molecular and Continuum in its own package (AR8), the 200 ms line to a
+  performance package (AR7). Next, item 14, the Study tools finished to the verdicts.
   host: claude-code.
 
 ## Not to be re-decided
@@ -49,14 +50,16 @@ close follow, about 35 sessions.
 - **A pore's axis is found; a variant follows its parent** (§8.2.39). **An edited outline keeps its charge; a
   continuum model builds alone; mesh parts are typed** (§8.2.40). **A physics model is shown in a picked study; a
   change of model sets its switches** (§8.2.41). **Red blocks, blue informs; refusals are
-  ASD-STE100** (WB-42; FR-35). **A thread count is recorded, never keyed** (AR3).
+  ASD-STE100** (WB-42; FR-35). **A thread count is recorded, never keyed** (AR3). **The 200 ms line goes to a performance package; a bridge suite
+  joins Molecular and Continuum, in its own package** (AR7, AR8).
 
 ## Somebody else's
 
 - **The paper's figure data** for VAL-16 and VAL-17 (D6); E1's ensemble legs; **Read the Docs**;
   **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
-- **The 200 ms redraw** on the author's GPU, WP5.19 (AG7); **verdicts on each suite's prototype** (AJ8).
+- **The 200 ms redraw** on the author's GPU, in a performance package (AR7; REV-258); **verdicts on each suite's
+  prototype** (AJ8).
 - **Rulings on a cycle (H6) or drift (I4)**; **Tier 3's PQRs**.
 - **REV-156**'s speed-up is Phase 6's (Z6); a cleaned run's rebuild WP5.20's (AN5).
 

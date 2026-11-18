@@ -2727,6 +2727,11 @@ The Study page prints `State: <fixture name>` and stage chips with no verdict wo
 
 **Deferred** to WP5.19, which builds the Charge on the mesh tool (WB-26; VER-60) after its prototype round on 2WCD (§8.2.34 AJ8, AJ10).
 
+**Fixed** in WP5.19 (item 9, `dd34e62`). The Study suite's pages name the study and its models, not a fixture, and
+the tool list carries each stage's state. The map has its axes in nm, its colour bar named in words with its unit, and
+the record's two worst planes. Each residue button carries its sign, and a picked residue rings every charged atom it
+holds. The round's verdicts ([the record](../design/reviews/2026-11-18-study.md)) ruled the screen at WP5.19's item 13.
+
 ### REV-206: An exported project can lose a result file of the same name, and keeps the run record's old paths
 
 The WP5.08 code review found four limits of `Project.export`. Two result files of one run that share a name, from different folders, are copied to `results/<name>` and the second replaces the first. The copied `run.json` still lists the result paths of the project it was copied from, so the copy's record points back at the original. An input file kept in a sub-folder of `inputs/` is copied flat while the item that names it is not rewritten, and an input in `inputs/` that no item names can share a name with a linked input and replace it. A failure part-way leaves a half-written destination that the next export refuses as not empty.
@@ -2761,6 +2766,10 @@ The second WP5.08 screen review found: the palette matches a typed word against 
 The charge screen is WP5.02's spike screen, placed in the frame. With no case or no structure charge it still shows "Linked" with an Unlink button beside two empty canvases and no caption; it says "case", a retired term; the Study page offers its link in the empty state; the map's background is light grey on the dark theme, against WB-26. The review doubted two things it could not check from the pictures: the Mol* toolbar icons may read below 3:1 (the harness measures no viewer control), and the 3D spheres and the map's dots may colour the same charges oppositely.
 
 **Deferred** to WP5.19, which builds the Charge on the mesh tool (WB-26; VER-60) with the colour bar of REV-205, its design settled in its prototype round (§8.2.34 AJ8, AJ10).
+
+**Fixed** in WP5.19 (item 9, `dd34e62`). The *Linked* chip shows only while a structure's residues are there to link,
+and a supplied charge says it has none. The map's zero is transparent, so it takes the theme's background on dark. The
+round's verdicts ruled the screen at WP5.19's item 13.
 
 ### REV-210: The frame lacks icons, headings and some states in the render set
 
@@ -2807,6 +2816,13 @@ The author, marking the changed list: "Spacing seems very generous. How is this 
 The author, marking the charge screen: "Looks very poorly integrated. Maybe because we are still in early development phase for the GUI. Also hard to judge without an example molecule.", then: "Looks very rudimentary still. I think we need to discuss a bit on how the design and functionality can go hand in hand." The screen is WP5.02's spike, placed in the frame (REV-205, REV-209). The render set's states are a charged and an uncharged tube, with no protein.
 
 **Deferred** to WP5.19, ruled by the author on 5 November 2026 (§8.2.34 AJ8; WB-38): the Study package opens with its tools prototyped over 2WCD's artefacts and rendered through their states, and the charge screen's design is settled with its function in that round, with REV-205's colour bar and axes and REV-209's link and dark map.
+
+**Fixed** at WP5.19's item 13, ruled by the author on 18 November 2026 ([the record](../design/reviews/2026-11-18-study.md)).
+Its function is settled: the check of one pairing's charge before a solve. Is the molecule's charge all on the mesh?
+Where is it least right? Which residue makes a patch of charge? The author placed it in a bridge suite between
+Molecular and Continuum, with the outline's creation, built in its own package (§8.2.42 AR8; WB-43). Until then it
+stays in Study, and WP5.19's item 14 opens Mol* side on, cut at the axis, with a *One subunit* switch (WB-44). The
+round's open questions on its design go with the bridge suite (REV-259).
 
 ### REV-216: The Phase 5 plan exceeds its word target again
 
@@ -3182,6 +3198,11 @@ settle:
 (WP5.19's charge screen or Analysis); the charge screen's overlay with WP5.19's charge screen; the maps with the
 plots' settings in Analysis; the safeguards before the first tool that deletes, with the project tree's actions.
 
+*Carried at WP5.19's item 13* ([the record](../design/reviews/2026-11-18-study.md)). The charge screen moves to a bridge suite between Molecular and Continuum
+(§8.2.42 AR8), so the overlay of the 3D structure, the 3D charge and the (r, z) map turned about the axis goes to that
+suite's round (REV-259). The variation view and the maps go to WP5.20, which draws ensembles' results and plots. WP5.19
+adds no tool that deletes, so the safeguards wait for the first one.
+
 ### REV-241: What the final review of the Molecular tools left open
 
 The GUI review and `impeccable`'s critique of the finished tools (WP5.16 item 12, render `shell-r2` at `def8265`; no
@@ -3456,6 +3477,10 @@ critique proposed it as a toggle beside the field's reset.
 **Open**, a question for the author: at the Study suite's round (WP5.19), which reads every kind's list, whether each
 kind gets its own list tool, *Expose* goes on every number, or it stays as it is.
 
+*Ruled* by the author on 18 November 2026, at WP5.19's item 13 ([the record](../design/reviews/2026-11-18-study.md)): "A list tool per suite". Molecular and
+Continuum each get the Physics suite's Exposed values tool, with *Expose* at its head, and the checkbox beside each
+number goes (WB-48). WP5.19's item 14 builds it.
+
 ### REV-253: A plot's axes the user tunes
 
 At WP5.18's collect the author chose a square-root concentration axis for Electrolyte's curves from four drawn
@@ -3562,6 +3587,10 @@ These stay:
 
 **Open**, a question for the author: the layout and the words at WP5.19's round; the view and the region with WP5.21.
 
+*Ruled* by the author on 18 November 2026, at WP5.19's item 13 ([the record](../design/reviews/2026-11-18-study.md)): "Fix them in item 14". WP5.19's item 14
+fixes *The pane's layout* and *Words* above. The view and the region stay with WP5.21, and CODE_REVIEW_058's two with
+the view's package.
+
 ### REV-256: A field's message, its text size and a field of several boxes, in every suite
 
 At WP5.18's round 2 ([the record](../design/reviews/2026-11-16-physics-2.md)) the author, on the in-tube Conditions
@@ -3577,6 +3606,11 @@ of several boxes drawn as one box with shaded rows. Each is drawn in the three s
 
 **Open** until WP5.19's round rules on the mockups and the package builds what the author keeps. WB-12 changes with it.
 
+*Ruled* by the author on 18 November 2026, at WP5.19's round ([the record](../design/reviews/2026-11-18-study.md)): "Keep the "Today" variant for the Error, the
+Proposed for the box." A field's message stays under its box (WB-12 unchanged). The box's text is drawn at its label's
+size, and a field of several boxes is one box with shaded rows. Each row keeps its own changed mark, reset and
+default, and the box keeps a 3:1 edge (WB-47). WP5.19's item 14 builds it in every suite.
+
 ### REV-257: The blend's nearest-solid jump carries no dielectric force
 
 Found by the physics review of REV-250's fix at WP5.18's ship. Under a solid fraction, PHY-20's blend goes to the
@@ -3589,3 +3623,54 @@ which has not been measured on ClyA or 2WCD.
 
 **Open**: measure the jump's force on a smoothed 2WCD case with the switch on, then assemble it as an edge term or
 blend `ε_p` smoothly. With the next package that changes PHY-23's terms.
+
+### REV-258: The 200 ms redraw, measured on a GPU, and the front end's share fixed
+
+AG7 had WP5.19 measure the 200 ms redraw line (WB-23) on the author's machine with a GPU, and fix a miss by the front
+end there. WP5.19's item 11 wrote `.claude/scripts/gui/redraw.cjs`, which clicks a residue's charged atoms on the
+charge map 20 times and times the markers' paint and Mol*'s second frame. Headless on the container's software GL,
+on 2WCD at 1440 × 900, it measured:
+
+- the markers' paint, 297 ms median and 380 ms p95;
+- Mol*'s second frame, 745 / 827 ms;
+- Mol*'s own share, 434 / 487 ms.
+
+Over five picks, the server took 167 / 243 ms of the markers' paint. Each pick keys the study's walk three or four
+times, at about 45 ms each:
+
+- `study_tools.py`'s `on_point` and `select` each call `StudyModel.charges()`, and `plane_url` calls `artefacts()`,
+  outside `builds.keyed_once`;
+- `pages.py`'s `study(name)` builds a new `StudyModel` per request, so `/api/study/{name}/charge/plane` keys it again.
+
+The author did not run the GPU measurement, and proposed moving this kind of optimisation to a dedicated performance
+package (§8.2.42 AR7).
+
+**Deferred** to a performance package that `/np-plan` places (§8.2.42 AR7). It measures the line with `redraw.cjs
+--headed` on a GPU, holds one keyed walk per pick, the route reusing the pane's read, and profiles any miss with
+`--trace`. The Phase 5 plan's criterion 6 goes with it.
+
+### REV-259: A bridge suite between Molecular and Continuum
+
+At WP5.19's round ([the record](../design/reviews/2026-11-18-study.md)) the author asked whether Charge on the mesh
+belongs to Study, and chose a bridge suite between Molecular and Continuum, built in its own package (§8.2.42 AR8;
+WB-43). It holds *Density*, *Outline* (the outline's creation and edit, from Continuum › Pore geometry) and *Charge
+map* (from Study › Charge on the mesh). Each pairs Mol*, side on and cut at the axis with its *One subunit* switch
+(WB-44), with the (r, z) view, linked both ways:
+
+- a residue finds its patch of charge;
+- a point finds its residue;
+- an edited outline shows the atoms it cuts.
+
+It adds no kind of model: its values stay the continuum model's `geometry` section, over a molecular model picked in
+the pane.
+
+Its round takes the charge screen's questions the author left open at WP5.19:
+
+- the pair's views at 1280 px: fold the pane, or let the pair take the view;
+- the diverging scale's light middle on the dark theme;
+- the deployed field's mesh edges on or off by default;
+- the residues as a strip of buttons or a table sorted by charge;
+- REV-240's overlay of the 3D structure, the 3D charge and the (r, z) map turned about the axis.
+
+**Open**, ruled by the author on 18 November 2026: a package of its own, which `/np-plan` places. It amends FR-31's
+five suites, §2's v0.6 row, WB-34 and WB-41 when it lands.

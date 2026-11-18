@@ -52,7 +52,7 @@ matrix rows.
 | D8 The opening walk | Boot walks the first study to `charge`, else `mesh` | REV-251; decided by the plan |
 | D9 Library steps | `upto` on reproduce; REV-206's export limits; AP5's shell spacing; REV-247 measured, AP1's consequence narrowed to its reach | REV-41, REV-206, AP5; AR5, ruled by the author |
 | D10 The round | The tools and graph on 2WCD, with REV-256's mockups; reviewed, published, collected with REV-240's, REV-252's and REV-255's points; finished | AJ8, REV-215, ruled by the author |
-| D11 The 200 ms line | `.claude/scripts/gui/redraw.cjs`, run by the author with a GPU: median and p95 of 20 picks, front end and whole repaint; a miss profiled | AG7, ruled by the author |
+| D11 The 200 ms line | `.claude/scripts/gui/redraw.cjs`, run by the author with a GPU: median and p95 of 20 picks, front end and whole repaint; a miss profiled. *Amended at item 13:* WP5.19 times it headless; the GPU run and the front end's fix go to a performance package | AG7, ruled by the author; §8.2.42 AR7, ruled by the author at item 13 (REV-258) |
 | D12 The shell's finest `h_c` | A supplied outline's `h_c` is also held at the finest density grid, 0.025 nm, where an edited edge is shorter: one short edge would otherwise refine the whole ring and halve the closing that fills gaps no water enters | The `physics-reviewer`'s F1 at item 4; decided by the implementing session, for `/np-ship` to put to the author |
 
 ### Grounding
@@ -280,8 +280,38 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 > It takes `--json`, `--headed` and `--trace`. On this container's software GL (SwiftShader), 2WCD at 1440 × 900, 20
 > picks: markers' paint 297 / 380 ms (median / p95), Mol*'s second frame 745 / 827 ms, Mol*'s own share 434 / 487 ms.
 > Of the markers' paint (five picks), the server's handling is 167 / 243 ms, the fetch 54 / 70 ms and the canvas 59 /
-> 67 ms. Each pick keys the study's walk two or three times in the pane and once in the route, about 45 ms each; item 14
-> keys it once. The author's GPU run decides AG7 at item 16.
+> 67 ms. Each pick keys the study's walk two or three times in the pane and once in the route, about 45 ms each. At
+> item 13 the author moved the GPU run and that fix to a performance package (§8.2.42 AR7; REV-258).
+
+> **Outcome — the round ruled.** The author marked all 19 picks, 7 `keep` and 12 `change`
+> ([the record](../../design/reviews/2026-11-18-study.md)). At the collect the author placed the charge screen in a
+> bridge suite between Molecular and Continuum, built in its own package (§8.2.42 AR8; WB-43; REV-259), and moved the
+> 200 ms line to a performance package (AR7; REV-258). The other rulings are WB-44 to WB-48: Mol* side on and cut, with
+> *One subunit*; a run's convergence in Runs' view; Overview's set values; the sweep's two modes in a table; the shared
+> field's box; an Exposed values tool per suite. They also cover REV-252's and REV-255's points. REV-205, REV-209 and
+> REV-215 are fixed; REV-240's points are carried. The design document's stale areas row and its renderer table are
+> corrected. The rulings grew item 14, so it is split: item 14 finishes the Study tools, item 15 the shared pane.
+
+**Item 14** (WB-44 to WB-46; REV-254).
+- Charge on the mesh: Mol* opens side on, the axis upright, the near half cut away at the plane through the axis.
+  A *One subunit* toggle in Mol*'s toolbar draws the structure's first chain alone. The pick path is kept as it is (AR7).
+- Runs: `view="plane"`. The picked run's convergence is drawn by `runs.convergence_plane` across the view, with
+  `rung_rows` as a table in the pane and a running entry redrawn on its poll. A queue line's *Open* goes to
+  `/study/runs` with that run picked. The queue's entry keeps its line only.
+- Overview: the case panel dumps the merged study as its files set it, unset values left out. *Show the whole case*
+  unfolds today's resolved dump.
+- Sweep: *Every combination* writes one axis per row, as today. *Stepped list* writes one axis of `assignments`: a
+  row of one value is held at every step, and rows of unequal length (other than one) are refused at the field,
+  naming both lengths. The table of points stays, its *Wave* head with a hint.
+- REV-254's Study words: the Study pages' refusal is one card that leads with the library's words, less its file and
+  path, with *Go to* its field, and says *blocked*.
+
+**Item 15** (WB-47, WB-48; REV-252, REV-255, REV-256).
+- `tools.py`'s field: the box's text at its label's size. A field of several boxes is one box with shaded rows, each
+  row keeping its own changed mark, reset and default; its edge meets 3:1. The message stays under the box.
+- An Exposed values tool in Molecular and Continuum: `physics_tools`' tool generalised over the model's kind, and
+  `_Pane.field`'s *Expose* removed. VER-78's screen list gains both.
+- The Physics pane: REV-255's *The pane's layout* and *Words*.
 
 ### Work items
 
@@ -309,10 +339,12 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 - [x] 12. Compaction checkpoint; the author's verdicts; the author runs `redraw.cjs`. **Executor:** main
 - [ ] 13. `/np-gui collect`; REV-215, REV-240's, REV-252's, REV-255's and REV-256's points ruled or carried; the
   design document's rows (D10); done when the code and review say so. **Executor:** main
-- [ ] 14. The tools finished to the verdicts, REV-254's Study words (D10); done when VER-78, VER-60 and VER-44 pass.
-  **Executor:** main
-- [ ] 15. Compaction checkpoint. **Executor:** main
-- [ ] 16. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; AG7's numbers or a `REV-nn` row;
+- [ ] 14. The Study tools finished to the verdicts: Mol*'s view, Runs' view, Overview, Sweep's modes, REV-254's Study
+  words (D10; WB-44 to WB-46); done when VER-78, VER-60 and VER-44 pass. **Executor:** main
+- [ ] 15. The shared field, an Exposed values tool in Molecular and Continuum, the Physics pane's layout and words (D10;
+  WB-47, WB-48; REV-252, REV-255, REV-256); done when VER-78 passes and the render shows them. **Executor:** main
+- [ ] 16. Compaction checkpoint. **Executor:** main
+- [ ] 17. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; AG7's numbers or a `REV-nn` row;
   VER-78's text, FR-33's and FR-39's matrix rows; `current.md`; done when the code and review say so. **Executor:** main
 
 ### Verification

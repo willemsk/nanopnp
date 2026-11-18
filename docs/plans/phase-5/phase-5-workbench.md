@@ -322,7 +322,8 @@ axes and dark map (FR-33; REV-205, REV-209); Runs, a run's convergence unfolded 
 the project (REV-206), and the Compute settings, solves at once and threads per solve, each run's record stating its
 thread count, which keys no result (AN1, AN4; AR3). `upto` on reproduce (REV-41). A supplied outline's exclusion shell
 takes the outline's own spacing (AP5); the charge check's reach against a shifted outline is measured and stated
-(REV-247; AR5). The 200 ms redraw is measured on the author's machine with a GPU (AG7; criterion 6). Q24 to Q26 and Q28
+(REV-247; AR5). The 200 ms redraw is timed headless by `redraw.cjs`; its GPU measurement and the front end's fix move to
+a performance package (AR7; criterion 6; REV-258). Q24 to Q26 and Q28
 to Q36 move here; VER-44 and VER-60 as restated. Tag `v0.6.0-alpha.19`.
 
 ### WP5.20 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
@@ -363,7 +364,7 @@ Settled rows: see §8.2.17 to §8.2.38 and [the record](phase-5-record.md).
 | Item | Needed by | If it does not arrive |
 |---|---|---|
 | Verdicts on each suite's prototype round, on 2WCD or, for Physics, example 01 | WP5.16 to WP5.20 | The suite is built on the prototype's design as it stands, and the verdicts move to its screen review |
-| A machine with a GPU, in a local session | WP5.19 | The 200 ms line stays unmeasured; a `REV-nn` row carries it to the close |
+| A machine with a GPU, in a local session | A performance package (§8.2.42 AR7) | The 200 ms line stays unmeasured; REV-258 carries it to the close |
 | A local Claude Code session | WP5.02 onward | Work continues headless, on renders |
 | Verdicts on the six findings against the ESI and the COMSOL report, asked in one round at WP5.12's item 11 (AL20; AM18; REV-227) | WP5.12 | A finding not yet checked stays `unchecked` in REV-227, carried to the close |
 | The verdict on xenon and import-linter (AL27) | After WP5.10 | Neither is added; the layering test stays the guard |
@@ -413,7 +414,8 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 5. **QR-10 is observed**: the colleague installs, loads a structure, accepts defaults and obtains a
    conductance and a field picture unaided. Predicted: met, with findings. A miss is waived and
    carried (S13).
-6. **The redraw is measured** on the author's machine with a GPU, in WP5.19: a residue selected on the charge map
+6. **The redraw is measured** on the author's machine with a GPU, in a performance package (§8.2.42 AR7; REV-258), not
+   WP5.19: a residue selected on the charge map
    redraws the whole picture within 200 ms (WB-23). Predicted: the front end's share met (26 ms p95 in the spike), the
    whole picture unknown. On a miss the redraw is profiled; where the renderer's own repaint is the cost, the line
    binds the front end's share and the renderer's time is recorded; a miss by the front end is fixed (§8.2.31 AG7).
