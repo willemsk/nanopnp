@@ -266,8 +266,16 @@ def convergence_plane(model: ConvergenceModel) -> Plane:
         "y_scale": "log",
         "y_ticks": list(model.ticks()),
     }
-    # The count of samples omitted is in the summary the entry shows above the plot.
-    return Plane("plot", _AXES, (x_low, x_high, y_low, y_high), tuple(layers), panels=(panel,))
+    # The count of samples omitted is in the summary the entry shows above the plot. The key
+    # stands below, so the plot keeps the side pane's width.
+    return Plane(
+        "plot",
+        _AXES,
+        (x_low, x_high, y_low, y_high),
+        tuple(layers),
+        panels=(panel,),
+        key_below=True,
+    )
 
 
 def rung_rows(model: ConvergenceModel) -> list[dict[str, str]]:

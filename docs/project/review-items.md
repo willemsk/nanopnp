@@ -3751,8 +3751,9 @@ draft's 23/40). Item 17 fixed:
 
 The charge screen's points go to REV-259's round. These stay, for WP5.21's pass over every suite:
 
-- **The convergence plot.** Its legend takes a third of the view beside the plot; only some bands carry their
-  number, one label meets the first marker, the x ticks step by 11 and the top decades crowd. The plot frame's labels
+- **The convergence plot.** One label meets the first marker, the x ticks step by 11 and the top decades crowd. Round
+  2's collect moved its legend, which took a third of the view, below the plot, and with that width each band
+  from rung 4 on carries its number ([round 2](../design/reviews/2026-11-18-study-2.md)). The plot frame's labels
   and keys go with REV-245's, in `plane.js`.
 - **Numbers in words and units.** Overview's physics table writes the unit in the label (*Bias, V* with 0.05), not
   50 mV; the sweep's values keep the hyphen-minus; a concentration's exposed range reads *any* where the schema

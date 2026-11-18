@@ -451,13 +451,14 @@
     drawPlot(ctx, area) {
       if (!this.drawing.layers.length) return;
       this.key = this.keyLayout(ctx, area);
-      if (this.key && area.w - this.key.width - KEY_GAP >= PLOT_MIN_W) {
+      const beside = !this.drawing.key_below && area.w - (this.key ? this.key.width : 0) - KEY_GAP >= PLOT_MIN_W;
+      if (this.key && beside) {
         // The legend stands beside the plot, where it hides no curve.
         area.w -= this.key.width + KEY_GAP;
         this.key.x = area.x + area.w + KEY_GAP;
         this.key.top = area.y;
       } else if (this.key) {
-        // Too narrow beside it: the key stands below the plot, its rows in columns.
+        // Asked below, or too narrow beside it: the key stands below the plot, its rows in columns.
         const across = this.key.width;
         const columns = Math.max(1, Math.floor((area.w + MARGIN.left) / across));
         const rows = Math.ceil(this.key.entries.length / columns);

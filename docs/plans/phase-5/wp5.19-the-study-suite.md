@@ -368,6 +368,12 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 > sessions, `/np-ship` to its review 0.8 agent hours and 3 touches in the sixth: 7.2 agent hours and 18 touches,
 > against the estimate of about six sessions, 9 to 14 agent hours and 14 touches.
 
+> **Outcome — round 2.** The author marked the 17 picks of [round 2](../../design/reviews/2026-11-18-study-2.md): 16
+> `keep` and 1 `change`. The two questions the cards asked were kept as drawn: the whole case writes `null` for an
+> input the case leaves unset, and *Outputs* cuts its list to an ellipsis. The change moved the convergence plot's key
+> below the plot (`Plane.key_below`), so the plot takes the side pane's width. The Study group's render at the collect
+> has no page error and no contrast, non-text or target finding. REV-261 keeps the plot's other points.
+
 ### Work items
 
 - [x] 229439d 1. `api/project.py` (D2's methods, REV-206), §5.3.5's NOTE (D2, D9); done when `test_study.py` and

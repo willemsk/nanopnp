@@ -215,6 +215,9 @@ class Plane:
     point_pick
         Whether a click asks about the point itself, as the charge map's residues, in place of
         picking a vertex, an element or a domain.
+    key_below
+        Whether a plot's key stands below it at any width, its rows in columns, so that a plot
+        in a narrow pane keeps the pane's width.
     """
 
     frame: Frame
@@ -224,6 +227,7 @@ class Plane:
     notes: tuple[str, ...] = ()
     panels: tuple[dict[str, Any], ...] = ()
     point_pick: bool = False
+    key_below: bool = False
 
     def json(self) -> dict[str, Any]:
         """Return the drawing as the canvas reads it."""
@@ -238,6 +242,7 @@ class Plane:
             "notes": list(self.notes),
             **({"panels": list(self.panels)} if self.panels else {}),
             **({"point_pick": True} if self.point_pick else {}),
+            **({"key_below": True} if self.key_below else {}),
         }
 
 
