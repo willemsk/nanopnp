@@ -667,12 +667,13 @@ def build_plan(
     # each point resolves, and the refusal still comes before anything is meshed (§5.3.4).
     plan = replace(plan, pairs=_pairs(plan.points, resolved))
     if plan.rectification and not plan.pairs:
+        named = ", ".join(repr(axis.name) for axis in document.axes)
         raise SweepPlanError(
             f"the base case asks for {RECTIFICATION!r}, which is the two-point ratio "
             "I(+V)/I(-V) and can only come from a matched pair of members, but no two points "
-            "of this sweep resolve to cases that differ only in 'boundary_conditions.bias_V' "
-            "at exactly opposite values. Give the bias axis a symmetric set of values, or drop "
-            "the output"
+            f"of the axes {named} resolve to cases that differ only in "
+            "'boundary_conditions.bias_V' at exactly opposite values. Give the bias axis a "
+            "symmetric set of values, or drop the output"
         )
     plan = replace(
         plan,

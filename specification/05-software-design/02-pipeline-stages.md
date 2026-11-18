@@ -340,7 +340,7 @@ The last criterion is VER-28's junction measure, made generic. The shipped refer
 its drawn corners (2.0, 3.5), and its mesh is unchanged. The fixture assembled with either chord
 meshes to one connectivity, with vertices within 4.2 × 10⁻⁹ nm (WP21 plan, Design §1).
 
-NOTE (the ion-exclusion shell, stage 5, FR-15, PHY-20; WP30; §8.2.40 AP5; §8.2.42 AR6): a non-zero
+NOTE (the ion-exclusion shell, stage 5, FR-15, PHY-20; WP30; §8.2.40 AP5; §8.2.42 AR6, AR9): a non-zero
 `charge.exclusion_offset_nm`, `a`, makes stage 5 build the exclusion contour from the model-frame
 profile `P`, with `h_c` as in the NOTE on the contour's size target. Beside a supplied outline
 (`inputs.profile`), which carries no density grid, `h_c` is the point spacing the outline's file
@@ -348,7 +348,7 @@ records, `provenance.min_vertex_spacing_nm`, read when the case is resolved and 
 density grid's range, 0.025 to 0.05 nm: an outline the density builds, a saved edit among them, shells
 at its own resolution; one drawn with a few long straight edges shells as the coarsest grid (§8.2.42
 AR6); and one with an edited edge shorter than the finest grid shells as the finest, so one short edge
-does not refine the whole ring. An outline its loader refuses, a repeated vertex among its faults, is
+does not refine the whole ring (§8.2.42 AR9). An outline its loader refuses, a repeated vertex among its faults, is
 refused when the case is resolved, naming its file, and so is an offset of at most `2 h_c`, naming the
 offset, `h_c` and where `h_c` comes from, with the recorded spacing where the range held it. The stage-5 key carries
 that `h_c` where the shell is on:

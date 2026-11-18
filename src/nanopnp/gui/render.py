@@ -343,6 +343,16 @@ def _recorded_artefact(run: Path, stage: str, *, needed: str | None) -> Artefact
     return artefact
 
 
+def _resolved_run(run: Path) -> ResolvedCase:
+    # Against the folder of the case file the run read, as open_run resolves it: a relative path
+    # in the case, as its outline's, names a file beside that case, not beside the run.
+    from nanopnp.pipeline.case import resolve
+    from nanopnp.pipeline.run import read_run, recorded_base
+
+    recorded = read_run(run)
+    return resolve(recorded.document, base=recorded_base(recorded.manifest.inputs))
+
+
 def _mesh_need(mesh: SuppliedArtefact | None) -> str | None:
     # Only a mesh supplied as a file is read without the stage-6 artefact.
     if mesh is None:
@@ -397,8 +407,6 @@ def render(request: RenderRequest) -> Rendered:
     Raises FileNotFoundError if the run records no converged state, and KeyError if the field is
     not one this solution carries.
     """
-    from nanopnp.io.manifest import CASE_FILENAME
-    from nanopnp.pipeline.case import load_case, resolve
     from nanopnp.post.export import (
         attribute_name,
         field_scale,
@@ -408,12 +416,11 @@ def render(request: RenderRequest) -> Rendered:
 
     run = Path(request.run)
     state = _state_path(run)
-    case = load_case(run / CASE_FILENAME)
-    resolved = resolve(case)
+    resolved = _resolved_run(run)
     solution = restore(
         state,
         resolved=resolved,
-        mesh_artefact=_recorded_artefact(run, "mesh", needed=_mesh_need(case.inputs.mesh)),
+        mesh_artefact=_recorded_artefact(run, "mesh", needed=_mesh_need(resolved.mesh)),
         charge_artefact=_recorded_artefact(run, "charge", needed=_stage7_need(resolved)),
     )
     # Any model: each reports the NUM-09 scale set that turns its state into SI numbers (§5.4.3).
@@ -468,12 +475,10 @@ def render(request: RenderRequest) -> Rendered:
 
 def render_mesh(request: MeshRequest) -> RenderedMesh:
     """Draw a run's stage-6 mesh by material into its ``viewer/``, with its gate figures."""
-    from nanopnp.io.manifest import CASE_FILENAME
     from nanopnp.mesh.ingest import deployed_mesh
-    from nanopnp.pipeline.case import load_case, resolve
 
     run = Path(request.run)
-    resolved = resolve(load_case(run / CASE_FILENAME))
+    resolved = _resolved_run(run)
     artefact = _recorded_artefact(run, "mesh", needed=_mesh_need(resolved.mesh))
     if artefact is None and _mesh_need(resolved.mesh) is not None:
         raise FileNotFoundError(
@@ -541,13 +546,11 @@ def deployed_coefficient(run: Path, quantity: ChargeQuantity) -> DeployedCoeffic
     from nanopnp.charge.dielectric import SOLID_FRACTION
     from nanopnp.charge.fields import CANONICAL_UNITS
     from nanopnp.charge.stage import case_fields, read_fields
-    from nanopnp.io.manifest import CASE_FILENAME
     from nanopnp.mesh.ingest import deployed_mesh
     from nanopnp.numerics.measures import AXISYMMETRIC
-    from nanopnp.pipeline.case import load_case, resolve
     from nanopnp.post.export import FIXED_CHARGE_ATTRIBUTE
 
-    resolved = resolve(load_case(run / CASE_FILENAME))
+    resolved = _resolved_run(run)
     mesh_artefact = _recorded_artefact(run, "mesh", needed=_mesh_need(resolved.mesh))
     if mesh_artefact is None and _mesh_need(resolved.mesh) is not None:
         raise FileNotFoundError(

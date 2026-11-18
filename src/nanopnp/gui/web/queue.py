@@ -40,6 +40,9 @@ class Entry:
         A study's run or a sweep's member: the events its convergence in the Runs tool draws.
     after
         The entries that end before this one starts, as a sweep's earlier waves.
+    then
+        Called once when the entry ends, however it ends: its walk done or failed, dropped
+        before it started, or refused its start.
     """
 
     number: int
@@ -52,6 +55,7 @@ class Entry:
     run: RunModel | None = field(default=None, repr=False)
     after: tuple[Entry, ...] = field(default=(), repr=False)
     study: str = ""
+    then: Callable[[], None] | None = field(default=None, repr=False)
 
     def state(self) -> str:
         """Return the entry's state as its glyph and word."""
@@ -103,9 +107,12 @@ class Queue:
         return entry
 
     def set(self, entry: Entry, status: Status) -> None:
-        """Move an entry to a status and say so in the log."""
+        """Move an entry to a status and say so in the log; one that ends calls its ``then``."""
+        ended = entry.ended
         entry.status = status
         self.say(f"{status} {entry.label}")
+        if entry.ended and not ended and entry.then is not None:
+            entry.then()
 
     def say(self, line: str) -> None:
         """Add a line to the log."""

@@ -53,7 +53,7 @@ matrix rows.
 | D9 Library steps | `upto` on reproduce; REV-206's export limits; AP5's shell spacing; REV-247 measured, AP1's consequence narrowed to its reach | REV-41, REV-206, AP5; AR5, ruled by the author |
 | D10 The round | The tools and graph on 2WCD, with REV-256's mockups; reviewed, published, collected with REV-240's, REV-252's and REV-255's points; finished | AJ8, REV-215, ruled by the author |
 | D11 The 200 ms line | `.claude/scripts/gui/redraw.cjs`, run by the author with a GPU: median and p95 of 20 picks, front end and whole repaint; a miss profiled. *Amended at item 13:* WP5.19 times it headless; the GPU run and the front end's fix go to a performance package | AG7, ruled by the author; §8.2.42 AR7, ruled by the author at item 13 (REV-258) |
-| D12 The shell's finest `h_c` | A supplied outline's `h_c` is also held at the finest density grid, 0.025 nm, where an edited edge is shorter: one short edge would otherwise refine the whole ring and halve the closing that fills gaps no water enters | The `physics-reviewer`'s F1 at item 4; decided by the implementing session, for `/np-ship` to put to the author |
+| D12 The shell's finest `h_c` | A supplied outline's `h_c` is also held at the finest density grid, 0.025 nm, where an edited edge is shorter: one short edge would otherwise refine the whole ring and halve the closing that fills gaps no water enters | The `physics-reviewer`'s F1 at item 4; decided by the implementing session; §8.2.42 AR9, ruled by the author at `/np-ship` |
 
 ### Grounding
 
@@ -352,6 +352,21 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 > exposed value's first name is a question for the author (REV-262); the charge screen's points join REV-259's round.
 > AG7's line is REV-258's. VER-78's text names the Study pages and each Build suite's Exposed values; FR-33's and
 > FR-39's matrix rows name their tests and review.
+
+> **Outcome — the review.** `/np-ship`'s pre-review pass dropped one test outside the scope, the queue's slot order
+> (`e0332dd`). The `physics-reviewer` found no sign, unit or cache-key error. It found the shell's 0.025 nm floor
+> stated under AR6, which ruled only the cap: the author kept the floor as §8.2.42 AR9. Three of its points were fixed:
+> the render child resolved a run's case against its own folder, so a shelled run with a relative outline path drew no
+> deployed charge; a reproduction did not name a recorded stage it failed to make, and VER-35's test did not show a key
+> drift reported; the rectification refusal named no axis. A reproduction of a record stopped at its solve compares no
+> number of the solve: REV-264, ruled to WP5.20. [CODE_REVIEW_060](../../code_reviews/CODE_REVIEW_060.md) (xhigh) on
+> `e0332dd` raised 20 findings and fixed 14, among them `reproduce --upto` short of stage 7 refused on every charged
+> run, a sweep never collected when its last members were dropped unstarted, two axes of one name writing a sweep file
+> its loader refuses, and three export limits. Finding 16 stands as D7 rules it; findings 11 to 15 are REV-263, ruled
+> to WP5.21, finding 12 among them reversing item 4's move of the offset check to resolve. QR-08's NOTE states what a
+> short reproduction compares and refuses. Measured: the implementing windows 6.4 agent hours and 15 touches in six
+> sessions, `/np-ship` to its review 0.8 agent hours and 3 touches in the sixth: 7.2 agent hours and 18 touches,
+> against the estimate of about six sessions, 9 to 14 agent hours and 14 touches.
 
 ### Work items
 

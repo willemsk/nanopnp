@@ -3707,6 +3707,11 @@ charge screen to the same round:
 - whether Mol* marks the picked residue in the side view, where the review could not see a mark;
 - *One subunit* draws the chain small, beside Mol*'s toolbar: frame the chain.
 
+WP5.19's physics review at `/np-ship` added one point. On a C_n structure, as 2WCD, the n chains' copies of one
+residue sit at nearly one (r, z), so `ResidueCharges.at` can fill its list with copies of one residue, ranked by
+small differences in their coordinates. The point that finds a residue should name the residue once, its chains
+together. VER-60's test covers one chain and one frame.
+
 **Open**, ruled by the author on 18 November 2026: a package of its own, which `/np-plan` places. It amends FR-31's
 five suites, §2's v0.6 row, WB-34 and WB-41 when it lands.
 
@@ -3778,3 +3783,37 @@ The critique asks for the field's label, *Size scale*, which the rule refuses. T
   materials did.
 
 **Open**: a question for the author, at WP5.21's round.
+
+### REV-263: What code review 060 of the Study suite left open
+
+[Code review 060](../code_reviews/CODE_REVIEW_060.md) fixed fourteen of its twenty findings, and one stands as D7 rules it. These stay:
+
+- **A variable's unit.** Study setup's *New variable* takes a name and a value or an expression, and no unit, so every
+  variable defined in the pane is dimensionless; one used at a field with a unit, as `boundary_conditions.bias_V`, is
+  refused. A unit box, or a unit read from the typed text, is a control of the pane's design (finding 11).
+- **The exclusion offset at load.** `check_exclusion_offset` runs in `resolve`, as a supplied outline's spacing is read
+  there; the derived outline's half, which needs only `geometry.density.grid_spacing_nm`, left `check_document` with
+  it. `Case.load` and the case editor's `commit` now accept an offset of at most `2 h_c` that they refused, and the
+  refusal comes at resolve, as `Project.problems` and a build do (finding 12).
+- **Sweep's plan, built twice.** `show_axes` and `sweep_view` each build the plan, resolving every point, and its
+  forecast, keying every member's walk, on the event loop, and again at each move of the queue. A cache keyed on the
+  sweep, study and model files would go stale as the store fills, which the forecast reads (finding 13).
+- **Run records read each second.** Charge on the mesh's refresh signature calls `StudyModel.charge_record`, which
+  stats and reads every run record of the study (finding 14).
+- **The residue lookup's loop.** `ResidueCharges.at` calls `volume_density` once per near atom; the kernel is
+  elementwise, but its signature takes floats (finding 15).
+
+**Open**, ruled by the author on 18 November 2026 at `/np-ship wp 5.19`: all five go to WP5.21, the unit box as a
+choice for its design round. None gives a wrong number; the offset is still refused before any build.
+
+### REV-264: A reproduction of a record stopped at its solve compares no number of the solve
+
+QR-08's NOTE reproduces a run stopped early to its last stage. It compares each reached stage's key, the mesh's content
+hash and the manifest's charge group, and compares the quantities only where the record reached `qoi`. A record that
+stopped at `solve` (`nanopnp reproduce --upto solve`) re-enters the solve and asserts the store miss, but compares no
+number the solve made. A stage key covers parameters and inputs, never the converged state, so a change to Newton or to
+the assembly that leaves `SOLVE_ALGORITHM_REVISION` alone converges elsewhere and still reports the run reproduced.
+WP5.19's physics review at `/np-ship` found it (F2). What such a reproduction compares, the Newton steps per rung, the
+final residuals or the field, is a tolerance to argue in QR-08's NOTE.
+
+**Open**, ruled by the author on 18 November 2026 at `/np-ship wp 5.19`: WP5.20, which opens a run's result, decides it.

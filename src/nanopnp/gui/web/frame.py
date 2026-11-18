@@ -100,7 +100,7 @@ def listed_changes(
                 found = project.changes(kind, name)
                 if kind == "study" and project.study(name).models_record is not None:
                     # Its models' values are listed under each model; its own keys here, as
-                    # Study setup marks them (WB-28).
+                    # Study setup marks them.
                     found = tuple(c for c in found if c.kind == "override" or c.owner == "study")
             except Exception:  # an item that does not load is listed as a problem
                 listed.append((f"{kind}/{name}", None))
@@ -883,7 +883,7 @@ class _Frame:
                 ui.label(line)
 
     def run_entry(self, entry: Entry) -> None:
-        """Draw a run's entry, whose *Open* shows its convergence in the Runs tool (WB-45)."""
+        """Draw a run's entry, whose *Open* shows its convergence in the Runs tool."""
         with (
             ui.row()
             .classes("run-entry items-center no-wrap gap-2")

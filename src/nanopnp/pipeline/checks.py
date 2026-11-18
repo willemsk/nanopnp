@@ -647,10 +647,10 @@ def check_exclusion_offset(resolved: ResolvedCase) -> None:
         if recorded == h_c:
             source += "records"
         else:
-            bound = "coarsest" if h_c < recorded else "finest"
+            bound, ruling = ("coarsest", "AR6") if h_c < recorded else ("finest", "AR9")
             source += (
                 f"records, {recorded:g} nm, held at the {bound} "
-                "geometry.density.grid_spacing_nm (section 8.2.42 AR6)"
+                f"geometry.density.grid_spacing_nm (section 8.2.42 {ruling})"
             )
     raise CaseValidationError(_offset_refusal(offset, h_c, source))
 

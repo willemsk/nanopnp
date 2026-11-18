@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
@@ -42,6 +43,8 @@ from nanopnp.gui.web.tools import (
     STAGE_TITLES,
     UNITS,
     _Pane,
+    _range,
+    _view_table,
     charge_colours,
     current_name,
 )
@@ -106,7 +109,7 @@ _SUPERSCRIPT = str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹")
 
 
 def _science(value: float, figures: int = 3) -> str:
-    """Return a small number as a mantissa times a power of ten, its minus signs U+2212."""
+    # A mantissa times a power of ten, its minus signs U+2212 as the pane writes them.
     if value == 0:
         return "0"
     mantissa, exponent = f"{value:.{figures - 1}e}".split("e")
@@ -116,7 +119,6 @@ def _science(value: float, figures: int = 3) -> str:
 
 
 def _sets(body: Mapping[str, Any], path: str) -> bool:
-    """Return whether a file's body sets a dotted case path."""
     node: Any = body
     for part in path.split("."):
         if not isinstance(node, Mapping) or part not in node:
@@ -137,7 +139,6 @@ _STAGE_WORDS = {
 
 
 def _default(path: str) -> object:
-    """Return the schema's default of a case path, or None where it has none."""
     try:
         has_default, default = schema_default(path)
     except KeyError:
@@ -145,39 +146,24 @@ def _default(path: str) -> object:
     return default if has_default else None
 
 
-def _range(low: float | None, high: float | None) -> str:
-    if high is None:
-        return f"from {low:g}"
-    return f"up to {high:g}" if low is None else f"{low:g} to {high:g}"
+# A number with an exponent and no point, which YAML 1.1 reads as text.
+_EXPONENT = re.compile(r"[+-]?(?:\d+\.?\d*|\.\d+)[eE][+-]?\d+")
 
 
 def _parsed(text: str) -> object:
-    """Return a typed value as YAML reads it: a number, a word, or a list."""
+    # As YAML reads it, a number, a word or a list; 1e-3 is the number a person typed.
     try:
-        return yaml.safe_load(text)
+        found = yaml.safe_load(text)
     except yaml.YAMLError:
         return text
-
-
-def _table(head: tuple[str, ...], rows: Sequence[tuple[str, ...]], control: str = "") -> None:
-    with (
-        ui.element("table")
-        .classes("view-table")
-        .props(f"data-control={control}" if control else "")
-    ):
-        with ui.element("thead"), ui.element("tr"):
-            for text in head:
-                TextElement(tag="th", text=text).props("scope=col")
-        with ui.element("tbody"):
-            for row in rows:
-                with ui.element("tr"):
-                    for text in row:
-                        TextElement(tag="td", text=text)
+    if isinstance(found, str) and _EXPONENT.fullmatch(found.strip()):
+        return float(found)
+    return found
 
 
 SweepMode = Literal["every", "stepped"]
 SWEEP_MODES: dict[SweepMode, str] = {"every": "Every combination", "stepped": "Stepped list"}
-"""The two ways a sweep's rows make its points (WB-46), with the title each shows."""
+"""The two ways a sweep's rows make its points, with the title each shows."""
 
 STEPS = "steps"
 """The name of a stepped list's one axis."""
@@ -201,14 +187,39 @@ def _sweep_rows(axes: Sequence[Axis]) -> tuple[SweepMode, list[tuple[str, list[A
     return None
 
 
+def _axis_names(rows: Sequence[tuple[str, Sequence[Any]]], kept: Sequence[Axis]) -> list[str]:
+    # An axis keeps the name its file gives it, else takes its path's last part; one that another
+    # axis already holds takes its whole path, as a sweep's axes are named apart.
+    named = {axis.path: axis.name for axis in kept if axis.path is not None}
+    names: list[str] = []
+    for path, _ in rows:
+        name = named.get(path) or path.rpartition(".")[2]
+        names.append(path if name in names else name)
+    return names
+
+
 def _written(
-    mode: SweepMode, rows: Sequence[tuple[str, Sequence[Any]]], labels: dict[str, str]
+    mode: SweepMode,
+    rows: Sequence[tuple[str, Sequence[Any]]],
+    labels: dict[str, str],
+    kept: Sequence[Axis] = (),
 ) -> list[Axis]:
+    # Each axis keeps the origin its file gives it while its values still reach it: the origin
+    # roots the sweep's warm starts.
+    origins = {axis.path: axis.origin for axis in kept if axis.path is not None}
     if mode == "every":
-        return [
-            Axis(name=path.rpartition(".")[2], path=path, values=cast("Any", list(values)))
-            for path, values in rows
-        ]
+        crossed: list[Axis] = []
+        for name, (path, values) in zip(_axis_names(rows, kept), rows, strict=True):
+            origin = origins.get(path, 0)
+            crossed.append(
+                Axis(
+                    name=name,
+                    path=path,
+                    values=cast("Any", list(values)),
+                    origin=origin if origin < len(values) else 0,
+                )
+            )
+        return crossed
     longest = max(len(values) for _, values in rows)
     for path, values in rows:
         if len(values) not in (1, longest):
@@ -220,7 +231,9 @@ def _written(
         {path: values[0] if len(values) == 1 else values[step] for path, values in rows}
         for step in range(longest)
     ]
-    return [Axis(name=STEPS, assignments=cast("Any", steps))]
+    stepped = next((axis.origin for axis in kept if axis.assignments is not None), 0)
+    origin = stepped if stepped < longest else 0
+    return [Axis(name=STEPS, assignments=cast("Any", steps), origin=origin)]
 
 
 class _StudyPane(_Pane[StudyModel]):
@@ -500,7 +513,7 @@ class _StudyPane(_Pane[StudyModel]):
                         "default",
                     )
                 rows.append((label, _text(value), owner))
-            _table(("Value", "Set to", "Set by"), rows, "overview-physics")
+            _view_table(("Value", "Set to", "Set by"), rows, "overview-physics")
         heading("Sweep", 2)
         axes = self.axes()
         if axes:
@@ -530,7 +543,7 @@ class _StudyPane(_Pane[StudyModel]):
         if case is None:
             ui.label("The study forms no case, so there is no case file to show.").classes("later")
             return
-        # What the study's files set, with the whole resolved case a click away (WB-46).
+        # What the study's files set, with the whole resolved case a click away.
         ui.label(
             "The values the models and the study set. The whole case adds each default."
         ).classes("field-hint")
@@ -549,7 +562,7 @@ class _StudyPane(_Pane[StudyModel]):
         except (KeyError, ValueError):
             return
         heading("Each boundary's conditions", 3)
-        # As Physics, Conditions writes them: each field's condition as mathematics (WB-42).
+        # As Physics, Conditions writes them: each field's condition as mathematics.
         with ui.column().classes("gap-1").props("data-control=overview-roles"):
             for role, texts in roles.items():
                 title = ROLE_TITLES.get(role, role.capitalize())
@@ -599,7 +612,7 @@ class _StudyPane(_Pane[StudyModel]):
         named = self.models()
         with self.values_box:
             # Each model's values under its name, molecular, continuum then physics, then the
-            # study's own (WB-35).
+            # study's own.
             for kind in (*MODEL_KINDS, "study"):
                 own = [value for value in listed if value.kind == kind]
                 if not own:
@@ -635,7 +648,7 @@ class _StudyPane(_Pane[StudyModel]):
         named = f'data-control={field_control(value.path)} aria-label="{shown}"'
         default = _default(value.path)
         # A study's override is the outlined diamond; its own key, or a model's value away from
-        # its default, the filled one (WB-28).
+        # its default, the filled one.
         if value.study is not None:
             mark = "◆" if value.kind == "study" else "◇"
         elif value.model is not None and default is not None and value.model != default:
@@ -801,7 +814,7 @@ class _StudyPane(_Pane[StudyModel]):
         ui.label(
             "Each model feeds the charge on the mesh or the solve. Pick a part to open it."
         ).classes("field-hint")
-        # Mermaid's default security, never loose; its text no smaller than the pane's (WB-21).
+        # Mermaid's default security, never loose; its text no smaller than the pane's.
         config = {"themeVariables": {"fontSize": "14px"}}
         ui.mermaid(self.graph(), config, on_node_click=self.on_node).classes("study-graph").props(
             "data-control=study-graph"
@@ -867,7 +880,7 @@ class _StudyPane(_Pane[StudyModel]):
         heading("Axes", 2)
         self.axes_box = ui.column().classes("w-full gap-1").props("data-control=sweep-axes")
         self.show_axes()
-        # The table of points follows its points' runs in the queue (WB-46).
+        # The table of points follows its points' runs in the queue.
         self.sweep_seen: tuple[tuple[int, str], ...] | None = None
         ui.timer(1.0, self.follow_sweep)
 
@@ -941,6 +954,7 @@ class _StudyPane(_Pane[StudyModel]):
         offered: dict[str, str],
         warned: Sequence[str],
     ) -> None:
+        names = _axis_names(rows, self.axes())
         for index, (path, values) in enumerate(rows):
             with ui.element("div").classes("field-row").props(f"data-control=sweep-axis-{index}"):
                 ui.label("").classes("mark")
@@ -953,9 +967,8 @@ class _StudyPane(_Pane[StudyModel]):
                     icon="sym_o_close", on_click=lambda _, i=index: self.remove_axis(i)
                 ).props(f'flat dense aria-label="Remove the axis over {path}"')
                 if self.sweep_mode == "every":
-                    named = path.rpartition(".")[2]
                     for line in warned:
-                        if f"axis {named!r}" in line:
+                        if f"axis {names[index]!r}" in line:
                             ui.label(f"● {line}").classes("field-hint field-warn-text")
         if self.sweep_mode == "stepped":
             for line in warned:
@@ -1018,7 +1031,8 @@ class _StudyPane(_Pane[StudyModel]):
             return False
         try:
             if rows:
-                write_sweep(model.project, model.name, _written(mode, rows, self.axis_paths()))
+                axes = _written(mode, rows, self.axis_paths(), self.axes())
+                write_sweep(model.project, model.name, axes)
             else:
                 sweep_file(model.project, model.name).unlink(missing_ok=True)
         except (*REFUSED, TypeError, ValueError) as error:
@@ -1055,7 +1069,7 @@ class _StudyPane(_Pane[StudyModel]):
         built = found.points if found is not None else ()
         offered = self.axis_paths()
         states = self.point_states(len(plan.points))
-        _table(
+        _view_table(
             (
                 "Point",
                 *(offered.get(name, name) for name in names),
@@ -1205,7 +1219,7 @@ class _StudyPane(_Pane[StudyModel]):
             with ui.element("tbody"):
                 for leg in view.legs:
                     ratio = leg.ratio
-                    # The verdict's glyph and word, in its state's colour (WB-42).
+                    # The verdict's glyph and word, in its state's colour.
                     glyph, word, look = (
                         ("", leg.reason or "not run", "state-none")
                         if leg.value is None
@@ -1344,7 +1358,7 @@ class _StudyPane(_Pane[StudyModel]):
         table = model.table()
         seen = study_side_view(table, None if table is not None else pqr_frame(model.pqr()))
         if seen is not None and seen.chain is not None:
-            # A pore of two chains or more can show one subunit alone (WB-44).
+            # A pore of two chains or more can show one subunit alone.
             query["subunit"] = "0"
         return f"/api/study/{model.name}/scene?{urlencode(query)}"
 
@@ -1369,27 +1383,25 @@ class _StudyPane(_Pane[StudyModel]):
         heading("In the queue", 2)
         self.queue_box = ui.column().classes("w-full gap-1").props("data-control=runs-queue")
         self.rungs_box = ui.column().classes("w-full gap-1").props("data-control=runs-rungs")
-        # The picked run's plot and table follow it while it runs (WB-45).
+        # The picked run's plot and table follow it while it runs.
         ui.timer(0.5, self.follow_run)
 
-    def study_entries(self) -> list[Entry]:
-        """Return the queue's runs of the study shown, the last ones listed."""
+    def study_entries(self, *, every: bool = False) -> list[Entry]:
+        """Return the queue's runs of the study shown: the last ones, or with ``every`` all."""
         model = self.model
         if model is None:
             return []
-        return [
+        found = [
             entry
             for entry in self.shell.queue.entries
-            if entry.run is not None
-            and (
-                entry.study == model.name
-                or (not entry.study and entry.label.startswith(model.name))
-            )
-        ][-RUNS_LISTED:]
+            if entry.run is not None and entry.study == model.name
+        ]
+        return found if every else found[-RUNS_LISTED:]
 
     def picked_run(self) -> Entry | None:
         """Return the run whose convergence the view shows: the one opened, else the last."""
-        entries = self.study_entries()
+        # Among them all: the queue's *Open* can name a run older than the last ones listed.
+        entries = self.study_entries(every=True)
         for entry in entries:
             if entry.number == self.shell.run_shown:
                 return entry
@@ -1400,6 +1412,9 @@ class _StudyPane(_Pane[StudyModel]):
         picked = self.picked_run()
         with self.queue_box:
             entries = self.study_entries()
+            if picked is not None and picked not in entries:
+                # An older run opened from the queue is listed first, so it shows as the one picked.
+                entries = [picked, *entries]
             for entry in entries:
                 with ui.row().classes("items-center no-wrap gap-1"):
                     shown = picked is not None and entry.number == picked.number
@@ -1511,7 +1526,7 @@ class _StudyPane(_Pane[StudyModel]):
                 json.loads((directory / RUN_RECORD_FILENAME).read_text(encoding="utf-8"))
             )
             quantities = record.get("quantities") if isinstance(record, dict) else None
-            # The scalar quantities, each in its unit with its prefix (WB-21): the bias, the
+            # The scalar quantities, each in its unit with its prefix: the bias, the
             # current, the conductance.
             said = ", ".join(
                 f"{base} {self.text(value, QUANTITY_UNITS[symbol])}"
@@ -1535,7 +1550,7 @@ class _StudyPane(_Pane[StudyModel]):
                     directory.name,
                 )
             )
-        _table(("Written", "Reached", "Quantities", "Threads", "Folder"), rows, "runs-records")
+        _view_table(("Written", "Reached", "Quantities", "Threads", "Folder"), rows, "runs-records")
 
 
 def study_page(shell: Shell, tool: Tool) -> Callable[..., None]:

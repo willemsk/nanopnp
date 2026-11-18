@@ -192,6 +192,18 @@ def test_ver35_a_run_stopped_at_its_charge_reproduces_to_that_stage(tmp_path: Pa
     assert "'solve'" in str(past.value)
     assert "'charge'" in str(past.value)
 
+    # A stage whose key moved is named as a drift, though no quantity is compared.
+    written = (made.directory / RUN_RECORD_FILENAME).read_text(encoding="utf-8")
+    moved = json.loads(written)
+    moved["artefacts"]["charge"]["hash"] = "0" * 64
+    (made.directory / RUN_RECORD_FILENAME).write_text(json.dumps(moved), encoding="utf-8")
+    try:
+        drifted = reproduce(made.directory)
+        assert not drifted.reproduced
+        assert [drift.path for drift in drifted.drifts] == ["artefacts.charge"]
+    finally:
+        (made.directory / RUN_RECORD_FILENAME).write_text(written, encoding="utf-8")
+
     pqr = case_path.parent / "atoms.pqr"
     original = pqr.read_bytes()
     try:

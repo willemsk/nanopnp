@@ -7,7 +7,7 @@ import math
 import re
 import tempfile
 import typing
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
@@ -368,8 +368,11 @@ def _range(low: float | None, high: float | None) -> str:
     return f"up to {high:g}" if low is None else f"{low:g} to {high:g}"
 
 
-def _view_table(head: tuple[str, ...], rows: list[tuple[str, ...]]) -> None:
-    with ui.element("table").classes("view-table"):
+def _view_table(head: tuple[str, ...], rows: Sequence[tuple[str, ...]], control: str = "") -> None:
+    table = ui.element("table").classes("view-table")
+    if control:
+        table.props(f"data-control={control}")
+    with table:
         with ui.element("thead"), ui.element("tr"):
             for text in head:
                 TextElement(tag="th", text=text).props("scope=col")
@@ -762,7 +765,7 @@ class _Pane(Generic[ModelT]):
             ui.label(solid).classes("material-name")
             number = ui.number(
                 value=held.get(solid),
-                # A solid the model does not set says so: it has no default (WB-47).
+                # A solid the model does not set says so: it has no default.
                 placeholder="not set",
                 on_change=lambda e, p=path, m=solid: self.write_material(p, m, e.value),
             ).props(
@@ -915,7 +918,7 @@ class _Pane(Generic[ModelT]):
             .props(f'data-field="{entry.path}" data-control={field_control(entry.path)}')
         ):
             # The value first, on a line of its own; then its name, range and removal, each box
-            # labelled in itself (REV-255).
+            # labelled in itself.
             ui.label(f"{label}, {unit}" if unit else label).classes("exposed-path")
             name = ui.input(label="Name", value=entry.name).props(
                 f'dense outlined debounce=800 aria-label="Name of {label}"'
@@ -1040,7 +1043,7 @@ class _Pane(Generic[ModelT]):
             if not listed:
                 ui.label(self.none_exposed()).classes("later")
                 return
-            # The model's value, as Study setup names it; a number in the pane's figures (WB-21).
+            # The model's value, as Study setup names it; a number in the pane's figures.
             _view_table(
                 ("Name", "Model's value", "Unit", "Range"),
                 [

@@ -49,13 +49,16 @@ supplied outline's exclusion shell takes the outline's own spacing. No golden mo
     wait for a slot, a member for its earlier waves; a queue line's *Open* shows its run in Runs (AN1, AN6).
   - `plot/data.py:ResidueCharges`, the residue under a point of the map; `gui/render.py:render_charge_elements`, the
     deployed charge per element, its integral the record's `q_mesh_e`.
-  - `nanopnp reproduce --upto <stage>`, reproducing a record that stopped at a stage (REV-41; QR-08).
+  - `nanopnp reproduce --upto <stage>`, reproducing a record that stopped at a stage; a recorded stage the
+    reproduction does not make is a drift, and one served whole from the store that holds the run is refused (REV-41;
+    QR-08).
   - `.claude/scripts/gui/redraw.cjs`, which times the charge screen's redraw after a pick.
 - **Changed**:
   - A solve and its run record state the thread count they ran with; no key moves with it (FR-25; §5.3.3; AR3).
-  - A sweep pairs a bias set through a variable for its rectification, by the resolved bias (VER-36).
+  - A sweep pairs a bias set through a variable for its rectification, by the resolved bias, and a sweep with no
+    pair is refused naming its axes (VER-36; QR-12).
   - A supplied outline's exclusion shell takes the outline's recorded spacing, held between 0.025 and 0.05 nm; a
-    repeated vertex is refused at resolve (VER-59; AP5; AR6).
+    repeated vertex is refused at resolve (VER-59; AP5; AR6, AR9).
   - The charge check's reach against a shifted outline is measured and stated (AP1; VER-55; AR5).
   - `Project.export` keeps every result and points its records at the copy (FR-32; REV-206).
   - A project opens with a walk of its first study to its charge, else to its mesh (REV-251).

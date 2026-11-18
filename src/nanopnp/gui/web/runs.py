@@ -20,7 +20,7 @@ from nanopnp.io.artefact import SWEEP_SCHEMA
 from nanopnp.io.project import FOLDERS, RUNS_FOLDER, STORE_FOLDER, SWEEPS_FOLDER, ItemKind
 from nanopnp.io.store import atomic_write_bytes
 from nanopnp.sweep.collect import collect
-from nanopnp.sweep.document import Axis, load_sweep
+from nanopnp.sweep.document import Axis, load_sweep, loads_sweep
 from nanopnp.sweep.plan import build_plan, read_plan, write_plan
 
 __all__ = [
@@ -88,16 +88,16 @@ def _queued(
         label, start=process.start, cancel=process.cancel, run=control.model, after=after
     )
     entry.study = study
+    # Called by the queue as the entry ends, so a member dropped unstarted counts as one ended.
+    entry.then = then
 
     def poll() -> None:
         model = control.poll()
         if not model.settled or entry.ended:
             return
-        queue.set(entry, "done" if model.state == "finished" else "failed")
         if model.diagnosis:
             queue.say(f"{label}: {model.diagnosis}")
-        if then is not None:
-            then()
+        queue.set(entry, "done" if model.state == "finished" else "failed")
 
     entry.poll = poll
     return entry
@@ -132,6 +132,11 @@ def write_sweep(project: Project, study: str, axes: Sequence[Axis]) -> Path:
     """Write a study's sweep over ``axes`` and return its file.
 
     An axis over ``models.<kind>`` takes model names, written as their files beside the study.
+
+    Raises
+    ------
+    CaseValidationError
+        If the axes form no sweep document, such as two of one name; nothing is written.
     """
     written: list[dict[str, Any]] = []
     for axis in axes:
@@ -151,9 +156,12 @@ def write_sweep(project: Project, study: str, axes: Sequence[Axis]) -> Path:
         "axes": written,
     }
     target = sweep_file(project, study)
+    text = yaml.safe_dump(document, sort_keys=False)
+    # Read back before it is written: a file its loader refuses would hide every axis.
+    loads_sweep(text, source=str(target))
     # A new project has no sweeps folder until its first sweep.
     target.parent.mkdir(parents=True, exist_ok=True)
-    atomic_write_bytes(target, yaml.safe_dump(document, sort_keys=False).encode("utf-8"))
+    atomic_write_bytes(target, text.encode("utf-8"))
     return target
 
 
@@ -208,7 +216,7 @@ def convergence_plane(model: ConvergenceModel) -> Plane:
     """Return a run's convergence plot: a band per rung, the residual and the update on decades.
 
     A silent rung's band says which silence it is; no threshold is drawn, the tolerance being
-    the rung's own (VER-44). A solve served from the store draws nothing and says so.
+    the rung's own. A solve served from the store draws nothing and says so.
     """
     if not model.bands:
         return Plane("plot", _AXES, (0.0, 1.0, -1.0, 1.0), (), (model.summary,))
