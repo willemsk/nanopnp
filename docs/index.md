@@ -43,5 +43,5 @@ the physics, and need full introspection. **Collaborating computational scientis
 reproducible, case-file runs and sweeps from the command line. **Experimental nanopore
 laboratories** want a desktop application: choose a pore, set the salt and the voltage, and get a
 prediction. The first two are served today. The third is served by the Qt shell of v0.5
-(`nanopnp-gui`). v0.6 replaces it with the browser workbench, `nanopnp gui`; the package WP5.21
+(`nanopnp-gui`). v0.6 replaces it with the browser workbench, `nanopnp gui`; the package WP5.23
 removes Qt and rewrites the [Desktop shell](guide/desktop.md) page.

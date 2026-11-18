@@ -1,63 +1,53 @@
 # Current work
 
-Updated 18 November 2026 (WP5.19 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 18 November 2026 (Phase 5 amended: the meso suite and the performance package placed). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 5 is merged through the Physics suite. The Study suite is built to your round's rulings: a study is made,
-set, swept, checked and run in the workbench. A performance package takes the 200 ms redraw; a new suite between
-Molecular and Continuum gets its own. Two suites, the route and the close follow.
+Phase 5 is merged through the Study suite. The plan now places the two packages you asked for at the Study round.
+The new suite between Molecular and Continuum comes next: it shows how the molecule becomes the pore's shape and
+charge, each picture beside the molecule, and takes the outline and charge tools from where they stand. The Analysis
+suite follows, then the performance package, timed on your machine with a graphics card, then the guided route and
+the close. The later packages moved up a number, and every mention of them was renumbered, the records included.
 
-**Your call.** At the review: hold an edited outline's shell no finer than the density grid? Recommendation: yes; one
-short edge would otherwise refine the whole ring.
+**Your call.** At the review: is the plan's entry for the new suite what you meant by a bridge between the scales?
+Recommendation: yes; it holds the three tools ruled at the Study round and adds no kind of model.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.18 merged
-  (`v0.6.0-alpha.18`).
-  **WP5.19** [delivered](phase-5/wp5.19-the-study-suite.md) on `ccr-ff91f6e7-ohlzgc`, the Study tools built to the
-  round's rulings (WB-43 to WB-48); its PR waits for `/np-ship`, which puts D12 to the author.
+- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.19 merged
+  (`v0.6.0-alpha.19`). The fifth amendment (§8.2.43 AS1 to AS4) is on `claude/serene-pascal-dmnl60`: the meso suite
+  is WP5.20, the performance package WP5.22; Analysis, the route and the close are WP5.21, WP5.23 and WP5.24.
+  **Next:** `/np-plan amend 5 review`, then, once merged, `/np-plan wp 5.20`.
   host: claude-code.
 
 ## Not to be re-decided
 
-- **Process rules** are §8.4. **Cost fixes follow measurement** (M2). **Phase 5 is a
-  browser workbench, §8.2.17 S1 to S14; Qt stays gated until it** (M3). **Two lanes at most** (S15); **packages `WP5.01` on** (S16).
-- **The `MOD-nn` rulings stand** (§8.2.8). **A moved edge edits `modularity-layering.yaml` in its commit (VER-61)**; a VER-62 miss
-  is reverted or re-pinned by ruling (G10, I4).
-- **An open item is a `REV-nn` row** until resolved (H12).
-- **An idealised pore is geometry the case declares; a wall charge is a boundary condition** (§8.2.22 X1 to X4).
-  **A `Case` is the case document; a `Session` runs it for every caller** (§8.2.23 Y1 to Y11).
-- **Text is a reading, `--json` the record** (W2). **A non-finite trial residual aborts** (AC2).
-- **A desktop wrapper stays possible** (§8.2.30 AF1). **The front end is NiceGUI; Mol* draws the molecule** (AF4).
-- **One shell package per suite; variables may be expressions, units through `pint`, keyed by resolved values**
-  (§8.2.31 AG1 to AG5). **Example 07 is re-pinned** (AG8). **A charge edit sits on the titratable group;
-  a radius edit is a scale; a variant is never a deviation** (AG9 to AG11). **A study overrides any model value** (AG12).
-  **An output states its needs of a model; a model provides every output whose needs it meets** (§8.2.32 AH1).
-  **A user's theme sets its contrast** (§8.2.33 AI1). **The store cleans the unused or all, never while a run holds
-  it** (§8.2.38 AN5, AN6).
-- **Physics is a third model with its own suite; models declare exposed values; Quasar's components build the
-  frame; suites are prototyped on 2WCD first; `impeccable` serves `np-gui`** (§8.2.34 AJ1 to AJ10).
-- **Layers read a model's declaration, never its name** (VER-56). **A golden carries the stage-7 recipe** (E3).
-- **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4), a move taking `nanopnp/case/v0.6` (G6).
-- **A callback is not an input** (VER-44). **A generated mesh is read only through `deployed_mesh`.**
-- **Plans are archived by phase** (§8.2.36 AL5, AL22 to AL26). **Text follows the tested program; its gaps, REV-223 to 225, are Phase 6's** (§8.2.37 AM1, AM2).
-- **A pore's axis is found; a variant follows its parent** (§8.2.39). **An edited outline keeps its charge; a
-  continuum model builds alone; mesh parts are typed** (§8.2.40). **A physics model is shown in a picked study; a
-  change of model sets its switches** (§8.2.41). **Red blocks, blue informs; refusals are
-  ASD-STE100** (WB-42; FR-35). **A thread count is recorded, never keyed** (AR3). **A performance package takes the 200 ms line; a
-  bridge suite has its own** (AR7, AR8).
+- **Process rules** are §8.4. **Cost fixes follow measurement** (M2). **Phase 5 is a browser workbench, §8.2.17 S1 to
+  S14; Qt stays gated until it** (M3). **Two lanes at most** (S15).
+- **The `MOD-nn` rulings stand** (§8.2.8). **A moved edge edits `modularity-layering.yaml` in its commit (VER-61)**; a
+  VER-62 miss is reverted or re-pinned by ruling (G10, I4). **An open item is a `REV-nn` row** until resolved (H12).
+- **A `Case` is the case document; a `Session` runs it for every caller** (§8.2.23). **The front end is NiceGUI; Mol*
+  draws the molecule** (AF4). **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4).
+- **One shell package per suite; variables keyed by resolved values** (§8.2.31). **A study overrides any model value**
+  (AG12). **The store cleans the unused or all, never while a run holds it** (AN5, AN6).
+- **Physics is a third model with its own suite; models declare exposed values; suites are prototyped on 2WCD first**
+  (§8.2.34). **Layers read a model's declaration, never its name** (VER-56). **A callback is not an input** (VER-44).
+- **An edited outline keeps its charge; a continuum model builds alone** (§8.2.40). **Red blocks, blue informs;
+  refusals are ASD-STE100** (WB-42). **A thread count is recorded, never keyed** (AR3).
+- **The meso suite is next, WP5.20, holding Density, Outline and Charge map and named at its round; the 200 ms line is
+  the performance package's, WP5.22, after Analysis** (AR7, AR8; §8.2.43 AS1 to AS3).
 
 ## Somebody else's
 
 - **The paper's figure data** for VAL-16 and VAL-17 (D6); E1's ensemble legs; **Read the Docs**;
   **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
-- **The 200 ms redraw**'s GPU run (REV-258); **verdicts on each suite's prototype** (AJ8).
+- **The 200 ms redraw**'s GPU run, in WP5.22 (REV-258); **the meso suite's name**, at WP5.20's round (AS3); **verdicts on each suite's prototype** (AJ8).
 - **Rulings on a cycle (H6) or drift (I4)**; **Tier 3's PQRs**.
-- **REV-156**'s speed-up is Phase 6's (Z6); a cleaned run's rebuild WP5.20's (AN5).
+- **REV-156**'s speed-up is Phase 6's (Z6); a cleaned run's rebuild WP5.21's (AN5).
 
 ## On demand
 
@@ -65,7 +55,7 @@ short edge would otherwise refine the whole ring.
 - **Amendments:** `phase-5-record.md`.
 - **Workflow:** `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5.
 - **Workbench:** `docs/design/workbench.md`; §8.2.17, §8.2.30,
-  §8.2.31, §8.2.34; `docs/design/reviews/`.
+  §8.2.31, §8.2.34, §8.2.42, §8.2.43; `docs/design/reviews/`.
 
 ## Handoff Rules
 

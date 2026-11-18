@@ -56,7 +56,7 @@ REV-32, REV-52 and MOD-13's command-line part `fixed`.
   `<root>/sweeps/<name>-<short>`, so a project's sweeps need their own root to leave `store/` with it.
 - `api/session.py:Session(store)` takes a `Store` as is and sets `_store_given`; `Session.open` then reads that store.
 - `io/models.py` already reads `models: {molecular, continuum}` beside the study and `MOLECULAR_SCHEMA`,
-  `CONTINUUM_SCHEMA`; a model file holds `schema`, `name` and its kind's keys. Comparisons have no schema until WP5.20:
+  `CONTINUUM_SCHEMA`; a model file holds `schema`, `name` and its kind's keys. Comparisons have no schema until WP5.21:
   the project indexes and exports their files unread.
 - `io` imports only `core` outside itself at run time (`docs/project/modularity-layering.yaml`); `api` may import
   `io`, `pipeline` and `sweep`. `nanopnp.PUBLIC` and its `TYPE_CHECKING` mirror are checked by `test_layering.py`.
@@ -238,8 +238,8 @@ In `tests/tier1/`: rows 1 to 3 `test_project.py`, 4 `test_stage_conformance.py`,
 
 ### Out of scope
 
-- The suites' tools, WP5.16 to WP5.20; a queued build or study and its convergence, WP5.19.
-- The comparison's schema and difference field, WP5.20; the guided route and Qt's removal, WP5.21.
+- The suites' tools, WP5.16 to WP5.21; a queued build or study and its convergence, WP5.19.
+- The comparison's schema and difference field, WP5.21; the guided route and Qt's removal, WP5.23.
 - Removing current results that no run uses, and a project's own look: not planned (AI14, AI13).
 
 ### Open questions

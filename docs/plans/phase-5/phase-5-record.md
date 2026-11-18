@@ -103,7 +103,7 @@ spikes leave the tree after the ruling (AF3). The entry read:
 
 ## Amended 3 November 2026 (§8.2.31 AG1 to AG7)
 
-The second amendment, after WP5.02 merged: the shell cut one package per suite after the frame (WP5.08 and WP5.16 to WP5.22), the
+The second amendment, after WP5.02 merged: the shell cut one package per suite after the frame (WP5.08 and WP5.16 to WP5.24), the
 sweep's variables and forecast as WP5.07, the comparison's difference field in v0.6, and criterion 6 on the 200 ms
 redraw. Replaced text follows.
 
@@ -289,9 +289,9 @@ files a case names imported (AI11) and every shortcut rebindable (AI12). WP5.08'
 After the author's verdicts on WP5.08's frame, the third `/np-plan amend 5` ruled the frame rebuilt on Quasar's
 components, physics a third reusable model with a Physics suite of its own, the values each model exposes, `impeccable`
 inside `np-gui`, the changed table, each suite designed on a prototype over 2WCD, the settings as one declared list, and
-the shell's packages renumbered WP5.09 and WP5.15 to WP5.22 (AJ1 to AJ10). The plan's status read:
+the shell's packages renumbered WP5.09 and WP5.15 to WP5.24 (AJ1 to AJ10). The plan's status read:
 
-> **Status: in progress; WP5.01 to WP5.07 merged; WP5.08 delivered, awaiting its merge; the shell packages WP5.16 to WP5.22 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
+> **Status: in progress; WP5.01 to WP5.07 merged; WP5.08 delivered, awaiting its merge; the shell packages WP5.16 to WP5.24 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 
 The design decisions' rows read:
 
@@ -323,23 +323,23 @@ The shell's package entries read:
 > unfolded in the queue. `upto` on reproduce (REV-41). The 200 ms redraw is measured on the author's machine with a GPU
 > (AG7; criterion 6). Q24 to Q26 and Q28 to Q36 move here; VER-44 and VER-60 as restated. Tag `v0.6.0-alpha.19`.
 >
-> ### WP5.20 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
+> ### WP5.21 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
 >
 > Library step first: the difference of two runs' fields over the overlap of their fluid domains, in `post/`, masked where
 > either lacks the point (AG6). Then the results explorer and its tiles: a field drawn by `webgui` when its tile opens it,
 > its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut. Probes and cuts are linked to their
 > field, and a run to its result (FR-33). Comparison shows two runs side by side on one scale or as their difference.
-> Q37 to Q41 move here. Tag `v0.6.0-alpha.20`.
+> Q37 to Q41 move here. Tag `v0.6.0-alpha.21`.
 >
-> ### WP5.21 — The guided route, Qt's removal and documentation increment 5 (FR-36; REV-134; S13, S17)
+> ### WP5.23 — The guided route, Qt's removal and documentation increment 5 (FR-36; REV-134; S13, S17)
 >
 > The guided route over the suites (FR-36). Every row Q01 to Q41 is checked present (criterion 3); then PySide6, the Qt
 > widgets, the bundle and the packaging probe leave, and the restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44, VER-55,
 > VER-60, CON-08, CON-09, CON-11, ADR-004's packaging NOTE and RSK-13 become their clauses (S17; T5). REV-134 closes (U1).
 > The application guide is rewritten against the browser workflow with the rendered screens (§8.1's increment 5). Tag
-> `v0.6.0-alpha.21`.
+> `v0.6.0-alpha.23`.
 >
-> ### WP5.22 — The close
+> ### WP5.24 — The close
 >
 > It resolves or carries each open decision, records QR-10 with the colleague named by then (S24), confirms Qt and the
 > bundle are gone with the capability list covered, orders the tool phases (S7), and writes the report, the changelog
@@ -347,13 +347,13 @@ The shell's package entries read:
 
 Open decision 7, the GPU row of *What the author supplies*, and the verification rows read:
 
-> | 7 | The shell packages, the sweep's design round (U4), REV-136's v0.6 cut line (U3) and the phase estimate | **Settled by the author, 3 November 2026** (§8.2.31 AG1 to AG7): one package per suite after the frame, WP5.08 and WP5.16 to WP5.22; WP5.07 for the sweep's variables and forecast; the difference field in v0.6 |
+> | 7 | The shell packages, the sweep's design round (U4), REV-136's v0.6 cut line (U3) and the phase estimate | **Settled by the author, 3 November 2026** (§8.2.31 AG1 to AG7): one package per suite after the frame, WP5.08 and WP5.16 to WP5.24; WP5.07 for the sweep's variables and forecast; the difference field in v0.6 |
 > | A machine with a GPU, in a local session | WP5.19 | The 200 ms line stays unmeasured; a `REV-nn` row carries it to the close |
 > | WP5.16, Molecular | 1, 2 | REV-121's cavity axis against a known axis (VER-48); VER-78 |
 > | WP5.17, Continuum | 1, 2 | VER-55 as restated; VER-62's mesh hash unmoved by REV-170; VER-78 |
 > | WP5.19, Study | 1 | VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) |
-> | WP5.20, Analysis | 1 | AG6's difference: exact for a linear field, zero for identical runs; VER-78 |
-> | WP5.21, route and Qt's removal; WP5.22, the close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 |
+> | WP5.21, Analysis | 1 | AG6's difference: exact for a linear field, zero for identical runs; VER-78 |
+> | WP5.23, route and Qt's removal; WP5.24, the close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 |
 
 Criterion 6 read:
 
@@ -371,7 +371,7 @@ packages were renumbered from WP5.10 to WP5.17 to WP5.15 to WP5.22, each tag wit
 tree, this record included, was rewritten to the new numbers, those made under the 3 November numbering mapped through
 both renumberings (AL26). The text below is quoted in the new numbering. The plan's status read:
 
-> **Status: in progress; WP5.01 to WP5.08 merged; WP5.09, the physics model, delivered, awaiting its merge; the shell packages WP5.15 to WP5.22 planned.**
+> **Status: in progress; WP5.01 to WP5.08 merged; WP5.09, the physics model, delivered, awaiting its merge; the shell packages WP5.15 to WP5.24 planned.**
 
 The In brief read:
 
@@ -454,7 +454,7 @@ touches, measured from each session's transcript (AM10, AM11), and that the live
 ## Amended 9 November 2026 (§8.2.37 AM13 to AM16)
 
 At WP5.12's plan, the author ruled that the sodium cap's test is tightened (AM13), that three ideas move to an open
-item (AM14), and that the site's register links wait for WP5.21 (AM15); at its review, that the source checklist has
+item (AM14), and that the site's register links wait for WP5.23 (AM15); at its review, that the source checklist has
 six rows (AM16). The *In brief* read: "Eight audit findings to check against the source papers, from a checklist."
 The *What the author supplies* row read:
 
@@ -474,8 +474,8 @@ Its *Verification* row read:
 
 > | WP5.12, the knowledge base | none kept | VER-45; `.claude/scripts/audit/markers.py` names no missing test; each `[verified]` claim names its source |
 
-WP5.21's entry ended: "The application guide is rewritten against the browser workflow with the rendered screens
-(§8.1's increment 5). Tag `v0.6.0-alpha.21`."
+WP5.23's entry ended: "The application guide is rewritten against the browser workflow with the rendered screens
+(§8.1's increment 5). Tag `v0.6.0-alpha.23`."
 
 ## Amended 9 November 2026 (§8.2.37 AM18)
 
@@ -666,7 +666,7 @@ The status line's dates:
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
 REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
-AG13); what an output needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1); after the verdicts on WP5.08's frame, the frame's components, the physics model, the design loop and the packages WP5.09 and WP5.15 to WP5.22 ruled the same day (§8.2.34 AJ1 to AJ10); WP5.09's open points ruled at its plan on 6 November 2026 (§8.2.35 AK1 to AK3); the written knowledge's follow-up, the architecture clean-ups and the packages renumbered on 8 November 2026 (§8.2.36 AL1 to AL27); how the plans are filed and WP5.10's model ruled at its plan the same day (AL28, AL29); WP5.11's meaning changes, its open gaps and REV-222 ruled at its plan on 9 November 2026 (§8.2.37 AM1 to AM9); the cost's units ruled at its review the same day (AM10 to AM12)
+AG13); what an output needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1); after the verdicts on WP5.08's frame, the frame's components, the physics model, the design loop and the packages WP5.09 and WP5.15 to WP5.24 ruled the same day (§8.2.34 AJ1 to AJ10); WP5.09's open points ruled at its plan on 6 November 2026 (§8.2.35 AK1 to AK3); the written knowledge's follow-up, the architecture clean-ups and the packages renumbered on 8 November 2026 (§8.2.36 AL1 to AL27); how the plans are filed and WP5.10's model ruled at its plan the same day (AL28, AL29); WP5.11's meaning changes, its open gaps and REV-222 ruled at its plan on 9 November 2026 (§8.2.37 AM1 to AM9); the cost's units ruled at its review the same day (AM10 to AM12)
 
 The settled rows of *Open decisions*:
 
@@ -695,7 +695,7 @@ The supplied rows of *What the author supplies*:
 
 ## Amended 10 November 2026 (§8.2.38 AN3 to AN7)
 
-At WP5.15's plan the author ruled the settings list, the store's clean-up in WP5.15, the compute settings in WP5.19 and a run's rebuild after a full clean-up in WP5.20; at the plan's review, the store's lock and the suite shortcuts (AN6, AN7). The three entries read:
+At WP5.15's plan the author ruled the settings list, the store's clean-up in WP5.15, the compute settings in WP5.19 and a run's rebuild after a full clean-up in WP5.21; at the plan's review, the store's lock and the suite shortcuts (AN6, AN7). The three entries read:
 
 > ### WP5.15 — The frame on Quasar's components (FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)
 >
@@ -723,13 +723,13 @@ At WP5.15's plan the author ruled the settings list, the store's clean-up in WP5
 > machine with a GPU (AG7; criterion 6). Q24 to Q26 and Q28 to Q36 move here; VER-44 and VER-60 as restated. Tag
 > `v0.6.0-alpha.19`.
 
-> ### WP5.20 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
+> ### WP5.21 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
 >
 > Library step first: the difference of two runs' fields over the overlap of their fluid domains, in `post/`, masked where
 > either lacks the point (AG6). Then, after the prototype round on 2WCD (AJ8), the results explorer and its tiles: a field
 > drawn by `webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut.
 > Probes and cuts are linked to their field, and a run to its result (FR-33). Comparison shows two runs side by side on
-> one scale or as their difference. Q37 to Q41 move here. Tag `v0.6.0-alpha.20`.
+> one scale or as their difference. Q37 to Q41 move here. Tag `v0.6.0-alpha.21`.
 
 ## Amended 11 November 2026 (§8.2.39 AO1 to AO3)
 
@@ -802,3 +802,58 @@ measured and stated rather than guarded by a new refusal (AR5). The entry read:
 Its row of *Verification* read:
 
 > | WP5.19, Study | 1 | VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) |
+
+## Amended 18 November 2026 (§8.2.43 AS1 to AS4)
+
+The fifth `/np-plan amend 5`, after WP5.19's merge, placed the two packages that §8.2.42 AR7 and AR8 had ruled: the
+meso suite between Molecular and Continuum is WP5.20, the next package (AS1), and the performance package is WP5.22,
+after the Analysis suite (AS2). The suite's name waits for its round (AS3). The planned packages were renumbered, the
+Analysis suite from WP5.20 to WP5.21, the guided route from WP5.21 to WP5.23 and the close from WP5.22 to WP5.24, each
+tag with its number, and every reference in the tree was rewritten, this record included, but for the sentences that
+describe the 8 November renumbering (AS4). The text below is quoted in the new numbering. The plan's status read:
+
+> **Status: in progress; WP5.01 to WP5.18 merged (`v0.6.0-alpha.18`); WP5.19, the Study suite, delivered for review, then WP5.21, WP5.23 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+
+The In brief read:
+
+> ## In brief
+>
+> **What changes.** The program gains a browser workbench, combining molecular viewers and continuum modelling
+> suites. Six library steps came first: protonation shapes the pore, a residue's charge can be edited, a project
+> reuses named models, the outputs form a list that can grow, a case gains variables with units, and physics becomes a
+> reusable model. Next, three packages correct the project's written knowledge where an audit found
+> it adrift, and two tidy the library's insides without moving a result. Then the screens: the frame, rebuilt on
+> ready-made parts, and five suites, three that build models and two that use them. Last come the guided route, the old desktop shell's removal, and the guide.
+>
+> **Cost.** Eleven packages remain: about 70 sessions, 60 to 120 hours of agent work and 110 times you act.
+>
+> **What could go wrong.** A formula could carry a wrong unit; each is checked against its field's and refused on a
+> mismatch. A tidying could move a stored result; each checks every stored fingerprint, and a move is undone. The molecule
+> viewer may redraw slower than 200 ms; it is timed on a computer with a graphics card, and if the viewer itself is the
+> cost, the line applies to the workbench's own share.
+>
+> **Your call.** Whether to
+> adopt either measuring tool the tools package tries, on its report. Six audit findings to check against the source
+> papers, asked in one round during the knowledge package. The colleague who tries the workbench, named by the close.
+
+WP5.19's live constraints began:
+
+> Live constraints: AR7 moves the 200 ms line to a performance package (REV-258); AR8 puts Charge on the mesh in a
+> bridge suite with its own package (REV-259). A recorded run picked in Runs is WP5.21's (REV-260); the review's polish
+> is WP5.23's (REV-261); an exposed value's first name is the author's (REV-262). D12 goes to the author at `/np-ship`.
+
+WP5.23's entry began:
+
+> The guided route over the five suites (FR-36), with the keyboard pass over every canvas action (REV-203's remainder;
+
+The GPU row of *What the author supplies* read:
+
+> | A machine with a GPU, in a local session | A performance package (§8.2.42 AR7) | The 200 ms line stays unmeasured; REV-258 carries it to the close |
+
+Criterion 6 read:
+
+> 6. **The redraw is measured** on the author's machine with a GPU, in a performance package (§8.2.42 AR7; REV-258), not
+>    WP5.19: a residue selected on the charge map
+>    redraws the whole picture within 200 ms (WB-23). Predicted: the front end's share met (26 ms p95 in the spike), the
+>    whole picture unknown. On a miss the redraw is profiled; where the renderer's own repaint is the cost, the line
+>    binds the front end's share and the renderer's time is recorded; a miss by the front end is fixed (§8.2.31 AG7).
