@@ -3672,9 +3672,8 @@ The author did not run the GPU measurement, and proposed moving this kind of opt
 package (§8.2.42 AR7).
 
 **Deferred** to WP5.22, the performance package, placed after the Analysis suite (§8.2.42 AR7; §8.2.43 AS2). It
-measures the line with `redraw.cjs
---headed` on a GPU, holds one keyed walk per pick, the route reusing the pane's read, and profiles any miss with
-`--trace`. The Phase 5 plan's criterion 6 goes with it.
+measures the line with `redraw.cjs --headed` on a GPU, holds one keyed walk per pick, the route reusing the pane's
+read, and profiles any miss with `--trace`. The Phase 5 plan's criterion 6 goes with it.
 
 ### REV-259: A bridge suite between Molecular and Continuum
 
@@ -3719,8 +3718,7 @@ small differences in their coordinates. The point that finds a residue should na
 together. VER-60's test covers one chain and one frame.
 
 **Open**, ruled by the author on 18 November 2026: a package of its own, placed as WP5.20, the next package (§8.2.43
-AS1). It amends FR-31's
-five suites, §2's v0.6 row, WB-34 and WB-41 when it lands.
+AS1). It amends FR-31's five suites, §2's v0.6 row, WB-34 and WB-41 when it lands.
 
 ### REV-260: A recorded run's convergence, picked in Runs
 

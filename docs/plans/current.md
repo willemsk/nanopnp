@@ -20,7 +20,7 @@ Recommendation: yes; it holds the three tools ruled at the Study round and adds 
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.19 merged
   (`v0.6.0-alpha.19`). The fifth amendment (§8.2.43 AS1 to AS4) is on `claude/serene-pascal-dmnl60`: the meso suite
   is WP5.20, the performance package WP5.22; Analysis, the route and the close are WP5.21, WP5.23 and WP5.24.
-  **Next:** `/np-plan amend 5 review`, then, once merged, `/np-plan wp 5.20`.
+  Reviewed (code review 061). **Next:** once merged, `/np-plan wp 5.20`.
   host: claude-code.
 
 ## Not to be re-decided
@@ -32,11 +32,13 @@ Recommendation: yes; it holds the three tools ruled at the Study round and adds 
 - **A `Case` is the case document; a `Session` runs it for every caller** (§8.2.23). **The front end is NiceGUI; Mol*
   draws the molecule** (AF4). **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4).
 - **One shell package per suite; variables keyed by resolved values** (§8.2.31). **A study overrides any model value**
-  (AG12). **The store cleans the unused or all, never while a run holds it** (AN5, AN6).
+  (AG12). **An output states its needs of a model** (AH1). **A user's theme sets its contrast** (AI1). **The store
+  cleans the unused or all, never while a run holds it** (AN5, AN6).
 - **Physics is a third model with its own suite; models declare exposed values; suites are prototyped on 2WCD first**
   (§8.2.34). **Layers read a model's declaration, never its name** (VER-56). **A callback is not an input** (VER-44).
-- **An edited outline keeps its charge; a continuum model builds alone** (§8.2.40). **Red blocks, blue informs;
-  refusals are ASD-STE100** (WB-42). **A thread count is recorded, never keyed** (AR3).
+  **A generated mesh is read only through `deployed_mesh`.** **Text follows the tested program** (AM1, AM2).
+- **An edited outline keeps its charge; a continuum model builds alone** (§8.2.40). **A physics model is shown
+  in a picked study** (§8.2.41). **Red blocks, blue informs; refusals are ASD-STE100** (WB-42). **A thread count is recorded, never keyed** (AR3).
 - **The meso suite is next, WP5.20, holding Density, Outline and Charge map and named at its round; the 200 ms line is
   the performance package's, WP5.22, after Analysis** (AR7, AR8; §8.2.43 AS1 to AS3).
 
