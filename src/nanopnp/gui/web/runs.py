@@ -36,6 +36,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 RUNG_COLUMNS: list[dict[str, str]] = [
+    {"name": "number", "label": "#", "field": "number", "align": "right"},
     {"name": "rung", "label": "Rung", "field": "rung", "align": "left"},
     {"name": "steps", "label": "Steps", "field": "steps", "align": "right"},
     {"name": "closed_on", "label": "Closed on", "field": "closed_on", "align": "left"},
@@ -78,12 +79,14 @@ def _queued(
     *,
     after: tuple[Entry, ...] = (),
     then: Callable[[], None] | None = None,
+    study: str = "",
 ) -> Entry:
     process = SolverProcess(request)
     control = RunControl(process=process)
     entry = queue.add(
         label, start=process.start, cancel=process.cancel, run=control.model, after=after
     )
+    entry.study = study
 
     def poll() -> None:
         model = control.poll()
@@ -107,7 +110,9 @@ def queue_run(
     It starts when the queue has a slot, its solve pinned to ``threads``.
     """
     request = _request(project, project.path("study", study), threads=threads, upto=upto)
-    entry = _queued(queue, f"{study} run" if upto is None else f"{study} to {upto}", request)
+    entry = _queued(
+        queue, f"{study} run" if upto is None else f"{study} to {upto}", request, study=study
+    )
     queue.pump()
     return entry
 
@@ -178,7 +183,7 @@ def queue_sweep(
         after = tuple(e for wave, held in earlier.items() if wave < point.wave for e in held)
         request = _request(project, plan_file, threads=threads, plan=plan_file, index=point.index)
         label = f"{study} sweep, point {point.index + 1} of {total}"
-        entry = _queued(queue, label, request, after=after, then=gather)
+        entry = _queued(queue, label, request, after=after, then=gather, study=study)
         entries.append(entry)
         earlier.setdefault(point.wave, []).append(entry)
     queue.pump()
@@ -211,6 +216,8 @@ def convergence_plane(model: ConvergenceModel) -> Plane:
                 "kind": "band",
                 "x": list(model.extent(band)),
                 "label": band.name,
+                # A band too narrow for its name shows the rung's number, as the table does.
+                "short": str(index + 1),
                 "note": _silence(band),
                 "shaded": index % 2 == 0,
                 "panel": 0,
@@ -258,6 +265,7 @@ def rung_rows(model: ConvergenceModel) -> list[dict[str, str]]:
         rows.append(
             {
                 "key": str(index),
+                "number": str(index + 1),
                 "rung": band.name,
                 "steps": str(len(band.steps)) if band.reporting else "—",
                 "closed_on": _CLOSED[band.closed_on()],

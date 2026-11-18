@@ -26,7 +26,6 @@ from nanopnp.gui.web.glossary import GLOSSARY
 from nanopnp.gui.web.numbers import Style, shown
 from nanopnp.gui.web.palette import Palette, options
 from nanopnp.gui.web.queue import Entry
-from nanopnp.gui.web.runs import RUNG_COLUMNS, convergence_plane, rung_rows
 from nanopnp.gui.web.screens import GROUPS, SUITES, tool_for
 from nanopnp.gui.web.screens import Suite as SuiteScreen
 from nanopnp.gui.web.settings_page import SettingsPage
@@ -224,10 +223,6 @@ class _Frame:
         self.queue_box: ui.column
         self.log_box: ui.column
         self.queue_seen: tuple[int, int, int] = (-1, -1, -1)
-        self.unfolded: set[int] = set()
-        """The queue's run entries open in this window, by number."""
-        self.run_views: dict[int, tuple[ui.label, ui.table]] = {}
-        self.run_seen: dict[int, tuple[str, int, int]] = {}
         self.view: ui.element
         self.hosts: dict[str, ui.element] = {}
         self.drawer: ui.left_drawer
@@ -871,8 +866,6 @@ class _Frame:
     def queue_rows(self) -> None:
         queue = self.shell.queue
         self.queue_seen = (queue.moved, len(queue.log), len(queue.entries))
-        self.run_views = {}
-        self.run_seen = {}
         with self.queue_box:
             if not queue.entries:
                 ui.label("Nothing is queued.")
@@ -888,61 +881,27 @@ class _Frame:
                 ui.label(line)
 
     def run_entry(self, entry: Entry) -> None:
-        """Draw a run's entry, which unfolds to its convergence plot and its rung table."""
-        run = entry.run
-        assert run is not None
-        number = entry.number
+        """Draw a run's entry, whose *Open* shows its convergence in the Runs tool (WB-45)."""
         with (
-            ui.expansion(
-                entry.line(),
-                value=number in self.unfolded,
-                on_value_change=lambda e, n=number: self.unfold(n, bool(e.value)),
-            )
-            .props(f"dense data-control=queue-entry-{number}")
-            .classes("run-entry w-full")
+            ui.row()
+            .classes("run-entry items-center no-wrap gap-2")
+            .props(f"data-control=queue-entry-{entry.number}")
         ):
-            summary = ui.label(run.convergence.summary).classes("run-summary")
-            ui.element("div").props(
-                f'id=run-plot-{number} data-control=run-plot role=img aria-label="Convergence of '
-                f'{entry.label}"'
-            ).classes("run-plot")
-            table = (
-                ui.table(columns=RUNG_COLUMNS, rows=rung_rows(run.convergence), row_key="key")
-                .props("dense flat data-control=run-rungs")
-                .classes("run-rungs w-full")
+            ui.label(entry.line())
+            ui.button("Open", on_click=lambda _, e=entry: self.open_run(e)).props(
+                f"flat dense no-caps data-control=queue-open-{entry.number} "
+                f'aria-label="Open the convergence of {entry.label}"'
             )
-        self.run_views[number] = (summary, table)
 
-    def unfold(self, number: int, value: bool) -> None:
-        if value:
-            self.unfolded.add(number)
-            self.run_seen.pop(number, None)
-            self.follow_run(number)
-        else:
-            self.unfolded.discard(number)
-
-    def follow_run(self, number: int) -> None:
-        """Bring an unfolded run's plot and table to what its run has said."""
-        entries = self.shell.queue.entries
-        if number > len(entries) or number not in self.run_views:
-            return
-        run = entries[number - 1].run
-        if run is None:
-            return
-        model = run.convergence
-        seen = (model.state, len(model.bands), sum(len(band.steps) for band in model.bands))
-        if self.run_seen.get(number) == seen:
-            return
-        self.run_seen[number] = seen
-        summary, table = self.run_views[number]
-        summary.text = model.summary
-        table.rows = rung_rows(model)
-        table.update()
-        drawing = json.dumps(convergence_plane(model).json())
-        ui.run_javascript(f"nano.plot('run-plot-{number}', {drawing})")
+    def open_run(self, entry: Entry) -> None:
+        """Show a run's convergence in the Runs tool, the study it runs picked."""
+        self.shell.run_shown = entry.number
+        if entry.study:
+            self.shell.study = entry.study
+        ui.navigate.to("/study/runs")
 
     def watch_queue(self) -> None:
-        """Redraw the queue and the log after an entry moved, and each unfolded run as it goes."""
+        """Redraw the queue and the log after an entry moved."""
         queue = self.shell.queue
         if (queue.moved, len(queue.log), len(queue.entries)) != self.queue_seen:
             self.queue_box.clear()
@@ -950,8 +909,6 @@ class _Frame:
             self.log_box.clear()
             self.log_rows()
             self.queue_moved()
-        for number in sorted(self.unfolded):
-            self.follow_run(number)
 
     def changed_text(self, changed: int) -> str:
         return f"{changed} changed" if self.shell.bench.project is not None else "No project"

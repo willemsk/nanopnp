@@ -26,6 +26,8 @@ class Shell:
     """The study each physics model is shown in, by model, as its tools' *Shown in* chose."""
     study: str | None = None
     """The study the Study suite's tools show, as their pane's *Study* chose; None for the first."""
+    run_shown: int | None = None
+    """The queue entry whose convergence the Runs tool shows, by number; None for the last."""
 
     @property
     def keys(self) -> dict[str, str]:

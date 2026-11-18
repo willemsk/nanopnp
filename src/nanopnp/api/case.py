@@ -117,7 +117,7 @@ class Case(CaseDocument):
         target.write_text(self.dumps(study=study), encoding="utf-8")
         return target
 
-    def dumps(self, *, study: bool = False) -> str:
+    def dumps(self, *, study: bool = False, set_only: bool = False) -> str:
         """Return the case as YAML text, under the keys a case file writes.
 
         Parameters
@@ -125,6 +125,9 @@ class Case(CaseDocument):
         study
             Write the study as it names its models: its own keys, its overrides and the model
             files by absolute path, instead of the one complete case it resolves to.
+        set_only
+            Leave out each value no file set, a default or an unset value, where ``study`` is
+            not set.
 
         Raises
         ------
@@ -132,7 +135,7 @@ class Case(CaseDocument):
             If ``study`` is set and the case names no model.
         """
         if not study:
-            return dumps_case(self)
+            return dumps_case(self, set_only=set_only)
         record = self.models_record
         if record is None:
             raise ValueError(f"case {self.name!r} names no model, so it has no study form")

@@ -30,6 +30,7 @@ from nanopnp.gui.web.molview import (
     pqr_pdb,
     scene,
     structure_text,
+    study_side_view,
 )
 from nanopnp.gui.web.physics import PhysicsModel
 from nanopnp.gui.web.physics_tools import physics_page
@@ -306,13 +307,20 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         return JSONResponse(charge_rows(table, pqr, positive=colours(positive)))
 
     @app.get("/api/study/{name}/scene")
-    def study_scene(name: str, positive: str = "blue", v: str = "") -> JSONResponse:
-        """Serve the scene of a study's structure, its residues coloured by their charge."""
+    def study_scene(
+        name: str, positive: str = "blue", v: str = "", subunit: int = 0
+    ) -> JSONResponse:
+        """Serve the scene of a study's structure from the side, cut at the axis or one subunit.
+
+        Its residues are coloured by their charge.
+        """
         model = study(name)
         table = model.table()
         pqr = None if table is not None else pqr_frame(model.pqr())
-        if table is None and pqr is None:
+        seen = study_side_view(table, pqr)
+        if seen is None:
             return JSONResponse(None)
+        alone = bool(subunit) and seen.chain is not None
         return JSONResponse(
             scene(
                 None,
@@ -321,6 +329,8 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
                 # Atoms with no backbone, as a fixture's charges, draw as balls: a cartoon
                 # draws nothing of them.
                 representation="cartoon" if has_backbone(table, pqr) else "spacefill",
+                clip=not alone,
+                side_on=replace(seen, alone=alone),
             )
         )
 

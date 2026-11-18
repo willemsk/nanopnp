@@ -848,12 +848,13 @@ def dump_case(document: CaseDocument, path: str | Path) -> Path:
     return target
 
 
-def dumps_case(document: CaseDocument) -> str:
+def dumps_case(document: CaseDocument, *, set_only: bool = False) -> str:
     """Return a validated case document as YAML text, under the aliases a case file writes.
 
     A case that defines variables or expressions writes them as written, beside the numbers.
+    With ``set_only``, a value that no file set, a default or an unset value, is left out.
     """
-    payload = document.model_dump(by_alias=True, mode="json")
+    payload = document.model_dump(by_alias=True, mode="json", exclude_unset=set_only)
     record = document.variables_record
     if record is not None:
         payload = record.written(payload)

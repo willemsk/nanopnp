@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -27,6 +29,7 @@ __all__ = [
     "ChargeColours",
     "Colouring",
     "Representation",
+    "SideView",
     "annotation",
     "charge_rows",
     "first_frame_pdb",
@@ -34,7 +37,9 @@ __all__ = [
     "pqr_frame",
     "pqr_pdb",
     "scene",
+    "side_view",
     "structure_text",
+    "study_side_view",
 ]
 
 
@@ -429,6 +434,61 @@ def _extent_a(model: MolecularModel) -> tuple[float, float] | None:
     return float(z.min()) * 10.0, float(z.max()) * 10.0
 
 
+@dataclass(frozen=True)
+class SideView:
+    """How a pore is seen from the side beside its (r, z) map.
+
+    Parameters
+    ----------
+    extent_a
+        The structure's lowest and highest z, in Å.
+    cut_deg
+        The azimuth of the cut through the axis, chosen so the first chain stands whole behind it.
+    chain
+        The first chain, which the view draws alone as one subunit; None for fewer than two chains.
+    chain_deg
+        The azimuth of the first chain's centre.
+    reach_a
+        The first chain's farthest atom from the axis, in Å.
+    alone
+        Draw the first chain alone, seen across its centre, in place of the cut.
+    """
+
+    extent_a: tuple[float, float]
+    cut_deg: float
+    chain: str | None
+    chain_deg: float
+    reach_a: float = 0.0
+    alone: bool = False
+
+
+def side_view(positions_nm: np.ndarray, chains: Sequence[str]) -> SideView:
+    """Return the side view of a structure aligned to the z axis, its atoms in nm."""
+    import numpy as np
+
+    xyz = np.asarray(positions_nm, dtype=float)
+    extent = (float(xyz[:, 2].min()) * 10.0, float(xyz[:, 2].max()) * 10.0)
+    ids = [_chain_id(str(chain)).strip() for chain in chains]
+    order = [chain for chain in dict.fromkeys(ids) if chain]
+    if len(order) < 2:
+        return SideView(extent, 0.0, None, 0.0)
+    first = np.array([chain == order[0] for chain in ids])
+    centre = math.degrees(math.atan2(xyz[first, 1].mean(), xyz[first, 0].mean()))
+    reach = float(np.hypot(xyz[first, 0], xyz[first, 1]).max()) * 10.0
+    # Half a subunit's angle back, so the first chain stands whole behind the cut, at the right.
+    return SideView(extent, centre - 180.0 / len(order), order[0], centre, reach)
+
+
+def study_side_view(table: ProtonationTable | None, pqr: PQRFrame | None) -> SideView | None:
+    """Return the side view of a study's atoms: its protonated first frame, else its PQR file."""
+    if table is not None:
+        stop = int(table.frame_offsets[1])
+        return side_view(table.positions_nm[:stop], table.chain[:stop].tolist())
+    if pqr is not None and len(pqr.chain):
+        return side_view(pqr.positions_A / 10.0, pqr.chain.tolist())
+    return None
+
+
 def scene(
     model: MolecularModel | None,
     *,
@@ -438,7 +498,7 @@ def scene(
     form: str = "pdb",
     clip: bool = False,
     frames: Sequence[int] = (0,),
-    side_on: Membrane | None = None,
+    side_on: Membrane | SideView | None = None,
 ) -> dict[str, object]:
     """Return the MolViewSpec document of one view: the structure, its look and the pore's axis.
 
@@ -450,13 +510,16 @@ def scene(
         Where the page reads the structure and the per-residue colours, on the server's own
         origin; without an annotation the viewer's own colours stand.
     clip
-        Cut the half in front of the plane y = 0 away, so the lumen shows from the side.
+        Cut the half in front of the plane through the axis away, so the lumen shows from the side.
     frames
         The frames drawn, each over the others.
     side_on
         Open the view from the side, z up, as a pore is drawn in its membrane, with this
-        membrane's two leaflets, at its centre less and plus half its thickness.
+        membrane's two leaflets, at its centre less and plus half its thickness. A side view
+        opens along its cut, or across its first chain drawn alone, with no leaflet.
     """
+    side = side_on if isinstance(side_on, SideView) else None
+    chain = side.chain if side is not None and side.alone else None
     colours: list[dict[str, object]] = []
     if annotation_url is not None:
         colours.append({"kind": "color", "params": {"color": NEUTRAL}})
@@ -466,11 +529,14 @@ def scene(
                 "params": {"uri": annotation_url, "format": "json", "schema": "auth_residue"},
             }
         )
+    # The view looks along the plane's normal, the plane's own direction at its right.
+    azimuth = 0.0 if side is None else math.radians(side.chain_deg if chain else side.cut_deg)
+    normal = [-math.sin(azimuth), math.cos(azimuth), 0.0]
     if clip:
         colours.append(
             {
                 "kind": "clip",
-                "params": {"type": "plane", "point": [0.0, 0.0, 0.0], "normal": [0.0, 1.0, 0.0]},
+                "params": {"type": "plane", "point": [0.0, 0.0, 0.0], "normal": normal},
             }
         )
     joiner = "&" if "?" in structure_url else "?"
@@ -489,7 +555,11 @@ def scene(
                             "children": [
                                 {
                                     "kind": "component",
-                                    "params": {"selector": "all"},
+                                    "params": {
+                                        "selector": "all"
+                                        if chain is None
+                                        else {"auth_asym_id": chain}
+                                    },
                                     "children": [
                                         {
                                             "kind": "representation",
@@ -506,7 +576,7 @@ def scene(
         }
         for frame in frames
     ]
-    extent = _extent_a(model) if model is not None else None
+    extent = _extent_a(model) if model is not None else None if side is None else side.extent_a
     if extent is not None:
         low, high = extent
         children.append(
@@ -527,14 +597,19 @@ def scene(
                 ],
             }
         )
-    if side_on is not None and not clip and extent is not None:
+    if (
+        side_on is not None
+        and not isinstance(side_on, SideView)
+        and not clip
+        and extent is not None
+    ):
         centre_a, half_a = side_on.centre_z_nm * 10.0, side_on.thickness_nm * 5.0
-        for side, z_a in (("cis", centre_a + half_a), ("trans", centre_a - half_a)):
+        for leaflet, z_a in (("cis", centre_a + half_a), ("trans", centre_a - half_a)):
             children.append(
                 {
                     "kind": "primitives",
                     "params": {
-                        "tooltip": f"The membrane's {side} leaflet",
+                        "tooltip": f"The membrane's {leaflet} leaflet",
                         "opacity": PLANE_OPACITY,
                     },
                     "children": [
@@ -555,12 +630,20 @@ def scene(
             )
     if side_on is not None and extent is not None:
         middle = (extent[0] + extent[1]) / 2.0
+        away = SIDE_DISTANCE * (extent[1] - extent[0])
+        # One subunit is aimed at midway out to its reach, so the axis stays at its left.
+        out = side.reach_a / 2.0 if side is not None and chain is not None else 0.0
+        target = [out * math.cos(azimuth), out * math.sin(azimuth), middle]
         children.append(
             {
                 "kind": "camera",
                 "params": {
-                    "target": [0.0, 0.0, middle],
-                    "position": [0.0, -SIDE_DISTANCE * (extent[1] - extent[0]), middle],
+                    "target": target,
+                    "position": [
+                        target[0] - away * normal[0],
+                        target[1] - away * normal[1],
+                        middle,
+                    ],
                     "up": [0.0, 0.0, 1.0],
                 },
             }

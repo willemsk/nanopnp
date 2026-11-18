@@ -17,8 +17,8 @@ Groups, each shot light and dark:
   no salt, and the shown study refusing the model (``shell-physics-<name>-<scheme>``).
 - ``study``: the Study tools on a copy of the 2WCD project, its study walked to its charge with a
   run record and its deployed charge drawn, and a sweep over the bias: each tool, a residue picked,
-  the deployed charge and *New study*; then the charged tube run once from Study setup and its
-  queue entry unfolded (``shell-study-<name>-<scheme>``).
+  the deployed charge, one subunit, the whole case and *New study*; then the charged tube run once
+  from Study setup and its convergence in Runs (``shell-study-<name>-<scheme>``).
 
 The 2WCD project is built once into ``cache/2wcd-<key>/`` beside ``<out-dir>``, ``key`` being 12 hex
 digits of the SHA-256 of the case file and the deposited structure; its first walk fills the
@@ -524,10 +524,13 @@ STUDY_TOOLS = ("overview", "setup", "sweep", "charge", "runs")
 STUDY_EXTRAS: tuple[tuple[str, str, list[str]], ...] = (
     ("charge-picked", "/study/charge", ["[data-control=charge-strip-item]"]),
     ("charge-deployed", "/study/charge", ["[data-control=charge-layer] button:nth-child(2)"]),
+    ("charge-subunit", "/study/charge", ["[data-control=mol-subunit]"]),
+    ("overview-whole", "/study/overview", ["[data-control=overview-whole-case]"]),
     ("new", "/study/setup", ["[data-control=study-new]"]),
 )
 """The 2WCD study's tools in states of their own: a residue picked from the list, the deployed
-charge on the mesh, and the *New study* window."""
+charge on the mesh, Mol* showing one subunit, Overview's whole case unfolded, and the *New study*
+window."""
 SWEPT_BIAS_V = [-0.05, 0.05]
 """The bias the 2WCD study's sweep varies over: two points, so its forecast stays quick."""
 
@@ -554,7 +557,7 @@ def study_project(out: Path) -> Path:
 
 
 def study_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[str, Any]]:
-    """Return the Study tools on the 2WCD project, then the charged tube run and unfolded."""
+    """Return the Study tools on the 2WCD project, then the charged tube run and its convergence."""
     launched = {
         "2wcd": launch("--project", str(study_project(out))),
         "tube": launch("--state", "charged-tube"),
@@ -571,8 +574,8 @@ def study_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[
             shot = entry(f"shell-study-{name}", first["2wcd"], path, scheme, click)
             shot["wait_ms"] = 2500
             manifest.append(shot)
-    # The tube is run once, from the light shot; its queue entry, the second after the opening
-    # walk's, is unfolded once the 8 s solve has ended.
+    # The tube is run once, from the light shot; Runs then draws its convergence, the study's last
+    # run, once the 8 s solve has ended (WB-45).
     for index, scheme in enumerate(SCHEMES):
         run = entry(
             "shell-study-tube-run",
@@ -582,15 +585,9 @@ def study_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[
             [] if index else ["[data-control=study-run]"],
         )
         run["wait_ms"] = 12000 if not index else 500
-        unfolded = entry(
-            "shell-study-tube-unfolded",
-            first["tube"],
-            "/study/runs?panel=queue",
-            scheme,
-            ["[data-control=queue-entry-2]"],
-        )
-        unfolded["wait_ms"] = 2500
-        manifest += [run, unfolded]
+        convergence = entry("shell-study-tube-convergence", first["tube"], "/study/runs", scheme)
+        convergence["wait_ms"] = 2500
+        manifest += [run, convergence]
     return manifest
 
 
