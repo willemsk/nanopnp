@@ -28,6 +28,8 @@ class Entry:
     suite
         The suite whose model the entry builds, which the frame marks while it runs; empty for a
         study's run.
+    study
+        The study a run or a sweep's member runs; empty for a build.
     start
         Starts the entry's walk once a slot is free; None where nothing waits to start.
     poll
@@ -35,7 +37,7 @@ class Entry:
     cancel
         Asks the running walk to stop at its next check.
     run
-        A study's run or a sweep's member: the events its unfolded entry draws.
+        A study's run or a sweep's member: the events its convergence in the Runs tool draws.
     after
         The entries that end before this one starts, as a sweep's earlier waves.
     """
@@ -49,6 +51,7 @@ class Entry:
     cancel: Callable[[], None] | None = field(default=None, repr=False)
     run: RunModel | None = field(default=None, repr=False)
     after: tuple[Entry, ...] = field(default=(), repr=False)
+    study: str = ""
 
     def line(self) -> str:
         """Return the entry as a glyph, a word and its label."""

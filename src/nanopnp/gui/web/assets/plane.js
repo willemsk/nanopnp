@@ -570,6 +570,11 @@
       const widest = Math.max(...lines.map((line) => ctx.measureText(line).width));
       if (right - left >= widest + 8) {
         lines.forEach((line, k) => ctx.fillText(line, left + 4, area.y + 4 + k * 13));
+      } else if (layer.short && !layer.note) {
+        // A narrow band that holds its curves is named by its number, which the rung table reads.
+        if (right - left >= ctx.measureText(layer.short).width + 4) {
+          ctx.fillText(layer.short, left + 2, area.y + 4);
+        }
       } else {
         ctx.translate(left + 4, area.y + 4);
         ctx.rotate(-Math.PI / 2);

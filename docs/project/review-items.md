@@ -3518,6 +3518,10 @@ its file as fields would end all three, with the pass over the diagnostics.
 **Open**: WP5.21's pass over the workbench's words and keyboard, or a package of its own if the diagnostics need one.
 The Study page's, WP5.19's.
 
+*The Study page's part, fixed at WP5.19's item 14.* The Study suite's page gave way to its five tools at item 9. Each
+tool's card leads with the refusal's plain words, less its file and path, with *Go to* its field, and says *blocked*.
+The pane's status line says which value to correct. The rest stays with WP5.21.
+
 ### REV-255: What the Physics suite's final review left open
 
 WP5.18's final render (306 shots; no contrast, non-text or target finding; two shots failed under load and drew clean

@@ -1,6 +1,6 @@
 # WP5.19 — The Study suite
 
-**Status: in progress, items 1 to 12 done.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
+**Status: in progress, items 1 to 13 done.** Planned 16 November 2026 on `main` (`51059ff`). It inherits AG5, AG7, AJ5, AJ8, AN1,
 AN4, AP5, AQ1 and this plan's AR3 to AR6 (§8.2.31 to §8.2.42).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
@@ -306,6 +306,17 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 - REV-254's Study words: the Study pages' refusal is one card that leads with the library's words, less its file and
   path, with *Go to* its field, and says *blocked*.
 
+> **Outcome — the Study tools finished to the round.** `molview.side_view` finds the first chain and sets the cut half
+> a subunit's angle back from it, so that chain stands whole at the cut's right. The study's scene opens there, cut at
+> the axis; *One subunit*, over Mol*'s view, swaps in that chain alone, the camera midway out to its reach. Runs draws
+> the picked run's convergence across its view: a band too narrow for its rung's name shows the rung's number, as the
+> rung table's first column does. A queue line's *Open* picks the run there. Overview dumps the case with
+> `set_only` (60 lines of 2WCD's 134), the whole case unfolding. Sweep writes *Every combination* as an axis per row,
+> and *Stepped list* as one axis of assignments. The Study tools already said REV-254's words through the shared card.
+> The pick path is as it was (AR7). `test_gui_screens.py`, `test_study_runs.py`, `test_study_charge.py`, `test_study.py`
+> and `test_variables.py` pass, 138 tests. The study group's render, 24 shots, has no contrast, non-text or target
+> finding.
+
 **Item 15** (WB-47, WB-48; REV-252, REV-255, REV-256).
 - `tools.py`'s field: the box's text at its label's size. A field of several boxes is one box with shaded rows, each
   row keeping its own changed mark, reset and default; its edge meets 3:1. The message stays under the box.
@@ -337,7 +348,7 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 - [x] 3ac5148 11. `.claude/scripts/gui/redraw.cjs` (D11); done when its check passes. **Executor:** general-purpose on Sonnet,
   high
 - [x] 12. Compaction checkpoint; the author's verdicts; the author runs `redraw.cjs`. **Executor:** main
-- [ ] 13. `/np-gui collect`; REV-215, REV-240's, REV-252's, REV-255's and REV-256's points ruled or carried; the
+- [x] eece2ae 13. `/np-gui collect`; REV-215, REV-240's, REV-252's, REV-255's and REV-256's points ruled or carried; the
   design document's rows (D10); done when the code and review say so. **Executor:** main
 - [ ] 14. The Study tools finished to the verdicts: Mol*'s view, Runs' view, Overview, Sweep's modes, REV-254's Study
   words (D10; WB-44 to WB-46); done when VER-78, VER-60 and VER-44 pass. **Executor:** main

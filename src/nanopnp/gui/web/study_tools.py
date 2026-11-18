@@ -20,9 +20,19 @@ from nanopnp.core.hashing import decode_floats
 from nanopnp.gui.render import ChargeRequest, RenderedElements, RenderFailed, RenderProcess
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.frame import Views, heading
+from nanopnp.gui.web.molview import pqr_frame, study_side_view
 from nanopnp.gui.web.physics_tools import UNITS, _field_tex, _mtext, _tex
 from nanopnp.gui.web.plane import ROLE_TITLES
-from nanopnp.gui.web.runs import queue_run, queue_sweep, sweep_file, write_sweep
+from nanopnp.gui.web.queue import Entry
+from nanopnp.gui.web.runs import (
+    RUNG_COLUMNS,
+    convergence_plane,
+    queue_run,
+    queue_sweep,
+    rung_rows,
+    sweep_file,
+    write_sweep,
+)
 from nanopnp.gui.web.screens import Tool, field_control
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.study import StudyModel, reached
@@ -123,6 +133,54 @@ def _table(head: tuple[str, ...], rows: Sequence[tuple[str, ...]], control: str 
                         TextElement(tag="td", text=text)
 
 
+SweepMode = Literal["every", "stepped"]
+SWEEP_MODES: dict[SweepMode, str] = {"every": "Every combination", "stepped": "Stepped list"}
+"""The two ways a sweep's rows make its points (WB-46), with the title each shows."""
+
+STEPS = "steps"
+"""The name of a stepped list's one axis."""
+
+
+def _sweep_rows(axes: Sequence[Axis]) -> tuple[SweepMode, list[tuple[str, list[Any]]]] | None:
+    # One axis of assignments is a stepped list; axes of one path each are crossed. A file
+    # written by hand in another form has no rows.
+    if len(axes) == 1 and axes[0].assignments is not None:
+        steps = axes[0].points()
+        paths = list(dict.fromkeys(path for step in steps for path in step))
+        if any(set(step) != set(paths) for step in steps):
+            return None
+        rows: list[tuple[str, list[Any]]] = []
+        for path in paths:
+            values = [step[path] for step in steps]
+            rows.append((path, values[:1] if all(v == values[0] for v in values) else values))
+        return "stepped", rows
+    if all(axis.path is not None and axis.values is not None for axis in axes):
+        return "every", [(str(axis.path), list(axis.values or ())) for axis in axes]
+    return None
+
+
+def _written(
+    mode: SweepMode, rows: Sequence[tuple[str, Sequence[Any]]], labels: dict[str, str]
+) -> list[Axis]:
+    if mode == "every":
+        return [
+            Axis(name=path.rpartition(".")[2], path=path, values=cast("Any", list(values)))
+            for path, values in rows
+        ]
+    longest = max(len(values) for _, values in rows)
+    for path, values in rows:
+        if len(values) not in (1, longest):
+            raise ValueError(
+                f"Give each row of a stepped list 1 value or {longest} values. "
+                f"{labels.get(path, path)} has {len(values)}."
+            )
+    steps = [
+        {path: values[0] if len(values) == 1 else values[step] for path, values in rows}
+        for step in range(longest)
+    ]
+    return [Axis(name=STEPS, assignments=cast("Any", steps))]
+
+
 class _StudyPane(_Pane[StudyModel]):
     kind: ClassVar[str] = "study"
     exposes: ClassVar[bool] = False
@@ -140,6 +198,10 @@ class _StudyPane(_Pane[StudyModel]):
         self.residue = ""
         self.linked = True
         self.drawn_render: str | None = None
+        self.sweep_mode: SweepMode = "every"
+        self.rungs_box: ui.column
+        self.run_summary: ui.label | None = None
+        self.run_seen: tuple[int, str, int, int] | None = None
 
     # -- the study shown ----------------------------------------------------------------------
 
@@ -298,7 +360,7 @@ class _StudyPane(_Pane[StudyModel]):
             paired = ", ".join(f"{kind} {named[kind]}" for kind in MODEL_KINDS if kind in named)
             ui.label(f"Study {self.model.name} pairs {paired or 'no model'}.")
             if self.model.problem() is not None:
-                ui.label("It forms no case until the message below is answered.")
+                ui.label("It forms no case. The message below names the value to correct.")
 
     def show_cards(self, problem: str | None, refusal: tuple[str, str] | None) -> None:
         self.cards.clear()
@@ -413,9 +475,19 @@ class _StudyPane(_Pane[StudyModel]):
         if case is None:
             ui.label("The study forms no case, so there is no case file to show.").classes("later")
             return
-        ui.code(case.dumps(), language="yaml").classes("case-file").props(
+        # What the study's files set, with the whole resolved case a click away (WB-46).
+        ui.label(
+            "The values the models and the study set. The whole case adds each default."
+        ).classes("field-hint")
+        ui.code(case.dumps(set_only=True), language="yaml").classes("case-file").props(
             "data-control=overview-case"
         )
+        with (
+            ui.expansion("Show the whole case")
+            .classes("w-full")
+            .props("dense data-control=overview-whole-case")
+        ):
+            ui.code(case.dumps(), language="yaml").classes("case-file")
         resolved = None if model is None else model.resolved()
         if resolved is None:
             return
@@ -754,94 +826,151 @@ class _StudyPane(_Pane[StudyModel]):
             offered[f"variables.{name}"] = f"Variable {name}"
         return offered
 
+    def sweep_rows(self) -> tuple[SweepMode, list[tuple[str, list[Any]]]] | None:
+        """Return the sweep as the pane edits it: its mode and a row per path, or None."""
+        axes = self.axes()
+        if not axes:
+            return self.sweep_mode, []
+        return _sweep_rows(axes)
+
     def show_axes(self) -> None:
         self.axes_box.clear()
-        axes = self.axes()
-        _, found, refused = self.plan()
-        warned = found.warnings() if found is not None else ()
+        found = self.sweep_rows()
+        if found is not None:
+            self.sweep_mode = found[0]
+        _, forecasted, refused = self.plan()
+        warned = forecasted.warnings() if forecasted is not None else ()
         offered = self.axis_paths()
         with self.axes_box:
-            for index, axis in enumerate(axes):
-                with (
-                    ui.element("div").classes("field-row").props(f"data-control=sweep-axis-{index}")
-                ):
-                    ui.label("").classes("mark")
-                    ui.label(offered.get(str(axis.path), str(axis.path))).classes("field-label")
-                    ui.input(
-                        value=", ".join(_text(v) for v in axis.values or ()),
-                        on_change=lambda e, i=index: self.set_axis(i, None, str(e.value or "")),
-                    ).props(f'dense outlined debounce=800 aria-label="Values of {axis.path}"')
-                    ui.button(
-                        icon="sym_o_close", on_click=lambda _, i=index: self.remove_axis(i)
-                    ).props(f'flat dense aria-label="Remove the axis over {axis.path}"')
-                    for line in warned:
-                        if f"axis {axis.name!r}" in line:
-                            ui.label(f"● {line}").classes("field-hint field-warn-text")
+            if found is None:
+                ui.label(
+                    "The sweep's file writes its axes in another form. Edit them in the file."
+                ).classes("later")
+                for axis in self.axes():
+                    ui.label(f"{axis.name}: {_text(axis.points())}").classes("field-hint")
+            else:
+                self.mode_row()
+                self.axis_rows(found[1], offered, warned)
             if refused:
                 with ui.element("div").classes("note-card note-err").props("role=alert"):
                     ui.label("The sweep does not plan").classes("note-title")
                     ui.label(refused).classes("note-short")
-            if self.model is None:
+            if self.model is None or found is None:
                 return
-            if not axes:
+            if not found[1]:
                 ui.label("No axis yet. Add one over a value, a variable or a model.").classes(
                     "later"
                 )
-            with ui.column().classes("study-adder w-full gap-1"):
-                ui.label("Add axis").classes("field-label")
-                adding = ui.select(offered, value=None).classes("w-full")
-                adding.props(
-                    'dense outlined options-dense data-control=sweep-add aria-label="What to vary"'
-                )
-                row = ui.row().classes("items-center no-wrap w-full")
-            with row:
-                values = (
-                    ui.input(placeholder="values, by commas")
-                    .classes("col")
-                    .props('dense outlined data-control=sweep-add-values aria-label="Its values"')
-                )
+            self.axis_adder(offered)
+
+    def mode_row(self) -> None:
+        with self.named("Points"):
+            ui.toggle(
+                dict(SWEEP_MODES),
+                value=self.sweep_mode,
+                on_change=lambda e: self.set_mode(cast("SweepMode", e.value)),
+            ).props('dense no-caps data-control=sweep-mode aria-label="How the rows make points"')
+        hint = (
+            "Each combination of the rows' values is a point."
+            if self.sweep_mode == "every"
+            else "Point k takes each row's k-th value. A row of one value keeps it at every point."
+        )
+        ui.label(hint).classes("field-hint").props("data-control=sweep-mode-hint")
+
+    def axis_rows(
+        self,
+        rows: Sequence[tuple[str, Sequence[Any]]],
+        offered: dict[str, str],
+        warned: Sequence[str],
+    ) -> None:
+        for index, (path, values) in enumerate(rows):
+            with ui.element("div").classes("field-row").props(f"data-control=sweep-axis-{index}"):
+                ui.label("").classes("mark")
+                ui.label(offered.get(path, path)).classes("field-label")
+                ui.input(
+                    value=", ".join(_text(v) for v in values),
+                    on_change=lambda e, i=index: self.set_axis(i, None, str(e.value or "")),
+                ).props(f'dense outlined debounce=800 aria-label="Values of {path}"')
                 ui.button(
-                    icon="sym_o_add",
-                    on_click=lambda: self.set_axis(
-                        None, str(adding.value or ""), str(values.value or "")
-                    ),
-                ).props('flat dense aria-label="Add the axis" data-control=sweep-add-axis')
+                    icon="sym_o_close", on_click=lambda _, i=index: self.remove_axis(i)
+                ).props(f'flat dense aria-label="Remove the axis over {path}"')
+                if self.sweep_mode == "every":
+                    named = path.rpartition(".")[2]
+                    for line in warned:
+                        if f"axis {named!r}" in line:
+                            ui.label(f"● {line}").classes("field-hint field-warn-text")
+        if self.sweep_mode == "stepped":
+            for line in warned:
+                ui.label(f"● {line}").classes("field-hint field-warn-text")
+
+    def axis_adder(self, offered: dict[str, str]) -> None:
+        with ui.column().classes("study-adder w-full gap-1"):
+            ui.label("Add axis").classes("field-label")
+            adding = ui.select(offered, value=None).classes("w-full")
+            adding.props(
+                'dense outlined options-dense data-control=sweep-add aria-label="What to vary"'
+            )
+            row = ui.row().classes("items-center no-wrap w-full")
+        with row:
+            values = (
+                ui.input(placeholder="values, by commas")
+                .classes("col")
+                .props('dense outlined data-control=sweep-add-values aria-label="Its values"')
+            )
+            ui.button(
+                icon="sym_o_add",
+                on_click=lambda: self.set_axis(
+                    None, str(adding.value or ""), str(values.value or "")
+                ),
+            ).props('flat dense aria-label="Add the axis" data-control=sweep-add-axis')
 
     def set_axis(self, index: int | None, path: str | None, typed: str) -> None:
+        found = self.sweep_rows()
+        values = [_parsed(part.strip()) for part in typed.split(",") if part.strip()]
+        if found is None or not values:
+            return
+        mode, rows = found
+        if index is None:
+            if not path:
+                return
+            rows.append((path, values))
+        else:
+            rows[index] = (rows[index][0], values)
+        self.write_rows(mode, rows)
+
+    def remove_axis(self, index: int) -> None:
+        found = self.sweep_rows()
+        if found is None:
+            return
+        self.write_rows(found[0], [row for k, row in enumerate(found[1]) if k != index])
+
+    def set_mode(self, mode: SweepMode) -> None:
+        found = self.sweep_rows()
+        if found is None or not found[1]:
+            self.sweep_mode = mode
+            self.show_axes()
+            return
+        if not self.write_rows(mode, found[1]):
+            self.show_axes()
+
+    def write_rows(self, mode: SweepMode, rows: Sequence[tuple[str, Sequence[Any]]]) -> bool:
+        """Write the rows as the mode writes them, or remove the sweep without a row."""
         model = self.model
         if model is None:
-            return
-        axes = list(self.axes())
-        values = [_parsed(part.strip()) for part in typed.split(",") if part.strip()]
-        if not values:
-            return
+            return False
         try:
-            if index is None:
-                if not path:
-                    return
-                name = path.rpartition(".")[2]
-                axes.append(Axis(name=name, path=path, values=cast("Any", values)))
+            if rows:
+                write_sweep(model.project, model.name, _written(mode, rows, self.axis_paths()))
             else:
-                axes[index] = axes[index].model_copy(update={"values": values})
-            write_sweep(model.project, model.name, axes)
-        except (*REFUSED, TypeError) as error:
+                sweep_file(model.project, model.name).unlink(missing_ok=True)
+        except (*REFUSED, TypeError, ValueError) as error:
             ui.notify(str(error), type="negative", multi_line=True)
-            return
+            return False
+        self.sweep_mode = mode
         self.show_axes()
         self.show_view()
         self.refresh()
-
-    def remove_axis(self, index: int) -> None:
-        model = self.model
-        if model is None:
-            return
-        axes = [axis for k, axis in enumerate(self.axes()) if k != index]
-        if axes:
-            write_sweep(model.project, model.name, axes)
-        else:
-            sweep_file(model.project, model.name).unlink(missing_ok=True)
-        self.show_axes()
-        self.show_view()
+        return True
 
     def run_sweep(self) -> None:
         model = self.model
@@ -880,6 +1009,10 @@ class _StudyPane(_Pane[StudyModel]):
             ],
             "sweep-points",
         )
+        ui.label(
+            "Wave: a point starts from the solution of a point in the wave before it, "
+            "so it waits for that wave."
+        ).classes("field-hint").props("data-control=sweep-wave-hint")
         if plan.rectification:
             ui.label(
                 f"Rectification pairs {len(plan.pairs)} points by their resolved bias."
@@ -1102,8 +1235,13 @@ class _StudyPane(_Pane[StudyModel]):
         key = self.scene_key()
         if model is None or not key:
             return None
-        asked = urlencode({"positive": charge_colours(self.shell), "v": key})
-        return f"/api/study/{model.name}/scene?{asked}"
+        query = {"positive": charge_colours(self.shell), "v": key}
+        table = model.table()
+        seen = study_side_view(table, None if table is not None else pqr_frame(model.pqr()))
+        if seen is not None and seen.chain is not None:
+            # A pore of two chains or more can show one subunit alone (WB-44).
+            query["subunit"] = "0"
+        return f"/api/study/{model.name}/scene?{urlencode(query)}"
 
     def plane_url(self) -> str | None:
         model = self.model
@@ -1125,29 +1263,101 @@ class _StudyPane(_Pane[StudyModel]):
     def runs_section(self) -> None:
         heading("In the queue", 2)
         self.queue_box = ui.column().classes("w-full gap-1").props("data-control=runs-queue")
+        self.rungs_box = ui.column().classes("w-full gap-1").props("data-control=runs-rungs")
+        # The picked run's plot and table follow it while it runs (WB-45).
+        ui.timer(0.5, self.follow_run)
+
+    def study_entries(self) -> list[Entry]:
+        """Return the queue's runs of the study shown, the last ones listed."""
+        model = self.model
+        if model is None:
+            return []
+        return [
+            entry
+            for entry in self.shell.queue.entries
+            if entry.run is not None
+            and (
+                entry.study == model.name
+                or (not entry.study and entry.label.startswith(model.name))
+            )
+        ][-RUNS_LISTED:]
+
+    def picked_run(self) -> Entry | None:
+        """Return the run whose convergence the view shows: the one opened, else the last."""
+        entries = self.study_entries()
+        for entry in entries:
+            if entry.number == self.shell.run_shown:
+                return entry
+        return entries[-1] if entries else None
 
     def show_runs(self) -> None:
         self.queue_box.clear()
-        model = self.model
+        picked = self.picked_run()
         with self.queue_box:
-            entries = [
-                entry
-                for entry in self.shell.queue.entries
-                if model is not None
-                and entry.run is not None
-                and entry.label.startswith(model.name)
-            ]
-            for entry in entries[-RUNS_LISTED:]:
-                with ui.row().classes("items-center no-wrap"):
-                    ui.label(entry.line())
+            entries = self.study_entries()
+            for entry in entries:
+                with ui.row().classes("items-center no-wrap gap-1"):
+                    shown = picked is not None and entry.number == picked.number
+                    ui.button(entry.line(), on_click=lambda _, e=entry: self.pick_run(e)).props(
+                        f"flat dense no-caps align=left data-control=runs-pick-{entry.number} "
+                        f"aria-pressed={'true' if shown else 'false'}"
+                    ).classes("runs-pick" + (" runs-picked" if shown else ""))
                     if not entry.ended:
                         ui.button("Cancel", on_click=lambda _, e=entry: self.cancel_entry(e)).props(
                             "outline dense no-caps data-control=runs-cancel"
                         )
             if not entries:
-                ui.label("No run of the study is queued. Its runs unfold in the queue.").classes(
-                    "later"
-                )
+                ui.label(
+                    "No run of the study is queued. Run study starts one, and its convergence "
+                    "is drawn in the view."
+                ).classes("later")
+        self.show_rungs(picked)
+
+    def show_rungs(self, picked: Entry | None) -> None:
+        self.rungs_box.clear()
+        if picked is None or picked.run is None:
+            return
+        with self.rungs_box:
+            heading("Its rungs", 2)
+            ui.table(
+                columns=RUNG_COLUMNS, rows=rung_rows(picked.run.convergence), row_key="key"
+            ).props("dense flat data-control=run-rungs").classes("run-rungs w-full")
+
+    def pick_run(self, entry: Entry) -> None:
+        self.shell.run_shown = entry.number
+        self.run_seen = None
+        self.show_runs()
+        self.follow_run()
+
+    def follow_run(self) -> None:
+        """Draw the picked run's convergence again where its run said more."""
+        if self.tool.id != "runs":
+            return
+        picked = self.picked_run()
+        run = None if picked is None else picked.run
+        seen = (
+            None
+            if picked is None or run is None
+            else (
+                picked.number,
+                run.convergence.state,
+                len(run.convergence.bands),
+                sum(len(band.steps) for band in run.convergence.bands),
+            )
+        )
+        if seen == self.run_seen:
+            return
+        changed_run = self.run_seen is None or seen is None or self.run_seen[0] != seen[0]
+        self.run_seen = seen
+        if changed_run:
+            self.show_runs()
+        elif picked is not None:
+            self.show_rungs(picked)
+        if picked is None or run is None or self.run_summary is None:
+            return
+        self.run_summary.text = f"{picked.label}: {run.convergence.summary}"
+        drawing = json.dumps(convergence_plane(run.convergence).json())
+        ui.run_javascript(f"nano.plot('runs-plot', {drawing})")
 
     def cancel_entry(self, entry: Any) -> None:  # noqa: ANN401 - a queue's entry
         self.shell.queue.drop(entry)
@@ -1157,6 +1367,14 @@ class _StudyPane(_Pane[StudyModel]):
 
     def runs_view(self) -> None:
         model = self.model
+        heading("Convergence", 2)
+        self.run_summary = ui.label("").classes("run-summary").props("data-control=runs-summary")
+        if self.picked_run() is None:
+            self.run_summary.text = "No run of the study is in the queue. Run study starts one."
+        ui.element("div").props(
+            'id=runs-plot data-control=runs-plot role=img aria-label="The convergence of the run"'
+        ).classes("run-plot runs-plot")
+        self.run_seen = None
         heading("Recorded runs", 2)
         records = () if model is None else model.records()
         if not records:
