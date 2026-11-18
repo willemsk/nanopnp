@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,438. By source: history ruling 357; plan decision row 717; REV row 262; MOD row 18; OPN row 9; WB row 48; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
+Rows: 1,441. By source: history ruling 358; plan decision row 717; REV row 264; MOD row 18; OPN row 9; WB row 48; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
 
-By decider: author 592; open 5; session, own call 838; session, put to the author 3.
+By decider: author 596; open 5; session, own call 837; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1097,10 +1097,11 @@ By decider: author 592; open 5; session, own call 838; session, put to the autho
 | WP5.19 D9 | author | `docs/plans/phase-5/wp5.19-the-study-suite.md` | 2026-11-16 | WP5.19 | `upto` on reproduce; REV-206's export limits; AP5's shell spacing; REV-247 measured, AP1's consequence narrowed to its reach \| REV-41, REV-206, AP5; AR5, ruled by the author \| | REV-206, REV-247, REV-41 | delivered plan |
 | WP5.19 D10 | author | `docs/plans/phase-5/wp5.19-the-study-suite.md` | 2026-11-16 | WP5.19 | The tools and graph on 2WCD, with REV-256's mockups; reviewed, published, collected with REV-240's, REV-252's and REV-255's points; finished \| AJ8, REV-215, ruled by the author \| | REV-256, REV-240, REV-252, REV-255, REV-215 | delivered plan |
 | WP5.19 D11 | author | `docs/plans/phase-5/wp5.19-the-study-suite.md` | 2026-11-16 | WP5.19 | `.claude/scripts/gui/redraw.cjs`, run by the author with a GPU: median and p95 of 20 picks, front end and whole repaint; a miss profiled. *Amended at item 13:* WP5.19 times it headless; the GPU run and the front end's f… | §8.2.42 AR7, REV-258 | delivered plan |
-| WP5.19 D12 | session, own call | `docs/plans/phase-5/wp5.19-the-study-suite.md` | 2026-11-16 | WP5.19 | A supplied outline's `h_c` is also held at the finest density grid, 0.025 nm, where an edited edge is shorter: one short edge would otherwise refine the whole ring and halve the closing that fills gaps no water enters \|… | unstated | delivered plan |
-| §8.2.42 AR6 | author | `specification/history/42-phy23s-terms-without-the-flow-and-under-a-solid-fraction.md` | 2026-11-17 | WP5.19 | Added 17 November 2026, at WP5.19's item 4.* **A supplied outline's exclusion shell takes the outline's point spacing, never coarser than the coarsest density grid, 0.05 nm.** Building AP5 found a case it did not weigh:… | §5.2's NOTE on the ion-exclusion shell; §5.3.1's NOTE on inputs.profile | in force |
+| WP5.19 D12 | author | `docs/plans/phase-5/wp5.19-the-study-suite.md` | 2026-11-16 | WP5.19 | A supplied outline's `h_c` is also held at the finest density grid, 0.025 nm, where an edited edge is shorter: one short edge would otherwise refine the whole ring and halve the closing that fills gaps no water enters \|… | §8.2.42 AR9 | delivered plan |
+| §8.2.42 AR6 | author | `specification/history/42-phy23s-terms-without-the-flow-and-under-a-solid-fraction.md` | 2026-11-17 | WP5.19 | Added 17 November 2026, at WP5.19's item 4.* **A supplied outline's exclusion shell takes the outline's point spacing, never coarser than the coarsest density grid, 0.05 nm.** Building AP5 found a case it did not weigh:… | §5.2's NOTE on the ion-exclusion shell; §5.3.1's NOTE on inputs.profile; amended by AR9 | in force |
 | §8.2.42 AR7 | author | `specification/history/42-phy23s-terms-without-the-flow-and-under-a-solid-fraction.md` | 2026-11-18 | WP5.19 | Added 18 November 2026, at WP5.19's item 13.* **The 200 ms redraw line moves to a dedicated performance package: its measurement on a machine with a GPU, and the fix of the front end's share.** AG7 had WP5.19 measure th… | the Phase 5 plan's criterion 6 and supply row; open: a performance package (REV-258) | in force |
 | §8.2.42 AR8 | author | `specification/history/42-phy23s-terms-without-the-flow-and-under-a-solid-fraction.md` | 2026-11-18 | WP5.19 | Added 18 November 2026, at WP5.19's item 13.* **A bridge suite between Molecular and Continuum holds the reduction of the molecule to the axisymmetric model, built in its own package.** At WP5.19's round the author aske… | open: the bridge suite's package (FR-31; REV-259) | open |
+| §8.2.42 AR9 | author | `specification/history/42-phy23s-terms-without-the-flow-and-under-a-solid-fraction.md` | 2026-11-18 | WP5.19 | Added 18 November 2026, at `/np-ship wp 5.19`.* **A supplied outline's exclusion shell spacing is also held at no finer than the finest density grid, 0.025 nm.** Building AR6, the implementing session held the spacing a… | §5.2's NOTE on the ion-exclusion shell; §5.3.1's NOTE on inputs.profile | in force |
 | REV-01 | session, own call | `docs/project/review-findings.md` |  | WP37 | TOL_NM's home loaded pydantic and yaml | WP37 | fixed |
 | REV-02 | session, own call | `docs/project/review-findings.md` |  | WP37 | cli/errors.py was a re-export nothing imported | WP37 | fixed |
 | REV-03 | session, own call | `docs/project/review-findings.md` |  | WP38 | The solution-field names lived in two layers | WP38 | fixed |
@@ -1363,6 +1364,8 @@ By decider: author 592; open 5; session, own call 838; session, put to the autho
 | REV-260 | session, own call | `docs/project/review-findings.md` |  | WP5.20 | A recorded run's convergence, picked in Runs | WP5.20 (WP5.19) | open |
 | REV-261 | session, own call | `docs/project/review-findings.md` |  | WP5.21 | What the Study suite's final review left open | WP5.21 (WP5.19) | open |
 | REV-262 | session, own call | `docs/project/review-findings.md` |  | WP5.21 | An exposed value's first name, and Exposed values' list as Study setup draws it | a question for the author, WP5.21 (WP5.19) | open |
+| REV-263 | author | `docs/project/review-findings.md` |  | WP5.21 | What code review 060 of the Study suite left open | ruled by the author, 18 November 2026: WP5.21 (WP5.19) | open |
+| REV-264 | author | `docs/project/review-findings.md` |  | WP5.20 | A reproduction of a record stopped at its solve compares no number of the solve | ruled by the author, 18 November 2026: WP5.20 (WP5.19) | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |

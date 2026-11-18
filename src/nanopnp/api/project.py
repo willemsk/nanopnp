@@ -1329,12 +1329,13 @@ class Project:
             place = partial / relative
             place.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, place)
-        copied_store = target / STORE_FOLDER if store else None
+        held = store and (self._root / STORE_FOLDER).is_dir()
+        copied_store = target / STORE_FOLDER if held else None
         self._export_runs(partial, target, copied_store)
         sweeps = self._root / SWEEPS_FOLDER
         if sweeps.is_dir():
             shutil.copytree(sweeps, partial / SWEEPS_FOLDER)
-        if store and (self._root / STORE_FOLDER).is_dir():
+        if held:
             shutil.copytree(
                 self._root / STORE_FOLDER,
                 partial / STORE_FOLDER,
@@ -1396,7 +1397,8 @@ class Project:
         # An input no item names goes at its own path, unless a linked input takes that path.
         for source in sorted(kept.rglob("*")) if kept.is_dir() else ():
             if source.is_file():
-                place = f"{INPUTS_FOLDER}/{source.resolve().relative_to(kept).as_posix()}"
+                # Its place as listed: a link in inputs/ resolves outside the folder.
+                place = f"{INPUTS_FOLDER}/{source.relative_to(kept).as_posix()}"
                 _take(places, place, source.resolve())
                 inputs.setdefault(source.resolve(), place)
         return _Plan(items=items, inputs=inputs)
@@ -1419,7 +1421,7 @@ class Project:
                     result = Path(str(entry))
                     if not result.is_file():
                         continue
-                    inside = Path("results", _report_path(record, result))
+                    inside = Path("results", _report_path(record, result, run))
                     (place / inside).parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(result, place / inside)
                     files.append(str(target / relative / inside))
@@ -1499,14 +1501,18 @@ def _take(places: dict[str, Path], place: str, source: Path) -> None:
         )
 
 
-def _report_path(record: Mapping[str, Any], result: Path) -> str:
-    # A result's path in the stored report it belongs to, so two of one name stay apart.
+def _report_path(record: Mapping[str, Any], result: Path, run: Path) -> str:
+    # A result's path in the stored report it belongs to, or in the run's results/ of a copy that
+    # carries no store, so two of one name stay apart.
     report = record.get("artefacts", {}).get("report")
     store = record.get("store")
     if isinstance(report, dict) and isinstance(store, str):
         location = Store(store).location(str(report.get("schema")), str(report.get("hash")))
         if location in result.parents:
             return result.relative_to(location).as_posix()
+    results = run / "results"
+    if results in result.parents:
+        return result.relative_to(results).as_posix()
     return result.name
 
 

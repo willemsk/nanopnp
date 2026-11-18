@@ -762,7 +762,7 @@ class _PhysicsPane(_Pane[PhysicsModel]):
             return
         shown = written(declared.terms, lambda term: self.term_state(term) is None)
         heading("Equations", 2)
-        # The symbols' table stands below the equations: one link reaches it (REV-255).
+        # The symbols' table stands below the equations: one link reaches it.
         ui.link("What each symbol means", "#equations-symbols").classes("field-hint").props(
             "data-control=equations-symbols-link"
         )

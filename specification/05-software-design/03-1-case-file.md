@@ -273,7 +273,7 @@ a structure is unknown). `artefact:` on `inputs.charge` or `inputs.eps_r` SHALL 
 unsupported section when the case is resolved, naming the key: no release schedules the store form of
 the two fields (WP40).
 
-NOTE (`inputs.profile`; §8.2.40 AP1, AP5; §8.2.42 AR6): `inputs.profile` is consumed by stage 5. It is named by `path`
+NOTE (`inputs.profile`; §8.2.40 AP1, AP5; §8.2.42 AR6, AR9): `inputs.profile` is consumed by stage 5. It is named by `path`
 with `format: profile1`, and `artefact:` or `groups` beside it is refused. The profile is
 hashed by the canonical digest of its validated payload. Stages 2 to 4 do not run beside it.
 `structure:` beside it stands where stage 7 deposits a charge from that structure's protonation:
@@ -290,7 +290,7 @@ model that declares no `fixed_charge`, the structure is read by nothing, and `st
 `geometry.contour` are refused where either is set away from its default; `geometry.membrane` and
 `geometry.reservoir` are read. With `charge.exclusion_offset_nm` set, the ion-exclusion shell takes
 its resolution `h_c` from the outline's recorded point spacing, held within the density grid's range
-(§5.2's NOTE on the ion-exclusion shell; §8.2.40 AP5; §8.2.42 AR6). A section set to
+(§5.2's NOTE on the ion-exclusion shell; §8.2.40 AP5; §8.2.42 AR6, AR9). A section set to
 its defaults is not refused, because a case dumped from its resolved document writes every section
 out, and FR-26 requires that dump to load back.
 

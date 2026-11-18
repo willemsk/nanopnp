@@ -6,7 +6,7 @@ import json
 import logging
 import math
 import tempfile
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -304,11 +304,20 @@ def _target_stage(upto: str | None, recorded: list[str], *, where: Path) -> str 
 
 
 def _compare_artefacts(
-    record: Mapping[str, Canonicalisable], result: RunResult
+    record: Mapping[str, Canonicalisable], result: RunResult, walked: Sequence[str]
 ) -> tuple[Drift, ...]:
     held = record.get("artefacts")
     recorded = held if isinstance(held, dict) else {}
     drifts: list[Drift] = []
+    # A stage the record made within the walk that the reproduction did not make is a walk that
+    # changed, not one that matched.
+    for stage in walked:
+        entry = recorded.get(stage)
+        was = entry.get("hash") if isinstance(entry, dict) else None
+        if was is not None and stage not in result.artefacts:
+            drifts.append(
+                Drift(path=f"artefacts.{stage}", recorded=was, reproduced=None, relative=None)
+            )
     for stage, artefact in result.artefacts.items():
         entry = recorded.get(stage)
         was = entry.get("hash") if isinstance(entry, dict) else None
@@ -367,7 +376,8 @@ def reproduce(
         )
 
     record = _recorded_run(where)
-    last = _target_stage(upto, _recorded_stages(record, where=where), where=where)
+    reached = _recorded_stages(record, where=where)
+    last = _target_stage(upto, reached, where=where)
     check_inputs(manifest, where=where)
     drift = check_environment(manifest)
     if drift and strict_environment:
@@ -397,14 +407,26 @@ def reproduce(
                 "this reproduction would assert that a dictionary lookup is deterministic and "
                 "nothing else. Reproduce into a store that does not hold the run (QR-08)"
             )
+        if solve is None and result.stages and all(stage.cached for stage in result.stages):
+            raise ReproductionError(
+                f"every stage up to {result.stages[-1].name!r} was served from the store at "
+                f"{target.root} rather than re-entered, so this reproduction would compare the "
+                "record with itself. Reproduce into a store that does not hold the run (QR-08)"
+            )
         check_mesh(manifest, result, where=where)
-        stage_drifts = _compare_artefacts(record, result)
-        was_charge = decode_floats(manifest.get("charge", {}))
-        charge_drifts, charge_worst = compare(
-            {"charge": was_charge if isinstance(was_charge, dict) else {}},
-            {"charge": dict(result.manifest.charge)},
-            tolerance=tolerance,
-        )
+        walked = reached if last is None else reached[: reached.index(last) + 1]
+        stage_drifts = _compare_artefacts(record, result, walked)
+        # A walk stopped short of the record's that did not run stage 7 records why it did not,
+        # not what the record's stage 7 made, so its charge group has nothing to compare.
+        charge_drifts: tuple[Drift, ...] = ()
+        charge_worst: float | None = None
+        if last is None or last == reached[-1] or "charge" in result.artefacts:
+            was_charge = decode_floats(manifest.get("charge", {}))
+            charge_drifts, charge_worst = compare(
+                {"charge": was_charge if isinstance(was_charge, dict) else {}},
+                {"charge": dict(result.manifest.charge)},
+                tolerance=tolerance,
+            )
         recorded: Mapping[str, Canonicalisable] = {}
         quantity_drifts: tuple[Drift, ...] = ()
         quantity_worst: float | None = None
