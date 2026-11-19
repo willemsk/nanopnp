@@ -1,6 +1,6 @@
 # WP5.20 — The meso suite
 
-**Status: in progress; items 1 to 4 done.** Planned 19 November 2026 on `main` (`dbe34da`). It inherits AJ8, AN7, AP1, AP2,
+**Status: in progress; items 1 to 8 done.** Planned 19 November 2026 on `main` (`dbe34da`). It inherits AJ8, AN7, AP1, AP2,
 AR8, AS1 and AS3, and this plan's AT1 to AT4 (§8.2.34 to §8.2.44).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
@@ -270,13 +270,13 @@ python .claude/scripts/gui/render_shell.py --only meso <scratch dir>` exits 0 wi
   **Executor:** main
 - [x] a85e565 3. `plot/data.py:charge_volumes` (D7); done when `test_meso.py`'s volume test passes and the `physics-reviewer` has read it. **Executor:** main
 - [x] 4. Compaction checkpoint. **Executor:** main
-- [ ] 5. `io/project.py`, `screens.py`, `tools.py`, `builds.py`, `frame.py`, `commands.py`; FR-31, §2, §3, §8.1 (D1, D3);
+- [x] 2df2371 5. `io/project.py`, `screens.py`, `tools.py`, `builds.py`, `frame.py`, `commands.py`; FR-31, §2, §3, §8.1 (D1, D3);
   done when `test_gui_screens.py` and `test_gui_settings.py` pass. **Executor:** main
-- [ ] 6. `gui/web/meso.py`, `meso_tools.py`, `pages.py`, `plane.py`, `molview.py`, `bridge.js`, `continuum_tools.py`,
+- [x] 918ec8e 6. `gui/web/meso.py`, `meso_tools.py`, `pages.py`, `plane.py`, `molview.py`, `bridge.js`, `continuum_tools.py`,
   `study_tools.py`, `study.py`; `test_study_charge.py` moved to `test_meso_charge.py`; VER-60's NOTE, VER-78 (a), (m),
   the matrix rows, the design document's rows (D2, D4 to D6, D9); done when VER-78 and `test_meso_charge.py` pass. **Executor:** main
-- [ ] 7. The overlay in the scene and the pane (D7); done when the code and review say so. **Executor:** main
-- [ ] 8. Compaction checkpoint. **Executor:** main
+- [x] 39887dd 7. The overlay in the scene and the pane (D7); done when the code and review say so. **Executor:** main
+- [x] 8. Compaction checkpoint. **Executor:** main
 - [ ] 9. `render_shell.py`, `redraw.cjs` (D8); done when its check passes. **Executor:** general-purpose on Sonnet, high
 - [ ] 10. `/np-gui render shell`, `review`, `publish`: the round (D8); done when the digest is published.
   **Executor:** main
