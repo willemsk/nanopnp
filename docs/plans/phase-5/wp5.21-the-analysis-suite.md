@@ -229,7 +229,7 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
 
 ### Work items
 
-- [ ] 1. `post/fields.py`, `charge/deposit.py:locate_points`, `plot/data.py` (D1); done when `test_analysis.py`'s
+- [x] b86fd0f 1. `post/fields.py`, `charge/deposit.py:locate_points`, `plot/data.py` (D1); done when `test_analysis.py`'s
   difference tests pass and the `physics-reviewer` has read it. **Executor:** main
 - [ ] 2. `post/export.py` (the fields file), `gui/render.py` (`FieldsRequest`, `document`, `colour_range`,
   `host_page`) (D2, D3); done when `test_analysis.py`'s file test passes. **Executor:** main

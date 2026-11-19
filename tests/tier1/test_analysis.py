@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -16,6 +17,8 @@ from nanopnp.post.export import (
     SolutionFields,
     field_scale,
     fields_of,
+    read_solution_fields,
+    write_solution_fields,
 )
 from nanopnp.post.fields import (
     field_at,
@@ -296,3 +299,24 @@ def test_fr32_one_runs_map_and_the_joint_range(
     low, high = joint_range(first, second, "potential")
     nodal = np.concatenate([first.whole[2]["phi_V"], second.whole[2]["phi_V"]])
     assert (low, high) == (nodal.min(), nodal.max())
+
+
+def test_fr27_a_fields_file_reads_back_array_equal_with_its_solve(
+    runs: tuple[SolutionFields, SolutionFields, ModelSolution], tmp_path: Path
+) -> None:
+    # The server samples maps from this file alone: a dropped set, a renamed attribute or a lost
+    # bulk value would draw another run's field, or none, without NGSolve to notice.
+    first, _, _ = runs
+    path = write_solution_fields(first, tmp_path / "viewer" / "fields.npz", solve="a" * 64)
+    read, solve = read_solution_fields(path)
+    assert solve == "a" * 64
+    assert read.model == first.model
+    assert read.wall_extent_nm == first.wall_extent_nm
+    assert read.bulk_mol_m3 == first.bulk_mol_m3
+    for held, written in ((read.whole, first.whole), (read.fluid, first.fluid)):
+        np.testing.assert_array_equal(held[0], written[0])
+        np.testing.assert_array_equal(held[1], written[1])
+        assert held[2].keys() == written[2].keys()
+        for key, values in written[2].items():
+            np.testing.assert_array_equal(held[2][key], values)
+    assert not list(tmp_path.glob("viewer/*.partial.npz"))
