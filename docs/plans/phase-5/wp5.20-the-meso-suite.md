@@ -261,6 +261,16 @@ vertex moved inward; the overlay on. `GROUPS` gains `meso`; the `/continuum/geom
 python .claude/scripts/gui/render_shell.py --only meso <scratch dir>` exits 0 with each shot written, and `node
 --check .claude/scripts/gui/redraw.cjs` passes.
 
+> **Outcome — the edit moves a vertex into the protein.** A vertex has no element to click, so `shoot.cjs`'s click
+> steps also take `{fill, value}` and `{plane_vertex}`, which clicks a vertex where the canvas draws it until the view
+> has picked it. Moved toward the axis, 2WCD's narrowest vertex crosses no atom; the shot moves it 0.5 nm into the
+> protein, and A:8 LYS and A:11 GLU cross into the water. The group's 20 shots load with no page error.
+
+> **Outcome — two fixes the round's render found.** The Outline editor's vertex r and z were squeezed to 15 px side by
+> side (the target check); each takes a row of the pane. With the overlay on, Mol* fitted its camera to the volume's
+> box, a third the scale: a scene that places its camera now sets `manualReset` (`bridge.js`), and the isosurfaces
+> draw over the cut structure at its framing.
+
 ### Work items
 
 - [x] 2851bbf 1. `plot/data.py` (`ResidueCopies`, `ResidueCharges`, `ResidueAtoms`, `inside_outline`), `gui/geometry.py`
@@ -277,7 +287,7 @@ python .claude/scripts/gui/render_shell.py --only meso <scratch dir>` exits 0 wi
   the matrix rows, the design document's rows (D2, D4 to D6, D9); done when VER-78 and `test_meso_charge.py` pass. **Executor:** main
 - [x] 39887dd 7. The overlay in the scene and the pane (D7); done when the code and review say so. **Executor:** main
 - [x] 8. Compaction checkpoint. **Executor:** main
-- [ ] 9. `render_shell.py`, `redraw.cjs` (D8); done when its check passes. **Executor:** general-purpose on Sonnet, high
+- [x] 024f44a 9. `render_shell.py`, `redraw.cjs` (D8); done when its check passes. **Executor:** general-purpose on Sonnet, high
 - [ ] 10. `/np-gui render shell`, `review`, `publish`: the round (D8); done when the digest is published.
   **Executor:** main
 - [ ] 11. Compaction checkpoint; the author's verdicts collected. **Executor:** main
