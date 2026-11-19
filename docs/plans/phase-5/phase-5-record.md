@@ -857,3 +857,26 @@ Criterion 6 read:
 >    redraws the whole picture within 200 ms (WB-23). Predicted: the front end's share met (26 ms p95 in the spike), the
 >    whole picture unknown. On a miss the redraw is profiled; where the renderer's own repaint is the cost, the line
 >    binds the front end's share and the renderer's time is recorded; a miss by the front end is fixed (§8.2.31 AG7).
+
+## Amended 19 November 2026 (§8.2.44 AT1, AT2)
+
+At WP5.20's plan the author ruled that the Outline tool marks the atoms an edit moves across the outline, each way
+(AT1), and that REV-240's overlay is drafted for the suite's round and built in WP5.20 if kept (AT2). The entry read:
+
+> ### WP5.20 — The meso suite (FR-31, FR-33; WB-43, WB-44; REV-259; REV-244's suite; §8.2.42 AR8; §8.2.43 AS1, AS3)
+>
+> A suite that builds, between Molecular and Continuum: the molecule reduced to the axisymmetric model, named at its round
+> (AS3). Library steps first, as the shell computes nothing (VER-60): a point on the charge map names each residue once,
+> its chains' copies on a C<sub>n</sub> structure together (REV-259's physics point), and the atoms an edited outline
+> cuts, read in stage 1's frame and reduced to (r, z). Then, after the prototype round on 2WCD (AJ8), which takes
+> REV-259's questions, the suite's name and REV-244's radius against z and vertex list: *Density*, stages 2 and 3, the
+> grid, the kernel and the reduced map; *Outline*, stage 4's outline, created and edited, its saved edit a continuum
+> model holding the outline (AP1), the two from Continuum › Pore geometry; *Charge map*, stage 7's charge on the mesh and
+> its conservation checks, from Study › Charge on the mesh. Each pairs Mol*, side on and cut at the axis with *One
+> subunit* (WB-44), with the (r, z) view, linked both ways: a residue finds its patch, a point its residue, an edited
+> outline the atoms it cuts (FR-33). Its values stay the continuum model's `geometry` section over a molecular model picked
+> in the pane; it adds no kind of model (AR8). Continuum keeps Region, Mesh and Exposed values; Study keeps Overview, Study
+> setup, Sweep and Runs. FR-31's suites, §2's v0.6 row, §8.1's Phase 5 deliverable, WB-34 and WB-41 are amended
+> (AR8). What names the tools' old places follows them: VER-78's suites in (a) and `/study/charge` in (m), the
+> capability list's rows for Q14 to Q20 and Q24 to Q30, and `redraw.cjs`'s address. Q14 to Q20 and Q28 to Q30 move
+> here; VER-60 as restated. Tag `v0.6.0-alpha.20`.
