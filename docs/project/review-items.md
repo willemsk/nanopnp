@@ -3203,8 +3203,9 @@ plots' settings in Analysis; the safeguards before the first tool that deletes, 
 suite's round (REV-259). The variation view and the maps go to WP5.21, which draws ensembles' results and plots. WP5.19
 adds no tool that deletes, so the safeguards wait for the first one.
 
-*Placed 19 November 2026* (§8.2.44 AT2): the overlay is drafted for WP5.20's round, the meso suite's, and built
-there if kept: the deposit's charge in 3D and its mean about the axis, each as isosurfaces over the structure.
+*Placed 19 November 2026* (§8.2.44 AT2, AT4): the overlay is drafted for WP5.20's round, the meso suite's, and built
+there if kept: the deposit's charge in 3D and its mean about the axis, smoothed to 0.4 nm on a 0.2 nm grid, each as
+isosurfaces over the structure.
 
 ### REV-241: What the final review of the Molecular tools left open
 

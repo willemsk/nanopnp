@@ -880,3 +880,12 @@ At WP5.20's plan the author ruled that the Outline tool marks the atoms an edit 
 > (AR8). What names the tools' old places follows them: VER-78's suites in (a) and `/study/charge` in (m), the
 > capability list's rows for Q14 to Q20 and Q24 to Q30, and `redraw.cjs`'s address. Q14 to Q20 and Q28 to Q30 move
 > here; VER-60 as restated. Tag `v0.6.0-alpha.20`.
+
+## Amended 19 November 2026, at WP5.20's plan's review (§8.2.44 AT3, AT4)
+
+At the plan's review the author ruled that the study graph's charge node opens Charge map on the continuum model built
+alone (AT3), which leaves the entry's text as it was, and that the overlay is drawn on a 0.2 nm grid with each atom's
+charge spread over at least 0.4 nm (AT4). The entry's heading ended "§8.2.44 AT1, AT2)", and its library step read:
+
+> and the deposit's charge on a 3D grid with
+> its mean about the axis, for REV-240's overlay (AT2).

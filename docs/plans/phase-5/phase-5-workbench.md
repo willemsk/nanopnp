@@ -342,13 +342,13 @@ Live constraints: AR7 moves the 200 ms line to WP5.22, the performance package (
 mesh in the meso suite, WP5.20 (REV-259). A recorded run picked in Runs is WP5.21's (REV-260); the review's polish
 is WP5.23's (REV-261); an exposed value's first name is the author's (REV-262). D12 goes to the author at `/np-ship`.
 
-### WP5.20 — The meso suite (FR-31, FR-33; WB-43, WB-44; REV-259; REV-244's suite; REV-240's overlay; §8.2.42 AR8; §8.2.43 AS1, AS3; §8.2.44 AT1, AT2)
+### WP5.20 — The meso suite (FR-31, FR-33; WB-43, WB-44; REV-259; REV-244's suite; REV-240's overlay; §8.2.42 AR8; §8.2.43 AS1, AS3; §8.2.44 AT1 to AT4)
 
 A suite that builds, between Molecular and Continuum: the molecule reduced to the axisymmetric model, named at its round
 (AS3). Library steps first, as the shell computes nothing (VER-60): a point on the charge map names each residue once,
 its chains' copies on a C<sub>n</sub> structure together (REV-259's physics point); the atoms an edit moves across
 the outline, each way, read in stage 1's frame and reduced to (r, z) (AT1); and the deposit's charge on a 3D grid with
-its mean about the axis, for REV-240's overlay (AT2). Then, after the prototype round on 2WCD (AJ8), which takes
+its mean about the axis, smoothed to 0.4 nm for the picture, for REV-240's overlay (AT2, AT4). Then, after the prototype round on 2WCD (AJ8), which takes
 REV-259's questions, the suite's name and REV-244's radius against z and vertex list: *Density*, stages 2 and 3, the
 grid, the kernel and the reduced map; *Outline*, stage 4's outline, created and edited, its saved edit a continuum
 model holding the outline (AP1), the two from Continuum › Pore geometry; *Charge map*, stage 7's charge on the mesh and
