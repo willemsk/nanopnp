@@ -3203,6 +3203,9 @@ plots' settings in Analysis; the safeguards before the first tool that deletes, 
 suite's round (REV-259). The variation view and the maps go to WP5.21, which draws ensembles' results and plots. WP5.19
 adds no tool that deletes, so the safeguards wait for the first one.
 
+*Placed 19 November 2026* (§8.2.44 AT2): the overlay is drafted for WP5.20's round, the meso suite's, and built
+there if kept: the deposit's charge in 3D and its mean about the axis, each as isosurfaces over the structure.
+
 ### REV-241: What the final review of the Molecular tools left open
 
 The GUI review and `impeccable`'s critique of the finished tools (WP5.16 item 12, render `shell-r2` at `def8265`; no
@@ -3696,7 +3699,8 @@ Its round takes the charge screen's questions the author left open at WP5.19:
 - the diverging scale's light middle on the dark theme;
 - the deployed field's mesh edges on or off by default;
 - the residues as a strip of buttons or a table sorted by charge;
-- REV-240's overlay of the 3D structure, the 3D charge and the (r, z) map turned about the axis;
+- REV-240's overlay of the 3D structure, the 3D charge and the (r, z) map turned about the axis, drafted for the round
+  and built in WP5.20 if kept (§8.2.44 AT2);
 - REV-244's radius against z and vertex list, which the design document's Contour row drew;
 - the suite's name (§8.2.43 AS3).
 

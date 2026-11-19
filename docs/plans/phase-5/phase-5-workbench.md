@@ -342,18 +342,20 @@ Live constraints: AR7 moves the 200 ms line to WP5.22, the performance package (
 mesh in the meso suite, WP5.20 (REV-259). A recorded run picked in Runs is WP5.21's (REV-260); the review's polish
 is WP5.23's (REV-261); an exposed value's first name is the author's (REV-262). D12 goes to the author at `/np-ship`.
 
-### WP5.20 — The meso suite (FR-31, FR-33; WB-43, WB-44; REV-259; REV-244's suite; §8.2.42 AR8; §8.2.43 AS1, AS3)
+### WP5.20 — The meso suite (FR-31, FR-33; WB-43, WB-44; REV-259; REV-244's suite; REV-240's overlay; §8.2.42 AR8; §8.2.43 AS1, AS3; §8.2.44 AT1, AT2)
 
 A suite that builds, between Molecular and Continuum: the molecule reduced to the axisymmetric model, named at its round
 (AS3). Library steps first, as the shell computes nothing (VER-60): a point on the charge map names each residue once,
-its chains' copies on a C<sub>n</sub> structure together (REV-259's physics point), and the atoms an edited outline
-cuts, read in stage 1's frame and reduced to (r, z). Then, after the prototype round on 2WCD (AJ8), which takes
+its chains' copies on a C<sub>n</sub> structure together (REV-259's physics point); the atoms an edit moves across
+the outline, each way, read in stage 1's frame and reduced to (r, z) (AT1); and the deposit's charge on a 3D grid with
+its mean about the axis, for REV-240's overlay (AT2). Then, after the prototype round on 2WCD (AJ8), which takes
 REV-259's questions, the suite's name and REV-244's radius against z and vertex list: *Density*, stages 2 and 3, the
 grid, the kernel and the reduced map; *Outline*, stage 4's outline, created and edited, its saved edit a continuum
 model holding the outline (AP1), the two from Continuum › Pore geometry; *Charge map*, stage 7's charge on the mesh and
-its conservation checks, from Study › Charge on the mesh. Each pairs Mol*, side on and cut at the axis with *One
+its conservation checks, from Study › Charge on the mesh, with REV-240's overlay drafted for the round and built if
+kept: the charge in 3D and its mean about the axis, each as isosurfaces over the structure (AT2). Each pairs Mol*, side on and cut at the axis with *One
 subunit* (WB-44), with the (r, z) view, linked both ways: a residue finds its patch, a point its residue, an edited
-outline the atoms it cuts (FR-33). Its values stay the continuum model's `geometry` section over a molecular model picked
+outline the atoms it moves (FR-33; AT1). Its values stay the continuum model's `geometry` section over a molecular model picked
 in the pane; it adds no kind of model (AR8). Continuum keeps Region, Mesh and Exposed values; Study keeps Overview, Study
 setup, Sweep and Runs. FR-31's suites, §2's v0.6 row, §8.1's Phase 5 deliverable, WB-34 and WB-41 are amended
 (AR8). What names the tools' old places follows them: VER-78's suites in (a) and `/study/charge` in (m), the
@@ -443,7 +445,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.17, Continuum | 1, 2 | VER-55 as restated, an unedited outline beside its structure depositing the same charge (AP1); VER-62's mesh hash unmoved by REV-170 and by untyped part sizes; MOD-03's edge gone (VER-61); a continuum model built alone keys as a study at its salt (FR-39); typed part sizes key as the table (VER-53); VER-78 |
 | WP5.18, Physics | 1 | A physics model edited in the suite resolves to the case it shows; VER-78 |
 | WP5.19, Study | 1, 2 | VER-44 and VER-60 as restated; FR-39's study and its sweep; VER-36's pair by resolved bias; VER-35 to a stage; VER-59's supplied spacing; a run's thread count keying nothing (VER-62); VER-78; the 200 ms measure (criterion 6) |
-| WP5.20, the meso suite | 1, 2 | VER-60 as restated: a point names a residue once on a C<sub>n</sub> structure, an edited outline names the atoms it cuts; VER-62 unmoved by the moved tools; VER-78 as amended, each moved tool's page at its new address |
+| WP5.20, the meso suite | 1, 2 | VER-60 as restated: a point names a residue once on a C<sub>n</sub> structure, an edit names the atoms it moves; the overlay's mean about the axis is the 3D charge's; VER-62 unmoved by the moved tools; VER-78 as amended, each moved tool's page at its new address |
 | WP5.21, Analysis | 1 | AG6's difference: exact for a linear field, zero for identical runs; VER-78 |
 | WP5.22, performance | 1 | VER-62 and VER-78 unmoved by the pick path's fix; criterion 6, timed by `redraw.cjs --headed` on a GPU |
 | WP5.23, route and Qt's removal; WP5.24, the close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 |
