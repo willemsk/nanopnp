@@ -7,16 +7,20 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from nanopnp.charge.dielectric import _inside
+from nanopnp.charge.fields import ChargeFieldError
 from nanopnp.charge.kernel import volume_density
 from nanopnp.density.radii import resolve_protonated_radii, resolve_radii
 from nanopnp.gui.geometry import ProfileEditor
 from nanopnp.gui.web.molview import first_frame_pdb
 from nanopnp.io.case import Density
 from nanopnp.plot.data import (
+    REACH_WIDTHS,
     DensityAtoms,
     ResidueAtoms,
     ResidueCharges,
     ResidueCopies,
+    charge_volumes,
     inside_outline,
 )
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
@@ -285,8 +289,6 @@ def test_ver60_moved_atoms_count_per_copy_and_per_frame() -> None:
 
 
 def test_ver60_inside_outline_is_the_solid_fractions_even_odd_test() -> None:
-    from nanopnp.charge.dielectric import _inside
-
     loop = np.array([(1.0, -2.0), (5.0, -2.0), (3.0, 0.5), (5.0, 2.0), (1.0, 2.0)])
     r = np.linspace(0.0, 6.0, 61)
     z = np.linspace(-3.0, 3.0, 61)
@@ -389,9 +391,6 @@ def _three_atoms() -> ProtonationTable:
 
 
 def test_ver60_the_overlays_mean_about_the_axis_is_its_3d_charges() -> None:
-    from nanopnp.charge.fields import ChargeFieldError
-    from nanopnp.plot.data import REACH_WIDTHS, charge_volumes
-
     table = _three_atoms()
     smoothing = 0.4
     widths = np.maximum(SHARPNESS * table.radius_nm, smoothing)

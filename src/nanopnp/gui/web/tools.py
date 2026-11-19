@@ -81,7 +81,7 @@ CARD_SHORT = 200
 _PLACE = re.compile(r"^(?:In study [^\s:]+:\s+)?(?:[^\s:]+:\s+)+")
 """The study, file and case path a refusal starts with."""
 _POWER = re.compile(r"\^([+-]?\d+)")
-_MINUS = re.compile(r"(?<![\w.)])-(?=\d)")
+_MINUS = re.compile(r"(?<![\w.)/\\-])-(?=\d)")
 _RAISED = str.maketrans("0123456789+-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻")
 MEMBRANE_OFF_NM = 0.01
 """How far the registration residues' centre may lie from the membrane's before Prepare warns."""

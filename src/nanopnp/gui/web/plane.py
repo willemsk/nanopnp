@@ -930,7 +930,7 @@ def _edited(model: ContinuumModel, layers: list[dict[str, Any]]) -> list[dict[st
     kept = [layer for layer in layers if layer["id"] != "contour"]
     opened = [layer for layer in layers if layer["id"] == "contour"]
     edit = {**_polygon("contour", "contour", editor.vertices, "Edited outline"), "editable": True}
-    if not editor.can_undo and opened:
+    if not editor.changed and opened:
         # Before its first change the edit is the outline it opened on, keyed as that outline.
         return [*kept, {**edit, "title": opened[0].get("title", "")}]
     original = [

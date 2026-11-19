@@ -151,11 +151,14 @@ def _charge_map(project: Project, study: str, queue: Queue) -> frozenset[str]:
     continuum = _continuum_of(project, study)
     if continuum is None:
         return frozenset()
+    try:
+        # A model that draws its own pore deposits no molecule's charge: nothing to walk.
+        case = project.charge_case(continuum)
+    except ValueError:
+        return frozenset()
     entry = queue.add(f"{continuum} to charge", "running")
     try:
-        result = Session(Store(project.root / STORE_FOLDER)).run(
-            project.charge_case(continuum), upto="charge"
-        )
+        result = Session(Store(project.root / STORE_FOLDER)).run(case, upto="charge")
     except Exception as error:
         if not isinstance(error, ValueError) and classify(error) not in {EXIT_CASE, EXIT_GATE}:
             raise

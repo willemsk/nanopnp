@@ -121,6 +121,8 @@ class _MesoPane(_ContinuumPane):
         self.overlay: dict[str, float] = {}
         self.peaks: dict[str, float] | None = None
         self.levels: dict[str, float] | None = None
+        # The hash of the charge the overlay's peaks and levels were computed from.
+        self.overlay_charge: str | None = None
         self.computing = False
         # Each layer's typed scale, in its own unit; None opens on the layer's clip.
         self.spans: dict[str, float | None] = {"lattice": None, "deployed": None}
@@ -329,7 +331,7 @@ class _MesoPane(_ContinuumPane):
             )
             state = (
                 f"Editing {parent}: {len(editor.vertices)} vertices, edited; not saved."
-                if editor.can_undo
+                if editor.changed
                 else f"Editing {parent}: no change yet."
             )
             ui.label(state).props("data-control=contour-state")
@@ -380,7 +382,7 @@ class _MesoPane(_ContinuumPane):
                 )
                 ui.button("Save edit…", on_click=self.ask_save).props(
                     "unelevated dense no-caps color=primary data-control=contour-save"
-                ).set_enabled(problem is None and editor.can_undo)
+                ).set_enabled(problem is None and editor.changed)
             self.show_moved()
 
     def show_assessment(self) -> None:
@@ -576,8 +578,19 @@ class _MesoPane(_ContinuumPane):
     def charge_section(self) -> None:
         self.charge_box = ui.column().classes("w-full gap-2").props("data-control=charge-pane")
 
+    def held_overlay(self) -> None:
+        """Clear the overlay where the charge it was computed from is no longer the model's."""
+        model = self.meso
+        charge = None if model is None else model.artefacts().get("charge")
+        digest = None if charge is None else charge.hash
+        if digest != self.overlay_charge:
+            self.overlay_charge = digest
+            self.overlay.clear()
+            self.peaks = self.levels = None
+
     def show_charge(self) -> None:
         model = self.meso
+        self.held_overlay()
         self.charge_box.clear()
         with self.charge_box:
             if model is None:
@@ -628,8 +641,10 @@ class _MesoPane(_ContinuumPane):
                     .props('role=group aria-label="Charged residues"')
                 ):
                     for key, name, charge_e, copies in listed:
-                        # Its sign beside its name: the list is read for where the charge is.
-                        sign = f"{charge_e:+.0f}".replace("-", "\u2212")
+                        # Its sign beside its name: the list is read for where the charge is. A
+                        # charge between whole ones, as half the frames', keeps its tenth.
+                        whole = abs(charge_e - round(charge_e)) < 0.05
+                        sign = f"{charge_e:+.{0 if whole else 1}f}".replace("-", "\u2212")
                         each = f", each of {copies} copies" if copies > 1 else ""
                         ui.button(
                             f"{key} {name} {sign}", on_click=lambda _, k=key: self.select(k)
@@ -1058,6 +1073,7 @@ class _MesoPane(_ContinuumPane):
         if model is None or not key:
             return None
         colour = "charge" if self.tool.id == "charge" else "chain"
+        self.held_overlay()
         charge = model.artefacts().get("charge")
         if charge is not None:
             # The overlay is the charge's: a new charge takes a new address.

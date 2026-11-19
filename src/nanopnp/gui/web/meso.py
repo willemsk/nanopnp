@@ -251,30 +251,38 @@ class MesoModel(ContinuumModel):
         A first read takes seconds for a pore of tens of thousands of charged atoms: it is kept by
         the protonation's and the charge's hashes, and a read meanwhile waits for it.
         """
+        return self._volumes()[0]
+
+    def _volumes(self) -> tuple[ChargeVolumes | None, tuple[str, str]]:
+        # One read of the stored stages keys the table, the volumes and their text alike, so a
+        # build that ends meanwhile cannot file one charge's volumes under another's hashes.
         stored = self.artefacts()
         protonation, charge = stored.get("protonation"), stored.get("charge")
-        resolved, table = self.resolved(), self.table()
-        if protonation is None or charge is None or resolved is None or table is None:
-            return None
+        resolved = self.resolved()
+        if protonation is None or charge is None or resolved is None:
+            return None, ("", "")
+        hashes = (protonation.hash, charge.hash)
 
         def read() -> ChargeVolumes | None:
+            table = kept(
+                ("table", protonation.hash),
+                lambda: ProtonationTable.read(Path(protonation.payload[PAYLOAD_NAME])),
+            )
             # A table that carries no charge deposits none to draw; any other refusal is a gate's.
             if not table.charge_e.any():
                 return None
             return charge_volumes(table, resolved)
 
         with _VOLUMES_LOCK:
-            return kept(("volumes", protonation.hash, charge.hash), read)
+            return kept(("volumes", *hashes), read), hashes
 
     def volume_text(self, which: str) -> str | None:
         """Return one overlay volume as OpenDX text in angstroms, or None where none is drawn."""
         if which not in VOLUMES:
             raise ValueError(f"which: {which!r} is not one of {', '.join(VOLUMES)}")
-        shown = self.volumes()
+        shown, hashes = self._volumes()
         if shown is None:
             return None
-        stored = self.artefacts()
-        hashes = tuple(stored[stage].hash for stage in ("protonation", "charge"))
         values = shown.full if which == "full" else shown.revolved
         return kept(
             ("dx", which, *hashes),

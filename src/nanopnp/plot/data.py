@@ -428,7 +428,7 @@ class ResidueCopies:
     """Which residues are copies of one another: the chains at one position of the ring's units.
 
     Under Cn, n ≥ 2, stage 1 checked that the chains at one position of their units hold
-    the same residue at a shared number (FR-03), so a residue is named once, under its first unit's
+    the same residue at a shared number, so a residue is named once, under its first unit's
     chain. Under C1, without stage 1, or where the header's units cannot be read so, each chain's
     residue stands alone.
     """

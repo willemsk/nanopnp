@@ -3892,5 +3892,11 @@ WP5.20's round ([the record](../design/reviews/2026-11-19-meso.md)) and its revi
   of its atoms carries: GLU 12 of chains B and C is listed as `A:12`. Its charge per copy, its copies and Mol*'s marks
   are right; only the name is wrong (the ship's physics read). A residue is to be named by its first present copy,
   alike in `ResidueCharges`, `ResidueAtoms` and `DensityAtoms`, whose keys the pane links.
+- **The overlay with One subunit.** A scene of one subunit has no cut, so the overlay draws the whole ring's charge
+  about the one chain shown (CODE_REVIEW_063). Whether One subunit shows the ring's charge, said in the pane, or no
+  overlay, is a design question for WP5.23's round.
+- **Density's list before the charge is built, under `as_loaded`.** Where stage 2 smears stage 1's atoms, a walk to
+  stage 3 builds no protonation table, so the nearest residues are listed without names and a pick marks nothing
+  until the charge is built (CODE_REVIEW_063). Mol* is blank there too, as it reads that table.
 
 **Open**: WP5.23.
