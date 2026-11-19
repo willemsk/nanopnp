@@ -11,14 +11,20 @@ Groups, each shot light and dark:
   query, glossary and About, on the charged fixture (``shell-extra-<name>-<scheme>``);
 - ``compact``: a few screens under a user configuration of compact density, tight spacing and a
   theme of the user's own (``shell-compact-<screen>-<scheme>``);
-- ``molecular`` and ``continuum``: their tools refused and mid-build, on 2WCD;
+- ``molecular`` and ``continuum``: their tools refused and mid-build, on 2WCD (``continuum``: a
+  continuum model whose stage 4 is refused and one held mid-build, shown in Meso's Outline, where
+  stage 4 builds);
+- ``meso``: the Meso tools on a copy of the 2WCD project, its continuum model's charge case walked
+  to its charge with a run record and its deployed charge drawn: each tool, Density's residue list
+  after a point is picked, a residue picked on Charge map, the deployed charge, one subunit, the
+  overlay of the charge in 3D and of its mean about the axis, and last an Outline edit moving the
+  narrowest vertex into the protein, with the residues it moves (``shell-meso-<name>-<scheme>``);
 - ``physics``: the Physics tools on example 01's project with the charged tube beside it, its
   study walked to its charge: each tool, a role picked, a change of model's note, a new model with
   no salt, and the shown study refusing the model (``shell-physics-<name>-<scheme>``).
 - ``study``: the Study tools on a copy of the 2WCD project, its study walked to its charge with a
-  run record and its deployed charge drawn, and a sweep over the bias: each tool, a residue picked,
-  the deployed charge, one subunit, the whole case and *New study*; then the charged tube run once
-  from Study setup and its convergence in Runs (``shell-study-<name>-<scheme>``).
+  run record, and a sweep over the bias: each tool, the whole case and *New study*; then the charged
+  tube run once from Study setup and its convergence in Runs (``shell-study-<name>-<scheme>``).
 
 The 2WCD project is built once into ``cache/2wcd-<key>/`` beside ``<out-dir>``, ``key`` being 12 hex
 digits of the SHA-256 of the case file and the deposited structure; its first walk fills the
@@ -44,6 +50,7 @@ import yaml
 
 from nanopnp.api.case import Case
 from nanopnp.api.project import Project
+from nanopnp.api.session import Session
 from nanopnp.gui.render import ChargeRequest, render_charge_elements
 from nanopnp.gui.web import server, theme
 from nanopnp.gui.web.runs import write_sweep
@@ -51,6 +58,8 @@ from nanopnp.gui.web.screens import SCREENS
 from nanopnp.gui.web.settings import SETTINGS_FILENAME
 from nanopnp.gui.web.states import STATES
 from nanopnp.io.project import STORE_FOLDER
+from nanopnp.io.store import Store
+from nanopnp.pipeline.run import RunResult
 from nanopnp.sweep.document import Axis
 from nanopnp.validation.charged_tube import write_charged_tube
 
@@ -63,7 +72,17 @@ DEPOSITED = ROOT / "tests" / "data" / "structures" / "2wcd.pdb.gz"
 VIEWPORT = [1280, 800]
 SCHEMES = ("light", "dark")
 READY = 'body[data-screen-ready="1"]'
-GROUPS = ("states", "2wcd", "extra", "compact", "molecular", "continuum", "physics", "study")
+GROUPS = (
+    "states",
+    "2wcd",
+    "extra",
+    "compact",
+    "molecular",
+    "meso",
+    "continuum",
+    "physics",
+    "study",
+)
 THEME_NAME = "dusk"
 START_S = 1800
 """How long a server may take to print its ready line: the 2WCD walk comes before it."""
@@ -131,11 +150,11 @@ PROJECT_EXTRAS: list[tuple[str, str, list[str]]] = [
         ["[data-control=region-domain]", ".q-menu .q-item:nth-child(3)"],
     ),
     # Last: the edit is held by the server, so every shot after it would show it.
-    ("c-geometry-edit", "/continuum/geometry", ["[data-control=contour-start]"]),
+    ("m-outline-edit", "/meso/outline", ["[data-control=contour-start]"]),
 ]
 """Windows opened over a tool of the 2WCD project, none of which writes to it."""
 
-HELD = frozenset({"c-geometry-edit"})
+HELD = frozenset({"m-outline-edit"})
 """The extras whose click leaves a state the server holds for the shots after it."""
 
 
@@ -237,7 +256,11 @@ def start(*arguments: str, config: Path | None = None) -> tuple[subprocess.Popen
 
 
 def entry(
-    identifier: str, first: str, path: str, scheme: str, click: list[str] | None = None
+    identifier: str,
+    first: str,
+    path: str,
+    scheme: str,
+    click: list[str] | list[str | dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Return one manifest entry: a path of the server at ``first``, shot in a colour scheme."""
     shot: dict[str, Any] = {
@@ -409,15 +432,16 @@ def continuum_project(out: Path, name: str, *, refused: bool) -> Path:
 
 
 def continuum_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[str, Any]]:
-    """Return the Continuum tools refused at stage 4 and held mid-build, on 2WCD.
+    """Return a continuum model refused at stage 4 and one held mid-build, on 2WCD.
 
-    The built and the empty tools are the ``2wcd`` and ``states`` groups' ``c-<tool>`` shots, and
-    an unsaved edit the ``2wcd`` group's last.
+    Stage 4 is built from Meso's Outline, so both are shot there. The built and the empty
+    Continuum tools are the ``2wcd`` and ``states`` groups' ``c-<tool>`` shots, and an unsaved edit
+    of the outline the ``2wcd`` group's last.
     """
     manifest = []
     for name, path, wait_ms in (
-        ("refused", "/continuum/geometry", 30000),
-        ("building", "/continuum/geometry", 2500),
+        ("refused", "/meso/outline", 30000),
+        ("building", "/meso/outline", 2500),
     ):
         for scheme in SCHEMES:
             folder = continuum_project(out, f"c-{name}-{scheme}", refused=name == "refused")
@@ -520,17 +544,105 @@ def physics_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dic
     return manifest
 
 
-STUDY_TOOLS = ("overview", "setup", "sweep", "charge", "runs")
+MESO_TOOLS = ("density", "outline", "charge")
+OVERLAY_WAIT_MS = 20000
+"""How long a shot waits after the overlay's toggle: its first volumes take about 7 s on 2WCD."""
+MESO_EXTRAS: tuple[tuple[str, str, list[str], int], ...] = (
+    # A click on the plane's centre names the residues nearest that point: Density's plane takes
+    # a point, where the Outline's picks a vertex.
+    ("density-near", "/meso/density", ["#plane canvas"], 2500),
+    ("charge-picked", "/meso/charge", ["[data-control=charge-strip-item]"], 2500),
+    ("charge-deployed", "/meso/charge", ["[data-control=charge-layer] button:nth-child(2)"], 2500),
+    ("charge-subunit", "/meso/charge", ["[data-control=mol-subunit]"], 2500),
+    ("charge-overlay-full", "/meso/charge", ["[data-control=overlay-full]"], OVERLAY_WAIT_MS),
+    (
+        "charge-overlay-revolved",
+        "/meso/charge",
+        ["[data-control=overlay-revolved]"],
+        OVERLAY_WAIT_MS,
+    ),
+)
+"""The Meso tools in states of their own: the residues nearest a point of Density's plane, a
+residue picked from the list, the deployed charge on the mesh, Mol* showing one subunit, and each
+of the overlay's two volumes drawn as isosurfaces."""
+
+
+OUTLINE_MOVE_NM = 0.5
+"""How far the outline edit moves the narrowest vertex into the protein: on 2WCD, two residues'
+atoms then lie in the water. Toward the axis it would move into water no atom reaches."""
+
+
+def outline_edit(walked: RunResult) -> list[str | dict[str, Any]]:
+    """Return the steps that open the outline's editor and move its narrowest vertex outward."""
+    profile = Path(walked.artefacts["contour"].payload["profile"])
+    radii = [r for r, _ in yaml.safe_load(profile.read_text(encoding="utf-8"))["vertices"]]
+    narrowest = radii.index(min(radii))
+    return [
+        "[data-control=contour-start]",
+        {"plane_vertex": narrowest},
+        {
+            "fill": "[data-control=contour-r]",
+            "value": round(radii[narrowest] + OUTLINE_MOVE_NM, 4),
+        },
+        "[data-control=contour-move]",
+    ]
+
+
+def meso_project(out: Path) -> tuple[Path, list[str | dict[str, Any]]]:
+    """Return a copy of the 2WCD project, its continuum model's charge walked and drawn.
+
+    The charge case is walked with a run record, as Meso's Build runs it, and the deployed charge
+    is drawn for the record, as Charge map asks the render child for. The steps of the outline's
+    edit come with it.
+    """
+    source = cached_project(out)
+    folder = out.resolve() / "projects" / "meso-2wcd"
+    if folder.exists():
+        shutil.rmtree(folder)
+    shutil.copytree(source, folder)
+    project = Project.open(folder)
+    (continuum,) = project.items("continuum")
+    walked = Session(Store(folder / STORE_FOLDER), write=True).run(
+        project.charge_case(continuum), upto="charge"
+    )
+    assert walked.directory is not None
+    render_charge_elements(ChargeRequest(run=str(walked.directory), elements=True))
+    project.open_item(f"continuum/{continuum}")
+    return folder, outline_edit(walked)
+
+
+def meso_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[str, Any]]:
+    """Return the Meso tools on the 2WCD project: each tool, then each state of the charge map."""
+    folder, edit = meso_project(out)
+    process, first = start("--project", str(folder))
+    servers.append(process)
+    manifest = []
+    for tool in MESO_TOOLS:
+        for scheme in SCHEMES:
+            shot = entry(f"shell-meso-{tool}", first, f"/meso/{tool}", scheme)
+            shot["wait_ms"] = 2500
+            manifest.append(shot)
+    for name, path, click, wait_ms in MESO_EXTRAS:
+        for scheme in SCHEMES:
+            shot = entry(f"shell-meso-{name}", first, path, scheme, click)
+            shot["wait_ms"] = wait_ms
+            manifest.append(shot)
+    # Last: the edit is held by the server, so the dark shot finds it made.
+    for index, scheme in enumerate(SCHEMES):
+        steps = [] if index else edit
+        shot = entry("shell-meso-outline-moved", first, "/meso/outline", scheme, steps)
+        shot["wait_ms"] = 2500
+        manifest.append(shot)
+    return manifest
+
+
+STUDY_TOOLS = ("overview", "setup", "sweep", "runs")
 STUDY_EXTRAS: tuple[tuple[str, str, list[str]], ...] = (
-    ("charge-picked", "/study/charge", ["[data-control=charge-strip-item]"]),
-    ("charge-deployed", "/study/charge", ["[data-control=charge-layer] button:nth-child(2)"]),
-    ("charge-subunit", "/study/charge", ["[data-control=mol-subunit]"]),
     ("overview-whole", "/study/overview", ["[data-control=overview-whole-case]"]),
     ("new", "/study/setup", ["[data-control=study-new]"]),
 )
-"""The 2WCD study's tools in states of their own: a residue picked from the list, the deployed
-charge on the mesh, Mol* showing one subunit, Overview's whole case unfolded, and the *New study*
-window."""
+"""The 2WCD study's tools in states of their own: Overview's whole case unfolded, and the *New
+study* window."""
 SWEPT_BIAS_V = [-0.05, 0.05]
 """The bias the 2WCD study's sweep varies over: two points, so its forecast stays quick."""
 
@@ -538,8 +650,7 @@ SWEPT_BIAS_V = [-0.05, 0.05]
 def study_project(out: Path) -> Path:
     """Return a copy of the 2WCD project, its study walked to its charge with a run record.
 
-    The deployed charge is drawn for the record, as Charge on the mesh asks the render child for,
-    and the study holds a sweep over the bias.
+    The study holds a sweep over the bias.
     """
     source = cached_project(out)
     folder = out.resolve() / "projects" / "study-2wcd"
@@ -548,9 +659,7 @@ def study_project(out: Path) -> Path:
     shutil.copytree(source, folder)
     project = Project.open(folder)
     (study,) = project.items("study")
-    walked = project.session().run(project.study(study), upto="charge")
-    assert walked.directory is not None
-    render_charge_elements(ChargeRequest(run=str(walked.directory), elements=True))
+    project.session().run(project.study(study), upto="charge")
     axis = Axis(name="bias", path="boundary_conditions.bias_V", values=list(SWEPT_BIAS_V))
     write_sweep(project, study, [axis])
     return folder
@@ -597,6 +706,7 @@ GROUP_ENTRIES = {
     "extra": extra_entries,
     "compact": compact_entries,
     "molecular": molecular_entries,
+    "meso": meso_entries,
     "continuum": continuum_entries,
     "physics": physics_entries,
     "study": study_entries,
@@ -621,9 +731,9 @@ def main(argv: list[str]) -> int:
     try:
         # The groups start their servers side by side: a server's start is its imports, and the
         # 2WCD project's is its walk.
-        # Four groups read the 2WCD cache, so it is built and its store filled before they start
+        # Five groups read the 2WCD cache, so it is built and its store filled before they start
         # side by side.
-        if {"2wcd", "molecular", "continuum", "study"} & set(groups):
+        if {"2wcd", "molecular", "meso", "continuum", "study"} & set(groups):
             filled_cache(out)
         with ThreadPoolExecutor(len(groups)) as pool:
             pending = [pool.submit(GROUP_ENTRIES[group], out, servers) for group in groups]
