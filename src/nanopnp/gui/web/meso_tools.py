@@ -278,21 +278,18 @@ class _MesoPane(_ContinuumPane):
                 ).set_enabled(self.measurable() and not self.assessing())
             if self.vertex is not None and self.vertex < len(editor.vertices):
                 r, z = editor.vertices[self.vertex]
-                with self.named(f"Vertex {self.vertex}"):
-                    with ui.row().classes("items-center no-wrap"):
-                        self.vertex_r = (
-                            ui.number(value=round(r, 4), suffix="nm", step=0.01)
-                            .props('dense outlined data-control=contour-r aria-label="r, in nm"')
-                            .style("width: 7.5rem")
-                        )
-                        self.vertex_z = (
-                            ui.number(value=round(z, 4), suffix="nm", step=0.01)
-                            .props('dense outlined data-control=contour-z aria-label="z, in nm"')
-                            .style("width: 7.5rem")
-                        )
-                        ui.button("Move", on_click=self.move_vertex).props(
-                            "outline dense no-caps data-control=contour-move"
-                        )
+                # One row each, as the pane's values: side by side they leave no width to read.
+                with self.named(f"Vertex {self.vertex}, r"):
+                    self.vertex_r = ui.number(value=round(r, 4), suffix="nm", step=0.01).props(
+                        'dense outlined data-control=contour-r aria-label="r of the vertex, in nm"'
+                    )
+                with self.named(f"Vertex {self.vertex}, z"):
+                    self.vertex_z = ui.number(value=round(z, 4), suffix="nm", step=0.01).props(
+                        'dense outlined data-control=contour-z aria-label="z of the vertex, in nm"'
+                    )
+                ui.button("Move vertex", on_click=self.move_vertex).props(
+                    "outline dense no-caps data-control=contour-move"
+                )
             else:
                 ui.label(
                     "Pick a vertex in the view to move or delete it; double-click an edge to "

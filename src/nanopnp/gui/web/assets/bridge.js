@@ -29,6 +29,9 @@ window.nano = {
         if (this.sceneKey !== null) await plugin.clear();
         this.sceneKey = null;
       } else {
+        // A scene that places its camera keeps it as its volumes arrive: the canvas would
+        // otherwise fit itself again to their box, which is wider than the structure.
+        plugin.canvas3d.setProps({ camera: { manualReset: /"kind":\s*"camera"/.test(text) } });
         await this.viewer.loadMvsData(text, 'mvsj', {
           replaceExisting: true, keepCamera: this.sceneKey === key,
           sourceUrl: new URL(url, window.location.href).href,
