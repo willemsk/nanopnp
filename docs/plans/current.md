@@ -1,17 +1,17 @@
 # Current work
 
-Updated 19 November 2026 (WP5.21, the Analysis suite, planned). Navigation only; `SPECIFICATION.md` governs; an
+Updated 19 November 2026 (WP5.21, the Analysis suite, reviewed). Navigation only; `SPECIFICATION.md` governs; an
 unmerged branch is not shipped.
 
 ## In brief
 
-The Analysis suite is planned. It opens a finished run: its field as a map, with a cut along the axis and probes, or
+The Analysis suite's plan is reviewed. It opens a finished run: its field as a map, with a cut along the axis and probes, or
 on its mesh in 3D; its current against voltage; its numbers. Comparison saves two runs, side by side on one scale or as
 their difference. As you ruled, every plot moves to a borrowed chart library whose axes you set, any Matplotlib colour
 map can be chosen, and Comparison's pair switches between maps and 3D. A run cleaned from the store is rebuilt on
 request and checked against its record. About eight sessions, with the round.
 
-**Your call.** Read the plan's review, then let it run. At the round: the tiles' layout and whether a run opens on the
+**Your call.** Approve the plan, then let it run. At the round: the tiles' layout and whether a run opens on the
 map or in 3D. Recommendation: rule them on the drawn screens.
 
 ## Position
@@ -19,7 +19,7 @@ map or in 3D. Recommendation: rule them on the drawn screens.
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.20 merged
   (`v0.6.0-alpha.19`; WP5.20's `v0.6.0-alpha.20` to be pushed). **WP5.21**, [the Analysis suite](phase-5/wp5.21-the-analysis-suite.md),
-  planned with the author's AU1 to AU3 (§8.2.45), its pull request open. **Next:** `/np-plan wp 5.21 review`, then
+  planned with the author's AU1 to AU3 (§8.2.45), reviewed ([064](../code_reviews/CODE_REVIEW_064.md)), its pull request open. **Next:**
   `/np-implement wp 5.21`. Then WP5.22 performance, WP5.23 the route, WP5.24 the close. host: claude-code.
 
 ## Not to be re-decided
