@@ -11,16 +11,22 @@ import yaml
 from nanopnp.api.case import Case
 from nanopnp.api.project import Project
 from nanopnp.api.session import Session
+from nanopnp.api.sweep import run_plan
 from nanopnp.core.errors import EXIT_CASE, EXIT_GATE, classify
 from nanopnp.gui.web import settings
 from nanopnp.gui.web.queue import Queue
+from nanopnp.gui.web.runs import write_sweep
 from nanopnp.io.project import STORE_FOLDER
 from nanopnp.io.store import StaleEntry, Store, StoreError
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import selected_stages
+from nanopnp.sweep.collect import collect
+from nanopnp.sweep.document import Axis, load_sweep
+from nanopnp.sweep.plan import build_plan, write_plan
 from nanopnp.validation.charged_tube import write_charged_tube, write_dielectric_tube
 
 __all__ = [
+    "SOLVED",
     "STATES",
     "Workbench",
     "boot",
@@ -35,6 +41,13 @@ logger = logging.getLogger(__name__)
 STATES: tuple[str, ...] = ("empty", "charged-tube", "uncharged", "refused")
 """The names ``--state`` takes: no case, a case walked to its charge, one walked to a stage 7 that
 carries no charge from a structure, and a case refused."""
+
+SOLVED = "solved"
+"""The state VER-78 (o) alone opens, outside :data:`STATES`: the charged tube solved at its 0.05 V,
+a sweep of its bias over -0.05 and 0.05 V, and comparison ``tube-bias`` of the run with the sweep's
+point at -0.05 V."""
+
+_BIAS = "boundary_conditions.bias_V"
 
 
 @dataclass(frozen=True)
@@ -172,8 +185,8 @@ def boot(state: str, work: Path) -> Workbench:
     """Return the named state: its fixture case imported into a project in ``work``, and walked."""
     if state == "empty":
         return Workbench("empty")
-    if state not in STATES:
-        raise ValueError(f"no state {state!r}; the states are {', '.join(STATES)}")
+    if state not in (*STATES, SOLVED):
+        raise ValueError(f"no state {state!r}; the states are {', '.join((*STATES, SOLVED))}")
     write = write_dielectric_tube if state == "uncharged" else write_charged_tube
     case = write(work / state)
     project = Project.create(work / state / "project", name=state)
@@ -185,4 +198,31 @@ def boot(state: str, work: Path) -> Workbench:
         if "radius_nm: 30.0" not in text:
             raise ValueError(f"{model} holds no radius_nm: 30.0 for the refused state to replace")
         model.write_text(text.replace("radius_nm: 30.0", "radius_nm: wide"), encoding="utf-8")
+    if state == SOLVED:
+        _solve(project)
     return boot_project(project)
+
+
+def _solve(project: Project) -> None:
+    """Solve a project's study, sweep its bias over -0.05 and 0.05 V, and compare the two runs."""
+    study = project.items("study")[0]
+    session = project.session()
+    run = session.run(project.study(study))
+    points = [{_BIAS: -0.05}, {_BIAS: 0.05}]
+    source = write_sweep(project, study, [Axis(name="bias", assignments=points)])
+    plan = build_plan(load_sweep(source), source=source, check_meshes=False)
+    directory = session.store.sweep_directory(plan.name, plan.hash)
+    write_plan(plan, directory)
+    members = run_plan(plan, directory, session=session)
+    collect(plan, directory, members=members)
+    minus = next(
+        member
+        for member in members
+        if member.assignments.get(_BIAS) == -0.05 and member.directory is not None
+    )
+    assert minus.directory is not None
+    project.new_comparison(
+        "tube-bias",
+        run.directory.relative_to(project.root).as_posix(),
+        Path(minus.directory).relative_to(project.root).as_posix(),
+    )

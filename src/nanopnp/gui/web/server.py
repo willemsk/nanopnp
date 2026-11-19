@@ -32,7 +32,15 @@ from nanopnp.gui.web import settings
 from nanopnp.gui.web.builds import cancel_builds
 from nanopnp.gui.web.pages import install
 from nanopnp.gui.web.shell import Shell
-from nanopnp.gui.web.states import STATES, Workbench, boot, boot_case, boot_project, cap_store
+from nanopnp.gui.web.states import (
+    SOLVED,
+    STATES,
+    Workbench,
+    boot,
+    boot_case,
+    boot_project,
+    cap_store,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -364,7 +372,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Run ``python -m nanopnp.gui.web.server``, the entry a desktop wrapper starts."""
     parser = argparse.ArgumentParser(prog="nanopnp gui", description=serve.__doc__)
     parser.add_argument("case", nargs="?", type=Path, help="a case file, walked to its charge")
-    parser.add_argument("--state", choices=STATES, help="a fixture state in place of a case")
+    parser.add_argument(
+        "--state", choices=(*STATES, SOLVED), help="a fixture state in place of a case"
+    )
     parser.add_argument(
         "--project", type=Path, help="a project folder, opened with its first study walked"
     )
