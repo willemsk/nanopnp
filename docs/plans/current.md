@@ -1,26 +1,27 @@
 # Current work
 
-Updated 19 November 2026 (WP5.20, the meso suite, planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 19 November 2026 (WP5.20, the meso suite, planned and reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
 The meso suite is planned. It sits between Molecular and Continuum and shows how the molecule becomes the pore's shape
 and charge, each picture beside the molecule cut open along its axis: Density, Outline and Charge map, moved from
-Continuum and Study. A point on the charge map names its residue once, not once per chain. As you ruled at the plan,
-an edited outline marks the residues the edit moves into the water or the protein, and the round shows a working
-overlay of the charge in 3D and its average around the axis, built if you keep it.
+Continuum and Study. A point on the charge map names its residue once, not once per chain. As you ruled at the plan
+and its review, an edited outline marks the residues the edit moves into the water or the protein; the round shows a
+working overlay of the charge in 3D and its average around the axis, smoothed to 0.4 nm, built if kept; and
+the study graph's charge opens the continuum model's, not the study's own.
 
-**Your call.** At the plan's review: does the plan hold what you meant by the bridge between the scales?
-Recommendation: yes; the name and the screens' questions wait for the round on 2WCD.
+**Your call.** Approve the plan, or name the decision to change. Recommendation: approve; the name and the screens
+wait for the round on 2WCD.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.19 merged
   (`v0.6.0-alpha.19`); the fifth amendment merged (§8.2.43). **WP5.20**, [the meso suite](phase-5/wp5.20-the-meso-suite.md),
-  planned on `claude/inspiring-carson-p9b9uc`, with the author's AT1 and AT2 (§8.2.44). **Next:**
-  `/np-plan wp 5.20 review`, then `/np-implement wp 5.20`. Then WP5.21 Analysis, WP5.22 performance, WP5.23 the route,
+  planned and reviewed on `claude/inspiring-carson-p9b9uc`, with the author's AT1 to AT4 (§8.2.44). **Next:**
+  `/np-implement wp 5.20`. Then WP5.21 Analysis, WP5.22 performance, WP5.23 the route,
   WP5.24 the close. host: claude-code.
 
 ## Not to be re-decided
@@ -41,7 +42,8 @@ Recommendation: yes; the name and the screens' questions wait for the round on 2
   in a picked study** (§8.2.41). **Red blocks, blue informs; refusals are ASD-STE100** (WB-42). **A thread count is recorded, never keyed** (AR3).
 - **The meso suite is next, WP5.20, holding Density, Outline and Charge map and named at its round; the 200 ms line is
   the performance package's, WP5.22, after Analysis** (AR7, AR8; §8.2.43 AS1 to AS3). **An edit marks the atoms it
-  moves; the overlay is drafted for the round and built if kept** (§8.2.44 AT1, AT2).
+  moves; the overlay is drafted for the round, smoothed to 0.4 nm, and built if kept; a study's charge node opens the
+  continuum model's** (§8.2.44 AT1 to AT4).
 
 ## Somebody else's
 
