@@ -238,9 +238,9 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
   `host_page`) (D2, D3); done when `test_analysis.py`'s file test passes. **Executor:** main
 - [x] 835274a 3. `io/project.py`, `api/project.py` (comparisons, `sweeps`, `run_state`, `rebuild`); §5.3.5's NOTE (D5, D9);
   done when `test_project.py`'s comparison and rebuild tests pass. **Executor:** main
-- [ ] 4. `solve/stage.py`, `plot/data.py:newton_history`, `gui/convergence.py`, `gui/web/runs.py` (D8); done when
+- [x] 8d988a9 4. `solve/stage.py`, `plot/data.py:newton_history`, `gui/convergence.py`, `gui/web/runs.py` (D8); done when
   `test_study_runs.py`'s replay test passes and the `physics-reviewer` has read it. **Executor:** main
-- [ ] 5. Compaction checkpoint. **Executor:** main
+- [x] 5. Compaction checkpoint. **Executor:** main
 - [ ] 6. uPlot vendored, `/vendor/uplot` and `/vendor/webgui`, Matplotlib in `gui` (D6, D7); done when CON-09's test
   passes. **Executor:** general-purpose on Sonnet, high
 - [ ] 7. `gui/web/chart.py`, `assets/chart.js`, the two plots moved, `lookup_table` (D6, D7); ADR-004's NOTE, §2.6's
