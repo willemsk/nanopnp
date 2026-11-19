@@ -19,6 +19,7 @@ from nanopnp.density.map import DensityMap
 from nanopnp.geometry.profile import load_profile
 from nanopnp.gui.geometry import ImageModel, density_section, lookup_table, reduced_image
 from nanopnp.gui.web.builds import REFUSED
+from nanopnp.gui.web.chart import Axis, Band, Chart, Panel, Rule, Series
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.io.case import Membrane, Reservoir
 from nanopnp.mesh.adapter import detect_format, read
@@ -68,11 +69,12 @@ __all__ = [
     "charge_ends",
     "charge_plane",
     "deployed_layer",
-    "electrolyte_plane",
+    "electrolyte_chart",
     "image_png",
     "ion_text",
     "mesh_quality",
     "mesh_stored",
+    "physics_chart",
     "physics_plane",
     "plane",
     "png",
@@ -80,7 +82,7 @@ __all__ = [
     "unit_text",
 ]
 
-Frame = Literal["structure", "model", "plot"]
+Frame = Literal["structure", "model"]
 
 _T = TypeVar("_T")
 
@@ -209,23 +211,15 @@ class Plane:
     ----------
     frame
         ``structure``, stage 1's frame, where stages 2 to 4 draw; ``model``, the membrane at
-        z = 0, where the region and the mesh draw; ``plot``, a graph with each axis scaled
-        alone. The view keeps its pan and zoom while the frame stays the same.
+        z = 0, where the region and the mesh draw. The view keeps its pan and zoom while the
+        frame stays the same.
     extent_nm
-        ``(r_low, r_high, z_low, z_high)`` the view opens on: the pore, not the reservoir. A
-        plot's ``(x_low, x_high, y_low, y_high)``, in its axes' units, as its layers' points.
+        ``(r_low, r_high, z_low, z_high)`` the view opens on: the pore, not the reservoir.
     notes
         What is not drawn, and why, said beside the drawing.
-    panels
-        A plot's graphs, one above the other, each with its ``axes``, ``extent_nm``, x
-        ``scale`` (``linear`` or ``sqrt``) and, optionally, its x ``ticks``; a layer names its
-        graph by ``panel``. Empty: one graph of ``axes`` and ``extent_nm``.
     point_pick
         Whether a click asks about the point itself, as the charge map's residues, in place of
         picking a vertex, an element or a domain.
-    key_below
-        Whether a plot's key stands below it at any width, its rows in columns, so that a plot
-        in a narrow pane keeps the pane's width.
     """
 
     frame: Frame
@@ -233,9 +227,7 @@ class Plane:
     extent_nm: tuple[float, float, float, float]
     layers: tuple[dict[str, Any], ...]
     notes: tuple[str, ...] = ()
-    panels: tuple[dict[str, Any], ...] = ()
     point_pick: bool = False
-    key_below: bool = False
 
     def json(self) -> dict[str, Any]:
         """Return the drawing as the canvas reads it."""
@@ -243,14 +235,11 @@ class Plane:
             "frame": self.frame,
             "axes": list(self.axes),
             "extent_nm": list(self.extent_nm),
-            # Whether the extent frames something drawn, not the empty view's stand-in; a plot
-            # is fitted to its extent at every drawing.
-            "framed": self.frame != "plot" and _bounds(self.layers) is not None,
+            # Whether the extent frames something drawn, not the empty view's stand-in.
+            "framed": _bounds(self.layers) is not None,
             "layers": list(self.layers),
             "notes": list(self.notes),
-            **({"panels": list(self.panels)} if self.panels else {}),
             **({"point_pick": True} if self.point_pick else {}),
-            **({"key_below": True} if self.key_below else {}),
         }
 
 
@@ -1055,22 +1044,6 @@ def _nice(low: float, high: float) -> tuple[float, float]:
     return low, high
 
 
-def _curve(
-    identifier: str, title: str, x: np.ndarray, y: np.ndarray, colour: str, panel: int
-) -> dict[str, Any]:
-    import numpy as np
-
-    kept = np.isfinite(x) & np.isfinite(y)
-    return {
-        "id": identifier,
-        "kind": "line",
-        "title": title,
-        "points_nm": _flat(np.column_stack((x[kept], y[kept]))),
-        "colour": colour,
-        "panel": panel,
-    }
-
-
 _SUPERSCRIPT = str.maketrans(
     "0123456789+-", "\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079\u207a\u207b"
 )
@@ -1114,11 +1087,11 @@ def _factor_range(curves: Iterable[np.ndarray]) -> tuple[float, float]:
     return _nice(min(float(values.min()), 1.0), max(float(values.max()), 1.0))
 
 
-def electrolyte_plane(electrolyte: Electrolyte, concentration_M: float | None) -> Plane:
+def electrolyte_chart(electrolyte: Electrolyte, concentration_M: float | None) -> Chart:
     """Return Electrolyte's two graphs: each correction against the driver, then the wall distance.
 
-    Without a concentration, as for a model that sets no salt, the curves against the driver are
-    drawn alone, with no operating value: they read none.
+    The driver stands on a square-root axis. Without a concentration, as for a model that sets no
+    salt, the curves against the driver are drawn alone, with no operating value: they read none.
     """
     import numpy as np
 
@@ -1131,36 +1104,22 @@ def electrolyte_plane(electrolyte: Electrolyte, concentration_M: float | None) -
         if electrolyte.driver == "ionic_strength"
         else "average concentration"
     )
-    # The canvas draws in the interface's face, which has no angle brackets: the axis names the
-    # average in words, and the marks write it c.
+    # The chart draws in the interface's face, which has no angle brackets: the axis names the
+    # average in words, and the rule writes it c.
     symbol = "I" if electrolyte.driver == "ionic_strength" else "c"
     bracketed = " \u27e8c\u27e9"
     driver_axis = f"{named.replace(bracketed, '')} (M)"
+    factor = "correction factor"
     if not curves:
         flat = ("Each correction is the none model, so each factor is 1.",)
-        return Plane("plot", (driver_axis, "correction factor"), (0.0, 1.0, 0.0, 2.0), (), flat)
+        empty = Panel(Axis(driver_axis, "sqrt", (0.0, 1.0)), Axis(factor, range=(0.0, 2.0)))
+        return Chart((empty,), notes=flat, label=f"{factor} against {named}: nothing drawn")
     at_M = curves[0].at_driver_M
     low, high = electrolyte.validity_M
-    layers: list[dict[str, Any]] = [
-        {
-            "id": "validity",
-            "kind": "band",
-            "title": f"Fitted range, {low:g} to {high:g} M",
-            "x": [low, high],
-            "panel": 0,
-        }
-    ]
-    if operating:
-        layers.append(
-            {
-                "id": "driver",
-                "kind": "rule",
-                "title": f"Operating {symbol}, {at_M:g} M",
-                "x": at_M,
-                "panel": 0,
-            }
-        )
+    bands = (Band("validity", (low, high), title=f"Fitted range, {low:g} to {high:g} M", panel=0),)
+    rules = (Rule("driver", at_M, f"Operating {symbol}, {at_M:g} M"),) if operating else ()
     ions = [species.name for species in electrolyte.species]
+    series: list[Series] = []
     for curve in curves:
         prop, _, ion = curve.name.partition(":")
         title = f"{prop.capitalize()}, {ion_text(ion)}" if ion else prop.capitalize()
@@ -1169,44 +1128,71 @@ def electrolyte_plane(electrolyte: Electrolyte, concentration_M: float | None) -
         if operating:
             drawn.append((1, curve.distance_m * 1e9, curve.factor_vs_distance))
         for panel, x, y in drawn:
-            line = _curve(f"curve-{panel}-{curve.name}", title, x, y, colour, panel)
-            layers.append({**line, "dash": dash})
+            kept = np.isfinite(x) & np.isfinite(y)
+            series.append(
+                Series(
+                    f"curve-{panel}-{curve.name}",
+                    title,
+                    tuple(float(value) for value in x[kept]),
+                    tuple(float(value) for value in y[kept]),
+                    colour,
+                    tuple(float(gap) for gap in dash),
+                    panel=panel,
+                )
+            )
     x_high = max(float(np.nanmax(curves[0].driver_M)), at_M)
-    panels: list[dict[str, Any]] = [
-        {
-            "axes": [driver_axis, "correction factor"],
-            "extent_nm": [0.0, x_high, *_factor_range(c.factor_vs_driver for c in curves)],
-            "scale": "sqrt",
-            "ticks": [tick for tick in SQRT_TICKS_M if tick <= x_high],
-        }
+    panels = [
+        Panel(
+            Axis(
+                driver_axis,
+                "sqrt",
+                (0.0, x_high),
+                tuple(tick for tick in SQRT_TICKS_M if tick <= x_high),
+            ),
+            Axis(factor, range=_factor_range(c.factor_vs_driver for c in curves)),
+        )
     ]
     notes: tuple[str, ...] = ()
     if operating:
         distance = axis_label("distance d to the pore wall", "length")
         d_high = float(np.nanmax(curves[0].distance_m)) * 1e9
         panels.append(
-            {
-                "axes": [f"{distance}, at {symbol} = {at_M:g} M", "correction factor"],
-                "extent_nm": [
-                    0.0,
-                    d_high,
-                    *_factor_range(c.factor_vs_distance for c in curves),
-                ],
-                "scale": "linear",
-                "ticks": [0.5 * k for k in range(int(2 * d_high) + 1)],
-            }
+            Panel(
+                Axis(
+                    f"{distance}, at {symbol} = {at_M:g} M",
+                    range=(0.0, d_high),
+                    ticks=tuple(0.5 * k for k in range(int(2 * d_high) + 1)),
+                ),
+                Axis(factor, range=_factor_range(c.factor_vs_distance for c in curves)),
+            )
         )
     else:
         notes = ("Type the concentration to see the factors against the distance to the wall.",)
-    first = panels[0]
-    return Plane(
-        "plot",
-        tuple(first["axes"]),
-        tuple(first["extent_nm"]),
-        tuple(layers),
+    return Chart(
+        tuple(panels),
+        tuple(series),
+        bands,
+        rules,
         notes,
-        panels=tuple(panels),
+        label=f"Each {factor} against {named}"
+        + (" and against the distance to the pore wall" if operating else ""),
     )
+
+
+def physics_chart(case: Case | None, note: str = REFUSED_SHOWN) -> Chart:
+    """Return Electrolyte's graphs for the shown case; without one that resolves, the note."""
+    if case is not None:
+        try:
+            resolved = resolve(case, base=case.source.base)
+        except REFUSED:
+            pass
+        else:
+            return electrolyte_chart(resolved.electrolyte, resolved.concentration_M)
+    empty = Panel(
+        Axis("concentration driver (M)", "sqrt", (0.0, 1.0)),
+        Axis("correction factor", range=(0.0, 2.0)),
+    )
+    return Chart((empty,), notes=(note,), label="Electrolyte's graphs: nothing drawn")
 
 
 def _stored_stages(
@@ -1394,8 +1380,7 @@ def physics_plane(
     store
         The project's store, read for the stages the case's keys name.
     tool
-        ``electrolyte``, each correction's factor against the concentration driver, then
-        against the distance to the wall; ``conditions``, the boundaries.
+        ``conditions``, the boundaries; Electrolyte draws a chart (:func:`physics_chart`).
     pick
         The boundary role the Conditions tool draws picked.
     mesh_held
@@ -1409,22 +1394,16 @@ def physics_plane(
     ValueError
         If the tool or the pick is not one this view draws.
     """
-    if tool not in ("electrolyte", "conditions"):
-        raise ValueError(f"tool {tool!r} is not a Physics tool the view draws")
+    if tool != "conditions":
+        raise ValueError(f"tool {tool!r} is not a Physics tool the (r, z) view draws")
     if pick and pick not in BOUNDARY_VOCABULARY:
         raise ValueError(f"pick {pick!r} is not one of {', '.join(BOUNDARY_VOCABULARY)}")
     blank = (0.0, 10.0, -10.0, 10.0)
-    frame: Frame = "plot" if tool == "electrolyte" else "model"
-    if tool == "electrolyte":
-        axes, empty = ("concentration driver (M)", "correction factor"), (0.0, 1.0, 0.0, 2.0)
-    else:
-        axes, empty = ("r (nm)", "z (nm)"), _extent([], blank)
+    axes, empty = ("r (nm)", "z (nm)"), _extent([], blank)
     if case is None:
-        return Plane(frame, axes, empty, (), (REFUSED_SHOWN,))
+        return Plane("model", axes, empty, (), (REFUSED_SHOWN,))
     try:
         resolved = resolve(case, base=case.source.base)
     except REFUSED:
-        return Plane(frame, axes, empty, (), (REFUSED_SHOWN,))
-    if tool == "electrolyte":
-        return electrolyte_plane(resolved.electrolyte, resolved.concentration_M)
+        return Plane("model", axes, empty, (), (REFUSED_SHOWN,))
     return _conditions_plane(resolved, store, pick or "", mesh_held, blank, mesh=mesh)

@@ -3,20 +3,22 @@
 from __future__ import annotations
 
 import json
-import math
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
+
+import pytest
 
 from nanopnp.api.case import Case
 from nanopnp.api.session import Session
 from nanopnp.gui.convergence import ConvergenceModel
 from nanopnp.gui.run_model import RunModel
 from nanopnp.gui.solver import Finished, Iteration, RunEvent, Rung, Stage, Started
+from nanopnp.gui.web.chart import placeable
 from nanopnp.gui.web.runs import (
     OTHER_SOLVE_NOTE,
     SERVED_NOTE,
-    convergence_plane,
+    convergence_chart,
     recorded_convergence,
     rung_rows,
 )
@@ -72,39 +74,54 @@ def test_ver44_the_unfolded_run_names_each_silence_and_what_closed_each_rung() -
     assert (update["closed_on"], update["forced"], update["damping"]) == ("update test", "0", "1")
     assert update["last"] == "2.00e-09 ≤ 1e-08"
 
-    drawing = convergence_plane(model).json()
-    kinds = [layer["kind"] for layer in drawing["layers"]]
-    assert "rule" not in kinds  # no threshold: the tolerance is each rung's own
-    bands = [layer for layer in drawing["layers"] if layer["kind"] == "band"]
+    drawing = convergence_chart(model).json()
+    assert drawing["rules"] == []  # no threshold: the tolerance is each rung's own
+    bands = drawing["bands"]
     assert [(band["label"], band["note"]) for band in bands] == [
         ("Poisson", "no Newton steps"),
         ("bias 0.01 V", "converged on entry"),
         ("bias 0.05 V", ""),
         ("bias 0.1 V", ""),
     ]
-    # Each band's curves stay inside it: none is drawn across a silent rung.
-    lines = {
-        layer["id"]: layer["points_nm"] for layer in drawing["layers"] if layer["kind"] == "line"
+    # Each band's curves stay inside it: every band's start breaks each curve, and no sample
+    # stands in a silent rung.
+    curves = {
+        curve["id"]: list(zip(curve["x"], curve["y"], strict=True)) for curve in drawing["series"]
     }
-    assert sorted(lines) == ["residual-2", "residual-3", "update-2", "update-3"]
+    assert sorted(curves) == ["residual", "update"]
+    stepped = [band["x"] for band in bands[2:]]
+    for samples in curves.values():
+        assert {band["x"][0] for band in bands} <= {x for x, y in samples if y is None}
+        assert all(
+            any(low < x < high for low, high in stepped) for x, y in samples if y is not None
+        )
+
+    def inside(series: str, index: int) -> list[tuple[float, float]]:
+        low, high = bands[index]["x"]
+        return [(x, y) for x, y in curves[series] if y is not None and low < x < high]
+
     start, _ = bands[2]["x"]
-    assert lines["residual-2"] == [start + 0.5, -2.0, start + 1.5, -9.0]
-    assert lines["update-3"] == [bands[3]["x"][0] + 1.5, math.log10(2e-9)]
+    assert inside("residual", 2) == [(start + 0.5, 1e-2), (start + 1.5, 1e-9)]
+    start, _ = bands[3]["x"]
+    assert inside("update", 3) == [(start + 0.5, 0.0), (start + 1.5, 2e-9)]
     (panel,) = drawing["panels"]
-    assert panel["y_scale"] == "log"
-    # Nine decades, 1e-9 to 1e-1, ticked at every other one.
-    assert panel["extent_nm"][2:] == [-9.0, -1.0]
-    assert panel["y_ticks"] == [-9.0, -7.0, -5.0, -3.0, -1.0]
-    # The update no decade can place is omitted and counted, not drawn at the floor; the entry
-    # shows the count in its summary above the plot.
+    assert panel["y"]["scale"] == "log"
+    # The update no decade can place is omitted and counted, not drawn at the floor: the chart
+    # counts it under the plot, and the Qt panel's summary above its own.
+    assert [placeable(y, "log") for _, y in inside("update", 3)] == [False, True]
+    assert drawing["omitted"] == 1
     assert "1 sample(s) omitted" in model.summary
+    assert "omitted" not in model.headline
+    # Nine decades, 1e-9 to 1e-1, ticked at every other one.
+    assert panel["y"]["range"] == pytest.approx([1e-9, 1e-1], rel=1e-12)
+    assert panel["y"]["ticks"] == pytest.approx([1e-9, 1e-7, 1e-5, 1e-3, 1e-1], rel=1e-12)
 
     # A solve served from the store is said to be one, not drawn as an empty plot.
     served = _run((Started("tube.case.yaml", None), Stage("solve", 9, 11), Finished("runs/t/1")))
     assert served.convergence.state == "served"
     assert rung_rows(served.convergence) == []
-    drawing = convergence_plane(served.convergence).json()
-    assert drawing["layers"] == []
+    drawing = convergence_chart(served.convergence).json()
+    assert (drawing["series"], drawing["bands"]) == ([], [])
     assert "served from the artefact store" in drawing["notes"][0]
 
 
@@ -134,8 +151,8 @@ class _Feed:
         del name, seconds, iterations
 
 
-def _bands(model: ConvergenceModel) -> list[dict[str, object]]:
-    return [layer for layer in convergence_plane(model).json()["layers"] if layer["kind"] != "line"]
+def _bands(model: ConvergenceModel) -> list[dict[str, Any]]:
+    return list(convergence_chart(model).json()["bands"])
 
 
 def test_ver44_a_recorded_run_replays_the_convergence_its_solve_reported(tmp_path: Path) -> None:
@@ -151,7 +168,7 @@ def test_ver44_a_recorded_run_replays_the_convergence_its_solve_reported(tmp_pat
     assert live.bands and any(band.steps for band in live.bands)
     assert rung_rows(replayed) == rung_rows(live)
     assert _bands(replayed) == _bands(live)
-    assert convergence_plane(replayed).json() == convergence_plane(live).json()
+    assert convergence_chart(replayed).json() == convergence_chart(live).json()
     assert replayed.summary == live.summary
     assert replayed.note == ""
 

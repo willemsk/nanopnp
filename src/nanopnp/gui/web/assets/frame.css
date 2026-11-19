@@ -890,20 +890,118 @@ body a.tool-link.tool-link-open {
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   gap: var(--gap);
 }
-/* A queued run unfolded: its convergence plot over its rung table. */
-.run-plot {
-  position: relative;
+/* A chart (chart.js): its panels, the key of its bands and rules, its notes; its axis fields
+   under it. */
+.chart-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
   width: 100%;
-  height: 14rem;
+}
+.chart {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  flex: 1 1 auto;
+  min-height: 16rem;
+  padding: var(--pad);
   border: 1px solid var(--line);
   background: var(--canvas-plot);
+  color: var(--canvas-plot-ink);
+  overflow: hidden;
 }
-.run-plot canvas {
-  display: block;
+.chart-panels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.chart-panel {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.chart .uplot {
+  width: 100%;
+  font-family: var(--font-ui);
+}
+.chart .u-legend {
+  font-size: var(--text-xs);
+  line-height: 1.3;
+  color: var(--canvas-plot-ink);
+}
+.chart .u-legend .u-series > * {
+  padding: 0 0.2rem;
+}
+.chart .u-legend .u-marker {
+  width: 0.8em;
+  height: 0.8em;
+}
+.chart .u-select {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.chart-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-xs);
+}
+.chart-swatch {
+  display: inline-block;
+  width: 1.5em;
+  margin-right: 0.35em;
+  vertical-align: middle;
+}
+.chart-swatch-band {
+  height: 0.75em;
+  background: color-mix(in srgb, var(--canvas-plot-ink) 12%, transparent);
+  outline: 1px solid var(--control-edge);
+}
+.chart-swatch-rule {
+  border-top: 2px dashed var(--canvas-plot-ink);
+}
+.chart-notes {
+  font-size: var(--text-sm);
+}
+.chart-axes-fold {
+  flex: none;
+  font-size: var(--text-sm);
+}
+.chart-axes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--gap) 1rem;
+}
+.chart-axis {
+  display: grid;
+  grid-template-columns: 8.5rem 5.5rem 5.5rem;
+  gap: 0 var(--gap);
+  align-items: end;
+}
+.chart-axis-name,
+.chart-axis-hint {
+  grid-column: 1 / -1;
+}
+.chart-axis-name {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+/* The frame's chart fills the view region beside the pane, its fields under it. */
+.main-row:has(.tool-pane) .view-chart {
+  height: calc(100vh - 8.5rem);
+  min-height: 20rem;
 }
 /* The Runs tool's view: the picked run's convergence across it (WB-45). */
-.runs-plot {
+.runs-plot .chart {
   height: 26rem;
+  flex: none;
 }
 /* With no run picked, no empty frame stands in the view: the summary says why. */
 .runs-plot.runs-plot-none {

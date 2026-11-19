@@ -361,11 +361,12 @@ def test_ver78_m_continuum_and_physics_tools_share_the_canvas_and_keep_the_molec
         page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
         assert page.locator("[data-control=tool-view]").is_visible()
         assert not page.locator("[data-control=plane]").is_visible()
-        for tool in ("electrolyte", "conditions"):
+        # Electrolyte's plots are a chart's; Conditions draws on the canvas.
+        for tool, view in (("electrolyte", "chart"), ("conditions", "plane")):
             page.locator(f"[data-control=tool-link-{tool}]").click()
             page.wait_for_url(origin + f"/physics/{tool}", timeout=READY_WAIT_MS)
             page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
-            assert page.locator("[data-control=plane]").is_visible()
+            assert page.locator(f"[data-control={view}]").is_visible()
             assert not page.locator("[data-control=molecule]").is_visible()
         page.locator("[data-control=suite-continuum]").click()
         page.wait_for_url(origin + "/continuum/region", timeout=READY_WAIT_MS)

@@ -22,6 +22,8 @@ from nanopnp.core.paths import recent_projects, remember_project
 from nanopnp.core.public import __version__
 from nanopnp.gui.web import commands, theme
 from nanopnp.gui.web.builds import refusals
+from nanopnp.gui.web.chart import Chart
+from nanopnp.gui.web.chart_view import ChartView
 from nanopnp.gui.web.glossary import GLOSSARY
 from nanopnp.gui.web.numbers import Style, shown
 from nanopnp.gui.web.palette import Palette, options
@@ -58,11 +60,12 @@ class Route:
         The suite the path belongs to, or None for a page of no suite, such as the settings.
     view
         ``molecule`` for the Mol* host the frame owns, ``plane`` for its (r, z) canvas, each
-        built once and never rebuilt, ``pair`` for the two side by side; else None.
+        built once and never rebuilt, ``pair`` for the two side by side, ``chart`` for its chart
+        host; else None.
     """
 
     suite: Suite | None
-    view: Literal["molecule", "plane", "pair"] | None = None
+    view: Literal["molecule", "plane", "pair", "chart"] | None = None
 
 
 KINDS: tuple[tuple[ItemKind, str], ...] = (
@@ -169,6 +172,9 @@ class Views(Protocol):
         ``key`` names the structure the scene draws: the camera is kept while it stays the same.
         """
 
+    async def show_chart(self, chart: Chart) -> None:
+        """Show the chart host with a chart, its axis fields under it; mark the screen ready."""
+
     async def show_plane(self, url: str | None, note: str = "") -> None:
         """Show the (r, z) canvas, built once, with the drawing at ``url``; mark the screen ready.
 
@@ -231,6 +237,7 @@ class _Frame:
         self.queue_seen: tuple[int, int, int] = (-1, -1, -1)
         self.view: ui.element
         self.hosts: dict[str, ui.element] = {}
+        self.chart: ChartView
         self.drawer: ui.left_drawer
         self.tabs: ui.tabs
         self.dialog: ui.dialog
@@ -428,6 +435,11 @@ class _Frame:
         argument = "null" if scene_url is None else json.dumps(scene_url)
         # A long timeout: Mol* builds in seconds on a machine with no GPU.
         await ui.run_javascript(f"nano.scene({argument}, {json.dumps(key)})", timeout=60)
+
+    async def show_chart(self, chart: Chart) -> None:
+        """Show the frame's chart host with a chart, its axis fields under it; mark it ready."""
+        self.show_host("chart")
+        await self.chart.show(chart)
 
     async def show_plane(self, url: str | None, note: str = "") -> None:
         """Show the frame's (r, z) canvas, built once, with a drawing; mark the screen ready."""
@@ -1224,6 +1236,8 @@ def frame(
         with ui.element("div").classes("view-region") as built.view:
             built.hosts["molecule"] = ui.element("div").props("id=mol data-control=molecule")
             built.hosts["plane"] = ui.element("div").props("id=plane data-control=plane")
+            built.chart = ChartView("chart", "chart", classes="view-chart", marks=True)
+            built.hosts["chart"] = built.chart.element
         built.view.set_visibility(False)
         with ui.element("div").classes("sub-page"):
             yield built

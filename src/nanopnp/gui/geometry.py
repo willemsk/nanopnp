@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 from pydantic import ValidationError
 
@@ -59,6 +59,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 __all__ = [
     "BUILD_UPTO",
+    "COLOUR_MAP_SIZE",
     "GEOMETRY_STAGES",
     "MODEL_FRAME",
     "STAGE_1_FRAME",
@@ -74,6 +75,7 @@ __all__ = [
     "SummaryView",
     "ViewTransform",
     "can_build",
+    "colour_maps",
     "density_section",
     "load_structure",
     "load_view",
@@ -242,11 +244,10 @@ _DIVERGING_DARK: tuple[tuple[int, int, int], ...] = (
     (255, 173, 173),
 )
 
-Palette: TypeAlias = Literal[
-    "viridis", "diverging", "diverging_r", "diverging_dark", "diverging_dark_r"
-]
-"""``diverging`` runs from blue to red; ``diverging_r`` from red to blue, positive blue; the
-``_dark`` pair the same ways through a dark middle."""
+Palette: TypeAlias = str
+"""A colour map's name: one of the workbench's own five, else any Matplotlib registers, its
+reverse ending ``_r``. ``diverging`` runs from blue to red; ``diverging_r`` from red to blue,
+positive blue; the ``_dark`` pair the same ways through a dark middle."""
 
 _PALETTES: dict[str, tuple[tuple[tuple[int, int, int], ...], int]] = {
     "viridis": (_VIRIDIS, 256),
@@ -256,11 +257,41 @@ _PALETTES: dict[str, tuple[tuple[tuple[int, int, int], ...], int]] = {
     "diverging_dark_r": (_DIVERGING_DARK[::-1], 255),
 }
 
+COLOUR_MAP_SIZE = 256
+"""The entries of a lookup table sampled from a Matplotlib colour map."""
+
+
+def colour_maps() -> tuple[str, ...]:
+    """Return every colour map's name: the workbench's own, then Matplotlib's, each reversed too.
+
+    Raises
+    ------
+    ValueError
+        If Matplotlib, of the ``gui`` extra, is not installed.
+    """
+    borrowed = sorted(name for name in _matplotlib_maps() if name not in _PALETTES)
+    return (*_PALETTES, *borrowed)
+
 
 def lookup_table(palette: Palette = "viridis") -> np.ndarray:
-    """Return a palette's N x 4 RGBA lookup table, interpolated from its anchors."""
+    """Return a colour map's N x 4 RGBA lookup table: the workbench's own, else Matplotlib's.
+
+    Raises
+    ------
+    ValueError
+        If no colour map has that name, or Matplotlib, of the ``gui`` extra, is not installed.
+    """
     import numpy as np
 
+    if palette not in _PALETTES:
+        maps = _matplotlib_maps()
+        if palette not in maps:
+            raise ValueError(
+                f"no colour map is named {palette!r}: the workbench's own are "
+                f"{', '.join(_PALETTES)}, and Matplotlib's are listed by colour_maps()"
+            )
+        sampled = maps[palette](np.linspace(0.0, 1.0, COLOUR_MAP_SIZE), bytes=True)
+        return np.ascontiguousarray(sampled, dtype=np.uint8)
     colours, size = _PALETTES[palette]
     anchors = np.asarray(colours, dtype=np.float64)
     positions = np.linspace(0.0, 1.0, len(anchors))
@@ -270,6 +301,17 @@ def lookup_table(palette: Palette = "viridis") -> np.ndarray:
         table[:, channel] = np.round(np.interp(samples, positions, anchors[:, channel]))
     table[:, 3] = 255
     return table
+
+
+def _matplotlib_maps() -> Any:  # noqa: ANN401 - Matplotlib's colour-map registry
+    try:
+        from matplotlib import colormaps
+    except ImportError as error:
+        raise ValueError(
+            "a colour map other than the workbench's own needs Matplotlib: install nanopnp's "
+            f"gui extra ({error})"
+        ) from None
+    return colormaps
 
 
 @dataclass(frozen=True)
