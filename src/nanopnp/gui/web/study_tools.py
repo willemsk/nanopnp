@@ -49,7 +49,7 @@ from nanopnp.gui.web.tools import (
     current_name,
 )
 from nanopnp.io.case_paths import case_fields, schema_default, value_at
-from nanopnp.io.models import MODEL_KINDS, owner_of
+from nanopnp.io.models import MODEL_KINDS, Kind, owner_of
 from nanopnp.physics.models import case_model, role_conditions
 from nanopnp.physics.terms import CONDITIONS
 from nanopnp.pipeline.run import RUN_RECORD_FILENAME
@@ -238,6 +238,7 @@ def _written(
 
 class _StudyPane(_Pane[StudyModel]):
     kind: ClassVar[str] = "study"
+    model_kind: ClassVar[Kind] = "study"
 
     def __init__(self, shell: Shell, tool: Tool, built: Views, focus: str) -> None:
         super().__init__(shell, tool, built, focus, current_study(shell))

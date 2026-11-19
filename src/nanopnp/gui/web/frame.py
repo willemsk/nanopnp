@@ -26,13 +26,14 @@ from nanopnp.gui.web.glossary import GLOSSARY
 from nanopnp.gui.web.numbers import Style, shown
 from nanopnp.gui.web.palette import Palette, options
 from nanopnp.gui.web.queue import Entry
-from nanopnp.gui.web.screens import GROUPS, SUITES, tool_for
+from nanopnp.gui.web.screens import GROUPS, SUITES, place
 from nanopnp.gui.web.screens import Suite as SuiteScreen
 from nanopnp.gui.web.settings_page import SettingsPage
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import Workbench, cap_store
 from nanopnp.io.case_paths import SEQUENCE_INDEX
 from nanopnp.io.defaults import Change
+from nanopnp.io.models import owner_of
 from nanopnp.io.project import (
     BOTTOM_PX_LIMITS,
     ITEM_SUITES,
@@ -288,7 +289,8 @@ class _Frame:
     def problems(self) -> tuple[Problem, ...]:
         project = self.shell.bench.project
         if self._problems is None:
-            self._problems = () if project is None else (*project.problems(), *refusals(project))
+            found = () if project is None else (*project.problems(), *refusals(project))
+            self._problems = tuple(_placed(problem) for problem in found)
         return self._problems
 
     # -- commands -----------------------------------------------------------
@@ -805,7 +807,9 @@ class _Frame:
         if not item or "/" not in item:
             return
         kind, _ = split_reference(item)
-        self.open_item(item, ITEM_SUITES[kind])
+        # An item the open suite edits stays in it, as a continuum model in Meso.
+        here = next((suite for suite in SUITES if suite.id == self.suite), None)
+        self.open_item(item, self.suite if here and here.edits == kind else ITEM_SUITES[kind])
 
     def open_item(self, item: str, suite: str) -> None:
         project = self.shell.bench.project
@@ -1035,9 +1039,9 @@ class _Frame:
             self.rail_box.clear()
             with self.rail_box:
                 self.rail_items()
-        suite = ITEM_SUITES[kind]
-        tool = tool_for(suite, field)
-        page = f"/{suite}/{tool.id}" if tool is not None else f"/{suite}"
+        found = place(kind, field)
+        suite = found[0].id if found is not None else ITEM_SUITES[kind]
+        page = f"/{suite}/{found[1].id}" if found is not None else f"/{suite}"
         ui.navigate.to(f"{page if page in self.routes else f'/{suite}'}?field={field}")
 
     def ask_reset(self, kind: str, name: str, path: str) -> None:
@@ -1234,6 +1238,20 @@ def frame(
 def heading(text: str, level: int) -> TextElement:
     """Return a heading of this level, ``h1`` to ``h6``, in the frame's type scale."""
     return TextElement(tag=f"h{level}", text=text).classes(f"heading heading-{level}")
+
+
+def _placed(problem: Problem) -> Problem:
+    # A problem at a value opens the suite whose tool sets it: the item's kind's, else its owner's.
+    if problem.path is None:
+        return problem
+    try:
+        kind, _ = split_reference(problem.item)
+    except ValueError:
+        return problem
+    found = place(kind, problem.path) or place(owner_of(problem.path), problem.path)
+    if found is None or found[0].id == problem.suite:
+        return problem
+    return Problem(problem.item, problem.path, problem.message, found[0].id)
 
 
 def current_suite(shell: Shell) -> Suite:

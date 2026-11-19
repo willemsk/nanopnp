@@ -207,6 +207,12 @@ points. The server keeps them by the protonation and charge hashes, as
   `build` enters its queue entry with `suite=ITEM_SUITES[kind]`, or `"meso"` for the slot `meso`.
   `__init_subclass__` registers a class by its slot where `"kind" in cls.__dict__ or "slot" in cls.__dict__`.
 - `Frame.problems` replaces each problem's suite with `place(kind, path)`'s where its path is placed.
+> **Outcome — the suite lands before its tools.** The commit gate loads every screen, so item 5 serves `/meso/<tool>`
+> with a thin pane over the continuum pane (`meso_tools.py`): Density and Outline draw Pore geometry's picture and
+> editor beside the molecular model's cut scene; Charge map draws the pair alone. Pore geometry, `BUILDS["geometry"]`
+> and Charge on the mesh stay until item 6 moves them, Continuum then opening on Region. `Frame.problems` places a
+> problem by its item's kind, then by its path's owner (`frame.py:_placed`): a study's problem can name a continuum
+> model's value. The rail opens an item in the open suite where that suite edits its kind.
 
 **Item 6.**
 - `MesoModel(ContinuumModel)`: `slot = "meso"`, `stages` = `study.STAGES`, `upto = "charge"`, `paths` the study's,

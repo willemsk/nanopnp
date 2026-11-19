@@ -39,6 +39,7 @@ from nanopnp.gui.web.screens import (
     Suite,
     Tool,
     field_control,
+    place,
     tool_for,
     tool_view,
 )
@@ -46,7 +47,7 @@ from nanopnp.gui.web.settings import SETTINGS
 from nanopnp.gui.web.shell import Shell
 from nanopnp.io.case import ChargeEdit, Membrane
 from nanopnp.io.case_paths import schema_default
-from nanopnp.io.models import exposable_paths, read_model_file
+from nanopnp.io.models import exposable_paths, owner_of, read_model_file
 from nanopnp.io.project import INPUTS_FOLDER, ItemKind, split_reference
 from nanopnp.pipeline.checks import options_at
 from nanopnp.structure.orient import (
@@ -58,7 +59,7 @@ from nanopnp.structure.orient import (
 from nanopnp.structure.protonated import parent_residue
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from nanopnp.io.models import ModelKind
+    from nanopnp.io.models import Kind, ModelKind
 
 __all__ = [
     "FIELDS",
@@ -195,6 +196,8 @@ BUILDS: dict[str, tuple[str | None, str, str]] = {
     "protonation": ("protonation", "Build molecular model", "charge"),
     "edit": ("protonation", "Build molecular model", "changed"),
     "view": (None, "", "charge"),
+    "density": ("symmetry", "Build density", ""),
+    "outline": ("contour", "Build outline", ""),
     "geometry": ("contour", "Build geometry", ""),
     "region": ("region", "Build region", ""),
     "mesh": ("mesh", "Build mesh", ""),
@@ -391,6 +394,8 @@ class _Pane(Generic[ModelT]):
 
     kind: ClassVar[str]
     """The suite the pane's tools belong to."""
+    model_kind: ClassVar[Kind]
+    """The kind of item the pane's tools edit."""
 
     def __init__(
         self, shell: Shell, tool: Tool, built: Views, focus: str, model: ModelT | None
@@ -600,7 +605,7 @@ class _Pane(Generic[ModelT]):
         if self.project is None:
             return "No project is open. Create or open one from the File menu."
         if self.model is None:
-            return f"The project holds no {self.kind} model."
+            return f"The project holds no {self.model_kind} model."
         return f"{self.suite.title} model {self.model.name}"
 
     def tool_list(self) -> None:
@@ -784,9 +789,18 @@ class _Pane(Generic[ModelT]):
             self.material_marks[row_path] = (mark, undo)
 
     def tool_of(self, path: str) -> tuple[Suite, Tool] | None:
-        """Return the suite and tool whose pane sets a path: this suite's first, then any."""
-        ordered = sorted(SUITES, key=lambda suite: suite.id != self.suite.id)
-        for suite in ordered:
+        """Return the suite and tool whose pane sets a path.
+
+        This suite's tool first; then the tool of the suites editing the kind of model that
+        owns the path; then any.
+        """
+        own = tool_for(self.suite.id, path)
+        if own is not None:
+            return self.suite, own
+        placed = place(owner_of(path), path)
+        if placed is not None:
+            return placed
+        for suite in SUITES:
             tool = tool_for(suite.id, path)
             if tool is not None:
                 return suite, tool
@@ -883,7 +897,7 @@ class _Pane(Generic[ModelT]):
             # The value to add first, so it stays in place while the list grows.
             offered = {
                 path: FIELDS[path].label if path in FIELDS else path
-                for path in exposable_paths(cast("ModelKind", self.kind))
+                for path in exposable_paths(cast("ModelKind", self.model_kind))
                 if path not in {entry.path for entry in listed}
             }
             with self.named("Expose"):
@@ -972,7 +986,7 @@ class _Pane(Generic[ModelT]):
         """Return the values the model exposes, as its file lists them."""
         if self.model is None:
             return ()
-        kind = cast("ModelKind", self.kind)
+        kind = cast("ModelKind", self.model_kind)
         try:
             location = self.model.project.path(kind, self.model.name)
             return read_model_file(kind, location).exposed
@@ -982,7 +996,7 @@ class _Pane(Generic[ModelT]):
     def none_exposed(self) -> str:
         """Say why the list is empty: the model exposes nothing, or its file is not read."""
         if self.model is not None:
-            kind = cast("ModelKind", self.kind)
+            kind = cast("ModelKind", self.model_kind)
             try:
                 read_model_file(kind, self.model.project.path(kind, self.model.name))
             except REFUSED:
@@ -1005,7 +1019,7 @@ class _Pane(Generic[ModelT]):
             return
         try:
             model.project.set_exposed(
-                cast("ModelKind", self.kind), model.name, path, True, label=label, span=ranged
+                cast("ModelKind", self.model_kind), model.name, path, True, label=label, span=ranged
             )
         except ValueError as error:
             ui.notify(str(error).replace(f"{model.project.root}/", ""), type="negative")
@@ -1018,7 +1032,7 @@ class _Pane(Generic[ModelT]):
         if model is None:
             return
         try:
-            model.project.set_exposed(cast("ModelKind", self.kind), model.name, path, False)
+            model.project.set_exposed(cast("ModelKind", self.model_kind), model.name, path, False)
         except ValueError as error:
             ui.notify(str(error), type="negative")
             return
@@ -1332,6 +1346,7 @@ class _Pane(Generic[ModelT]):
 
 class _MolecularPane(_Pane[MolecularModel]):
     kind: ClassVar[str] = "molecular"
+    model_kind: ClassVar[Kind] = "molecular"
 
     def __init__(self, shell: Shell, tool: Tool, built: Views, focus: str) -> None:
         super().__init__(shell, tool, built, focus, current_model(shell))

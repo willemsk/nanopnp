@@ -34,6 +34,7 @@ from nanopnp.gui.web.plane import (
 from nanopnp.gui.web.screens import Tool
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import _Pane, current_name
+from nanopnp.io.models import Kind
 from nanopnp.io.project import STORE_FOLDER
 from nanopnp.mesh.quality import QUALITY_FLOOR
 from nanopnp.mesh.sizing import SIZES, case_sizes
@@ -79,6 +80,18 @@ DOMAIN_FIELDS: dict[str, tuple[str, ...]] = {
     "electrolyte": ("geometry.reservoir.radius_nm", PORE_RADIUS),
 }
 """The Region tool's values each domain picked shows."""
+OUTLINE_TOOLS = ("geometry", "outline")
+"""The tools that draw the outline and edit it."""
+PORE_TOOLS = ("geometry", "density", "outline")
+"""The tools of stages 2 to 4, which a supplied outline leaves unbuilt."""
+TOOL_STAGES = {
+    "geometry": "contour",
+    "density": "symmetry",
+    "outline": "contour",
+    "region": "region",
+    "mesh": "mesh",
+}
+"""The stage each tool of a continuum model builds to."""
 SUPPLIED = {
     "geometry.pore": "declares an idealised pore (geometry.pore)",
     "inputs.profile": "supplies its outline (inputs.profile)",
@@ -110,6 +123,7 @@ def current_continuum(shell: Shell) -> ContinuumModel | None:
 
 class _ContinuumPane(_Pane[ContinuumModel]):
     kind: ClassVar[str] = "continuum"
+    model_kind: ClassVar[Kind] = "continuum"
 
     def __init__(self, shell: Shell, tool: Tool, built: Views, focus: str) -> None:
         super().__init__(shell, tool, built, focus, current_continuum(shell))
@@ -150,7 +164,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             self.domain_choice()
         if self.tool.id == "mesh":
             self.quality_verdict()
-        if self.tool.id == "geometry":
+        if self.tool.id in OUTLINE_TOOLS:
             self.outline_verdict()
         model = self.model
         if model is None or self.project is None:
@@ -199,7 +213,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         if self.model is None:
             return
         said = SUPPLIED.get(self.supplied or "", "reads no structure")
-        if self.tool.id == "geometry" and "contour" not in self.walked:
+        if self.tool.id in PORE_TOOLS and "contour" not in self.walked:
             ui.label(
                 f"This model {said}: stages 2 to 4 do not run, so their values are not read. "
                 "Its outline is drawn and edited here."
@@ -223,7 +237,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         return None
 
     def unbuilt(self, tool_id: str) -> str | None:
-        stage = {"geometry": "contour", "region": "region", "mesh": "mesh"}.get(tool_id)
+        stage = TOOL_STAGES.get(tool_id)
         if self.model is None or stage is None or stage in self.walked or not self.usable():
             return None
         return "outline supplied" if self.supplied == "inputs.profile" else "supplied"
@@ -240,6 +254,11 @@ class _ContinuumPane(_Pane[ContinuumModel]):
                 control.disable()
 
     def geometry_section(self) -> None:
+        self.picture_choice()
+        self.outline_editor()
+
+    def picture_choice(self) -> None:
+        """Draw the point group the map is averaged over and the picture drawn under the outline."""
         case = None if self.model is None else self.model.case()
         if case is not None and case.structure is not None:
             group = case.structure.symmetry.point_group
@@ -257,6 +276,9 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             ).props(
                 'dense outlined options-dense data-control=plane-image aria-label="Picture"'
             ).set_enabled(self.model is not None and "contour" in self.walked)
+
+    def outline_editor(self) -> None:
+        """Draw the outline's editor."""
         heading("Outline", 2)
         self.edit_box = ui.column().classes("w-full gap-1").props("data-control=contour-edit")
         self.show_edit()
@@ -551,7 +573,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
 
     def on_plane_pick(self, event: events.GenericEventArguments) -> None:
         layer, index = str(event.args.get("layer", "")), int(event.args.get("index", 0))
-        if layer == "contour" and self.tool.id == "geometry":
+        if layer == "contour" and self.tool.id in OUTLINE_TOOLS:
             self.vertex = index
             self.show_edit()
         elif layer == "mesh" and self.tool.id == "mesh":
@@ -561,13 +583,13 @@ class _ContinuumPane(_Pane[ContinuumModel]):
 
     async def on_plane_insert(self, event: events.GenericEventArguments) -> None:
         editor = None if self.model is None else self.model.editor()
-        if editor is None or self.tool.id != "geometry":
+        if editor is None or self.tool.id not in OUTLINE_TOOLS:
             return
         self.vertex = editor.insert(int(event.args.get("edge", 0)))
         await self.edited()
 
     async def on_plane_delete(self, event: events.GenericEventArguments) -> None:
-        if self.tool.id == "geometry":
+        if self.tool.id in OUTLINE_TOOLS:
             await self.delete_vertex(int(event.args.get("index", 0)))
 
     async def on_plane_value(self, event: events.GenericEventArguments) -> None:
@@ -956,7 +978,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             return []
         held = model.artefacts()
         rows: list[tuple[str, str, Callable[[], None] | None]] = []
-        if self.tool.id == "geometry" and "contour" in held:
+        if self.tool.id in OUTLINE_TOOLS and "contour" in held:
             # The vertices and the narrowest radius lead the pane, with stage 4's verdict.
             summary = held["contour"].summary
             rows.append(

@@ -40,9 +40,9 @@ SWEEPS_FOLDER = "sweeps"
 
 STORE_FOLDER = "store"
 
-Suite = Literal["molecular", "continuum", "physics", "study", "analysis"]
+Suite = Literal["molecular", "meso", "continuum", "physics", "study", "analysis"]
 
-SUITES: tuple[Suite, ...] = ("molecular", "continuum", "physics", "study", "analysis")
+SUITES: tuple[Suite, ...] = ("molecular", "meso", "continuum", "physics", "study", "analysis")
 
 ITEM_SUITES: dict[ItemKind, Suite] = {
     "molecular": "molecular",
@@ -51,7 +51,7 @@ ITEM_SUITES: dict[ItemKind, Suite] = {
     "study": "study",
     "comparison": "analysis",
 }
-"""The suite whose tools edit each kind of item."""
+"""The suite an item of each kind opens in; Meso edits a continuum model too, over its molecule."""
 
 
 class ProjectFormatError(ValueError):

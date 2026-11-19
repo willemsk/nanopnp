@@ -24,10 +24,10 @@ The subject of each requirement is the product unless stated otherwise.
 
 NOTE (IF-09; lands with WP5.23, Qt's removal). When it lands, IF-09 reads:
 "SHALL provide a graphical workbench, served by a local server and opened in the browser by
-`nanopnp gui`, covering the five suites of the workbench design (Molecular, Continuum, Physics, Study and
-Analysis), the run queue and the project folder, as a thin shell over the IF-01 interface that
-speaks to its server through a network API." Until then the text above gates the Qt shell (§8.2.17
-S12, S17; `docs/design/workbench.md`, WB-01, WB-29, WB-34; §8.2.34 AJ2).
+`nanopnp gui`, covering the six suites of the workbench design (Molecular, Meso, Continuum, Physics,
+Study and Analysis), the run queue and the project folder, as a thin shell over the IF-01 interface
+that speaks to its server through a network API." Until then the text above gates the Qt shell
+(§8.2.17 S12, S17; `docs/design/workbench.md`, WB-01, WB-29, WB-34; §8.2.34 AJ2; §8.2.42 AR8).
 
 Rationale (IF-06): MSH 4.1 is the only format in the toolchain carrying physical-group tags,
 higher-order elements and mixed element types without loss.
@@ -209,7 +209,7 @@ the quantity-of-interest extraction. Heavy data is compressed.
 | **FR-28** | SHALL export fields and the originating case file from a completed run; its figures are FR-44's. | v0.7 |
 | **FR-29** | MAY perform goal-oriented (dual-weighted-residual) mesh adaptivity targeting the ionic current. | post-1.0 |
 | **FR-30** | (a) SHALL draw a figure of the artefact of every stage that declares one, of the solve's Newton and continuation history, and of a sweep's collected results, from the stored artefacts alone, in SI units and the model frame, through an optional extra the default import path does not load; (b) SHALL draw a solved potential in mV on a colour scale centred at 0 mV whose reach the caller may set, a concentration relative to the bulk the solve imposed on that species, on a logarithmic scale, the signed axial velocity with streamlines in the lumen, the lumen being read from the pore wall of the mesh, and a mesh as its element edges and its whole domain beside its lumen with λ_D/5 marked; (c) SHALL draw an axial or radial cutline of any solved field from the stored nodes; and (d) SHALL let a notebook display any artefact and run result, as its stage's figure where one is declared. | v0.5 |
-| **FR-31** | SHALL provide the workbench as five suites in a project, shown as those that build the project's models, Molecular, Continuum and Physics, and those that use them, Study and Analysis, each tool's settings docked beside its live view, with the project rail, the changed-from-default count and the run queue always on screen (§8.2.17 S2; WB-01 to WB-03, WB-05, WB-07, WB-29, WB-34). | v0.6 |
+| **FR-31** | SHALL provide the workbench as six suites in a project, shown as those that build the project's models, Molecular, Meso, Continuum and Physics, and those that use them, Study and Analysis, each tool's settings docked beside its live view, with the project rail, the changed-from-default count and the run queue always on screen. Meso adds no kind of model: its tools edit a continuum model's values over the molecular model it is built over, and a value or a problem opens the suite and tool whose pane sets it (§8.2.17 S2; §8.2.42 AR8; §8.2.43 AS1, AS3; WB-01 to WB-03, WB-05, WB-07, WB-29, WB-34). | v0.6 |
 | **FR-32** | SHALL keep a workbench project as a plain folder of named molecular, continuum and physics models, studies pairing one of each kind, comparisons, each showing two runs side by side on one scale or as the difference of their fields over the overlap of their fluid domains, runs each with its resolved case file and manifest, the store, and a project file holding no physics; and SHALL export it as a portable copy of readable files (§8.2.17 S11; WB-04, WB-11, WB-13, WB-34). | v0.6 |
 | **FR-33** | SHALL link, both ways and until unlinked, a residue and the charge map, a geometry and its parameters, a field and its probes and cuts, and a run and its result (§8.2.17 S6; WB-06). | v0.6 |
 | **FR-34** | SHALL mark every value set away from its default and every study override where it is shown, count them on screen, and list them in one table grouped by model and study, each with its value, default, unit and reset and leading to its field, every tool pane and the settings filtering to the values so set; and SHALL keep every setting of a tool on its pane, guarded against being changed by accident (FR-25; WB-03, WB-28, WB-32, WB-36). | v0.6 |

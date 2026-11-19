@@ -16,7 +16,7 @@ from nanopnp.core.stages import describe
 from nanopnp.gui.solver import Cancelled, Failed, Finished, RunRequest, SolverProcess, Stage
 from nanopnp.gui.web.queue import Entry, Queue
 from nanopnp.io.models import read_model_file
-from nanopnp.io.project import ITEM_SUITES, STORE_FOLDER, ItemKind
+from nanopnp.io.project import ITEM_SUITES, STORE_FOLDER, SUITES, ItemKind, Suite
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import keyed_walk, selected_stages
 
@@ -53,7 +53,7 @@ class _Held:
     """The stage the last build was refused at, and what it said."""
 
 
-# Each model's build and refusal outlive a window: keyed by project, kind and name.
+# Each model's build and refusal outlive a window: keyed by project, slot and name.
 _MODELS: dict[tuple[Path, str, str], _Held] = {}
 _KINDS: dict[str, type[BuiltModel]] = {}
 
@@ -93,12 +93,12 @@ class ToolModel(Protocol):
 def refusals(project: Project) -> tuple[Problem, ...]:
     """Return the last build's refusal of each model of a project, as its problems."""
     found = []
-    for (root, kind, name), held in _MODELS.items():
+    for (root, slot, name), held in _MODELS.items():
         if root != project.root or held.refusal is None:
             continue
-        model = _KINDS[kind](project, name)
+        model = _KINDS[slot](project, name)
         path = model.refused_path(held.refusal[1])
-        found.append(Problem(f"{kind}/{name}", path, held.refusal[1], ITEM_SUITES[model.kind]))
+        found.append(Problem(f"{model.kind}/{name}", path, held.refusal[1], model.suite()))
     return tuple(found)
 
 
@@ -125,6 +125,9 @@ class BuiltModel:
     _keyed: dict[str, object] | None = field(default=None, init=False, repr=False, compare=False)
 
     kind: ClassVar[ItemKind]
+    slot: ClassVar[str]
+    """What the model's build and refusal are held under: its kind, unless a suite of its own
+    builds it further, as Meso builds a continuum model's charge."""
     stages: ClassVar[tuple[str, ...]]
     """The model's own stages, in the order the walk runs them."""
     upto: ClassVar[str] = ""
@@ -136,11 +139,18 @@ class BuiltModel:
 
     def __init_subclass__(cls, **kwargs: object) -> None:
         super().__init_subclass__(**kwargs)
-        _KINDS[cls.kind] = cls
+        if "kind" in cls.__dict__ and "slot" not in cls.__dict__:
+            cls.slot = cls.kind
+        if "kind" in cls.__dict__ or "slot" in cls.__dict__:
+            _KINDS[cls.slot] = cls
 
     @property
     def _held(self) -> _Held:
-        return _MODELS.setdefault((self.project.root, self.kind, self.name), _Held())
+        return _MODELS.setdefault((self.project.root, self.slot, self.name), _Held())
+
+    def suite(self) -> Suite:
+        """Return the suite whose tools build the model: its slot's, else its kind's."""
+        return next((suite for suite in SUITES if suite == self.slot), ITEM_SUITES[self.kind])
 
     @contextmanager
     def keyed_once(self) -> Iterator[None]:
@@ -336,7 +346,7 @@ class BuiltModel:
         process = SolverProcess(self.request(written, upto))
         entry = self.queue.add(
             f"{self.name} to {upto}",
-            suite=self.kind,
+            suite=self.suite(),
             start=process.start,
             poll=self.poll,
             cancel=process.cancel,

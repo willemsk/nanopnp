@@ -18,7 +18,7 @@ from nanopnp.gui.web.plane import ROLE_TITLES, ion_text, mesh_stored, shown_soli
 from nanopnp.gui.web.screens import CORRECTED, Tool, field_control
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import FIELDS, _Pane, _value_of, current_name
-from nanopnp.io.models import owner_of
+from nanopnp.io.models import Kind, owner_of
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.mesh.ingest import SOLID_MATERIALS
 from nanopnp.mesh.primitives import PERMITTIVITY_EXEMPT
@@ -73,6 +73,7 @@ def current_physics(shell: Shell) -> PhysicsModel | None:
 
 class _PhysicsPane(_Pane[PhysicsModel]):
     kind: ClassVar[str] = "physics"
+    model_kind: ClassVar[Kind] = "physics"
 
     def __init__(self, shell: Shell, tool: Tool, built: Views, focus: str) -> None:
         super().__init__(shell, tool, built, focus, current_physics(shell))

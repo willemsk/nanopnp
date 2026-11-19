@@ -17,6 +17,7 @@ from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.gui.web.continuum_tools import continuum_page
 from nanopnp.gui.web.frame import Route, Views, current_suite, frame, heading
+from nanopnp.gui.web.meso_tools import meso_page
 from nanopnp.gui.web.molecular import MolecularModel
 from nanopnp.gui.web.molview import (
     COLOURINGS,
@@ -360,6 +361,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
     def page_of(suite: Suite, tool: Tool) -> Callable[..., None]:
         pages = {
             "molecular": tool_page,
+            "meso": meso_page,
             "continuum": continuum_page,
             "physics": physics_page,
             "study": study_page,
