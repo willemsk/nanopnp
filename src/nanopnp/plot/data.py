@@ -5,8 +5,6 @@ from __future__ import annotations
 import dataclasses
 import json
 import math
-import threading
-import weakref
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -33,6 +31,7 @@ from nanopnp.mesh.adapter import read as read_mesh
 from nanopnp.mesh.ingest import MESH_PAYLOAD, deployed_mesh
 from nanopnp.mesh.quality import QualityReport, element_quality
 from nanopnp.post.export import lumen_extent_nm
+from nanopnp.post.fields import FIELD_ALIASES, field_at, field_values, subdivided
 from nanopnp.solve.state import NEWTON_HISTORY_KEY
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble, EnsembleFormatError, chain_characters
@@ -41,7 +40,6 @@ from nanopnp.symmetry.reduce import ReducedMap
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
-    from matplotlib.tri import Triangulation
 
     from nanopnp.io.resolved import ResolvedCase
     from nanopnp.materials.electrolyte import Electrolyte
@@ -1252,28 +1250,6 @@ def qoi_rows(summary: Mapping[str, Any]) -> list[dict[str, str]]:
     return rows
 
 
-def subdivided(cells: np.ndarray) -> np.ndarray:
-    """Split each Triangle_6 cell into its four linear triangles, ``(n, 6)`` to ``(4n, 3)``."""
-    import numpy as np
-
-    a, b, c, ab, bc, ca = (cells[:, k] for k in range(6))
-    return np.concatenate(
-        [
-            np.stack([a, ab, ca], axis=1),
-            np.stack([ab, b, bc], axis=1),
-            np.stack([ca, bc, c], axis=1),
-            np.stack([ab, bc, ca], axis=1),
-        ]
-    )
-
-
-FIELD_ALIASES: dict[str, tuple[str, int | None]] = {
-    "potential": ("phi_V", None),
-    "u_r": ("u_m_s", 0),
-    "u_z": ("u_m_s", 1),
-}
-"""Quantity names a field panel takes beside the attribute keys, as ``(key, component)``."""
-
 LUMEN_NM = (5.0, 10.0)
 """The ``(r, |z|)`` window of a close-up of the pore, in nm, where the mesh names no pore wall."""
 
@@ -1296,45 +1272,6 @@ def lumen_window_nm(wall_extent_nm: tuple[float, float] | None) -> tuple[float, 
 
 
 CUTLINE_POINTS = 400
-
-
-def field_values(
-    fields: SolutionFields, quantity: str
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return ``(points_m, cells, values)`` of one quantity, on the domain it is solved on.
-
-    Parameters
-    ----------
-    quantity
-        An attribute key of the fields (``phi_V``, ``c_Na_mol_m3``, ``p_Pa``), or
-        ``"potential"``, ``"u_r"`` or ``"u_z"``.
-
-    Raises
-    ------
-    KeyError
-        No field of that name, or a vector named without its component.
-    """
-    import numpy as np
-
-    key, component = FIELD_ALIASES.get(quantity, (quantity, None))
-    for points, cells, values in (fields.whole, fields.fluid):
-        if key not in values:
-            continue
-        found = np.asarray(values[key], dtype=np.float64)
-        if component is not None:
-            return points, cells, found[:, component]
-        if found.ndim != 1:
-            raise KeyError(f"{quantity!r} is a vector; name a component, 'u_r' or 'u_z'")
-        return points, cells, found
-    known = sorted({*fields.whole[2], *fields.fluid[2], *FIELD_ALIASES})
-    raise KeyError(f"no field {quantity!r}; the run holds {', '.join(known)}")
-
-
-_TRIANGULATIONS: list[
-    tuple[weakref.ReferenceType[np.ndarray], weakref.ReferenceType[np.ndarray], Triangulation]
-] = []
-_TRIANGULATION_LOCK = threading.Lock()
-_KEPT_TRIANGULATIONS = 4
 
 
 def field_menu(fields: SolutionFields, *, radial: bool = True) -> dict[str, str]:
@@ -1367,40 +1304,11 @@ def fields_lumen_nm(fields: SolutionFields) -> tuple[float, float]:
     return lumen_window_nm(fields.wall_extent_nm)
 
 
-def field_triangulation(points_m: np.ndarray, cells: np.ndarray) -> Triangulation:
-    """Return the mesh in nm as the four linear triangles of each P2 cell; the last few are kept.
-
-    A cutline is exact at the P2 nodes only on this split. The arrays are matched by identity, so
-    a figure and a slider that read the same fields build it once. An entry never keeps its arrays
-    alive: it is dropped when either is collected.
-    """
-    from matplotlib.tri import Triangulation
-
-    with _TRIANGULATION_LOCK:
-        _TRIANGULATIONS[:] = [
-            entry for entry in _TRIANGULATIONS if entry[0]() is not None and entry[1]() is not None
-        ]
-        for held_points, held_cells, held in _TRIANGULATIONS:
-            if held_points() is points_m and held_cells() is cells:
-                return held
-    built = Triangulation(points_m[:, 0] / _NM, points_m[:, 1] / _NM, subdivided(cells))
-    with _TRIANGULATION_LOCK:
-        _TRIANGULATIONS.append((weakref.ref(points_m), weakref.ref(cells), built))
-        del _TRIANGULATIONS[:-_KEPT_TRIANGULATIONS]
-    return built
-
-
 def sampled(
     fields: SolutionFields, quantity: str, r_nm: np.ndarray, z_nm: np.ndarray
 ) -> np.ndarray:
     """Return one field at the points ``(r_nm, z_nm)``, NaN outside the field's domain."""
-    import numpy as np
-    from matplotlib.tri import LinearTriInterpolator
-
-    points, cells, values = field_values(fields, quantity)
-    triangulation = field_triangulation(points, cells)
-    found = LinearTriInterpolator(triangulation, values)(r_nm, z_nm)
-    return np.ma.filled(np.ma.asarray(found, dtype=np.float64), np.nan)
+    return field_at(fields, quantity, r_nm, z_nm)
 
 
 def axial_cutline(

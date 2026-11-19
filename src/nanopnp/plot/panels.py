@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from nanopnp.plot import data
 from nanopnp.plot.data import DISPLAY, axis_label
+from nanopnp.post.fields import field_split
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -205,7 +206,10 @@ def plot_field(
         quantity if quantity in ("u_r", "u_z") else key, values, _bulk(fields, key, relative)
     )
     ax = _axes(ax, (4.6, 5.6))
-    triangulation = data.field_triangulation(points, cells)
+    from matplotlib.tri import Triangulation
+
+    split = field_split(points, cells)
+    triangulation = Triangulation(split.vertices_nm[:, 0], split.vertices_nm[:, 1], split.triangles)
     image = ax.tripcolor(
         triangulation,
         shown.values,
