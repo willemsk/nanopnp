@@ -3207,6 +3207,9 @@ adds no tool that deletes, so the safeguards wait for the first one.
 there if kept: the deposit's charge in 3D and its mean about the axis, smoothed to 0.4 nm on a 0.2 nm grid, each as
 isosurfaces over the structure.
 
+*The overlay settled in WP5.20* ([the record](../design/reviews/2026-11-19-meso.md)): the author kept both volumes at their level, so the charge
+screen's overlay is built. The variation view, the maps and the safeguards stay as carried above.
+
 ### REV-241: What the final review of the Molecular tools left open
 
 The GUI review and `impeccable`'s critique of the finished tools (WP5.16 item 12, render `shell-r2` at `def8265`; no
@@ -3298,6 +3301,10 @@ refinement regions.
 
 *Placed 18 November 2026* (§8.2.42 AR8; §8.2.43 AS1): the suite is WP5.20, the meso suite, and its round takes the
 radius against z and the vertex list (REV-259).
+
+*The suite settled in WP5.20* ([the record](../design/reviews/2026-11-19-meso.md)): Meso holds Density, Outline and Charge map. The author kept
+Outline without the radius against z and the vertex list; the editor's keyboard path, which a vertex list would have
+given, is REV-266's. The CAD tooling and the subdivisions stay as carried above.
 
 ### REV-245: What the Continuum suite's final review left open
 
@@ -3725,6 +3732,13 @@ together. VER-60's test covers one chain and one frame.
 **Open**, ruled by the author on 18 November 2026: a package of its own, placed as WP5.20, the next package (§8.2.43
 AS1). It amends FR-31's five suites, §2's v0.6 row, WB-34 and WB-41 when it lands.
 
+*Fixed in WP5.20* ([the record](../design/reviews/2026-11-19-meso.md); WB-43, WB-49). The suite is built as Meso, FR-31's six suites, with its three
+tools, the point that finds a residue naming it once with its copies (§8.2.44 AT1). The round settled each question:
+the name stays *Meso*; the pair keeps its width; the scale runs through a dark middle on the dark theme; the mesh's
+edges stay on; the residues stay a strip of buttons, counted, four rows shown; the overlay is kept and built; Outline
+gains no radius against z and no vertex list. REV-261's seven points were fixed or answered at WP5.20's item 12; what
+the round left open is REV-266's, and the structure's free list of layers REV-265's.
+
 ### REV-260: A recorded run's convergence, picked in Runs
 
 Study › Runs draws the convergence of a run picked in the queue: this session's runs. A run recorded before, as after a
@@ -3781,6 +3795,11 @@ The charge screen's points go to REV-259's round. These stay, for WP5.23's pass 
 
 **Open**: WP5.23.
 
+*The charge screen's points settled in WP5.20* ([the record](../design/reviews/2026-11-19-meso.md)): the key stands above a drawing it would cover,
+its bar's ends apart; each charge unit as the panes write it, with no field identifier; a worst plane within its
+tolerance dashed in the muted grey; the chip naming what it links; the pick keyed as its rings; Mol*'s mark kept;
+*One subunit* framed on its chain. The points above stay for WP5.23.
+
 ### REV-262: An exposed value's first name, and Exposed values' list as Study setup draws it
 
 An exposed value's name is an identifier (`[A-Za-z][A-Za-z0-9_]*`, §5.3.1's NOTE on model files): the library's
@@ -3828,3 +3847,34 @@ WP5.19's physics review at `/np-ship` found it (F2). What such a reproduction co
 final residuals or the field, is a tolerance to argue in QR-08's NOTE.
 
 **Open**, ruled by the author on 18 November 2026 at `/np-ship wp 5.19`: WP5.21, which opens a run's result, decides it.
+
+### REV-265: A free list of the structure's layers in Meso's Mol* view
+
+At WP5.20's round the author asked for display options in Meso's Mol* view: "having some display options like
+molecular surface, sticks, spheres, etc. would be good. In cartoon mode, selecting a residue could change the style of
+the side-chain to sticks or spheres for example." Of a picked residue, offered ball and stick, spheres or Mol*'s outline,
+the author asked to "Solve this in a holistic way, offering the ability to change/configure the representations in a
+flexible way", and of two designs chose "A free list of layers" ([the record](../design/reviews/2026-11-19-meso.md); WB-49). Each layer chooses
+what it draws (everything, a chain, the charged residues, the residues the tool is about, a residue by name), its style
+(Mol*'s cartoon, backbone, putty, ball and stick, spheres or surface, as MolViewSpec names them), its colour and its
+opacity; the residues the tool is about are Charge map's picked residue with its copies, Density's named residues and
+Outline's moved ones. The option put it at about three agent hours, as a package of its own. WP5.20 builds its first
+layer: each Meso tool's *Structure* switch.
+
+**Open**, ruled by the author on 19 November 2026: a package of its own, placed at the phase's next amendment; whether
+Molecular's View takes the same list is decided there.
+
+### REV-266: What the Meso suite's round left open
+
+WP5.20's round ([the record](../design/reviews/2026-11-19-meso.md)) and its review left these, beside REV-265:
+
+- **Outline's keyboard path.** The author kept Outline without a vertex list, so a vertex is picked only by a click on
+  the picture, and live link 2's vertex table is not drawn (QR-16; FR-33; the review's F6 and F7). With WP5.23's
+  keyboard pass over the canvas (REV-245).
+- **The overlay's key and fields.** The scene has no key for the overlay's positive and negative surfaces, and its two
+  level fields stand at different places, one label wrapping (Q5).
+- **Mol* while a build runs.** Mol* is blank while a build runs, though the structure is stored (F13).
+- **The conservation checks below the fold.** On 2WCD the checks stand below the pane's fold in every shot, under the
+  residues, the view and the overlay (the review's route). With REV-245's pane layout.
+
+**Open**: WP5.23.

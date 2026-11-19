@@ -80,6 +80,9 @@ CARD_SHORT = 200
 """A card shows this much of a message; the rest unfolds."""
 _PLACE = re.compile(r"^(?:In study [^\s:]+:\s+)?(?:[^\s:]+:\s+)+")
 """The study, file and case path a refusal starts with."""
+_POWER = re.compile(r"\^([+-]?\d+)")
+_MINUS = re.compile(r"(?<![\w.)])-(?=\d)")
+_RAISED = str.maketrans("0123456789+-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻")
 MEMBRANE_OFF_NM = 0.01
 """How far the registration residues' centre may lie from the membrane's before Prepare warns."""
 STRUCTURE_SUFFIXES = (".pdb", ".ent", ".cif", ".mmcif", ".gz")
@@ -216,7 +219,7 @@ STAGE_TITLES = {
     "protonation": "Protonation",
     "density": "Density",
     "symmetry": "Reduction to (r, z)",
-    "contour": "Contour",
+    "contour": "Outline",
     "region": "Region",
     "mesh": "Mesh",
     "charge": "Charge map",
@@ -2289,4 +2292,8 @@ def tool_page(shell: Shell, tool: Tool) -> Callable[..., None]:
 
 def _plain(text: str) -> str:
     words = _PLACE.sub("", text, count=1).strip()
-    return f"{words[:1].upper()}{words[1:]}" if words else text
+    if not words:
+        return text
+    # A message's numbers as the panes set them: powers raised, the minus sign U+2212.
+    words = _MINUS.sub("\u2212", _POWER.sub(lambda m: m.group(1).translate(_RAISED), words))
+    return f"{words[:1].upper()}{words[1:]}"

@@ -31,6 +31,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 __all__ = [
     "BUILD_UPTO",
     "CHARGE_STAGES",
+    "CLIP_PERCENTILE",
     "MAX_PIXELS",
     "BuildOffer",
     "ChargeMap",
@@ -44,6 +45,7 @@ __all__ = [
     "build_offer",
     "charge_image",
     "charge_stages",
+    "clip_of",
     "load_charge",
     "load_protonation",
 ]
@@ -89,6 +91,23 @@ def charge_stages(document: CaseDocument) -> StageList:
     """
     walked = selected_stages(resolve(document), BUILD_UPTO)
     return StageList(planned=tuple(name for name in walked if name in CHARGE_STAGES))
+
+
+CLIP_PERCENTILE = 99.0
+"""The share of a charge's size, in percent, its colour scale opens on: a few atoms near the axis
+set the largest value, so a scale to it leaves the bulk of the map at its middle colour."""
+
+
+def clip_of(values: np.ndarray) -> float:
+    """Return the scale a charge's colours open on: the percentile of its size where it is not zero.
+
+    A charge with nothing to clip, or none at all, opens on its largest value, or on 0.
+    """
+    import numpy as np
+
+    sizes = np.abs(values[np.isfinite(values)])
+    carried = sizes[sizes > 0.0]
+    return float(np.percentile(carried, CLIP_PERCENTILE)) if carried.size else 0.0
 
 
 def block_size(shape: tuple[int, int], limit: int = MAX_PIXELS) -> int:
@@ -137,6 +156,8 @@ class ChargeMap:
         ``A_p`` per pixel, in m^2 (m^3 for a volume density).
     integral_C
         ``sum_p mean_p A_p``, in coulombs.
+    limit, clip
+        The picture's largest size, and the scale its colours open on (:func:`clip_of`).
     """
 
     image: ImageModel
@@ -144,6 +165,7 @@ class ChargeMap:
     areas: np.ndarray
     integral_C: float
     limit: float
+    clip: float
     quantity: str
     units: str
     planes: tuple[tuple[str, float], ...] = ()
@@ -189,6 +211,7 @@ def charge_image(
         means = np.where(carried, means, _plain_means(grid.values, k))
     finite = means[np.isfinite(means)]
     limit = float(np.max(np.abs(finite))) if finite.size else 0.0
+    clip = clip_of(finite)
     shown = limit if limit > 0.0 else 1.0
     step_r, step_z = grid.spacing_nm
     origin_r, origin_z = grid.origin_nm
@@ -215,6 +238,7 @@ def charge_image(
         areas=areas,
         integral_C=float(np.sum(sums)),
         limit=limit,
+        clip=clip,
         quantity=lattice.quantity,
         units=lattice.units,
         planes=planes,

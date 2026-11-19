@@ -1477,13 +1477,16 @@ body .parts .parts-row[aria-pressed="true"] {
   grid-column: 1 / -1;
 }
 
-/* The Study suite. Charge on the mesh's residues, a strip of small buttons that wraps. */
+/* Meso's Charge map: its residues, a strip of small buttons that wraps, four whole rows shown. */
 .charge-strip {
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
-  max-height: 9rem;
+  max-height: calc(4 * 2rem + 3 * 2px);
   overflow-y: auto;
+}
+.charge-strip .strip-item {
+  height: 2rem;
 }
 .charge-strip .strip-item[aria-pressed="true"] {
   outline: 2px solid var(--accent);

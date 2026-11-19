@@ -28,6 +28,8 @@ class Shell:
     """The study the Study suite's tools show, as their pane's *Study* chose; None for the first."""
     run_shown: int | None = None
     """The queue entry whose convergence the Runs tool shows, by number; None for the last."""
+    looks: dict[str, str] = field(default_factory=dict)
+    """How Mol* draws the structure on each Meso tool, by ``meso/<tool>``, as its pane chose."""
 
     @property
     def keys(self) -> dict[str, str]:

@@ -23,13 +23,21 @@ from nanopnp.gui.assess import (
     AssessRequest,
     Seeded,
 )
+from nanopnp.gui.charge import CLIP_PERCENTILE
 from nanopnp.gui.geometry import ProfileEditor
 from nanopnp.gui.render import ChargeRequest, RenderedElements, RenderFailed, RenderProcess
 from nanopnp.gui.web.continuum_tools import SUPPLIED, _ContinuumPane, _keyed, _mapping
 from nanopnp.gui.web.frame import Views, heading
 from nanopnp.gui.web.meso import MesoModel
-from nanopnp.gui.web.molview import MOVED_COLOURS, pqr_frame, study_side_view
-from nanopnp.gui.web.plane import IMAGES, STAGE_THREE
+from nanopnp.gui.web.molview import (
+    MOVED_COLOURS,
+    REPRESENTATIONS,
+    Representation,
+    has_backbone,
+    pqr_frame,
+    study_side_view,
+)
+from nanopnp.gui.web.plane import IMAGES, STAGE_THREE, unit_text
 from nanopnp.gui.web.screens import Tool
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import charge_colours
@@ -54,6 +62,8 @@ MOVED_LISTED = 12
 """The residues each side of an edit lists, the most atoms first."""
 OVERLAY_TITLES = {"full": "Charge in 3D", "revolved": "Its mean about the axis"}
 """The overlay's two volumes, as its pane names them."""
+STRIP_SHOWN = 16
+"""About how many residues the strip shows before it scrolls: four rows of four."""
 
 # The deployed charge's render, one per run record, kept for the server's life: a window that
 # closes while it draws does not start it again.
@@ -70,6 +80,18 @@ def _science(value: float, figures: int = 3) -> str:
     power = f"10{str(int(exponent)).translate(_SUPERSCRIPT)}"
     text = power if float(mantissa) == 1.0 else f"{mantissa}\u2009\u00d7\u200910" + power[2:]
     return text.replace("-", "\u2212")
+
+
+def _power(value: float) -> int:
+    # The power of ten, a multiple of three, a field's number is typed against: 0 near unity.
+    if value <= 0 or 1e-2 <= value < 1e4:
+        return 0
+    return 3 * math.floor(math.log10(value) / 3)
+
+
+def _figures(value: float) -> str:
+    # Three figures, or a power of ten far from unity, as the pane writes a number.
+    return _science(value) if _power(abs(value)) else f"{value:.3g}".replace("-", "\u2212")
 
 
 class _MesoPane(_ContinuumPane):
@@ -102,6 +124,8 @@ class _MesoPane(_ContinuumPane):
         self.peaks: dict[str, float] | None = None
         self.levels: dict[str, float] | None = None
         self.computing = False
+        # Each layer's typed scale, in its own unit; None opens on the layer's clip.
+        self.spans: dict[str, float | None] = {"lattice": None, "deployed": None}
 
     @property
     def meso(self) -> MesoModel | None:
@@ -112,9 +136,7 @@ class _MesoPane(_ContinuumPane):
         model = self.model
         if self.project is None or model is None:
             return super().subject()
-        molecular = model.molecular()
-        over = f", over molecular model {molecular}" if molecular is not None else ""
-        return f"Continuum model {model.name}{over}"
+        return f"Continuum model {model.name}"
 
     def before_fields(self) -> None:
         if self.tool.id == "outline":
@@ -134,7 +156,7 @@ class _MesoPane(_ContinuumPane):
                 f"Its outline is drawn and edited {where}."
             )
         elif molecular is not None:
-            ui.label(f"Drawn from molecular model {molecular}, outside any study.")
+            ui.label(f"Built over molecular model {molecular}, outside any study.")
         else:
             ui.label("The project holds no molecular model for this model to be drawn from.")
 
@@ -162,6 +184,33 @@ class _MesoPane(_ContinuumPane):
             self.show_charge()
 
     # -- the sections ---------------------------------------------------------------------------
+
+    def representation(self) -> Representation:
+        """Return how Mol* draws the structure on this tool: the user's choice, else its default."""
+        chosen = self.shell.looks.get(f"meso/{self.tool.id}", "")
+        if chosen in REPRESENTATIONS:
+            return chosen
+        model = self.meso
+        table = None if model is None else model.table()
+        pqr = None if model is None or table is not None else pqr_frame(model.pqr())
+        # Atoms with no backbone, as a fixture's charges, draw as balls: a cartoon draws none.
+        return "cartoon" if has_backbone(table, pqr) else "spacefill"
+
+    def structure_row(self) -> None:
+        with self.named("Structure"):
+            ui.select(
+                dict(REPRESENTATIONS),
+                value=self.representation(),
+                on_change=lambda e: self.represent(str(e.value)),
+            ).props(
+                "dense outlined options-dense data-control=view-representation "
+                'aria-label="How the structure is drawn"'
+            ).set_enabled(bool(self.scene_key()))
+
+    async def represent(self, representation: str) -> None:
+        if representation in REPRESENTATIONS:
+            self.shell.looks[f"meso/{self.tool.id}"] = representation
+            await self.show()
 
     def density_section(self) -> None:
         self.picture_choice(IMAGES, "Drawn", "density")
@@ -202,7 +251,7 @@ class _MesoPane(_ContinuumPane):
         ).classes("state-ok").props("data-control=contour-verdict")
 
     def picture_choice(self, images: tuple[str, ...], label: str, stage: str) -> None:
-        """Draw the point group the map is averaged over and the picture the view draws."""
+        """Draw the point group, the picture the view draws and the structure's look."""
         case = None if self.model is None else self.model.case()
         if case is not None and case.structure is not None:
             group = case.structure.symmetry.point_group
@@ -211,7 +260,7 @@ class _MesoPane(_ContinuumPane):
                     f"{group}, set in Prepare",
                     f"/molecular/prepare?field={POINT_GROUP}",
                 ).props("data-control=geometry-point-group")
-        heading("Picture", 2)
+        heading("View", 2)
         with self.named(label):
             ui.select(
                 {name: IMAGE_TITLES[name] for name in images},
@@ -220,6 +269,7 @@ class _MesoPane(_ContinuumPane):
             ).props(
                 'dense outlined options-dense data-control=plane-image aria-label="Picture"'
             ).set_enabled(self.model is not None and stage in self.walked)
+        self.structure_row()
 
     def outline_editor(self) -> None:
         """Draw the outline's editor."""
@@ -327,7 +377,7 @@ class _MesoPane(_ContinuumPane):
                 )
                 ui.button("Save edit…", on_click=self.ask_save).props(
                     "unelevated dense no-caps color=primary data-control=contour-save"
-                ).set_enabled(problem is None)
+                ).set_enabled(problem is None and editor.can_undo)
             self.show_moved()
 
     def show_assessment(self) -> None:
@@ -540,9 +590,9 @@ class _MesoPane(_ContinuumPane):
             if charges is not None:
                 # A link only where the residues are on the map.
                 with ui.row().classes("items-center no-wrap"):
-                    ui.badge("Linked" if self.linked else "Not linked").props(
-                        "data-control=charge-link-state"
-                    )
+                    ui.badge(
+                        "Map, molecule and list linked" if self.linked else "Not linked"
+                    ).props("data-control=charge-link-state")
                     ui.button("Unlink" if self.linked else "Link", on_click=self.toggle_link).props(
                         "flat dense no-caps data-control=charge-link"
                     )
@@ -562,12 +612,17 @@ class _MesoPane(_ContinuumPane):
                     else "Pick a residue on the map, the molecule or the list."
                 )
                 ui.label(picked).props("data-control=charge-residue role=status")
+                listed = charges.residues()
+                ui.label(
+                    f"{len(listed)} charged residues, each named once: "
+                    + ("scroll for more." if len(listed) > STRIP_SHOWN else "all shown.")
+                ).classes("field-hint").props("data-control=charge-strip-count")
                 with (
                     ui.element("div")
                     .classes("charge-strip")
                     .props('role=group aria-label="Charged residues"')
                 ):
-                    for key, name, charge_e, copies in charges.residues():
+                    for key, name, charge_e, copies in listed:
                         # Its sign beside its name: the list is read for where the charge is.
                         sign = f"{charge_e:+.0f}".replace("-", "\u2212")
                         each = f", each of {copies} copies" if copies > 1 else ""
@@ -578,9 +633,46 @@ class _MesoPane(_ContinuumPane):
                             f"aria-pressed={'true' if key == self.residue else 'false'} "
                             f'title="{name} {key}, {charge_e:+.2f} e{each}"'
                         ).classes("strip-item")
+            self.view_rows()
             self.overlay_rows()
             self.conservation_rows()
             self.render_note()
+
+    def view_rows(self) -> None:
+        model = self.meso
+        heading("View", 2)
+        self.structure_row()
+        scale = None if model is None else model.charge_scale(self.layer)
+        if scale is None:
+            return
+        largest, clip, units = scale
+        unit = unit_text(units)
+        opened = self.spans[self.layer] or clip or largest
+        # A number far from unity is typed against its power of ten, which the unit carries.
+        power = _power(clip or largest)
+        factor = 10.0**power
+        typed_in = f"\u00d7\u200910{str(power).translate(_SUPERSCRIPT)} {unit}" if power else unit
+        with self.named("Map range"):
+            ui.number(
+                value=float(f"{opened / factor:.3g}"),
+                min=0.0,
+                format="%.3g",
+                suffix=typed_in,
+                on_change=lambda e, f=factor: self.set_span(e.value, f),
+            ).props(
+                f"dense outlined data-control=charge-range "
+                f'aria-label="How far the colour scale runs each side of zero, in {typed_in}"'
+            )
+        ui.label(
+            f"The scale opens on the {CLIP_PERCENTILE:g}th percentile of the charge's size; "
+            f"its largest is {_figures(largest)} {unit}."
+        ).classes("field-hint").props("data-control=charge-range-hint")
+
+    async def set_span(self, value: object, factor: float) -> None:
+        if not isinstance(value, int | float) or value <= 0:
+            return
+        self.spans[self.layer] = float(value) * factor
+        await self.redraw()
 
     def overlay_rows(self) -> None:
         model = self.meso
@@ -609,16 +701,16 @@ class _MesoPane(_ContinuumPane):
                             value=float(f"{self.overlay[which]:.3g}"),
                             min=0.0,
                             format="%.3g",
-                            suffix="e/nm³",
+                            suffix="e nm⁻³",
                             on_change=lambda e, w=which: self.set_level(w, e.value),
                         )
                         .props(
                             f"dense outlined data-control=overlay-level-{which} "
-                            f'aria-label="{title}: the isosurfaces\' level, in e/nm³"'
+                            f'aria-label="{title}: the isosurfaces\' level, in e nm⁻³"'
                         )
                         .style("width: 9rem")
                     )
-                    level.props(f'title="Largest magnitude {self.peaks[which]:.3g} e/nm³"')
+                    level.props(f'title="Largest magnitude {self.peaks[which]:.3g} e nm⁻³"')
 
     async def toggle_overlay(self, which: str, on: bool) -> None:
         model = self.meso
@@ -939,7 +1031,12 @@ class _MesoPane(_ContinuumPane):
         if charge is not None:
             # The overlay is the charge's: a new charge takes a new address.
             key = f"{key}-{charge.hash[:12]}"
-        query = {"colour": colour, "positive": charge_colours(self.shell), "v": key}
+        query = {
+            "colour": colour,
+            "positive": charge_colours(self.shell),
+            "v": key,
+            "representation": self.representation(),
+        }
         for which, level in self.overlay.items():
             query[which] = f"{level:.6g}"
         editor, moved = model.editor(), model.moved() if self.tool.id == "outline" else None
@@ -972,10 +1069,26 @@ class _MesoPane(_ContinuumPane):
             "positive": charge_colours(self.shell),
             "v": charge.hash[:12],
         }
+        span = self.spans[self.layer]
+        if span is not None:
+            drawn["span"] = f"{span:.6g}"
         return f"/api/meso/{model.name}/charge/plane?{urlencode(drawn)}"
 
+    def plane_note(self) -> str:
+        """Say why the (r, z) view draws nothing, where it has no drawing to ask for."""
+        model = self.meso
+        if model is None:
+            return "No project is open." if self.project is None else "No continuum model is open."
+        if model.problem() is not None:
+            return "The model's file forms no case, so nothing is drawn: see the pane."
+        if model.running_stage() is not None:
+            return "A build is running: the view draws the model when it ends."
+        return "No charge is built: build the charge map to draw it."
+
     async def show(self) -> None:
-        await self.built.show_pair(self.scene_url(), self.plane_url(), self.scene_key())
+        await self.built.show_pair(
+            self.scene_url(), self.plane_url(), self.scene_key(), self.plane_note()
+        )
 
 
 def meso_page(shell: Shell, tool: Tool) -> Callable[..., None]:

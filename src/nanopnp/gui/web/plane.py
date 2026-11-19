@@ -17,6 +17,7 @@ from nanopnp.core.stages import describe
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
 from nanopnp.geometry.profile import load_profile
+from nanopnp.gui.charge import clip_of
 from nanopnp.gui.geometry import ImageModel, density_section, lookup_table, reduced_image
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
@@ -397,9 +398,17 @@ def image_png(model: ContinuumModel, layer: str) -> bytes | None:
 
 
 def _membrane(
-    document_membrane: Membrane, outline: Sequence[float] | None, *, r_high: float
+    document_membrane: Membrane,
+    outline: Sequence[float] | None,
+    *,
+    r_high: float,
+    r_drawn: float = 0.0,
 ) -> list[dict[str, Any]]:
-    """Return the membrane's faces in stage 1's frame, each from the outline's outer edge out."""
+    """Return the membrane's faces in stage 1's frame, each from the outline's outer edge out.
+
+    With no outline each starts at ``r_drawn``, the edge of what is drawn, so it crosses no
+    protein and no lumen.
+    """
     from shapely import LineString, Polygon
 
     centre = document_membrane.centre_z_nm
@@ -409,7 +418,7 @@ def _membrane(
         solid = Polygon(list(zip(outline[0::2], outline[1::2], strict=True))).buffer(0)
     faces = []
     for side, z in (("trans", centre - half), ("cis", centre + half)):
-        start = 0.0
+        start = r_drawn
         if solid is not None:
             crossed = LineString([(0.0, z), (r_high, z)]).intersection(solid)
             start = 0.0 if crossed.is_empty else float(crossed.bounds[2])
@@ -718,11 +727,14 @@ def _mesh_layer(
     }
 
 
-def deployed_layer(path: Path, *, positive: Literal["blue", "red"] = "blue") -> dict[str, Any]:
+def deployed_layer(
+    path: Path, *, positive: Literal["blue", "red"] = "blue", span: float | None = None
+) -> dict[str, Any]:
     """Return a run's deployed charge, one mean per element, as a mesh layer with its colour bar.
 
     ``path`` is the file :func:`nanopnp.gui.render.render_charge_elements` wrote. The charge's
-    scale is symmetric about zero, a positive charge in the named colour.
+    scale is symmetric about zero, a positive charge in the named colour, and runs to ``span``,
+    or else opens on :func:`~nanopnp.gui.charge.clip_of`'s share of its size.
     """
     import numpy as np
 
@@ -734,10 +746,11 @@ def deployed_layer(path: Path, *, positive: Literal["blue", "red"] = "blue") -> 
         name, units = str(held["name"]), str(held["units"])
     charge = name == FIXED_CHARGE_ATTRIBUTE
     limit = float(np.abs(values).max()) if values.size else 0.0
+    top = 1.0
     if charge:
-        # An all-zero charge still needs a range a colour map can divide by.
-        scale = [-limit, limit] if limit > 0.0 else [-1.0, 1.0]
-        palette = _stops(lookup_table("diverging_r" if positive == "blue" else "diverging"))
+        top = _span(limit, clip_of(values), span)
+        scale = [-top, top]
+        palette = _charge_palette(positive)
     else:
         scale = [0.0, 1.0]
         palette = _stops(lookup_table("viridis"))
@@ -756,12 +769,13 @@ def deployed_layer(path: Path, *, positive: Literal["blue", "red"] = "blue") -> 
         "legend": [],
         "categorical": False,
         "outlined": [],
-        # The quantity in words; the unit, then the name the exported field carries (IF-07).
         "bar": (
-            {"quantity": "Fixed charge density", "unit": f"{unit_text(units)} ({name})"}
+            {"quantity": "Fixed charge density", "unit": unit_text(units), "clipped": top < limit}
             if charge
             else {"quantity": name, "unit": unit_text(units)}
         ),
+        **({"dark": {"palette": _charge_palette(positive, dark=True)}} if charge else {}),
+        "largest": limit,
     }
 
 
@@ -772,8 +786,19 @@ NO_DEPLOYED = (
 )
 
 
-def _charge_palette(positive: Literal["blue", "red"]) -> list[str]:
-    return _stops(lookup_table("diverging_r" if positive == "blue" else "diverging"))
+def _charge_palette(positive: Literal["blue", "red"], *, dark: bool = False) -> list[str]:
+    if positive == "blue":
+        return _stops(lookup_table("diverging_dark_r" if dark else "diverging_r"))
+    return _stops(lookup_table("diverging_dark" if dark else "diverging"))
+
+
+def _span(limit: float, clip: float, span: float | None) -> float:
+    """Return how far a charge's scale runs each side of zero: ``span``, else the clip."""
+    # An all-zero charge still needs a range a colour map can divide by.
+    for value in (span, clip, limit):
+        if value is not None and value > 0.0:
+            return value
+    return 1.0
 
 
 def charge_ends(positive: Literal["blue", "red"] = "blue") -> tuple[str, str]:
@@ -791,20 +816,25 @@ def charge_plane(
     deployed: Path | None = None,
     layer: Literal["lattice", "deployed"] = "lattice",
     picked: tuple[str, Sequence[tuple[float, float, float]]] | None = None,
+    span: float | None = None,
 ) -> Plane:
     """Return the charge on the mesh: the lattice or the deployed charge, with its bar.
 
-    Each worst plane of the conservation record is a dashed line across the map, and a picked
-    residue's charged atoms are rings in the charge's own colours. A click asks about its point.
+    Each worst plane of the conservation record is a dashed line across the map, in the warning
+    colour where its leg is over its tolerance, and a picked residue's charged atoms are rings in
+    the charge's own colours. A click asks about its point.
 
     Parameters
     ----------
     image_url
-        Where the canvas reads the lattice's picture.
+        Where the canvas reads the lattice's picture, which the dark theme asks for with
+        ``&middle=dark``.
     deployed
         The file of the deployed charge per element, where one is drawn.
     picked
         The picked residue's key and its charged atoms, each ``(r_nm, z_nm, q_e)``.
+    span
+        How far the scale runs each side of zero; by default the layer's clip.
     """
     palette = _charge_palette(positive)
     layers: list[dict[str, Any]] = []
@@ -817,7 +847,7 @@ def charge_plane(
         if deployed is None:
             notes.append(NO_DEPLOYED)
         else:
-            drawn = deployed_layer(deployed, positive=positive)
+            drawn = deployed_layer(deployed, positive=positive, span=span)
             layers.append(drawn)
             if extent is None:
                 rs, zs = drawn["vertices_nm"][0::2], drawn["vertices_nm"][1::2]
@@ -825,31 +855,39 @@ def charge_plane(
     elif shown is None:
         notes.append(NO_LATTICE)
     else:
-        limit = shown.limit if shown.limit > 0.0 else 1.0
+        top = _span(shown.limit, shown.clip, span)
         layers.append(
             {
                 "id": "lattice",
                 "kind": "image",
                 "url": image_url,
                 "extent_nm": [round(v, ROUND_NM) for v in shown.image.extent_nm],
-                "scale": [-limit, limit],
+                "scale": [-top, top],
                 "title": shown.image.title,
                 "bar": {
                     "quantity": shown.quantity.replace("_", " ").capitalize(),
                     "unit": unit_text(shown.units),
-                    "low": -limit,
-                    "high": limit,
+                    "low": -top,
+                    "high": top,
                     "palette": palette,
+                    "clipped": top < shown.limit,
                 },
+                "dark": {
+                    "url": f"{image_url}&middle=dark",
+                    "bar": _charge_palette(positive, dark=True),
+                },
+                "largest": shown.limit,
             }
         )
-    if extent is not None and layers:
-        for label, z_nm in () if conservation is None else conservation.planes:
+    if extent is not None and layers and conservation is not None:
+        over = {leg.name for leg in conservation.legs if leg.ratio is not None and leg.ratio > 1.0}
+        for label, z_nm in conservation.planes:
             side = label.removeprefix("worst plane (").rstrip(")")
             layers.append(
                 _line(
                     f"worst-{side}",
-                    "worst",
+                    # A plane within its tolerance is a place, not a warning.
+                    "worst" if label in over else "plane",
                     [(extent[0], z_nm), (extent[1], z_nm)],
                     f"{label.capitalize()}, z = {z_nm:.4g} nm",
                 )
@@ -863,6 +901,8 @@ def charge_plane(
                 "points_nm": _flat((r, z) for r, z, _ in markers),
                 "colours": [palette[-1] if q > 0 else palette[0] for _, _, q in markers],
                 "title": f"Residue {residue}, its charged atoms",
+                # Keyed as rings, one of each sign it holds.
+                "ring": True,
             }
         )
     framed = _extent(layers, extent or (0.0, 1.0, -1.0, 1.0))
@@ -886,12 +926,15 @@ def _edited(model: ContinuumModel, layers: list[dict[str, Any]]) -> list[dict[st
     if editor is None:
         return layers
     kept = [layer for layer in layers if layer["id"] != "contour"]
+    opened = [layer for layer in layers if layer["id"] == "contour"]
+    edit = {**_polygon("contour", "contour", editor.vertices, "Edited outline"), "editable": True}
+    if not editor.can_undo and opened:
+        # Before its first change the edit is the outline it opened on, keyed as that outline.
+        return [*kept, {**edit, "title": opened[0].get("title", "")}]
     original = [
         {**layer, "id": "original", "role": "original", "title": "Outline before the edit"}
-        for layer in layers
-        if layer["id"] == "contour"
+        for layer in opened
     ]
-    edit = {**_polygon("contour", "contour", editor.vertices, "Edited outline"), "editable": True}
     return [*kept, *original, edit]
 
 
@@ -959,7 +1002,10 @@ def plane(
         membrane, _, _ = _values(model)
         extent = _extent(layers, blank)
         outline = None if loop is None else _flat(loop)
-        layers += _membrane(membrane, outline, r_high=extent[1])
+        drawn = _bounds(layers)
+        layers += _membrane(
+            membrane, outline, r_high=extent[1], r_drawn=0.0 if drawn is None else drawn[1]
+        )
         if marked is not None and marked[1]:
             layers.append(_atoms_layer(*marked))
         return Plane(
@@ -1029,8 +1075,15 @@ _SUPERSCRIPT = str.maketrans(
 
 
 def unit_text(units: str) -> str:
-    """Return a unit as the workbench writes it: each power raised, as ``C/m^3`` reads ``C/m³``."""
-    return re.sub(r"\^([+-]?\d+)", lambda found: found.group(1).translate(_SUPERSCRIPT), units)
+    """Return a unit as the panes write it, each power raised: ``C/m^3`` reads ``C m⁻³``."""
+    raised = re.sub(r"\^([+-]?\d+)", lambda found: found.group(1).translate(_SUPERSCRIPT), units)
+    over, slash, under = raised.partition("/")
+    if not slash or "/" in under:
+        return raised
+    # One unit over another: the divisor's power negative, as C m⁻² in the panes.
+    power = re.search(r"[\u2070\u00b9\u00b2\u00b3\u2074-\u2079]+$", under)
+    base = under[: power.start()] if power else under
+    return f"{over} {base}\u207b{power.group(0) if power else chr(0xB9)}"
 
 
 def ion_text(name: str) -> str:

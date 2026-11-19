@@ -13,7 +13,7 @@ from nanopnp.api.project import Project
 from nanopnp.api.session import Session
 from nanopnp.charge.stage import stored_lattice
 from nanopnp.core.constants import ELEMENTARY_CHARGE
-from nanopnp.gui.charge import ConservationView, charge_image
+from nanopnp.gui.charge import ConservationView, charge_image, clip_of
 from nanopnp.gui.render import ChargeRequest, render_charge_elements
 from nanopnp.gui.web.meso import MesoModel
 from nanopnp.gui.web.plane import charge_plane, deployed_layer
@@ -71,8 +71,12 @@ def test_ver60_the_charge_map_shows_the_walks_record(walked, charged_tube) -> No
     rendered = render_charge_elements(ChargeRequest(run=str(walked.directory), elements=True))
     layer = deployed_layer(Path(rendered.path))
     assert layer["colour"] == FIXED_CHARGE_ATTRIBUTE
-    assert layer["bar"]["unit"] == f"C/m³ ({FIXED_CHARGE_ATTRIBUTE})"
-    assert layer["scale"] == [-rendered.limit, rendered.limit]
+    assert layer["bar"]["unit"] == "C m⁻³"
+    # The scale opens on the clip of the charge's size, and keeps its largest beside it.
+    assert layer["largest"] == rendered.limit
+    opened = clip_of(np.asarray(layer["values"]))
+    assert layer["scale"] == [-opened, opened]
+    assert layer["bar"]["clipped"] == (opened < rendered.limit)
     vertices = np.reshape(layer["vertices_nm"], (-1, 2))
     triangles = np.reshape(layer["triangles"], (-1, 3))
     assert len(layer["values"]) == len(triangles) == rendered.elements
@@ -120,7 +124,12 @@ def test_ver60_the_charge_map_draws_the_stages_and_planes_the_walk_recorded(char
     drawing = charge_plane(model.charge_map(), shown, image_url="/map.png").json()
     (image,) = (layer for layer in drawing["layers"] if layer["kind"] == "image")
     assert image["bar"]["low"] == -image["bar"]["high"]
-    rules = [layer for layer in drawing["layers"] if layer.get("role") == "worst"]
+    # Each worst plane is drawn, a warning only where its leg is over its tolerance.
+    rules = [layer for layer in drawing["layers"] if layer["id"].startswith("worst-")]
+    over = {leg.name for leg in recorded.legs if leg.ratio is not None and leg.ratio > 1.0}
+    assert [rule["role"] for rule in rules] == [
+        "worst" if label in over else "plane" for label, _ in recorded.planes
+    ]
     assert recorded.planes, "the record names no worst plane to draw"
     assert [(rule["points_nm"][1], rule["points_nm"][3]) for rule in rules] == [
         (pytest.approx(z_nm, abs=1e-5), pytest.approx(z_nm, abs=1e-5))
