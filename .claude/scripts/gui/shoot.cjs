@@ -9,7 +9,9 @@
 // addresses to load first, so that a server's token cookie is set; `ready` is a selector awaited
 // (90 s) after the load, as the workbench's `body[data-screen-ready="1"]`. `click` lists selectors
 // clicked in order once the page is ready, each awaited (30 s) and followed by a short settle, so
-// that a menu, a dialog or a folded rail is open when the page is shot. Entries that share a server
+// that a menu, a dialog or a folded rail is open when the page is shot; a step may instead type
+// into a field, `{fill, value}`, or click a vertex of the plane's edited outline,
+// `{plane_vertex}` (`act`). Entries that share a server
 // (the first address of `via`) run in order, since a server's state carries from one shot to the
 // next; the servers' entries run side by side, `NANOPNP_SHOOT_JOBS` at a time (default: one fewer
 // than the CPUs, at most 3; more starves the software-GL pages, and a menu opens after the shot's
@@ -387,6 +389,43 @@ class Seat {
   }
 }
 
+// One step of an entry's `click`: a selector, clicked; `{fill, value}`, the field the selector
+// names typed into; or `{plane_vertex}`, the vertex of that index of the plane's edited outline,
+// clicked where the canvas draws it, since a vertex has no element of its own.
+async function act(page, step) {
+  if (typeof step === "string") {
+    await page.waitForSelector(step, { state: "visible", timeout: 30000 });
+    await page.click(step, { timeout: 30000 });
+  } else if (step.fill !== undefined) {
+    await page.waitForSelector(step.fill, { state: "visible", timeout: 30000 });
+    await page.fill(step.fill, String(step.value), { timeout: 30000 });
+  } else if (step.plane_vertex !== undefined) {
+    // The view is fitted again as the pane beside it grows, which moves the vertex: it is found
+    // and clicked again until the view has picked it.
+    for (let attempt = 1; ; attempt++) {
+      const at = await page.waitForFunction(
+        (index) => {
+          const view = window.nano && window.nano.canvas;
+          const layers = (view && view.drawing && view.drawing.layers) || [];
+          const edited = layers.find((layer) => layer.role === "contour" && layer.editable);
+          if (!edited || edited.points_nm.length < 2 * index + 2) return null;
+          const [x, y] = view.toScreen(edited.points_nm[2 * index], edited.points_nm[2 * index + 1]);
+          return { x, y };
+        },
+        step.plane_vertex,
+        { timeout: 30000 },
+      );
+      await page.click("#plane canvas", { position: await at.jsonValue(), timeout: 30000 });
+      const picked = await page.evaluate(() => window.nano.canvas.picked);
+      if (picked && picked.layer === "contour" && picked.index === step.plane_vertex) break;
+      if (attempt === 5) throw new Error(`the plane did not pick vertex ${step.plane_vertex}`);
+      await page.waitForTimeout(1000);
+    }
+  } else {
+    throw new Error(`a click step is a selector, {fill, value} or {plane_vertex}: ${JSON.stringify(step)}`);
+  }
+}
+
 async function shootOne(seat, entry, out) {
   const [width, height] = entry.viewport || [1280, 800];
   const { context, page, consoleErrors, pageErrors } = await seat.open(entry);
@@ -400,9 +439,8 @@ async function shootOne(seat, entry, out) {
     await page.goto(entry.url, { waitUntil: "load", timeout: 60000 });
     if (entry.ready) await page.waitForSelector(entry.ready, { timeout: 90000 });
     // After the ready wait: a click on a page whose socket has not connected is lost.
-    for (const selector of entry.click || []) {
-      await page.waitForSelector(selector, { state: "visible", timeout: 30000 });
-      await page.click(selector, { timeout: 30000 });
+    for (const step of entry.click || []) {
+      await act(page, step);
       await settle(page, CLICK_SETTLE_MS, entry);
     }
   } catch (error) {

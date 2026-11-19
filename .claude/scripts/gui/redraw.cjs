@@ -1,13 +1,15 @@
-// Time the charge screen's redraw after a pick on the (r, z) map: decision D11, the 200 ms line
+// Time Meso's Charge map redraw after a pick on the (r, z) map: decision D11, the 200 ms line
 // (ruling AG7; WB-23).
 //
-//   node .claude/scripts/gui/redraw.cjs <address> [--picks 20] [--gap-ms 1500] [--warmup 3]
-//        [--headed] [--json] [--trace <file>]
+//   node .claude/scripts/gui/redraw.cjs <address> [--continuum <name>] [--picks 20] [--gap-ms 1500]
+//        [--warmup 3] [--headed] [--json] [--trace <file>]
 //
 // <address> is the line a served project prints, `nanopnp-gui ready <address>`, for a project whose
-// study is walked to its charge (a 2WCD project): serve it with
+// continuum model's charge is built (a 2WCD project): serve it with
 // `uv run python -m nanopnp.gui.web.server --no-browser --project <folder>`. The script loads that
-// address first, which sets the token cookie, then `/study/charge`. It picks residues on the map by
+// address first, which sets the token cookie, then `/meso/charge`. `--continuum` names the
+// continuum model whose charge map is picked on; it is the one the page itself draws when the
+// option is left out. It picks residues on the map by
 // clicking canvas pixels at their charged atoms, alternating between a few residues so that each
 // pick redraws. Per pick it records, from the pointer's release:
 //   - the markers' paint: `body[data-screen-ready]` going to "0" and back to "1";
@@ -44,7 +46,7 @@ const CANDIDATES = 6;
 class Failure extends Error {}
 
 function parse(argv) {
-  const options = { picks: 20, gapMs: 1500, warmup: 3, headed: false, json: false, trace: null, url: null };
+  const options = { picks: 20, gapMs: 1500, warmup: 3, headed: false, json: false, trace: null, continuum: null, url: null };
   const number = (name, text) => {
     const value = Number(text);
     if (!Number.isInteger(value) || value < 0) throw new Failure(`${name}: ${text} is not a whole number`);
@@ -61,6 +63,7 @@ function parse(argv) {
     else if (arg === "--gap-ms") options.gapMs = number(arg, value());
     else if (arg === "--warmup") options.warmup = number(arg, value());
     else if (arg === "--trace") options.trace = value();
+    else if (arg === "--continuum") options.continuum = value();
     else if (arg === "--headed") options.headed = true;
     else if (arg === "--json") options.json = true;
     else if (arg.startsWith("--")) throw new Failure(`unknown option ${arg}`);
@@ -141,22 +144,22 @@ async function gpuOf(page) {
 
 // Residues the pick will alternate between: each with a charged atom's point at which the server
 // ranks that residue first, so that a click there selects it.
-async function candidates(page, study) {
+async function candidates(page, continuum) {
   const keys = await page.$$eval("[data-control=charge-strip-item]", (items) =>
     items.map((item) => item.textContent.trim().split(/\s+/)[0]),
   );
   if (!keys.length) throw new Failure("the charge screen lists no residues");
   return page.evaluate(
-    async ({ study, keys, want }) => {
+    async ({ continuum, keys, want }) => {
       const found = [];
       for (const key of keys) {
         if (found.length >= want) break;
-        const drawing = await (await fetch(`/api/study/${study}/charge/plane?residue=${encodeURIComponent(key)}`)).json();
+        const drawing = await (await fetch(`/api/meso/${continuum}/charge/plane?residue=${encodeURIComponent(key)}`)).json();
         const layer = drawing.layers.find((l) => l.id === "residue" && l.kind === "points");
         if (!layer || !layer.points_nm || layer.points_nm.length < 2) continue;
         for (let k = 0; k + 1 < layer.points_nm.length; k += 2) {
           const [r, z] = [layer.points_nm[k], layer.points_nm[k + 1]];
-          const ranked = await (await fetch(`/api/study/${study}/residues?r=${r}&z=${z}`)).json();
+          const ranked = await (await fetch(`/api/meso/${continuum}/residues?r=${r}&z=${z}`)).json();
           if (ranked.length && ranked[0].key === key) {
             found.push({ key, r, z });
             break;
@@ -165,7 +168,7 @@ async function candidates(page, study) {
       }
       return found;
     },
-    { study, keys, want: CANDIDATES },
+    { continuum, keys, want: CANDIDATES },
   );
 }
 
@@ -235,22 +238,22 @@ async function measure(options) {
     const page = await browser.newPage({ viewport: VIEWPORT });
     const errors = [];
     page.on("pageerror", (error) => errors.push(String(error)));
-    let study = null;
+    let continuum = options.continuum;
     page.on("request", (request) => {
-      const match = request.url().match(/\/api\/study\/([^/]+)\/charge\/plane/);
-      if (match && !study) study = decodeURIComponent(match[1]);
+      const match = request.url().match(/\/api\/meso\/([^/]+)\/charge\/plane/);
+      if (match && !continuum) continuum = decodeURIComponent(match[1]);
     });
     await page.goto(options.url, { waitUntil: "load" });
     const origin = new URL(options.url).origin;
-    await page.goto(`${origin}/study/charge`, { waitUntil: "load" });
+    await page.goto(`${origin}/meso/charge`, { waitUntil: "load" });
     try {
       await page.waitForSelector('body[data-screen-ready="1"]', { timeout: READY_MS });
       await page.waitForSelector("[data-control=charge-strip-item]", { timeout: 30000 });
     } catch (error) {
-      throw new Failure(`the charge screen did not ready within ${READY_MS / 1000} s (a served project walked to its charge is needed)`);
+      throw new Failure(`the charge screen did not ready within ${READY_MS / 1000} s (a served project with a continuum model whose charge is built is needed)`);
     }
-    if (!study) throw new Failure("the page did not fetch a charge drawing: no study to pick residues of");
-    const points = await candidates(page, study);
+    if (!continuum) throw new Failure("the page did not fetch a charge drawing: no continuum model to pick residues of");
+    const points = await candidates(page, continuum);
     if (points.length < 2) throw new Failure(`found ${points.length} pick points; at least two residues are needed`);
     await page.evaluate(instrument);
     const gpu = await gpuOf(page);
@@ -267,7 +270,7 @@ async function measure(options) {
       await page.waitForTimeout(options.gapMs);
     }
     if (tracing) await browser.stopTracing();
-    return { picks, gpu, study, errors };
+    return { picks, gpu, continuum, errors };
   } finally {
     await browser.close();
   }
@@ -301,7 +304,7 @@ function text({ result, measures, met }) {
       ? `${label.padEnd(30)} median ${ms(m.median).padStart(10)}   p95 ${ms(m.p95).padStart(10)}   n=${m.count}`
       : `${label.padEnd(30)} not recorded`;
   const lines = [
-    `Redraw after a pick, ${result.picks.length} picks on study ${result.study}`,
+    `Redraw after a pick, ${result.picks.length} picks on continuum model ${result.continuum}`,
     row("Markers' paint", measures.markers_paint),
     row("  server to nano.plane", measures.server_to_plane),
     row("  drawing fetched", measures.drawing_fetched),
@@ -324,7 +327,7 @@ async function main() {
   if (options.json) {
     console.log(
       JSON.stringify({
-        study: done.result.study,
+        continuum: done.result.continuum,
         count: done.result.picks.length,
         viewport: VIEWPORT,
         gpu: done.result.gpu,
