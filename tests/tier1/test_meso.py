@@ -355,3 +355,106 @@ def test_ver60_a_point_on_an_atom_ranks_its_residue_first(tmp_path: Path, mode: 
         assert key == f"{table.chain[i]}:{table.resid[i]}"
         # Stage 1 stores its positions in float32.
         assert distance < 1e-5
+
+
+def _three_atoms() -> ProtonationTable:
+    # Three atoms in two frames, the second moved across z.
+    table = _table(("A",), frames=1)
+    positions = np.array(
+        [
+            (2.0, 0.5, 1.0),
+            (-1.0, 2.5, -0.5),
+            (0.3, -0.2, 0.2),
+            (2.05, 0.6, 1.0),
+            (-1.1, 2.45, -0.5),
+            (0.25, -0.15, 0.2),
+        ]
+    )
+    return ProtonationTable(
+        **{
+            **{key: getattr(table, key) for key in ProtonationTable.ARRAYS},
+            "frame_offsets": np.array([0, 3, 6]),
+            "positions_nm": positions,
+            "charge_e": np.array([1.0, -1.0, 0.5] * 2),
+            # Stage 7's widths are 0.15, 0.5 and 0.6 nm: the first is widened to the smoothing.
+            "radius_nm": np.array([0.3, 1.0, 1.2] * 2),
+            "name": np.array(["OE1", "NZ", "OD1"] * 2),
+            "resname": np.array(["GLU", "LYS", "ASP"] * 2),
+            "chain": np.array(["A"] * 6),
+            "resid": np.array([1, 2, 3] * 2),
+            "icode": np.array([""] * 6),
+        },
+        header={},
+    )
+
+
+def test_ver60_the_overlays_mean_about_the_axis_is_its_3d_charges() -> None:
+    from nanopnp.charge.fields import ChargeFieldError
+    from nanopnp.plot.data import REACH_WIDTHS, charge_volumes
+
+    table = _three_atoms()
+    smoothing = 0.4
+    widths = np.maximum(SHARPNESS * table.radius_nm, smoothing)
+    assert widths.min() == smoothing
+    spacing = widths.min() / 4.0
+    # A membrane's shift moves the model frame, and the overlay stays in stage 1's.
+    resolved = _resolved(0.7)
+    volumes = charge_volumes(table, resolved, spacing_nm=spacing, smoothing_nm=smoothing)  # type: ignore[arg-type]
+    x, y, z = volumes.axes_nm()
+    assert volumes.full.shape == volumes.revolved.shape == (x.size, y.size, z.size)
+    weight = table.charge_e / table.frames
+
+    # Each widened Gaussian at every node, within its reach, summed by hand.
+    xx, yy, zz = np.meshgrid(x, y, z, indexing="ij")
+    by_hand = np.zeros(xx.shape)
+    for i, (x_i, y_i, z_i) in enumerate(table.positions_nm):
+        squared = ((xx - x_i) ** 2 + (yy - y_i) ** 2 + (zz - z_i) ** 2) / widths[i] ** 2
+        by_hand += np.where(
+            squared <= REACH_WIDTHS**2,
+            weight[i] * math.pi**-1.5 * widths[i] ** -3 * np.exp(-squared),
+            0.0,
+        )
+    peak = np.abs(by_hand).max()
+    np.testing.assert_allclose(volumes.full, by_hand, rtol=1e-12, atol=1e-12 * peak)
+    nodes = np.array([(x[60], y[50], z[30]), (x[47], y[47], z[27]), (x[37], y[72], z[20])])
+    assert volumes.full_at(nodes) == pytest.approx(
+        [volumes.full[60, 50, 30], volumes.full[47, 47, 27], volumes.full[37, 72, 20]], rel=1e-12
+    )
+
+    # The closed form of each widened Gaussian's mean about the axis, summed within its reach.
+    r_i = np.hypot(table.positions_nm[:, 0], table.positions_nm[:, 1])
+    z_i = table.positions_nm[:, 2]
+    rr = np.hypot(xx, yy)
+    expected = np.zeros(rr.shape)
+    for i in range(len(weight)):
+        inside = (rr - r_i[i]) ** 2 + (zz - z_i[i]) ** 2 <= (REACH_WIDTHS * widths[i]) ** 2
+        expected += np.where(
+            inside, weight[i] * volume_density(rr, zz, r_i[i], z_i[i], widths[i]), 0.0
+        )
+    scale = np.abs(expected).max()
+    np.testing.assert_allclose(volumes.revolved, expected, rtol=1e-12, atol=1e-12 * scale)
+
+    # The mean of the 3D sum over the azimuth, a periodic trapezoid, is the revolved value.
+    phi = 2.0 * math.pi * np.arange(360) / 360
+    centre = x.size // 2
+    for ix, iz in (
+        (centre + 20, 30),
+        (centre + 21, 30),
+        (centre + 26, 20),
+        (centre + 3, 27),
+        (centre + 5, 22),
+    ):
+        radius, height = float(x[ix]), float(z[iz])
+        ring = np.column_stack([radius * np.cos(phi), radius * np.sin(phi), np.full(360, height)])
+        mean = float(volumes.full_at(ring).mean())
+        assert abs(mean) > 1e-3 * scale
+        assert mean == pytest.approx(float(volumes.revolved[ix, centre, iz]), rel=1e-6)
+
+    # Each grid holds the charge per frame; the reach cuts off 5.2e-7 of each 3D Gaussian.
+    cell = spacing**3
+    net = float(weight.sum())
+    assert float(volumes.full.sum()) * cell == pytest.approx(net, rel=1e-6)
+    assert float(volumes.revolved.sum()) * cell == pytest.approx(net, rel=1e-6)
+
+    with pytest.raises(ChargeFieldError, match="does not resolve the narrowest kernel"):
+        charge_volumes(table, resolved, spacing_nm=0.21, smoothing_nm=smoothing)  # type: ignore[arg-type]
