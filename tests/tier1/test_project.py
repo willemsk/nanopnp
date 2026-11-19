@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import filecmp
 import json
+import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -456,3 +457,76 @@ def test_fr39_a_continuum_models_charge_keys_as_its_study_and_is_kept(tmp_path: 
     for artefact in walked.artefacts.values():
         if artefact.hash in built:
             assert store.contains(artefact, mark=False), artefact.schema_id
+
+
+@pytest.fixture(scope="module")
+def solved_tube(tmp_path_factory: pytest.TempPathFactory) -> tuple[Project, str, Path, Path]:
+    root = tmp_path_factory.mktemp("solved")
+    project = Project.create(root / "project")
+    study = project.import_case(Case.load(write_charged_tube(root / "tube")))
+    first = project.session().run(project.study(study)).directory
+    project.set_study_value(study, "boundary_conditions.bias_V", -0.05)
+    second = project.session().run(project.study(study)).directory
+    return project, study, first, second
+
+
+def test_fr32_a_comparison_is_written_read_back_listed_and_exported_with_its_runs(
+    solved_tube: tuple[Project, str, Path, Path], tmp_path: Path
+) -> None:
+    # A comparison names its runs by their place in the project, so a copy keeps the pair; a run
+    # gone from under it is listed, and never stops the project from opening.
+    project, _, first, second = solved_tube
+    location = project.new_comparison("tube-bias", first, second)
+    pair = (first.relative_to(project.root).as_posix(), second.relative_to(project.root).as_posix())
+    assert project.comparison("tube-bias").runs == pair
+    assert project.comparison("tube-bias").quantity == "potential"
+    assert Project.open(project.root).items("comparison") == ("tube-bias",)
+    changed = project.set_comparison("tube-bias", view="maps", colour_map="magma", range=[-1, 1])
+    assert (changed.view, changed.colour_map, changed.range) == ("maps", "magma", (-1.0, 1.0))
+    written = location.read_bytes()
+    for refused in ({"view": "sideways"}, {"range": [1, -1]}, {"bias_V": 0.1}):
+        with pytest.raises(ProjectError):
+            project.set_comparison("tube-bias", **refused)
+        assert location.read_bytes() == written
+    with pytest.raises(ProjectError, match="not a run"):
+        project.new_comparison("stray", first, tmp_path)
+    assert project.problems() == ()
+
+    copy = project.export(tmp_path / "copy")
+    assert (copy / "comparisons" / "tube-bias.yaml").read_bytes() == written
+    reopened = Project.open(copy)
+    assert reopened.comparison("tube-bias").runs == pair
+    assert all((copy / run / "run.json").is_file() for run in pair)
+    assert reopened.problems() == ()
+    shutil.rmtree(copy / pair[1])
+    [problem] = Project.open(copy).problems()
+    assert (problem.item, problem.path, problem.suite) == (
+        "comparison/tube-bias",
+        "runs",
+        "analysis",
+    )
+
+
+def test_fr32_qr08_a_run_cleaned_from_the_store_is_rebuilt_to_its_record(
+    solved_tube: tuple[Project, str, Path, Path],
+) -> None:
+    # A rebuild that served its solve from the store, or walked another case, would claim a run
+    # it never re-entered; its solve hash and every recorded scalar must come back. The study was
+    # edited after the first run, which reads its own case.yaml and so does not drift.
+    project, study, first, second = solved_tube
+    stopped = project.session().run(project.study(study), upto="mesh").directory
+    assert [project.run_state(run) for run in (first, second, stopped)] == [
+        "solved",
+        "solved",
+        "unsolved",
+    ]
+    project.clean_store(everything=True)
+    assert [project.run_state(run) for run in (first, second)] == ["removed", "removed"]
+
+    reproduction = project.rebuild(first)
+    assert reproduction.reproduced, [drift.summary() for drift in reproduction.drifts]
+    assert reproduction.quantities
+    assert reproduction.worst is not None and reproduction.worst <= 1e-6
+    recorded = json.loads((first / "run.json").read_text(encoding="utf-8"))
+    assert reproduction.run.artefacts["solve"].hash == recorded["artefacts"]["solve"]["hash"]
+    assert [project.run_state(run) for run in (first, second)] == ["solved", "removed"]

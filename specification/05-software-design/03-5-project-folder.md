@@ -6,7 +6,8 @@ description: "Specifies the workbench project: a plain folder of models, studies
 
 #### 5.3.5 Project folder
 
-NOTE (the project, FR-32, FR-34, FR-35, FR-39, IF-02; §8.2.17 S11; §8.2.33 AI9 to AI14; WP5.19): a workbench
+NOTE (the project, FR-32, FR-34, FR-35, FR-39, IF-02, QR-08; §8.2.17 S11; §8.2.31 AG6; §8.2.33 AI9
+to AI14; §8.2.38 AN5; §8.2.45 AU3; WP5.19, WP5.21): a workbench
 **project** is a folder: `nanopnp-project.yaml` (`nanopnp/project/v0.6`, which holds the item index, the
 open items, the current item, each suite's layout, the project's settings and the molecular model each continuum model
 is built alone over where one was chosen (`built_with`; §5.3.1's NOTE on model files), and no physics), `models/molecular/`,
@@ -46,6 +47,19 @@ copied run record names the copy's directory and files, and the copy's store, wh
 `store=True`. An input the project cannot find, and two inputs that take one path in the copy, are
 refused, naming both, before anything is written. The copy is written beside the destination and moved
 into place whole, so a refused or failed export leaves nothing.
+A **comparison** (`comparisons/<name>.yaml`, `nanopnp/comparison/v0.6`) holds `name`, `runs` (two run
+folders of the project, first then second, relative to it), `quantity` (`potential` by default), `view`
+(`difference`, the default, `maps` or `mesh`), `colour_map` and `range` (None by default), and no physics.
+`Project.new_comparison` writes one over two runs, `Project.comparison` reads it and
+`Project.set_comparison` sets its values, each written only once it reads back. A run it names that holds
+no `run.json` is a problem at `runs`, never a refusal to open; an export copies the file unchanged, its
+runs with it. Its difference (`post.fields.field_difference`) samples both runs onto one cell-centred
+(r, z) grid of about 10⁶ cells over the overlap of their fluids' boxes, each run on the set its quantity
+is solved on, and is NaN where either fluid lacks a cell's centre. `Project.sweeps` lists a study's
+sweeps. `Project.run_state` is `solved` while a run's solve is in the store, `removed` once a clean-up
+took it, and `unsolved` for a walk that stopped short of it. `Project.rebuild` reproduces a run into
+the project's store (§5.3.2's NOTE on reproduction), so its stage keys and every scalar it recorded come
+back, compared at 10⁻⁶; a drift is returned, naming each value.
 `Project.changes` lists each value of an item away from its default (the schema's, or a switch's
 validated one) and each study override, with its kind, value, default and the model's value;
 `Project.reset` removes the key from the item that sets it. `Project.problems` lists each missing file,

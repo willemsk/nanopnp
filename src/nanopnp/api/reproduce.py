@@ -180,8 +180,13 @@ def check_inputs(manifest: Mapping[str, Canonicalisable], *, where: Path) -> Non
     files = inputs.get("files", {}) if isinstance(inputs, dict) else {}
     if not isinstance(files, dict):
         return
+    # A study's run reads its case.yaml, the merged case the manifest embeds; the study and model
+    # files it was formed from are not read again, so an edit of them moves no reproduction.
+    study = any(str(role).startswith("models.") for role in files)
     for role, record in sorted(files.items()):
         if not isinstance(record, dict):
+            continue
+        if study and (role == "case" or str(role).startswith("models.")):
             continue
         path = Path(str(record["path"]))
         recorded = str(record["sha256"])

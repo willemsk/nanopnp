@@ -12,13 +12,14 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import yaml
-from pydantic import JsonValue
+from pydantic import JsonValue, ValidationError
 from pydantic_core import to_jsonable_python
 
 from nanopnp.api.case import Case
+from nanopnp.api.reproduce import Reproduction, reproduce
 from nanopnp.api.session import Session
 from nanopnp.core.hashing import canonical, file_hash
 from nanopnp.io import case as schema
@@ -53,6 +54,7 @@ from nanopnp.io.models import (
     split_case_layers,
 )
 from nanopnp.io.project import (
+    COMPARISON_SCHEMA,
     FOLDERS,
     INPUTS_FOLDER,
     ITEM_KINDS,
@@ -62,6 +64,7 @@ from nanopnp.io.project import (
     STORE_FOLDER,
     SUITES,
     SWEEPS_FOLDER,
+    ComparisonFile,
     ItemKind,
     ProjectFile,
     ProjectFormatError,
@@ -73,15 +76,19 @@ from nanopnp.io.project import (
     valid_name,
     write_project,
 )
-from nanopnp.io.store import LOCKS, StaleEntry, Store, StoreUsage
+from nanopnp.io.store import LOCKS, StaleEntry, Store, StoreUsage, atomic_write_bytes
 from nanopnp.io.variables import field_unit
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.physics.models import SWITCHES, declaration
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import keyed_walk, selected_stages
+from nanopnp.sweep.plan import PLAN_FILENAME
 from nanopnp.sweep.run import MEMBERS_DIRNAME
 
-__all__ = ["Problem", "Project", "ProjectError", "StudyValue"]
+if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from nanopnp.core.stages import CancelToken, Progress
+
+__all__ = ["Problem", "Project", "ProjectError", "RunState", "StudyValue"]
 
 T = TypeVar("T")
 
@@ -104,6 +111,9 @@ OWN_OUTLINE: tuple[str, ...] = ("geometry.pore", "inputs.profile", "inputs.mesh"
 """The values with which a continuum model draws its own pore, and reads no molecular model."""
 
 _REFUSED = (ValueError, KeyError, OSError)
+
+RunState = Literal["solved", "removed", "unsolved"]
+"""A run's solve: in the store, recorded but cleaned from the store, or never reached."""
 
 
 class ProjectError(ValueError):
@@ -282,6 +292,136 @@ class Project:
         if not base.is_dir():
             return ()
         return tuple(sorted(d for d in base.iterdir() if (d / "run.json").is_file()))
+
+    def sweeps(self, study: str) -> tuple[Path, ...]:
+        """Return the sweep directories of one study, each holding its plan."""
+        base = self._root / SWEEPS_FOLDER
+        if not base.is_dir():
+            return ()
+        return tuple(
+            sorted(
+                folder
+                for folder in base.iterdir()
+                if (folder / PLAN_FILENAME).is_file()
+                and _json_object(folder / PLAN_FILENAME).get("name") == study
+            )
+        )
+
+    def run_state(self, run: str | Path) -> RunState:
+        """Return whether a run's solve is in the store, cleaned from it, or never reached."""
+        record = _json_object(self._run_folder(run) / RUN_RECORD_FILENAME)
+        artefacts = record.get("artefacts")
+        solve = artefacts.get("solve") if isinstance(artefacts, dict) else None
+        if not isinstance(solve, dict):
+            return "unsolved"
+        named = record.get("store")
+        store = Store(Path(str(named))) if named else self._store()
+        found = store.get(str(solve.get("schema")), str(solve.get("hash")), mark=False)
+        return "solved" if found is not None else "removed"
+
+    def rebuild(
+        self,
+        run: str | Path,
+        *,
+        progress: Progress | None = None,
+        cancel: CancelToken | None = None,
+    ) -> Reproduction:
+        """Walk a run's recorded case again into the project's store; return what moved.
+
+        Every scalar the record holds is compared at the reproduction's tolerance; a drift is
+        returned, not raised.
+
+        Raises
+        ------
+        ReproductionError
+            The run's files disagree, or its solve was served from the store.
+        InputMovedError
+            An input it read has changed.
+        """
+        return reproduce(
+            self._run_folder(run), store=self._store(), progress=progress, cancel=cancel
+        )
+
+    def _run_folder(self, run: str | Path) -> Path:
+        folder = Path(run)
+        folder = folder if folder.is_absolute() else self._root / folder
+        if not (folder / RUN_RECORD_FILENAME).is_file():
+            raise ProjectError(f"{folder} holds no {RUN_RECORD_FILENAME}. It is not a run.")
+        return folder
+
+    # -- comparisons ----------------------------------------------------------
+
+    def new_comparison(self, name: str, first: str | Path, second: str | Path) -> Path:
+        """Create a comparison of two of the project's runs; return its file.
+
+        Raises
+        ------
+        ProjectError
+            If the name is not an item name or is taken, or either folder is no run of the
+            project.
+        """
+        self._free_name("comparison", name)
+        runs = (self._run_name(first), self._run_name(second))
+        document = ComparisonFile(schema=COMPARISON_SCHEMA, name=name, runs=runs)
+        return self._write_comparison(name, document.model_dump(by_alias=True, mode="json"))
+
+    def comparison(self, name: str) -> ComparisonFile:
+        """Read a comparison.
+
+        Raises
+        ------
+        ProjectError
+            If its file is missing or is not a comparison of this release.
+        """
+        location = self.path("comparison", name)
+        if not location.is_file():
+            raise ProjectError(f"The project holds no comparison {name!r}.")
+        try:
+            return ComparisonFile.model_validate(_body(location))
+        except (ValidationError, ValueError, yaml.YAMLError) as error:
+            raise ProjectError(f"{location}: {_first_error(error)}") from None
+
+    def set_comparison(self, name: str, **values: JsonValue) -> ComparisonFile:
+        """Set values of a comparison, as its file names them; nothing is written if refused.
+
+        ``runs`` takes two run folders, absolute or relative to the project.
+
+        Raises
+        ------
+        ProjectError
+            If the comparison is missing, a key is not one of its file's, or a value is refused.
+        """
+        body = self.comparison(name).model_dump(by_alias=True, mode="json")
+        if "runs" in values and isinstance(values["runs"], list | tuple):
+            values["runs"] = [self._run_name(str(run)) for run in values["runs"]]
+        for key in values:
+            if key in ("schema", "name"):
+                raise ProjectError(f"{key} is the comparison file's own. It is not a value to set.")
+        body.update(values)
+        self._write_comparison(name, body)
+        return self.comparison(name)
+
+    def _run_name(self, run: str | Path) -> str:
+        folder = self._run_folder(run).resolve()
+        if self._root not in folder.parents:
+            raise ProjectError(f"{folder} is not a run of the project at {self._root}.")
+        return folder.relative_to(self._root).as_posix()
+
+    def _write_comparison(self, name: str, body: Mapping[str, Any]) -> Path:
+        # Read back before it is written: a file its reader refuses would hide the comparison.
+        text = _text(body)
+        try:
+            ComparisonFile.model_validate(yaml.safe_load(text))
+        except (ValidationError, ValueError) as error:
+            raise ProjectError(f"comparison {name!r}: {_first_error(error)}") from None
+        location = self.path("comparison", name)
+        location.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write_bytes(location, text.encode("utf-8"))
+        names = self._file.names("comparison")
+        if name not in names:
+            names.append(name)
+            write_project(self._root, self._file)
+        return location
 
     def session(self) -> Session:
         """Return a session over the project's store, runs and sweeps."""
@@ -1291,7 +1431,7 @@ class Project:
                 Problem(item, None, f"{location} is indexed, but the file does not exist.", suite)
             ]
         if kind == "comparison":
-            return []
+            return self._comparison_problems(name, location)
         try:
             body = _body(location)
         except (OSError, yaml.YAMLError, ValueError) as error:  # ValueError: not UTF-8, not a map
@@ -1323,6 +1463,32 @@ class Project:
             where_path = _error_path(error)
             refused = _owner_suite(where_path) if where_path and kind == "study" else suite
             found.append(Problem(item, where_path, str(error), refused))
+        return found
+
+    def _comparison_problems(self, name: str, location: Path) -> list[Problem]:
+        item = item_reference("comparison", name)
+        try:
+            document = ComparisonFile.model_validate(_body(location))
+        except (ValidationError, ValueError, OSError, yaml.YAMLError) as error:
+            return [Problem(item, None, f"{location}: {_first_error(error)}", "analysis")]
+        found: list[Problem] = []
+        if document.name != name:
+            found.append(
+                Problem(
+                    item,
+                    "name",
+                    f"The file is {location.name}, but its name: is {document.name!r}. "
+                    "Make the two the same.",
+                    "analysis",
+                )
+            )
+        for run in document.runs:
+            if not (self._root / run / RUN_RECORD_FILENAME).is_file():
+                found.append(
+                    Problem(
+                        item, "runs", f"{self._root / run} holds no run. Pick another.", "analysis"
+                    )
+                )
         return found
 
     # -- export -------------------------------------------------------------
@@ -1562,6 +1728,15 @@ def _report_path(record: Mapping[str, Any], result: Path, run: Path) -> str:
     if results in result.parents:
         return result.relative_to(results).as_posix()
     return result.name
+
+
+def _first_error(error: Exception) -> str:
+    if isinstance(error, ValidationError):
+        first = error.errors()[0]
+        where = ".".join(str(part) for part in first["loc"])
+        message = str(first["msg"]).removeprefix("Value error, ")
+        return f"{where}: {message}" if where else message
+    return str(error)
 
 
 def _json_object(path: Path) -> dict[str, Any]:

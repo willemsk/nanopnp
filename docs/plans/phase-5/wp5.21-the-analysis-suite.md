@@ -125,6 +125,9 @@ design document's renderer table, Analysis rows, rows Q37 to Q41, links 3 and 4,
 **D9.**
 - `api/reproduce.py:reproduce(directory, store=…, progress, cancel)` loads `case.yaml` against the recorded base. It
   refuses a moved input or mesh and a solve served from the store, and returns `Reproduction` with its drifts.
+- *Corrected in Item 3:* `check_inputs` compared a study's run's `case.yaml`, the merged case, with the study file's
+  recorded hash, so `reproduce` refused every project run. A study's `case` and `models.*` roles are no longer
+  re-read (§5.3.2's NOTE on reproduction).
 - `clean_store(everything=True)` leaves run folders. `render.py:_state_path` raises naming a removed state.
 - `gui/solver.py:_worker` runs a case or a sweep member; `RunRequest` carries strings: `case`, `store`, `runs`, `plan`.
 - `Project.set_study_value(name, path, value)` sets a study's bias.
@@ -231,7 +234,7 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
 
 - [x] b86fd0f 1. `post/fields.py`, `charge/deposit.py:locate_points`, `plot/data.py` (D1); done when `test_analysis.py`'s
   difference tests pass and the `physics-reviewer` has read it. **Executor:** main
-- [ ] 2. `post/export.py` (the fields file), `gui/render.py` (`FieldsRequest`, `document`, `colour_range`,
+- [x] bb23417 2. `post/export.py` (the fields file), `gui/render.py` (`FieldsRequest`, `document`, `colour_range`,
   `host_page`) (D2, D3); done when `test_analysis.py`'s file test passes. **Executor:** main
 - [ ] 3. `io/project.py`, `api/project.py` (comparisons, `sweeps`, `run_state`, `rebuild`); §5.3.5's NOTE (D5, D9);
   done when `test_project.py`'s comparison and rebuild tests pass. **Executor:** main
