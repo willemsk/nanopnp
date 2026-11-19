@@ -335,9 +335,11 @@ class _Frame:
 
     def on_path(self, path: str) -> None:
         # A key capture begun on the settings page ends with it, or the next chord would be bound.
+        # A scene or a drawing still under way for the screen left marks this one ready no more.
         ui.run_javascript(
             "document.body.dataset.screenReady = '0';"
             "if (window.frame) window.frame.capturing = false;"
+            "if (window.nano) { nano.asked += 1; if (nano.canvas) nano.canvas.asked += 1; }"
         )
         route = self.route(path)
         self.path = path
@@ -415,8 +417,8 @@ class _Frame:
         for element in self.hosts.values():
             element.set_visibility(True)
         scene = "null" if scene_url is None else json.dumps(scene_url)
-        await ui.run_javascript(f"nano.scene({scene}, {json.dumps(key)})", timeout=60)
-        # The canvas last: its drawing marks the screen ready once both have drawn.
+        # The canvas last: its drawing, not the scene, marks the screen ready once both have drawn.
+        await ui.run_javascript(f"nano.scene({scene}, {json.dumps(key)}, false)", timeout=60)
         drawing = "null" if plane_url is None else json.dumps(plane_url)
         await ui.run_javascript(f"nano.plane({drawing}, {json.dumps(note)})", timeout=60)
 

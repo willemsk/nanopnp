@@ -13,9 +13,14 @@ window.nano = {
   picked: null,
   // The button that swaps the study's pore, cut at its axis, for one subunit (WB-44).
   subunit: null,
+  // The scenes asked for, counted: one a later scene or a change of screen overtakes marks no
+  // screen ready.
+  asked: 0,
   // Show a MolViewSpec scene the server writes, building Mol* the first time; null empties the view.
-  async scene(url, key) {
+  // `mark` false leaves the screen to be marked ready by what is drawn after, as a pair's canvas.
+  async scene(url, key, mark = true) {
     document.body.dataset.screenReady = '0';
+    const asked = ++this.asked;
     if (this.viewer === null && this.building === null) {
       this.building = this.init().finally(() => { this.building = null; });
     }
@@ -45,6 +50,7 @@ window.nano = {
     this.offer(url);
     this.tune();
     await this.reveal();
+    if (mark && asked === this.asked) document.body.dataset.screenReady = '1';
   },
   // A scene whose address carries `subunit` offers the swap; any other hides the button.
   offer(url) {
@@ -97,7 +103,6 @@ window.nano = {
     });
     canvas.requestDraw(true);
     await drawn;
-    document.body.dataset.screenReady = '1';
   },
   // The 3D view's background is the --canvas-3d token, a setting of the user's (WB-30). The frame
   // calls this again after each change to the settings, since the one viewer is never rebuilt.
