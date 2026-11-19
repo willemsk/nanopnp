@@ -13,6 +13,7 @@ from test_models import split_case
 
 from nanopnp.api.case import Case
 from nanopnp.api.project import Project, ProjectError
+from nanopnp.api.session import Session
 from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case import CaseValidationError
 from nanopnp.io.project import PROJECT_FILENAME, STORE_FOLDER
@@ -436,8 +437,6 @@ def test_fr39_a_continuum_model_built_alone_keys_as_a_study_at_its_salt(
 
 
 def test_fr39_a_continuum_models_charge_keys_as_its_study_and_is_kept(tmp_path: Path) -> None:
-    from nanopnp.api.session import Session
-
     project = Project.create(tmp_path / "tube")
     study = project.import_case(Case.load(write_charged_tube(tmp_path / "charged")))
     (continuum,) = project.items("continuum")

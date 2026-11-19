@@ -319,6 +319,15 @@ python .claude/scripts/gui/render_shell.py --only meso <scratch dir>` exits 0 wi
 > which the server holds, as `shoot.cjs` takes the entries in order. The map's default share (D1), the pane's
 > scroll and the critique's polish are REV-266's.
 
+> **Outcome — shipped: the physics read and the review.** At `/np-ship` the FR-39 test's two input refusals were
+> dropped (N1). The `physics-reviewer` found no blocking or major error; its fixes are the overlay showing a charge
+> gate's refusal and a docstring's cut-off. [Code review 063](../../code_reviews/CODE_REVIEW_063.md) found ten, three
+> of them important: a seeded outline could not be saved as it is, the overlay kept a rebuilt charge's old levels,
+> and its text could be filed under a newer charge. Eight were fixed; two are REV-266's, with the physics read's
+> residue named by a chain that lacks it. **Measured cost:** 5 sessions, 6.4 agent hours and 11 touches (the
+> implementing sessions' 4, 5.8 and 9; `/np-ship`'s 1, 0.6 and 2 so far), against the In brief's six sessions, 7 to
+> 12 agent hours and 15 touches.
+
 ### Work items
 
 - [x] 2851bbf 1. `plot/data.py` (`ResidueCopies`, `ResidueCharges`, `ResidueAtoms`, `inside_outline`), `gui/geometry.py`

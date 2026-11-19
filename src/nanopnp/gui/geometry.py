@@ -674,12 +674,15 @@ class ProfileEditor:
         ``provenance.sha256`` the edit records: the digest of the profile it was edited from.
     start
         The loop the edit started from, which the atoms it moves are read against.
+    seeded
+        Whether the loop was traced from the map, not opened on a stored outline.
     """
 
     vertices: list[Vertex]
     parent_digest: str
     parent_name: str
     start: list[Vertex] = field(default_factory=list)
+    seeded: bool = False
     _undo: list[list[Vertex]] = field(default_factory=list, repr=False)
     _redo: list[list[Vertex]] = field(default_factory=list, repr=False)
 
@@ -698,7 +701,9 @@ class ProfileEditor:
     def from_seed(cls, vertices: Sequence[Vertex], *, digest: str, name: str) -> ProfileEditor:
         """Start from a loop stage 4's gate refused."""
         loop = [(float(r), float(z)) for r, z in vertices]
-        return cls(vertices=loop, parent_digest=digest, parent_name=name, start=list(loop))
+        return cls(
+            vertices=loop, parent_digest=digest, parent_name=name, start=list(loop), seeded=True
+        )
 
     def _push(self) -> None:
         self._undo.append(list(self.vertices))
@@ -765,6 +770,11 @@ class ProfileEditor:
     def can_redo(self) -> bool:
         """Whether there is an undone edit to re-apply."""
         return bool(self._redo)
+
+    @property
+    def changed(self) -> bool:
+        """Whether the loop is other than the outline it opened on: a seed, or an edit applied."""
+        return self.seeded or self.can_undo
 
     @property
     def name(self) -> str:
