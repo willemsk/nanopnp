@@ -1,6 +1,6 @@
 # WP5.20 — The meso suite
 
-**Status: planned, not started.** Planned 19 November 2026 on `main` (`dbe34da`). It inherits AJ8, AN7, AP1, AP2,
+**Status: in progress; items 1 to 4 done.** Planned 19 November 2026 on `main` (`dbe34da`). It inherits AJ8, AN7, AP1, AP2,
 AR8, AS1 and AS3, and this plan's AT1 to AT4 (§8.2.34 to §8.2.44).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
@@ -250,10 +250,10 @@ python .claude/scripts/gui/render_shell.py --only meso <scratch dir>` exits 0 wi
 - [x] 2851bbf 1. `plot/data.py` (`ResidueCopies`, `ResidueCharges`, `ResidueAtoms`, `inside_outline`), `gui/geometry.py`
   (D5, D6); done when `test_meso.py`'s copy and moved-atom tests pass and the `physics-reviewer` has read it.
   **Executor:** main
-- [ ] 2. `api/project.py` (`charge_case`, `kept_artefacts`) (D4); done when `test_project.py`'s charge case passes.
+- [x] 77d24ce 2. `api/project.py` (`charge_case`, `kept_artefacts`) (D4); done when `test_project.py`'s charge case passes.
   **Executor:** main
-- [ ] 3. `plot/data.py:charge_volumes` (D7); done when `test_meso.py`'s volume test passes and the `physics-reviewer` has read it. **Executor:** main
-- [ ] 4. Compaction checkpoint. **Executor:** main
+- [x] a85e565 3. `plot/data.py:charge_volumes` (D7); done when `test_meso.py`'s volume test passes and the `physics-reviewer` has read it. **Executor:** main
+- [x] 4. Compaction checkpoint. **Executor:** main
 - [ ] 5. `io/project.py`, `screens.py`, `tools.py`, `builds.py`, `frame.py`, `commands.py`; FR-31, §2, §3, §8.1 (D1, D3);
   done when `test_gui_screens.py` and `test_gui_settings.py` pass. **Executor:** main
 - [ ] 6. `gui/web/meso.py`, `meso_tools.py`, `pages.py`, `plane.py`, `molview.py`, `bridge.js`, `continuum_tools.py`,
