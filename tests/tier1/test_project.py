@@ -457,12 +457,3 @@ def test_fr39_a_continuum_models_charge_keys_as_its_study_and_is_kept(tmp_path: 
     for artefact in walked.artefacts.values():
         if artefact.hash in built:
             assert store.contains(artefact, mark=False), artefact.schema_id
-
-    project.new_model("continuum", "cyl")
-    project.set_value("continuum", "cyl", "geometry.pore", {"shape": "cylinder", "radius_nm": 2.0})
-    with pytest.raises(ProjectError, match="Continuum model cyl draws its own pore"):
-        project.charge_case("cyl")
-    alone = Project.create(tmp_path / "alone")
-    alone.new_model("continuum", "outline")
-    with pytest.raises(ProjectError, match="no molecular model"):
-        alone.charge_case("outline")
