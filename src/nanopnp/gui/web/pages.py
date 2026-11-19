@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, Response
 from nicegui import app as nicegui_app
 from nicegui import ui
 
+from nanopnp.gui.render import RENDERER_DIRECTORY
 from nanopnp.gui.web.assets import ASSETS, TOKENS
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
@@ -473,6 +474,8 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
 
     nicegui_app.add_static_files("/vendor/molstar", ASSETS / "molstar")
     nicegui_app.add_static_files("/vendor/katex", ASSETS / "katex")
+    nicegui_app.add_static_files("/vendor/uplot", ASSETS / "uplot")
+    nicegui_app.add_static_files("/vendor/webgui", RENDERER_DIRECTORY)
     # Our own small files are not cached (max-age 0): NiceGUI's hour of caching would hide an edit
     # that `nanopnp gui --dev` restarted the server for.
     for local, url in (

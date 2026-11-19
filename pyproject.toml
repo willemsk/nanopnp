@@ -58,6 +58,7 @@ structure = [
 # PySide6 is the Qt shell, which leaves with Qt. PyQt is forbidden by CON-09.
 gui = [
     "fastapi>=0.115",
+    "matplotlib>=3.8",
     "nicegui>=3.0",
     "PySide6>=6.7",
     "uvicorn>=0.30",
