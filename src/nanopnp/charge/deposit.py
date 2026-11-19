@@ -39,6 +39,7 @@ __all__ = [
     "gridfunction",
     "lattice_masses",
     "locate",
+    "locate_points",
     "mesh_geometry_digest",
     "triangle_rule",
 ]
@@ -131,10 +132,25 @@ def mesh_geometry_digest(mesh: Mesh) -> str:
 
 
 def locate(data: MeshData, points_nm: np.ndarray, *, cell_nm: float) -> np.ndarray:
+    """Return the lowest-indexed triangle of ``data`` containing each point, or -1.
+
+    Parameters
+    ----------
+    cell_nm
+        Bucket size in nm.
+    """
+    return locate_points(data.vertices, data.triangles, points_nm, cell_nm=cell_nm)
+
+
+def locate_points(
+    vertices_nm: np.ndarray, triangles: np.ndarray, points_nm: np.ndarray, *, cell_nm: float
+) -> np.ndarray:
     """Return the lowest-indexed triangle containing each point, or -1.
 
     Parameters
     ----------
+    triangles
+        ``(n, 3)`` vertex indices of linear triangles.
     cell_nm
         Bucket size in nm.
     """
@@ -152,7 +168,7 @@ def locate(data: MeshData, points_nm: np.ndarray, *, cell_nm: float) -> np.ndarr
     order = np.argsort(flat, kind="stable")
     starts = np.searchsorted(flat[order], np.arange(shape[0] * shape[1] + 1))
 
-    corners = data.vertices[data.triangles]
+    corners = vertices_nm[triangles]
     box_low = np.ceil(corners.min(axis=1) / cell_nm - 0.5 - 1e-9).astype(np.int64)
     box_high = np.floor(corners.max(axis=1) / cell_nm + 0.5 + 1e-9).astype(np.int64)
     box_low = np.maximum(box_low, low)

@@ -145,26 +145,26 @@ def _fields(
     )
 
 
-def test_triangulation_cache_does_not_keep_the_field_arrays_alive() -> None:
+def test_split_cache_does_not_keep_the_field_arrays_alive() -> None:
     # A cache that held the arrays would keep every figure's mesh in memory for the process.
-    pytest.importorskip("matplotlib")
     import weakref
 
+    from nanopnp.post import fields
+
     points_m, cells = _p2_square()
-    first = data.field_triangulation(points_m, cells)
-    assert data.field_triangulation(points_m, cells) is first
+    first = fields.field_split(points_m, cells)
+    assert fields.field_split(points_m, cells) is first
     gone = weakref.ref(points_m)
     del points_m
     gc.collect()
     assert gone() is None
     kept_points, kept_cells = _p2_square()
-    data.field_triangulation(kept_points, kept_cells)
-    assert [entry[0]() is kept_points for entry in data._TRIANGULATIONS] == [True]
+    fields.field_split(kept_points, kept_cells)
+    assert [entry[0]() is kept_points for entry in fields._SPLITS] == [True]
 
 
 def test_radial_cutline_is_masked_outside_the_fluid() -> None:
     # A linear field is exact on the subdivided cells; past r = 1 nm the line leaves the fluid.
-    pytest.importorskip("matplotlib")
     points_m, _ = _p2_square()
     r_nm, z_nm = points_m[:, 0] * 1e9, points_m[:, 1] * 1e9
     fields = _fields({"c_Na_mol_m3": 3.0 + 2.0 * r_nm - z_nm})

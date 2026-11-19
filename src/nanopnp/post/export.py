@@ -45,6 +45,7 @@ __all__ = [
     "attribute_name",
     "export_fields",
     "field_scale",
+    "fields_of",
     "logarithmic_fields",
     "lumen_extent_nm",
     "p2_nodes",
@@ -437,8 +438,18 @@ def solution_fields(inputs: StageInputs, artefact: Artefact) -> SolutionFields:
     if kept is not None:
         return kept
     state, _ = restored(inputs, artefact)
+    fields = fields_of(state)
+    with _RESTORE_LOCK:
+        while len(_RESTORED_FIELDS) >= _KEPT_RESTORES:
+            del _RESTORED_FIELDS[next(iter(_RESTORED_FIELDS))]
+        _RESTORED_FIELDS[artefact.hash] = fields
+    return fields
+
+
+def fields_of(state: ModelSolution) -> SolutionFields:
+    """Sample every field of a solved state at the P2 nodes, in SI."""
     sampled = sampled_fields(state, state.model.scales)
-    fields = SolutionFields(
+    return SolutionFields(
         model=state.model.name,
         whole=(sampled.omega.points_nm * 1e-9, sampled.omega.cells, sampled.whole),
         fluid=(sampled.omega_w.points_nm * 1e-9, sampled.omega_w.cells, sampled.restricted),
@@ -451,11 +462,6 @@ def solution_fields(inputs: StageInputs, artefact: Artefact) -> SolutionFields:
             for species in state.model.species
         },
     )
-    with _RESTORE_LOCK:
-        while len(_RESTORED_FIELDS) >= _KEPT_RESTORES:
-            del _RESTORED_FIELDS[next(iter(_RESTORED_FIELDS))]
-        _RESTORED_FIELDS[artefact.hash] = fields
-    return fields
 
 
 def export_fields(
