@@ -526,7 +526,7 @@ def test_ver78_the_server_cancels_the_solves_it_started() -> None:
     assert solve.cancelled
 
 
-@pytest.mark.parametrize("library", ["molstar", "katex"])
+@pytest.mark.parametrize("library", ["molstar", "katex", "uplot"])
 def test_con09_the_vendored_libraries_are_unmodified(library: str) -> None:
     folder = Path(server.__file__).parent / "assets" / library
     notice = (folder / "NOTICE.md").read_text(encoding="utf-8")
