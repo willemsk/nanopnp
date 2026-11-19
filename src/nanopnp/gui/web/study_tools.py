@@ -772,9 +772,9 @@ class _StudyPane(_Pane[StudyModel]):
 
     def setup_view(self) -> None:
         heading("The study as a graph", 2)
-        ui.label(
-            "Each model feeds the charge on the mesh or the solve. Pick a part to open it."
-        ).classes("field-hint")
+        ui.label("Each model feeds the charge map or the solve. Pick a part to open it.").classes(
+            "field-hint"
+        )
         # Mermaid's default security, never loose; its text no smaller than the pane's.
         config = {"themeVariables": {"fontSize": "14px"}}
         ui.mermaid(self.graph(), config, on_node_click=self.on_node).classes("study-graph").props(

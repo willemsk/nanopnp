@@ -53,6 +53,7 @@ __all__ = [
     "DISPLAY",
     "FIELD_ALIASES",
     "LUMEN_NM",
+    "OVERLAY_LEVEL",
     "OVERLAY_SMOOTHING_NM",
     "OVERLAY_SPACING_NM",
     "QOI_UNITS",
@@ -835,6 +836,9 @@ OVERLAY_SPACING_NM = 0.2
 OVERLAY_SMOOTHING_NM = 0.4
 """The least kernel width the overlay spreads an atom's charge over, in nm (§8.2.44 AT4)."""
 
+OVERLAY_LEVEL = 0.1
+"""The fraction of a volume's largest magnitude its isosurfaces are first drawn at."""
+
 
 class ChargeVolumes:
     """The deposit's charge density on one 3D grid, and its mean about the axis, in e/nm^3.
@@ -861,6 +865,14 @@ class ChargeVolumes:
         self.full = full
         self.revolved = revolved
         self._positions, self._width, self._weight = atoms
+
+    def peak(self, which: str) -> float:
+        """Return the largest magnitude of ``full`` or ``revolved``, in e/nm^3."""
+        return float(abs(self.full if which == "full" else self.revolved).max())
+
+    def level(self, which: str) -> float:
+        """Return the level a volume's isosurfaces are first drawn at, in e/nm^3."""
+        return OVERLAY_LEVEL * self.peak(which)
 
     def axes_nm(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Return the grid's x, y and z, in nm."""

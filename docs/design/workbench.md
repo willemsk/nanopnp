@@ -562,7 +562,7 @@ base's and the specification's; these are the workbench's own.
 | Schematic | A drawing that shows where a field lies, not its values |
 | Store | Where artefacts are kept, keyed by their hash |
 | Study | A Study-suite item pairing one molecular, one continuum and one physics model with its overrides and sweep, and running it (WB-11, WB-29, WB-34) |
-| Suite | One of the five parts of the workbench: Molecular, Continuum and Physics, which build models, and Study and Analysis, which use them (WB-02, WB-29, WB-34) |
+| Suite | One of the six parts of the workbench: Molecular, Meso, Continuum and Physics, which build models, and Study and Analysis, which use them (WB-02, WB-29, WB-34, WB-43) |
 | Switch | A setting away from its validated default, recorded in every result's manifest (FR-25) |
 | Tool | One task in a suite, with its settings docked beside its live view (WB-07) |
 | Variant | A model derived from a parent and shown as its difference from it, such as a residue's charge changed (WB-04) |

@@ -271,6 +271,28 @@ python .claude/scripts/gui/render_shell.py --only meso <scratch dir>` exits 0 wi
 > box, a third the scale: a scene that places its camera now sets `manualReset` (`bridge.js`), and the isosurfaces
 > draw over the cut structure at its framing.
 
+> **Outcome — the round's review, decided.** The `gui-reviewer` read the render (19 findings, none blocking; 6
+> doubts), and `impeccable`'s critique scored it 27/40 with no P0. Fixed before publishing:
+> - F1: a model that supplies its pore, outline or mesh walks no stage 2 to 4, even where its charge case is refused;
+> - F2: the overlay's peak and first level come from `ChargeVolumes`;
+> - F3, AT1: Mol* marks an edit's moved residues in every copy, cyan into the water and orange into the protein;
+> - F4: Density's lookup runs off the window's loop, and `shoot.cjs` fails a shot that shows NiceGUI's reconnect notice;
+> - F5: the edit's shots;
+> - F6 for Density: a typed point;
+> - F16 and F17: the glossary and the graph's caption;
+> - D3: the hint's wording ("at any angle about the axis").
+>
+> Put to the author on the digest: Q1 to Q7, the vertex list (F6 and F7 for Outline), F18, and the critique's grey map.
+> Left to item 12 with REV-261's points: F8 to F13 and F15. Answered:
+> - F14: a problem's icon is its value's suite;
+> - F19: it predates WP5.20;
+> - D2: AT3;
+> - D4: Mol* colours by residue, the map by atom;
+> - D5: the revolved volume is cut as the structure is.
+>
+> Two of 424 shots lost their page under the full render's load; each group rendered alone loads every shot. The
+> digest has 19 picks over 70 shots: [the round](https://claude.ai/artifact/QtpwQnBQ69ooDgrTkP2y8M).
+
 ### Work items
 
 - [x] 2851bbf 1. `plot/data.py` (`ResidueCopies`, `ResidueCharges`, `ResidueAtoms`, `inside_outline`), `gui/geometry.py`

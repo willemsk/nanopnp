@@ -156,6 +156,8 @@ PROJECT_EXTRAS: list[tuple[str, str, list[str]]] = [
 
 HELD = frozenset({"m-outline-edit"})
 """The extras whose click leaves a state the server holds for the shots after it."""
+HELD_WAIT_MS = 2500
+"""How long a held extra's shot waits: the editor's pane is drawn after the plane's key."""
 
 
 def cache_key() -> str:
@@ -301,7 +303,12 @@ def project_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dic
         for scheme in SCHEMES
     ] + [
         # The server holds an edit once a shot has started it, so only the first scheme's starts it.
-        entry(f"shell-2wcd-{name}", first, path, scheme, [] if name in HELD and index else click)
+        {
+            **entry(
+                f"shell-2wcd-{name}", first, path, scheme, [] if name in HELD and index else click
+            ),
+            "wait_ms": HELD_WAIT_MS if name in HELD else 500,
+        }
         for name, path, click in PROJECT_EXTRAS
         for index, scheme in enumerate(SCHEMES)
     ]
@@ -567,6 +574,8 @@ residue picked from the list, the deployed charge on the mesh, Mol* showing one 
 of the overlay's two volumes drawn as isosurfaces."""
 
 
+MOVED_HEADING = "[data-control=contour-moved] h3"
+"""The heading of the residues an edit moves into the water."""
 OUTLINE_MOVE_NM = 0.5
 """How far the outline edit moves the narrowest vertex into the protein: on 2WCD, two residues'
 atoms then lie in the water. Toward the axis it would move into water no atom reaches."""
@@ -585,6 +594,9 @@ def outline_edit(walked: RunResult) -> list[str | dict[str, Any]]:
             "value": round(radii[narrowest] + OUTLINE_MOVE_NM, 4),
         },
         "[data-control=contour-move]",
+        # The residues it moves are listed below the editor: a click on their heading scrolls
+        # them into view.
+        MOVED_HEADING,
     ]
 
 
@@ -629,7 +641,8 @@ def meso_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[s
             manifest.append(shot)
     # Last: the edit is held by the server, so the dark shot finds it made.
     for index, scheme in enumerate(SCHEMES):
-        steps = [] if index else edit
+        # The dark shot finds the edit made, and picks the same vertex to show its r and z.
+        steps = [edit[1], MOVED_HEADING] if index else edit
         shot = entry("shell-meso-outline-moved", first, "/meso/outline", scheme, steps)
         shot["wait_ms"] = 2500
         manifest.append(shot)

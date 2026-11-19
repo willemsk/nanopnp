@@ -24,6 +24,7 @@ from nanopnp.pipeline.run import RUN_RECORD_FILENAME
 from nanopnp.plot.data import (
     ChargeVolumes,
     DensityAtoms,
+    Moved,
     ResidueAtoms,
     ResidueCharges,
     charge_volumes,
@@ -187,6 +188,15 @@ class MesoModel(ContinuumModel):
             ("atoms", protonation.hash, "" if structure is None else structure.hash),
             lambda: ResidueAtoms.of(protonation, structure),
         )
+
+    def moved(self) -> Moved | None:
+        """Return the residues the held edit of the outline moves across it, or None."""
+        import numpy as np
+
+        editor, atoms = self.editor(), self.residue_atoms()
+        if editor is None or atoms is None or not editor.start or len(editor.vertices) < 3:
+            return None
+        return atoms.moved(np.asarray(editor.start), np.asarray(editor.vertices))
 
     def density_atoms(self) -> DensityAtoms | None:
         """Return the atoms stage 2 smears, with its widths, or None where it reads none."""

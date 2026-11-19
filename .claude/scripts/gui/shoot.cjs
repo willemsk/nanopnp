@@ -443,6 +443,10 @@ async function shootOne(seat, entry, out) {
       await act(page, step);
       await settle(page, CLICK_SETTLE_MS, entry);
     }
+    // A window that lost its server shows NiceGUI's notice and holds a stale state: not a shot.
+    if (await page.getByText("Connection lost.").first().isVisible().catch(() => false)) {
+      pageErrors.push("the window lost its server: NiceGUI's reconnect notice is shown");
+    }
   } catch (error) {
     loaded = false;
     pageErrors.push(`load failed: ${error.message}`);

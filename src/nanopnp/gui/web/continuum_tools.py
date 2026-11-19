@@ -35,6 +35,8 @@ BINS = 10
 PORE_RADIUS = "geometry.pore.radius_nm"
 OUTLINE_STAGES = ("geometry.density.", "geometry.contour.")
 """The values of stages 2 to 4, which a supplied outline leaves unread."""
+OUTLINE_WALK = ("density", "symmetry", "contour")
+"""Stages 2 to 4, which draw the outline from the structure: a supplied one runs none."""
 GLOBAL = "numerics.mesh.maxh_nm"
 WALL = "numerics.mesh.wall_h_nm"
 PART_ROWS: tuple[tuple[str, str, str, str | None], ...] = (
@@ -126,6 +128,10 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         model = self.model
         self.walked = () if model is None else model.walked()
         self.supplied = None if model is None else model.own_outline()
+        if self.supplied is not None:
+            # A supplied pore, outline or mesh runs no stage 2 to 4, even where its case is
+            # refused and the walk falls back to every stage.
+            self.walked = tuple(stage for stage in self.walked if stage not in OUTLINE_WALK)
         # A tool whose stage a supplied outline drops builds nothing.
         if self.stage is not None and model is not None and self.stage not in self.walked:
             self.stage = None
