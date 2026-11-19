@@ -1186,15 +1186,16 @@ class _StudyPane(_Pane[StudyModel]):
                     .classes("charge-strip")
                     .props('role=group aria-label="Charged residues"')
                 ):
-                    for key, name, charge_e in charges.residues():
+                    for key, name, charge_e, copies in charges.residues():
                         # Its sign beside its name: the list is read for where the charge is.
                         sign = f"{charge_e:+.0f}".replace("-", "\u2212")
+                        each = f", each of {copies} copies" if copies > 1 else ""
                         ui.button(
                             f"{key} {name} {sign}", on_click=lambda _, k=key: self.select(k)
                         ).props(
                             f"flat dense no-caps data-control=charge-strip-item "
                             f"aria-pressed={'true' if key == self.residue else 'false'} "
-                            f'title="{name} {key}, {charge_e:+.2f} e"'
+                            f'title="{name} {key}, {charge_e:+.2f} e{each}"'
                         ).classes("strip-item")
             self.conservation_rows()
             self.render_note()

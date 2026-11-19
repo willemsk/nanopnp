@@ -12,7 +12,7 @@ from nanopnp.charge.pqr import PQRFrame, read_pqr
 from nanopnp.charge.protonation import PAYLOAD_NAME as TABLE_PAYLOAD
 from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.gui.geometry import lookup_table
-from nanopnp.plot.data import residue_key
+from nanopnp.plot.data import chain_letters, residue_key, table_letters
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.structure.protonated import parent_residue
@@ -43,9 +43,10 @@ __all__ = [
 ]
 
 
-def _chain_id(chain: str) -> str:
+def _chain_id(chain: str, letters: dict[str, str] | None = None) -> str:
     # The one column of a PDB chain, as a residue's key names it.
-    return residue_key(chain, 0, "").partition(":")[0]
+    letter = (letters or {}).get(chain, chain)
+    return residue_key(letter, 0, "").partition(":")[0]
 
 
 # Atoms as PDB text, which Mol* reads; the positions are in Å.
@@ -58,6 +59,7 @@ def _pdb_text(
     icode: Sequence[str],
 ) -> str:
     lines = []
+    letters = chain_letters(str(c) for c in chain)
     for row in range(len(name)):
         x, y, z = (float(v) * 10.0 for v in positions_nm[row])
         atom = str(name[row]).strip()
@@ -68,7 +70,7 @@ def _pdb_text(
             number %= 10000
         lines.append(
             f"ATOM  {(row + 1) % 100000:5d} {atom:<4s} {str(resname[row]).strip():>3s} "
-            f"{_chain_id(str(chain[row]))}{number:4d}"
+            f"{_chain_id(str(chain[row]), letters)}{number:4d}"
             f"{str(icode[row]).strip()[:1] or ' '}   {x:8.3f}{y:8.3f}{z:8.3f}"
             f"  1.00  0.00          {atom[:1]:>2s}"
         )
@@ -215,8 +217,9 @@ def residues(model: MolecularModel) -> list[tuple[str, str]]:
             strict=True,
         )
     )
+    letters = chain_letters(chain for chain, _, _, _ in found)
     return [
-        (f"{_chain_id(chain)}:{resid}{icode}", f"{resname} {resid}{icode}, chain {chain}")
+        (f"{_chain_id(chain, letters)}:{resid}{icode}", f"{resname} {resid}{icode}, chain {chain}")
         for chain, resid, icode, resname in found
     ]
 
@@ -231,6 +234,7 @@ def titration_states(model: MolecularModel) -> list[dict[str, object]]:
     if table is None:
         return []
     rows: list[dict[str, object]] = []
+    letters = table_letters(table)
     for index, residue in enumerate(table.group_residue.tolist()):
         expected = float(table.expected_charge_e[0][residue])
         rows.append(
@@ -243,7 +247,7 @@ def titration_states(model: MolecularModel) -> list[dict[str, object]]:
                 "expected_e": None if expected != expected else round(expected, 3),
                 "unapplied": bool(table.unapplied[0][residue]),
                 "key": (
-                    f"{_chain_id(str(table.residue_chain[residue]))}:"
+                    f"{_chain_id(str(table.residue_chain[residue]), letters)}:"
                     f"{int(table.residue_resid[residue])}"
                     f"{str(table.residue_icode[residue]).strip()}"
                 ),
@@ -305,9 +309,11 @@ def _hex(rgb: Sequence[int]) -> str:
     return f"#{int(rgb[0]):02x}{int(rgb[1]):02x}{int(rgb[2]):02x}"
 
 
-def _row(chain: str, resid: int, icode: str, colour: str) -> dict[str, object]:
+def _row(
+    chain: str, resid: int, icode: str, colour: str, letters: dict[str, str] | None = None
+) -> dict[str, object]:
     row: dict[str, object] = {
-        "auth_asym_id": _chain_id(chain),
+        "auth_asym_id": _chain_id(chain, letters),
         "auth_seq_id": int(resid),
         "color": colour,
     }
@@ -333,7 +339,7 @@ def annotation(
     table = _table(model)
     pqr = None if table is not None else _pqr(model)
     if by == "charge":
-        return _charge_rows(_residue_charges(table, pqr), positive)
+        return _charge_rows(_residue_charges(table, pqr), positive, _letters(table, pqr))
     ensemble = None if table is not None else _ensemble(model)
     held = table if table is not None else ensemble if ensemble is not None else pqr
     if held is None:
@@ -348,10 +354,13 @@ def annotation(
             strict=True,
         )
     )
+    letters = chain_letters(chain for chain, _, _, _ in residues)
     if by == "chain":
         order = list(dict.fromkeys(chain for chain, _, _, _ in residues))
         hue = {c: CHAIN_COLOURS[i % len(CHAIN_COLOURS)] for i, c in enumerate(order)}
-        return [_row(chain, resid, icode, hue[chain]) for chain, resid, icode, _ in residues]
+        return [
+            _row(chain, resid, icode, hue[chain], letters) for chain, resid, icode, _ in residues
+        ]
     case = model.case()
     edited = set()
     for edit in case.charge.edits if case is not None and case.charge is not None else ():
@@ -359,7 +368,7 @@ def annotation(
         edited.add((parent.strip(), number.strip().lstrip("0") or "0"))
     # An edit names the parent residue, and a protonated table the state it holds, as HSD.
     return [
-        _row(chain, resid, icode, CHANGED)
+        _row(chain, resid, icode, CHANGED, letters)
         for chain, resid, icode, resname in residues
         if (parent_residue(resname), f"{resid}{icode.strip()}") in edited
     ]
@@ -376,11 +385,19 @@ def charge_rows(
     The scale is diverging about zero and saturates at one elementary charge, a positive residue
     in the named colour, as the charge map's.
     """
-    return _charge_rows(_residue_charges(table, pqr), positive)
+    return _charge_rows(_residue_charges(table, pqr), positive, _letters(table, pqr))
+
+
+def _letters(table: ProtonationTable | None, pqr: PQRFrame | None) -> dict[str, str]:
+    if table is not None:
+        return table_letters(table)
+    return {} if pqr is None else chain_letters(pqr.chain.tolist())
 
 
 def _charge_rows(
-    totals: dict[tuple[str, int, str], float], positive: ChargeColours
+    totals: dict[tuple[str, int, str], float],
+    positive: ChargeColours,
+    letters: dict[str, str],
 ) -> list[dict[str, object]]:
     colours = lookup_table("diverging")
     if positive == "blue":
@@ -389,7 +406,7 @@ def _charge_rows(
     rows = []
     for (chain, resid, icode), total in totals.items():
         step = round(max(-1.0, min(1.0, total / CHARGE_SCALE_E)) * middle)
-        rows.append(_row(chain, resid, icode, _hex(colours[middle + step])))
+        rows.append(_row(chain, resid, icode, _hex(colours[middle + step]), letters))
     return rows
 
 
@@ -471,7 +488,8 @@ def side_view(positions_nm: np.ndarray, chains: Sequence[str]) -> SideView:
 
     xyz = np.asarray(positions_nm, dtype=float)
     extent = (float(xyz[:, 2].min()) * 10.0, float(xyz[:, 2].max()) * 10.0)
-    ids = [_chain_id(str(chain)).strip() for chain in chains]
+    letters = chain_letters(str(chain) for chain in chains)
+    ids = [_chain_id(str(chain), letters).strip() for chain in chains]
     order = [chain for chain in dict.fromkeys(ids) if chain]
     if len(order) < 2:
         # Seen across the atoms' mean azimuth, no atom stands behind the axis's tube.
