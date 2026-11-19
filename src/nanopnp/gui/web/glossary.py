@@ -64,6 +64,11 @@ GLOSSARY: tuple[tuple[str, str], ...] = (
     ),
     ("Live link", "Two views that select together until unlinked."),
     (
+        "Meso",
+        "The suite between Molecular and Continuum that draws a continuum model's pore and charge "
+        "from the molecular model it is built over, beside the molecule; it adds no kind of model.",
+    ),
+    (
         "Molecular model",
         "A library item built in the Molecular suite: the prepared structure, its ensemble and "
         "protonation.",

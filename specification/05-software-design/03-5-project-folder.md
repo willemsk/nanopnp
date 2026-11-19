@@ -14,8 +14,11 @@ is built alone over where one was chosen (`built_with`; §5.3.1's NOTE on model 
 `store/`. An item's name is its file's stem and its `name:`, and matches `[A-Za-z0-9][A-Za-z0-9._-]{0,63}`.
 The folder is the truth: a file the index lacks is appended on opening, and an indexed name without its
 file is a problem, never a refusal to open. A run is `runs/<study>/<short key>`, and
-`upto-<stage>-<short key>` when its walk stopped early. `api.Project` is the library's whole interface
-to it; the command line and the workbench add none.
+`upto-<stage>-<short key>` when its walk stopped early. A continuum model's charge built alone in the
+meso suite (`Project.charge_case`) writes its record in the store, as
+`store/runs/<model>-upto-charge-<short key>`, from which its deployed charge is drawn; the store's
+clean-up keeps it while its key is the model's (§8.2.42 AR8). `api.Project` is the library's whole
+interface to it; the command line and the workbench add none.
 A case file **imports** into a project (`Project.import_case`, `nanopnp project import`) split by the
 ownership table of §5.3.1's `models:` NOTE into a molecular model, a continuum model, a physics model and a study, and the
 study resolves to the case it was split from, so every stage's key but the first is the original's.

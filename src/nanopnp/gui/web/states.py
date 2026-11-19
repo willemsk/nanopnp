@@ -6,12 +6,15 @@ import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import yaml
+
 from nanopnp.api.case import Case
 from nanopnp.api.project import Project
 from nanopnp.api.session import Session
 from nanopnp.core.errors import EXIT_CASE, EXIT_GATE, classify
 from nanopnp.gui.web import settings
 from nanopnp.gui.web.queue import Queue
+from nanopnp.io.project import STORE_FOLDER
 from nanopnp.io.store import StaleEntry, Store, StoreError
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import selected_stages
@@ -120,10 +123,46 @@ def boot_project(project: Project, queue: Queue | None = None) -> Workbench:
         return Workbench(project.name, project=project, refusal=said, queue=queue)
     queue.set(entry, "done")
     held = frozenset(artefact.hash for artefact in result.artefacts.values())
+    if upto == "charge":
+        held |= _charge_map(project, study, queue)
     cap_store(project, held)
     return Workbench(
         project.name, project=project, stages=tuple(result.artefacts), queue=queue, held=held
     )
+
+
+def _continuum_of(project: Project, study: str) -> str | None:
+    try:
+        body = yaml.safe_load(project.path("study", study).read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return None
+    named = body.get("models") if isinstance(body, dict) else None
+    path = named.get("continuum") if isinstance(named, dict) else None
+    name = Path(path).stem if isinstance(path, str) else None
+    return name if name in project.items("continuum") else None
+
+
+def _charge_map(project: Project, study: str, queue: Queue) -> frozenset[str]:
+    """Walk a study's continuum model to the charge as Meso builds it; return what it stored.
+
+    The walk is the continuum model's charge case, its run record under the store's ``runs/``,
+    so Meso's Charge map opens on its deployed charge; a refusal is left to Meso to say.
+    """
+    continuum = _continuum_of(project, study)
+    if continuum is None:
+        return frozenset()
+    entry = queue.add(f"{continuum} to charge", "running")
+    try:
+        result = Session(Store(project.root / STORE_FOLDER)).run(
+            project.charge_case(continuum), upto="charge"
+        )
+    except Exception as error:
+        if not isinstance(error, ValueError) and classify(error) not in {EXIT_CASE, EXIT_GATE}:
+            raise
+        queue.set(entry, "failed")
+        return frozenset()
+    queue.set(entry, "done")
+    return frozenset(artefact.hash for artefact in result.artefacts.values())
 
 
 def boot(state: str, work: Path) -> Workbench:

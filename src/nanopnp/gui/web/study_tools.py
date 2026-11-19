@@ -3,25 +3,20 @@
 from __future__ import annotations
 
 import json
-import math
 import re
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any, ClassVar, Literal, cast
-from urllib.parse import urlencode
 
 import yaml
 from nicegui import events, ui
-from nicegui.elements.mixins.text_element import TextElement
 from nicegui.elements.mixins.validation_element import ValidationElement
 
 from nanopnp.api.project import StudyValue
 from nanopnp.core.hashing import decode_floats
-from nanopnp.gui.render import ChargeRequest, RenderedElements, RenderFailed, RenderProcess
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.frame import Views, heading
-from nanopnp.gui.web.molview import pqr_frame, study_side_view
 from nanopnp.gui.web.physics_tools import _field_tex, _mtext, _tex
 from nanopnp.gui.web.plane import ROLE_TITLES
 from nanopnp.gui.web.queue import Entry
@@ -45,7 +40,6 @@ from nanopnp.gui.web.tools import (
     _Pane,
     _range,
     _view_table,
-    charge_colours,
     current_name,
 )
 from nanopnp.io.case_paths import case_fields, schema_default, value_at
@@ -78,10 +72,6 @@ PHYSICS_SHOWN: tuple[tuple[str, str], ...] = (
 )
 """The physics a study's Overview lists, by case path, each with its name."""
 
-# The deployed charge's render, one per run record, kept for the server's life: a window that
-# closes while it draws does not start it again.
-_RENDERS: dict[Path, RenderProcess] = {}
-
 
 def current_study(shell: Shell) -> StudyModel | None:
     """Return the study the Study tools show: the one the pane chose, else the open or first one."""
@@ -103,19 +93,6 @@ def _text(value: object) -> str:
     if isinstance(value, list | tuple):
         return ", ".join(_text(entry) for entry in value) or "none"
     return str(value)
-
-
-_SUPERSCRIPT = str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹")
-
-
-def _science(value: float, figures: int = 3) -> str:
-    # A mantissa times a power of ten, its minus signs U+2212 as the pane writes them.
-    if value == 0:
-        return "0"
-    mantissa, exponent = f"{value:.{figures - 1}e}".split("e")
-    power = f"10{str(int(exponent)).translate(_SUPERSCRIPT)}"
-    text = power if float(mantissa) == 1.0 else f"{mantissa}\u2009\u00d7\u200910" + power[2:]
-    return text.replace("-", "\u2212")
 
 
 def _sets(body: Mapping[str, Any], path: str) -> bool:
@@ -247,12 +224,7 @@ class _StudyPane(_Pane[StudyModel]):
         self.values_box: ui.column
         self.variables_box: ui.column
         self.axes_box: ui.column
-        self.charge_box: ui.column
         self.queue_box: ui.column
-        self.layer: Literal["lattice", "deployed"] = "lattice"
-        self.residue = ""
-        self.linked = True
-        self.drawn_render: str | None = None
         self.sweep_mode: SweepMode = "every"
         self.rungs_box: ui.column
         self.run_summary: ui.label | None = None
@@ -433,18 +405,9 @@ class _StudyPane(_Pane[StudyModel]):
                 named = self.model.refused_path(refusal[1])
                 self.card("err", f"The build was blocked at {refusal[0]}", refusal[1], named)
 
-    def signature(self) -> object:
-        model = self.model
-        if model is None or self.tool.id != "charge":
-            return None
-        record = model.charge_record()
-        return [str(record) if record else None, self.drawn_render]
-
     def after_refresh(self) -> None:
         self.show_view()
-        if self.tool.id == "charge":
-            self.show_charge()
-        elif self.tool.id == "runs":
+        if self.tool.id == "runs":
             self.show_runs()
 
     # -- the views ----------------------------------------------------------------------------
@@ -460,9 +423,6 @@ class _StudyPane(_Pane[StudyModel]):
                 getattr(self, f"{self.tool.id}_view")()
 
     async def show(self) -> None:
-        if self.tool.view == "pair":
-            await self.built.show_pair(self.scene_url(), self.plane_url(), self.scene_key())
-            return
         graphed = json.dumps(self.tool.id == "setup" and self.model is not None)
         # Ready once the graph has drawn, where the page draws one.
         await ui.run_javascript(
@@ -832,7 +792,7 @@ class _StudyPane(_Pane[StudyModel]):
                 f'  node_{kind}["{KIND_TITLES[kind]} model<br/>{named.get(kind, "none")}"]'
             )
         lines += [
-            '  node_charge(["Charge on the mesh"])',
+            '  node_charge(["Charge map"])',
             '  node_solve(["Solve"])',
             "  node_molecular --> node_charge",
             "  node_continuum --> node_charge",
@@ -846,13 +806,28 @@ class _StudyPane(_Pane[StudyModel]):
     async def on_node(self, event: events.MermaidNodeClickEventArguments) -> None:
         node = event.node_id.removeprefix("node_")
         if node == "charge":
-            ui.navigate.to("/study/charge")
+            self.open_charge_map()
         elif node in MODEL_KINDS:
             await self.go_to(f"models.{node}")
         elif node == "solve":
             await self.go_to("numerics.continuation")
         elif node.startswith("output_"):
             await self.go_to("outputs")
+
+    def open_charge_map(self) -> None:
+        """Open Meso's Charge map on the study's continuum model, over its molecular model."""
+        project, named = self.project, self.models()
+        continuum, molecular = named.get("continuum"), named.get("molecular")
+        if project is None or continuum is None:
+            return
+        try:
+            if molecular is not None and project.molecular_for(continuum) != molecular:
+                project.set_built_with(continuum, molecular)
+        except ValueError as error:
+            ui.notify(str(error), type="negative")
+            return
+        project.open_item(f"continuum/{continuum}")
+        ui.navigate.to("/meso/charge")
 
     # -- Sweep ----------------------------------------------------------------------------------
 
@@ -1131,253 +1106,6 @@ class _StudyPane(_Pane[StudyModel]):
             self.sweep_seen = seen
             if changed:
                 self.show_view()
-
-    # -- Charge on the mesh ---------------------------------------------------------------------
-
-    def charge_section(self) -> None:
-        self.charge_box = ui.column().classes("w-full gap-2").props("data-control=charge-pane")
-
-    def listen(self) -> None:
-        if self.tool.id != "charge":
-            return
-        self.built.listen("mol_pick", self.on_mol)
-        self.built.listen("plane_point", self.on_point)
-
-    def show_charge(self) -> None:
-        model = self.model
-        self.charge_box.clear()
-        with self.charge_box:
-            if model is None:
-                return
-            with ui.row().classes("items-center no-wrap"):
-                toggle = ui.toggle(
-                    {"lattice": "Lattice map", "deployed": "Deployed on the mesh"},
-                    value=self.layer,
-                    on_change=lambda e: self.choose_layer(str(e.value)),
-                ).props('dense no-caps data-control=charge-layer aria-label="What the map draws"')
-                toggle.set_enabled(model.artefacts().get("charge") is not None)
-            charges = model.charges()
-            if charges is not None:
-                # A link only where the residues are on the map.
-                with ui.row().classes("items-center no-wrap"):
-                    ui.badge("Linked" if self.linked else "Not linked").props(
-                        "data-control=charge-link-state"
-                    )
-                    ui.button("Unlink" if self.linked else "Link", on_click=self.toggle_link).props(
-                        "flat dense no-caps data-control=charge-link"
-                    )
-            if charges is None:
-                said = (
-                    "Correct the value the message above names, then build the charge."
-                    if model.problem() is not None
-                    else "Build the charge on the mesh to see it."
-                    if model.artefacts().get("charge") is None
-                    else "The charge does not come from a structure, so no residue is linked."
-                )
-                ui.label(said).classes("later").props("data-control=charge-residue")
-            else:
-                picked = (
-                    f"Residue {self.residue}. Pick another on the map, the molecule or the list."
-                    if self.residue
-                    else "Pick a residue on the map, the molecule or the list."
-                )
-                ui.label(picked).props("data-control=charge-residue role=status")
-                with (
-                    ui.element("div")
-                    .classes("charge-strip")
-                    .props('role=group aria-label="Charged residues"')
-                ):
-                    for key, name, charge_e, copies in charges.residues():
-                        # Its sign beside its name: the list is read for where the charge is.
-                        sign = f"{charge_e:+.0f}".replace("-", "\u2212")
-                        each = f", each of {copies} copies" if copies > 1 else ""
-                        ui.button(
-                            f"{key} {name} {sign}", on_click=lambda _, k=key: self.select(k)
-                        ).props(
-                            f"flat dense no-caps data-control=charge-strip-item "
-                            f"aria-pressed={'true' if key == self.residue else 'false'} "
-                            f'title="{name} {key}, {charge_e:+.2f} e{each}"'
-                        ).classes("strip-item")
-            self.conservation_rows()
-            self.render_note()
-
-    def conservation_rows(self) -> None:
-        model = self.model
-        view = None if model is None else model.conservation()
-        heading("Conservation", 2)
-        if view is None:
-            built = model is not None and model.artefacts().get("charge") is not None
-            said = (
-                "The charge record holds no conservation check: no structure deposits it."
-                if built
-                else "No charge is built, so nothing is checked yet."
-            )
-            ui.label(said).classes("later")
-            return
-        with ui.element("table").classes("view-table legs").props("data-control=charge-legs"):
-            with ui.element("thead"), ui.element("tr"):
-                for text in ("Leg", "Relative error", "Tolerance", "Verdict"):
-                    TextElement(tag="th", text=text).props("scope=col")
-            with ui.element("tbody"):
-                for leg in view.legs:
-                    ratio = leg.ratio
-                    # The verdict's glyph and word, in its state's colour.
-                    glyph, word, look = (
-                        ("", leg.reason or "not run", "state-none")
-                        if leg.value is None
-                        else ("\u2713", "within", "state-ok")
-                        if ratio is not None and ratio <= 1.0
-                        else ("\u2715", "over", "state-err")
-                    )
-                    with ui.element("tr"):
-                        # Where the leg is worst, under its name: the pane holds four columns.
-                        with ui.element("td"):
-                            ui.label(leg.name)
-                            if leg.location:
-                                ui.label(leg.location).classes("field-hint")
-                        TextElement(tag="td", text="" if leg.value is None else _science(leg.value))
-                        TextElement(
-                            tag="td",
-                            text="" if leg.tolerance is None else _science(leg.tolerance, 1),
-                        )
-                        TextElement(tag="td", text=f"{glyph} {word}".strip()).classes(look)
-        figures = view.figures
-        shown = [
-            (name, figures.get(key))
-            for key, name in (
-                ("q_net_e", "Net charge"),
-                ("q_grid_e", "On the lattice"),
-                ("q_mesh_e", "On the mesh"),
-            )
-        ]
-        with ui.element("dl").classes("readout-list").props("data-control=charge-figures"):
-            for name, value in shown:
-                if isinstance(value, int | float) and math.isfinite(float(value)):
-                    TextElement(tag="dt", text=name)
-                    TextElement(tag="dd", text=f"{float(value):+.4f} e")
-
-    def render_note(self) -> None:
-        model = self.model
-        if model is None or self.layer != "deployed":
-            return
-        record = model.charge_record()
-        process = None if record is None else _RENDERS.get(record)
-        if record is None:
-            ui.label("Build the charge on the mesh: the deployed charge is read from its record.")
-        elif model.elements() is None and process is not None and process.running:
-            ui.label("Drawing the deployed charge…").props("role=status")
-
-    async def choose_layer(self, layer: str) -> None:
-        self.layer = "deployed" if layer == "deployed" else "lattice"
-        if self.layer == "deployed":
-            self.start_render()
-        await self.redraw()
-        self.shown_state = ""
-        self.refresh()
-
-    def start_render(self) -> None:
-        model = self.model
-        record = None if model is None else model.charge_record()
-        if model is None or record is None or model.elements() is not None:
-            return
-        held = _RENDERS.get(record)
-        if held is not None and (held.running or not held.answered):
-            return
-        process = RenderProcess(ChargeRequest(run=str(record), elements=True))
-        process.start()
-        _RENDERS[record] = process
-
-    async def tick(self) -> None:
-        await super().tick()
-        model = self.model
-        if model is None or self.tool.id != "charge" or self.layer != "deployed":
-            return
-        record = model.charge_record()
-        process = None if record is None else _RENDERS.get(record)
-        if process is None:
-            return
-        for event in process.drain():
-            if isinstance(event, RenderFailed):
-                ui.notify(f"The deployed charge was not drawn: {event.message}", type="negative")
-            elif isinstance(event, RenderedElements):
-                self.drawn_render = event.path
-                self.shown_state = ""
-                self.refresh()
-                await self.redraw()
-
-    def toggle_link(self) -> None:
-        self.linked = not self.linked
-        self.shown_state = ""
-        self.refresh()
-
-    async def on_mol(self, event: events.GenericEventArguments) -> None:
-        if self.linked:
-            await self.select(str(event.args.get("key", "")), move=False)
-
-    async def on_point(self, event: events.GenericEventArguments) -> None:
-        model = self.model
-        charges = None if model is None else model.charges()
-        if charges is None or not self.linked:
-            return
-        found = charges.at(float(event.args["r"]), float(event.args["z"]))
-        if found:
-            await self.select(found[0][0])
-
-    async def select(self, key: str, *, move: bool = True) -> None:
-        model = self.model
-        charges = None if model is None else model.charges()
-        if charges is None or key not in charges:
-            return
-        self.residue = key
-        # The views first: the refresh rebuilds the box that holds the button that asked.
-        await self.redraw()
-        if move:
-            await ui.run_javascript(f"nano.show({json.dumps(key)})", timeout=30)
-        self.shown_state = ""
-        self.refresh()
-
-    async def redraw(self) -> None:
-        """Draw the map again, the molecule kept: a pick or a layer changes the map alone."""
-        url = self.plane_url()
-        await ui.run_javascript(f"nano.plane({json.dumps(url) if url else 'null'}, '')", timeout=60)
-
-    def scene_key(self) -> str:
-        model = self.model
-        if model is None:
-            return ""
-        table = model.artefacts().get("protonation")
-        if table is not None:
-            return table.hash[:16]
-        pqr = model.pqr()
-        return "" if pqr is None or not pqr.is_file() else f"pqr-{pqr.stat().st_mtime_ns}"
-
-    def scene_url(self) -> str | None:
-        model = self.model
-        key = self.scene_key()
-        if model is None or not key:
-            return None
-        query = {"positive": charge_colours(self.shell), "v": key}
-        table = model.table()
-        seen = study_side_view(table, None if table is not None else pqr_frame(model.pqr()))
-        if seen is not None and seen.chain is not None:
-            # A pore of two chains or more can show one subunit alone.
-            query["subunit"] = "0"
-        return f"/api/study/{model.name}/scene?{urlencode(query)}"
-
-    def plane_url(self) -> str | None:
-        model = self.model
-        if model is None:
-            return None
-        charge = model.artefacts().get("charge")
-        if charge is None:
-            return None
-        query = {
-            "layer": self.layer,
-            "residue": self.residue,
-            "positive": charge_colours(self.shell),
-            "v": charge.hash[:12],
-        }
-        return f"/api/study/{model.name}/charge/plane?{urlencode(query)}"
 
     # -- Runs -------------------------------------------------------------------------------------
 
