@@ -195,7 +195,7 @@ def test_ver78_a_rebound_shortcut_runs_its_command_and_the_old_chord_nothing(
         "document.querySelector('[data-control=key-suite-study]').innerText.includes('Ctrl+Alt+Y')"
     )
     _ready(page, origin + "/molecular")
-    page.keyboard.press("Alt+Shift+Digit4")  # the old chord of the study suite
+    page.keyboard.press("Alt+Shift+Digit5")  # the old chord of the study suite
     page.wait_for_timeout(1000)
     assert page.url == origin + "/molecular"
     page.keyboard.press("Control+Alt+KeyY")
@@ -209,7 +209,8 @@ def test_ver78_l_a_setting_found_by_its_word_sets_the_page_and_writes_its_file(
     _ready(page, origin + "/settings")
     page.locator("[data-control=settings-search]").fill("compact")
     page.locator("[data-control=setting-density]").wait_for()
-    assert not page.locator("[data-control=setting-theme]").is_visible()
+    # The density row shows before the filter too: the theme row hiding says the filter ran.
+    page.locator("[data-control=setting-theme]").wait_for(state="hidden", timeout=READY_WAIT_MS)
     page.locator("[data-control=settings-density]").get_by_text("Compact").click()
     page.wait_for_function("document.documentElement.dataset.density === 'compact'")
     assert "density: compact" in (config / "workbench.yaml").read_text(encoding="utf-8")

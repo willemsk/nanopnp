@@ -33,7 +33,8 @@ GLOSSARY: tuple[tuple[str, str], ...] = (
     ),
     (
         "Continuum model",
-        "A library item built in the Continuum suite: the pore geometry, the region and the mesh.",
+        "A library item built in the Meso and Continuum suites: the pore's outline drawn from a "
+        "molecular model, the region and the mesh.",
     ),
     (
         "Default mesh sizes",
@@ -98,8 +99,8 @@ GLOSSARY: tuple[tuple[str, str], ...] = (
     ),
     (
         "Suite",
-        "One of the five parts of the workbench: Molecular, Continuum and Physics, which build "
-        "models, and Study and Analysis, which use them.",
+        "One of the six parts of the workbench: Molecular, Meso, Continuum and Physics, which "
+        "build models, and Study and Analysis, which use them.",
     ),
     ("Switch", "A setting away from its validated default, recorded in every result's manifest."),
     ("Tool", "One task in a suite, with its settings docked beside its live view."),

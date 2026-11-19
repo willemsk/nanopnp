@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
+from nanopnp.io.project import ItemKind
 from nanopnp.io.project import Suite as SuiteId
 from nanopnp.physics.models import SWITCHES
 
@@ -22,6 +23,7 @@ __all__ = [
     "Tool",
     "View",
     "field_control",
+    "place",
     "screen",
     "tool_controls",
     "tool_for",
@@ -105,6 +107,8 @@ class Suite:
         The identifier in ``GROUPS`` of the group the suite belongs to.
     icon
         The Material Symbols name of the suite's icon.
+    edits
+        The kind of item the suite's tools edit, or None where they edit none.
     """
 
     id: SuiteId
@@ -113,6 +117,7 @@ class Suite:
     tools: tuple[Tool, ...]
     group: str
     icon: str
+    edits: ItemKind | None
 
 
 CORRECTED: tuple[str, ...] = ("diffusivity", "mobility", "viscosity", "permittivity", "density")
@@ -160,6 +165,39 @@ SUITES: tuple[Suite, ...] = (
         ),
         "build",
         "sym_o_hub",
+        "molecular",
+    ),
+    Suite(
+        "meso",
+        "Meso",
+        "a continuum model's pore from a molecular model",
+        (
+            Tool(
+                "density",
+                "Density",
+                (
+                    "geometry.density.grid_spacing_nm",
+                    "geometry.density.sharpness",
+                    "geometry.density.atoms",
+                ),
+                view="pair",
+            ),
+            Tool(
+                "outline",
+                "Outline",
+                (
+                    "geometry.contour.isolevel",
+                    "geometry.contour.smoothing",
+                    "geometry.contour.simplify_tol_nm",
+                ),
+                conditional=("inputs.profile",),
+                view="pair",
+            ),
+            Tool("charge", "Charge map", view="pair"),
+        ),
+        "build",
+        "sym_o_blur_on",
+        "continuum",
     ),
     Suite(
         "continuum",
@@ -207,6 +245,7 @@ SUITES: tuple[Suite, ...] = (
         ),
         "build",
         "sym_o_grid_on",
+        "continuum",
     ),
     Suite(
         "physics",
@@ -265,6 +304,7 @@ SUITES: tuple[Suite, ...] = (
         ),
         "build",
         "sym_o_function",
+        "physics",
     ),
     Suite(
         "study",
@@ -290,6 +330,7 @@ SUITES: tuple[Suite, ...] = (
         ),
         "use",
         "sym_o_science",
+        "study",
     ),
     Suite(
         "analysis",
@@ -298,6 +339,7 @@ SUITES: tuple[Suite, ...] = (
         _later("Results explorer", "Comparison"),
         "use",
         "sym_o_monitoring",
+        "comparison",
     ),
 )
 
@@ -321,6 +363,7 @@ TOOL_SUITES: tuple[Suite, ...] = tuple(suite for suite in SUITES if suite.tools[
 
 VIEWS: dict[SuiteId, Literal["molecule", "plane", "pair"]] = {
     "molecular": "molecule",
+    "meso": "pair",
     "continuum": "plane",
     "physics": "plane",
     "study": "pair",
@@ -371,6 +414,20 @@ def tool_for(suite: SuiteId, path: str) -> Tool | None:
                 for held in (*tool.fields, *tool.parts, *tool.conditional)
             ):
                 return tool
+    return None
+
+
+def place(kind: ItemKind, path: str) -> tuple[Suite, Tool] | None:
+    """Return the suite and tool whose pane sets a case path of an item of a kind, or None.
+
+    Of the suites whose tools edit that kind, the first in the bar's order that holds the path.
+    """
+    for suite in SUITES:
+        if suite.edits != kind:
+            continue
+        tool = tool_for(suite.id, path)
+        if tool is not None:
+            return suite, tool
     return None
 
 
