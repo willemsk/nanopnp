@@ -310,9 +310,9 @@ python .claude/scripts/gui/render_shell.py --only meso <scratch dir>` exits 0 wi
 - [x] 39887dd 7. The overlay in the scene and the pane (D7); done when the code and review say so. **Executor:** main
 - [x] 8. Compaction checkpoint. **Executor:** main
 - [x] 024f44a 9. `render_shell.py`, `redraw.cjs` (D8); done when its check passes. **Executor:** general-purpose on Sonnet, high
-- [ ] 10. `/np-gui render shell`, `review`, `publish`: the round (D8); done when the digest is published.
+- [x] 358fef3 10. `/np-gui render shell`, `review`, `publish`: the round (D8); done when the digest is published.
   **Executor:** main
-- [ ] 11. Compaction checkpoint; the author's verdicts collected. **Executor:** main
+- [x] 11. Compaction checkpoint; the author's verdicts collected. **Executor:** main
 - [ ] 12. The verdicts built: the name, REV-259's and REV-261's points, the overlay kept or removed; the round's
   WB row; a final render reviewed (D1, D7 to D9); done when the review's blocking
   findings are fixed. **Executor:** main
