@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import shutil
@@ -27,7 +28,7 @@ from nanopnp.gui.render import ChargeRequest, RenderedElements, RenderFailed, Re
 from nanopnp.gui.web.continuum_tools import SUPPLIED, _ContinuumPane, _keyed, _mapping
 from nanopnp.gui.web.frame import Views, heading
 from nanopnp.gui.web.meso import MesoModel
-from nanopnp.gui.web.molview import pqr_frame, study_side_view
+from nanopnp.gui.web.molview import MOVED_COLOURS, pqr_frame, study_side_view
 from nanopnp.gui.web.plane import IMAGES, STAGE_THREE
 from nanopnp.gui.web.screens import Tool
 from nanopnp.gui.web.shell import Shell
@@ -53,8 +54,6 @@ MOVED_LISTED = 12
 """The residues each side of an edit lists, the most atoms first."""
 OVERLAY_TITLES = {"full": "Charge in 3D", "revolved": "Its mean about the axis"}
 """The overlay's two volumes, as its pane names them."""
-OVERLAY_LEVEL = 0.1
-"""A volume's isosurfaces open at this share of its largest magnitude."""
 
 # The deployed charge's render, one per run record, kept for the server's life: a window that
 # closes while it draws does not start it again.
@@ -91,6 +90,8 @@ class _MesoPane(_ContinuumPane):
         self.vertex_r: ui.number
         self.vertex_z: ui.number
         self.near_box: ui.column
+        self.point_r: ui.number
+        self.point_z: ui.number
         self.near: list[tuple[str, float]] = []
         self.charge_box: ui.column
         self.layer: Literal["lattice", "deployed"] = "lattice"
@@ -99,6 +100,7 @@ class _MesoPane(_ContinuumPane):
         self.drawn_render: str | None = None
         self.overlay: dict[str, float] = {}
         self.peaks: dict[str, float] | None = None
+        self.levels: dict[str, float] | None = None
         self.computing = False
 
     @property
@@ -164,6 +166,21 @@ class _MesoPane(_ContinuumPane):
     def density_section(self) -> None:
         self.picture_choice(IMAGES, "Drawn", "density")
         heading("Atoms near a point", 2)
+        # The picture's click, typed: a point named from the keyboard.
+        usable = self.model is not None and "density" in self.walked
+        with self.named("Point, r"):
+            self.point_r = ui.number(suffix="nm", step=0.1).props(
+                'dense outlined data-control=density-r aria-label="r of the point, in nm"'
+            )
+            self.point_r.set_enabled(usable)
+        with self.named("Point, z"):
+            self.point_z = ui.number(suffix="nm", step=0.1).props(
+                'dense outlined data-control=density-z aria-label="z of the point, in nm"'
+            )
+            self.point_z.set_enabled(usable)
+        ui.button("Name residues", on_click=self.name_typed).props(
+            "outline dense no-caps data-control=density-name"
+        ).set_enabled(usable)
         self.near_box = ui.column().classes("w-full gap-1").props("data-control=density-near")
         self.show_near()
 
@@ -311,7 +328,7 @@ class _MesoPane(_ContinuumPane):
                 ui.button("Save edit…", on_click=self.ask_save).props(
                     "unelevated dense no-caps color=primary data-control=contour-save"
                 ).set_enabled(problem is None)
-            self.show_moved(editor)
+            self.show_moved()
 
     def show_assessment(self) -> None:
         said = self.assessed
@@ -569,10 +586,12 @@ class _MesoPane(_ContinuumPane):
         model = self.meso
         heading("Overlay", 2)
         built = model is not None and model.artefacts().get("charge") is not None
-        ui.label(
-            f"Smoothed to {self.text(OVERLAY_SMOOTHING_NM, 'nm')}: each charged atom's Gaussian "
-            "widened to at least that width, drawn over the structure at plus and minus a level."
-        ).classes("later").props("data-control=overlay-smoothing")
+        if built:
+            ui.label(
+                f"Smoothed to {self.text(OVERLAY_SMOOTHING_NM, 'nm')}: each charged atom's "
+                "Gaussian widened to at least that width, drawn over the structure at plus and "
+                "minus a level."
+            ).classes("later").props("data-control=overlay-smoothing")
         if self.computing:
             ui.label("Computing the overlay…").props("role=status data-control=overlay-busy")
         for which, title in OVERLAY_TITLES.items():
@@ -618,12 +637,10 @@ class _MesoPane(_ContinuumPane):
                     ui.notify("This model deposits no charge to overlay.", type="warning")
                     self.show_charge()
                     return
-                self.peaks = {
-                    "full": float(abs(shown.full).max()),
-                    "revolved": float(abs(shown.revolved).max()),
-                }
-            if on and self.peaks is not None:
-                self.overlay[which] = OVERLAY_LEVEL * self.peaks[which]
+                self.peaks = {volume: shown.peak(volume) for volume in OVERLAY_TITLES}
+                self.levels = {volume: shown.level(volume) for volume in OVERLAY_TITLES}
+            if on and self.levels is not None:
+                self.overlay[which] = self.levels[which]
             self.show_charge()
             await self.show()
 
@@ -728,9 +745,10 @@ class _MesoPane(_ContinuumPane):
         with self.near_box:
             if not self.near:
                 ui.label(
-                    "Click the picture to name the residues whose atoms reach the point first: "
-                    "stage 2's density is a union of its atoms, so each is ranked by its distance "
-                    "in its own atom's kernel width."
+                    "Click the picture, or type a point, to name the residues whose atoms reach "
+                    "it first at any angle about the axis: stage 2's density is a union of its "
+                    "atoms, so each is ranked by its distance in (r, z), in its own atom's "
+                    "kernel width."
                 ).classes("later")
                 return
             for key, widths in self.near:
@@ -747,17 +765,23 @@ class _MesoPane(_ContinuumPane):
 
     # -- the atoms an edit moves -------------------------------------------------------------
 
-    def show_moved(self, editor: ProfileEditor) -> None:
-        import numpy as np
-
+    def show_moved(self) -> None:
         model = self.meso
         atoms = None if model is None else model.residue_atoms()
-        if atoms is None or not editor.start or len(editor.vertices) < 3:
+        moved = None if model is None else model.moved()
+        if atoms is None or moved is None:
             return
-        moved = atoms.moved(np.asarray(editor.start), np.asarray(editor.vertices))
         with ui.column().classes("w-full gap-1").props("data-control=contour-moved"):
-            for title, rows in (("Into the water", moved.out), ("Into the protein", moved.in_)):
-                heading(title, 3)
+            for which, title, rows in (
+                ("out", "Into the water", moved.out),
+                ("in", "Into the protein", moved.in_),
+            ):
+                # The heading's swatch is the colour Mol* marks these residues in.
+                with ui.row().classes("items-center no-wrap gap-2"):
+                    ui.element("span").classes("swatch").style(
+                        f"background:{MOVED_COLOURS[which]}"
+                    ).props("aria-hidden=true")
+                    heading(title, 3)
                 if not rows:
                     ui.label("No atom crosses the outline this way.").classes("later")
                     continue
@@ -801,12 +825,10 @@ class _MesoPane(_ContinuumPane):
             return
         r, z = float(event.args["r"]), float(event.args["z"])
         if self.tool.id == "density":
-            atoms = model.density_atoms()
             # The section's x is r on its right half; its left half is the same pore.
-            self.near = [] if atoms is None else atoms.nearest(abs(r), z, NEAR_LISTED)
-            self.show_near()
-            if self.near:
-                await self.select(self.near[0][0])
+            self.point_r.set_value(round(abs(r), 3))
+            self.point_z.set_value(round(z, 3))
+            await self.name_near(abs(r), z)
             return
         charges = model.charges()
         if charges is None or not self.linked:
@@ -814,6 +836,22 @@ class _MesoPane(_ContinuumPane):
         found = charges.at(r, z)
         if found:
             await self.select(found[0][0])
+
+    async def name_typed(self) -> None:
+        r, z = self.point_r.value, self.point_z.value
+        if r is not None and z is not None:
+            await self.name_near(abs(float(r)), float(z))
+
+    async def name_near(self, r: float, z: float) -> None:
+        model = self.meso
+        if model is None:
+            return
+        # A first read gathers the structure's atoms: off the loop, so the window stays live.
+        atoms = await run.io_bound(model.density_atoms)
+        self.near = [] if atoms is None else atoms.nearest(r, z, NEAR_LISTED)
+        self.show_near()
+        if self.near:
+            await self.select(self.near[0][0])
 
     async def on_mol(self, event: events.GenericEventArguments) -> None:
         if self.tool.id != "charge" or self.linked:
@@ -904,6 +942,11 @@ class _MesoPane(_ContinuumPane):
         query = {"colour": colour, "positive": charge_colours(self.shell), "v": key}
         for which, level in self.overlay.items():
             query[which] = f"{level:.6g}"
+        editor, moved = model.editor(), model.moved() if self.tool.id == "outline" else None
+        if editor is not None and moved is not None and (moved.out or moved.in_):
+            # Mol* marks the residues the edit moves, each way; another edit, another address.
+            query["colour"] = "moved"
+            query["edit"] = hashlib.sha256(repr(editor.vertices).encode()).hexdigest()[:12]
         table = model.table()
         seen = study_side_view(table, None if table is not None else pqr_frame(model.pqr()))
         if seen is not None and seen.chain is not None:

@@ -481,7 +481,7 @@ def _outline_layers(
         if outlined:
             layers.append(_polygon("contour", "contour", supplied, "Outline, supplied"))
         notes.append("The model supplies its outline (inputs.profile): stages 2 to 4 do not run.")
-    if not layers:
+    if not layers and supplied is None:
         built_by = "the outline" if outlined else "the density"
         notes.append(_unbuilt(model, f"Nothing is built yet: build {built_by} to draw it."))
     return layers, notes, axis, loop

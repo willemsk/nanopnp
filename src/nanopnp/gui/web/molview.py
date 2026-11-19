@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
@@ -25,6 +25,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 __all__ = [
     "COLOURINGS",
+    "MOVED_COLOURS",
     "REPRESENTATIONS",
     "ChargeColours",
     "Colouring",
@@ -36,6 +37,7 @@ __all__ = [
     "charge_rows",
     "first_frame_pdb",
     "has_backbone",
+    "moved_rows",
     "overlaid",
     "pqr_frame",
     "pqr_pdb",
@@ -152,6 +154,8 @@ CHAIN_COLOURS = (
 )
 NEUTRAL = "#b9bcc2"
 CHANGED = "#f2c744"
+MOVED_COLOURS = {"out": "#2fa4c9", "in": "#e0913a"}
+"""The residues an edit of the outline moves: into the water, and into the protein."""
 AXIS_COLOUR = "#f2c744"
 AXIS_RADIUS_A = 0.6
 AXIS_MARGIN_A = 15.0
@@ -389,6 +393,22 @@ def charge_rows(
     in the named colour, as the charge map's.
     """
     return _charge_rows(_residue_charges(table, pqr), positive, _letters(table, pqr))
+
+
+def moved_rows(
+    table: ProtonationTable | None,
+    pqr: PQRFrame | None,
+    out: Collection[str],
+    into: Collection[str],
+) -> list[dict[str, object]]:
+    """Return a colour for each residue an edit moves, by its key, each way; none for the rest."""
+    found = []
+    for row in chain_rows(table, pqr):
+        code = row.get("pdbx_PDB_ins_code", "")
+        key = f"{row['auth_asym_id']}:{row['auth_seq_id']}{code}"
+        if key in out or key in into:
+            found.append({**row, "color": MOVED_COLOURS["out" if key in out else "in"]})
+    return found
 
 
 def chain_rows(

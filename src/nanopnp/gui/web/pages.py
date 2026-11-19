@@ -30,6 +30,7 @@ from nanopnp.gui.web.molview import (
     first_frame_pdb,
     frame_count,
     has_backbone,
+    moved_rows,
     overlaid,
     pqr_frame,
     pqr_pdb,
@@ -66,6 +67,8 @@ __all__ = ["ROUTES", "install"]
 STYLESHEETS = (
     '<link rel="stylesheet" href="/tokens.css"><link rel="stylesheet" href="/workbench.css">'
 )
+MESO_COLOURINGS = ("charge", "chain", "moved")
+"""What a Meso scene colours its residues by: their charge, their chain, or an edit's moves."""
 
 
 def _route_of(suite: Suite, tool: Tool) -> Route:
@@ -336,14 +339,26 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
 
     @app.get("/api/meso/{name}/annotation")
     def meso_annotation(name: str, colour: str = "charge", positive: str = "blue") -> JSONResponse:
-        """Serve one colour per residue, by its chain or its net charge, as an annotation."""
-        if colour not in ("charge", "chain"):
-            raise HTTPException(422, f"colour: {colour!r} is not charge or chain")
+        """Serve one colour per residue, by its chain or its net charge, as an annotation.
+
+        ``moved`` colours the residues the held edit of the outline moves, every copy, each way.
+        """
+        if colour not in MESO_COLOURINGS:
+            raise HTTPException(
+                422, f"colour: {colour!r} is not one of {', '.join(MESO_COLOURINGS)}"
+            )
         model = meso(name)
         table = model.table()
         pqr = None if table is not None else pqr_frame(model.pqr())
         if colour == "chain":
             return JSONResponse(chain_rows(table, pqr))
+        if colour == "moved":
+            moved, atoms = model.moved(), model.residue_atoms()
+            if moved is None or atoms is None:
+                return JSONResponse([])
+            out = {copy for key in moved.out for copy in atoms.copies(key)}
+            into = {copy for key in moved.in_ for copy in atoms.copies(key)}
+            return JSONResponse(moved_rows(table, pqr, out, into))
         return JSONResponse(charge_rows(table, pqr, positive=colours(positive)))
 
     @app.get("/api/meso/{name}/volume")
@@ -368,14 +383,18 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         subunit: int = 0,
         full: float = 0.0,
         revolved: float = 0.0,
+        edit: str = "",
     ) -> JSONResponse:
         """Serve the scene of a model's molecule from the side, cut at the axis or one subunit.
 
         ``full`` and ``revolved``, where above zero, draw that overlay volume's two isosurfaces
-        at plus and minus that level, in e/nm^3.
+        at plus and minus that level, in e/nm^3. ``edit`` names the held edit the ``moved``
+        colouring is drawn for, so a new edit takes a new annotation and the same structure.
         """
-        if colour not in ("charge", "chain"):
-            raise HTTPException(422, f"colour: {colour!r} is not charge or chain")
+        if colour not in MESO_COLOURINGS:
+            raise HTTPException(
+                422, f"colour: {colour!r} is not one of {', '.join(MESO_COLOURINGS)}"
+            )
         model = meso(name)
         table = model.table()
         pqr = None if table is not None else pqr_frame(model.pqr())
@@ -383,7 +402,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         if seen is None:
             return JSONResponse(None)
         alone = bool(subunit) and seen.chain is not None
-        painted = f"colour={colour}&positive={colours(positive)}&v={v}"
+        painted = f"colour={colour}&positive={colours(positive)}&v={v}&edit={edit}"
         ends = charge_ends(colours(positive))
         drawn = scene(
             None,
