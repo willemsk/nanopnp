@@ -189,6 +189,10 @@ each atom's `q/frames · π^−3/2 w^−3 exp(−|x − x_i|²/w²)` over its st
 `q/frames · volume_density(hypot(x, y), z, r_i, z_i, w)` the same way. `full_at(points)` is the same sum at given
 points. The server keeps them by the protonation and charge hashes, as
 `study.py:_kept` does.
+> **Outcome — 2WCD measured.** On 2WCD's protonation table (53 760 charged atoms, one frame) the grid is 77 × 77 × 88,
+> 5.2 × 10⁵ points; one thread takes 7.1 s and peaks at 96 MB; the grids hold −59.99997 e and −59.999991 e of the
+> −60 e, the reach's cut-off. Each atom's Gaussian is a product of one per axis added over its window; the first draft,
+> scattering index arrays, took 52 s.
 
 **Item 5.**
 - `Suite` gains `edits: ItemKind | None`: molecular, continuum (Meso and Continuum), physics, study, comparison.

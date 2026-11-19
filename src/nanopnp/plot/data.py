@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import dataclasses
 import json
+import math
 import threading
 import weakref
 from collections.abc import Iterable, Mapping, Sequence
@@ -10,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from nanopnp.charge.kernel import source_atoms, volume_density
+from nanopnp.charge.kernel import check_charged, check_spacing, source_atoms, volume_density
 from nanopnp.charge.protonation import PAYLOAD_NAME as PROTONATION_PAYLOAD
 from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.charge.stage import CHARGE_PAYLOAD, EPS_R_PAYLOAD, frame_shift_nm, stored_lattice
@@ -51,8 +53,11 @@ __all__ = [
     "DISPLAY",
     "FIELD_ALIASES",
     "LUMEN_NM",
+    "OVERLAY_SMOOTHING_NM",
+    "OVERLAY_SPACING_NM",
     "QOI_UNITS",
     "SICN_FLOOR",
+    "ChargeVolumes",
     "CorrectionCurves",
     "Count",
     "DensityAtoms",
@@ -76,6 +81,7 @@ __all__ = [
     "case_curves",
     "chain_letters",
     "charge_grids",
+    "charge_volumes",
     "cis_referenced_bias_V",
     "contour_polygon_m",
     "correction_curves",
@@ -806,6 +812,166 @@ class DensityAtoms:
         np.minimum.at(least, self._key_of, scaled)
         order = np.argsort(least, kind="stable")[:n]
         return [(self._keys[k], float(least[k])) for k in order if np.isfinite(least[k])]
+
+
+OVERLAY_SPACING_NM = 0.2
+"""The overlay's grid spacing, in nm (§8.2.44 AT4)."""
+
+OVERLAY_SMOOTHING_NM = 0.4
+"""The least kernel width the overlay spreads an atom's charge over, in nm (§8.2.44 AT4)."""
+
+
+class ChargeVolumes:
+    """The deposit's charge density on one 3D grid, and its mean about the axis, in e/nm^3.
+
+    Both are indexed ``[ix, iy, iz]`` in stage 1's frame from ``origin_nm`` at ``spacing_nm``.
+    Each atom's charge is spread over a Gaussian of width at least ``smoothing_nm``, so the grid
+    resolves it; ``revolved`` is the closed-form mean about the axis of the same Gaussians, so it
+    is the mean of ``full`` over the azimuth but for each Gaussian's cut-off at
+    :data:`REACH_WIDTHS` widths, below 10^-7 of its peak.
+    """
+
+    def __init__(
+        self,
+        origin_nm: tuple[float, float, float],
+        spacing_nm: float,
+        smoothing_nm: float,
+        full: np.ndarray,
+        revolved: np.ndarray,
+        atoms: tuple[np.ndarray, np.ndarray, np.ndarray],
+    ) -> None:
+        self.origin_nm = origin_nm
+        self.spacing_nm = spacing_nm
+        self.smoothing_nm = smoothing_nm
+        self.full = full
+        self.revolved = revolved
+        self._positions, self._width, self._weight = atoms
+
+    def axes_nm(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Return the grid's x, y and z, in nm."""
+        import numpy as np
+
+        return cast(
+            "tuple[np.ndarray, np.ndarray, np.ndarray]",
+            tuple(
+                self.origin_nm[axis] + self.spacing_nm * np.arange(self.full.shape[axis])
+                for axis in range(3)
+            ),
+        )
+
+    def full_at(self, points_nm: np.ndarray) -> np.ndarray:
+        """Return the 3D charge density at ``(k, 3)`` points in stage 1's frame, in e/nm^3."""
+        import numpy as np
+
+        points = np.asarray(points_nm, dtype=np.float64).reshape(-1, 3)
+        found = np.zeros(len(points))
+        for i in range(len(self._weight)):
+            width = float(self._width[i])
+            squared = np.sum((points - self._positions[i]) ** 2, axis=1) / width**2
+            near = squared <= REACH_WIDTHS**2
+            found[near] += (
+                float(self._weight[i]) * math.pi**-1.5 * width**-3 * np.exp(-squared[near])
+            )
+        return found
+
+
+def charge_volumes(
+    table: ProtonationTable,
+    resolved: ResolvedCase,
+    spacing_nm: float = OVERLAY_SPACING_NM,
+    smoothing_nm: float = OVERLAY_SMOOTHING_NM,
+) -> ChargeVolumes:
+    """Return the deposit's charge in 3D and its mean about the axis, smoothed for the picture.
+
+    Each charged atom of every frame carries ``q / frames``, as stage 7 deposits it, spread over a
+    Gaussian of width ``max(w_i, smoothing_nm)``, ``w_i`` stage 7's own, and summed within
+    :data:`REACH_WIDTHS` widths; the box spans every charged atom by as many widths.
+
+    Raises
+    ------
+    ChargeFieldError
+        If the table holds no charged atom, or the spacing exceeds half the narrowest width.
+    """
+    import numpy as np
+    from scipy.special import i0e
+
+    source = source_atoms(table, sharpness=resolved.smearing.sharpness)
+    check_charged(source)
+    width = np.maximum(source.width_nm, smoothing_nm)
+    check_spacing(dataclasses.replace(source, width_nm=width), spacing_nm)
+    positions = np.asarray(table.positions_nm, dtype=np.float64)[source.atom]
+    weight = source.weight_e
+    reach = REACH_WIDTHS * width
+    # The grid is symmetric about the axis, so its columns share their distances from it.
+    half = float(np.max(np.hypot(positions[:, 0], positions[:, 1]) + reach))
+    across = math.ceil(half / spacing_nm)
+    low_z = float(np.min(positions[:, 2] - reach))
+    high_z = float(np.max(positions[:, 2] + reach))
+    along = math.ceil((high_z - low_z) / spacing_nm) + 1
+    origin = (-across * spacing_nm, -across * spacing_nm, low_z)
+    shape = (2 * across + 1, 2 * across + 1, along)
+    x = origin[0] + spacing_nm * np.arange(shape[0])
+    z = origin[2] + spacing_nm * np.arange(shape[2])
+
+    full = np.zeros(shape)
+    y = x
+    for i in range(len(weight)):
+        # Each atom's Gaussian is the product of one per axis, added over the cube of its reach
+        # with the points beyond the reach left out.
+        w, limit = float(width[i]), float(reach[i])
+        window = []
+        for axis, values in enumerate((x, y, z)):
+            first = max(0, math.floor((positions[i, axis] - limit - origin[axis]) / spacing_nm))
+            last = min(
+                shape[axis], math.ceil((positions[i, axis] + limit - origin[axis]) / spacing_nm) + 1
+            )
+            window.append((first, last, (values[first:last] - positions[i, axis]) ** 2))
+        (x0, x1, dx), (y0, y1, dy), (z0, z1, dz) = window
+        squared = dx[:, None, None] + dy[None, :, None] + dz[None, None, :]
+        factor = float(weight[i]) * math.pi**-1.5 * w**-3
+        gaussian = np.multiply.outer(
+            np.multiply.outer(factor * np.exp(-dx / w**2), np.exp(-dy / w**2)), np.exp(-dz / w**2)
+        )
+        full[x0:x1, y0:y1, z0:z1] += np.where(squared <= limit**2, gaussian, 0.0)
+
+    # The mean about the axis depends on (r, z) alone: summed once per distinct column radius.
+    columns = np.hypot(x[:, None], x[None, :]).ravel()
+    radii, column_radius = np.unique(columns, return_inverse=True)
+    source_r = np.hypot(positions[:, 0], positions[:, 1])
+    plane = np.zeros((len(radii), shape[2]))
+    for i in range(len(weight)):
+        w, r_i, z_i, limit = (
+            float(width[i]),
+            float(source_r[i]),
+            float(positions[i, 2]),
+            float(reach[i]),
+        )
+        r0, r1 = np.searchsorted(radii, [r_i - limit, r_i + limit], side="left")
+        z0 = max(0, math.floor((z_i - limit - origin[2]) / spacing_nm))
+        z1 = min(shape[2], math.ceil((z_i + limit - origin[2]) / spacing_nm) + 1)
+        r_near, z_near = radii[r0:r1], z[z0:z1]
+        if r_near.size == 0 or z_near.size == 0:
+            continue
+        dr, dz = (r_near - r_i) ** 2, (z_near - z_i) ** 2
+        # volume_density, its radial and axial factors apart.
+        radial = (
+            float(weight[i])
+            * math.pi**-1.5
+            * w**-3
+            * np.exp(-dr / w**2)
+            * i0e(2.0 * r_near * r_i / w**2)
+        )
+        values = np.multiply.outer(radial, np.exp(-dz / w**2))
+        plane[r0:r1, z0:z1] += np.where(dr[:, None] + dz[None, :] <= limit**2, values, 0.0)
+    revolved = plane[column_radius].reshape(shape)
+    return ChargeVolumes(
+        origin_nm=origin,
+        spacing_nm=spacing_nm,
+        smoothing_nm=smoothing_nm,
+        full=full.reshape(shape),
+        revolved=revolved,
+        atoms=(positions, width, weight),
+    )
 
 
 @dataclass(frozen=True)
