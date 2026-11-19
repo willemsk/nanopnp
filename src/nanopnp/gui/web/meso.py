@@ -21,22 +21,36 @@ from nanopnp.gui.web.study import STAGES, StudyModel, charge_record
 from nanopnp.io.project import STORE_FOLDER
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import RUN_RECORD_FILENAME
-from nanopnp.plot.data import DensityAtoms, ResidueAtoms, ResidueCharges
+from nanopnp.plot.data import (
+    ChargeVolumes,
+    DensityAtoms,
+    ResidueAtoms,
+    ResidueCharges,
+    charge_volumes,
+)
+from nanopnp.validation.apbs import dx_text
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.api.case import Case
     from nanopnp.gui.solver import RunRequest
     from nanopnp.io.resolved import ResolvedCase
 
-__all__ = ["MesoModel", "kept"]
+__all__ = ["DX_DIGITS", "VOLUMES", "MesoModel", "kept"]
 
 _T = TypeVar("_T")
 
 # What a stored charge draws, by the hashes of the artefacts it is read from: reading them parses
 # the lattice and the protonation table, which a window's every redraw would repeat.
-_HELD = 8
+_HELD = 12
 _READ: dict[tuple[str, ...], object] = {}
 _READ_LOCK = threading.Lock()
+# One overlay is computed at a time: its second read, as the other volume's, waits for the first.
+_VOLUMES_LOCK = threading.Lock()
+
+VOLUMES: tuple[str, ...] = ("full", "revolved")
+"""The overlay's two volumes: the charge in 3D, and its mean about the axis."""
+DX_DIGITS = 4
+"""The places each overlay value is written to: enough for an isosurface, a third of the text."""
 
 DRAWS_OWN_PORE = ("geometry.pore", "inputs.mesh")
 """The values with which a continuum model draws a pore of its own, which no molecule charges."""
@@ -193,6 +207,45 @@ class MesoModel(ContinuumModel):
                 repr(spec.sharpness),
             ),
             lambda: DensityAtoms.of(resolved, structure, protonation),
+        )
+
+    # -- the overlay --------------------------------------------------------------------------
+
+    def volumes(self) -> ChargeVolumes | None:
+        """Return the charge in 3D and its mean about the axis, or None where none is deposited.
+
+        A first read takes seconds for a pore of tens of thousands of charged atoms: it is kept by
+        the protonation's and the charge's hashes, and a read meanwhile waits for it.
+        """
+        stored = self.artefacts()
+        protonation, charge = stored.get("protonation"), stored.get("charge")
+        resolved, table = self.resolved(), self.table()
+        if protonation is None or charge is None or resolved is None or table is None:
+            return None
+
+        def read() -> ChargeVolumes | None:
+            try:
+                return charge_volumes(table, resolved)
+            except ValueError:
+                # A table that carries no charge deposits none to draw.
+                return None
+
+        with _VOLUMES_LOCK:
+            return kept(("volumes", protonation.hash, charge.hash), read)
+
+    def volume_text(self, which: str) -> str | None:
+        """Return one overlay volume as OpenDX text in angstroms, or None where none is drawn."""
+        if which not in VOLUMES:
+            raise ValueError(f"which: {which!r} is not one of {', '.join(VOLUMES)}")
+        shown = self.volumes()
+        if shown is None:
+            return None
+        stored = self.artefacts()
+        hashes = tuple(stored[stage].hash for stage in ("protonation", "charge"))
+        values = shown.full if which == "full" else shown.revolved
+        return kept(
+            ("dx", which, *hashes),
+            lambda: dx_text(values, shown.origin_nm, shown.spacing_nm, digits=DX_DIGITS),
         )
 
     def pqr(self) -> Path | None:

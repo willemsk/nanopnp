@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import ClassVar, Literal, cast
 from urllib.parse import urlencode
 
-from nicegui import context, events, ui
+from nicegui import context, events, run, ui
 from nicegui.elements.mixins.text_element import TextElement
 
 from nanopnp.gui.assess import (
@@ -34,6 +34,7 @@ from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import charge_colours
 from nanopnp.io.models import Kind
 from nanopnp.io.project import STORE_FOLDER
+from nanopnp.plot.data import OVERLAY_SMOOTHING_NM
 
 __all__ = ["meso_page"]
 
@@ -50,6 +51,10 @@ NEAR_LISTED = 5
 """The residues a point of the density names, the nearest first."""
 MOVED_LISTED = 12
 """The residues each side of an edit lists, the most atoms first."""
+OVERLAY_TITLES = {"full": "Charge in 3D", "revolved": "Its mean about the axis"}
+"""The overlay's two volumes, as its pane names them."""
+OVERLAY_LEVEL = 0.1
+"""A volume's isosurfaces open at this share of its largest magnitude."""
 
 # The deployed charge's render, one per run record, kept for the server's life: a window that
 # closes while it draws does not start it again.
@@ -92,6 +97,9 @@ class _MesoPane(_ContinuumPane):
         self.residue = ""
         self.linked = True
         self.drawn_render: str | None = None
+        self.overlay: dict[str, float] = {}
+        self.peaks: dict[str, float] | None = None
+        self.computing = False
 
     @property
     def meso(self) -> MesoModel | None:
@@ -556,8 +564,77 @@ class _MesoPane(_ContinuumPane):
                             f"aria-pressed={'true' if key == self.residue else 'false'} "
                             f'title="{name} {key}, {charge_e:+.2f} e{each}"'
                         ).classes("strip-item")
+            self.overlay_rows()
             self.conservation_rows()
             self.render_note()
+
+    def overlay_rows(self) -> None:
+        model = self.meso
+        heading("Overlay", 2)
+        built = model is not None and model.artefacts().get("charge") is not None
+        ui.label(
+            f"Smoothed to {self.text(OVERLAY_SMOOTHING_NM, 'nm')}: each charged atom's Gaussian "
+            "widened to at least that width, drawn over the structure at plus and minus a level."
+        ).classes("later").props("data-control=overlay-smoothing")
+        if self.computing:
+            ui.label("Computing the overlay…").props("role=status data-control=overlay-busy")
+        for which, title in OVERLAY_TITLES.items():
+            with ui.row().classes("items-center no-wrap"):
+                ui.checkbox(
+                    title,
+                    value=which in self.overlay,
+                    on_change=lambda e, w=which: self.toggle_overlay(w, bool(e.value)),
+                ).props(f"dense data-control=overlay-{which}").set_enabled(
+                    built and not self.computing
+                )
+                if which in self.overlay and self.peaks is not None:
+                    level = (
+                        ui.number(
+                            value=float(f"{self.overlay[which]:.3g}"),
+                            min=0.0,
+                            format="%.3g",
+                            suffix="e/nm³",
+                            on_change=lambda e, w=which: self.set_level(w, e.value),
+                        )
+                        .props(
+                            f"dense outlined data-control=overlay-level-{which} "
+                            f'aria-label="{title}: the isosurfaces\' level, in e/nm³"'
+                        )
+                        .style("width: 9rem")
+                    )
+                    level.props(f'title="Largest magnitude {self.peaks[which]:.3g} e/nm³"')
+
+    async def toggle_overlay(self, which: str, on: bool) -> None:
+        model = self.meso
+        if model is None:
+            return
+        # A redraw deletes the checkbox that asked, and its slot: what follows runs in the box's.
+        with self.charge_box:
+            if not on:
+                self.overlay.pop(which, None)
+            elif self.peaks is None:
+                self.computing = True
+                self.show_charge()
+                shown = await run.io_bound(model.volumes)
+                self.computing = False
+                if shown is None:
+                    ui.notify("This model deposits no charge to overlay.", type="warning")
+                    self.show_charge()
+                    return
+                self.peaks = {
+                    "full": float(abs(shown.full).max()),
+                    "revolved": float(abs(shown.revolved).max()),
+                }
+            if on and self.peaks is not None:
+                self.overlay[which] = OVERLAY_LEVEL * self.peaks[which]
+            self.show_charge()
+            await self.show()
+
+    async def set_level(self, which: str, value: object) -> None:
+        if which not in self.overlay or not isinstance(value, int | float) or value <= 0:
+            return
+        self.overlay[which] = float(value)
+        await self.show()
 
     def conservation_rows(self) -> None:
         model = self.meso
@@ -823,7 +900,13 @@ class _MesoPane(_ContinuumPane):
         if model is None or not key:
             return None
         colour = "charge" if self.tool.id == "charge" else "chain"
+        charge = model.artefacts().get("charge")
+        if charge is not None:
+            # The overlay is the charge's: a new charge takes a new address.
+            key = f"{key}-{charge.hash[:12]}"
         query = {"colour": colour, "positive": charge_colours(self.shell), "v": key}
+        for which, level in self.overlay.items():
+            query[which] = f"{level:.6g}"
         table = model.table()
         seen = study_side_view(table, None if table is not None else pqr_frame(model.pqr()))
         if seen is not None and seen.chain is not None:

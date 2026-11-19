@@ -64,6 +64,7 @@ __all__ = [
     "ROLE_TITLES",
     "SERIES",
     "Plane",
+    "charge_ends",
     "charge_plane",
     "deployed_layer",
     "electrolyte_plane",
@@ -773,6 +774,12 @@ NO_DEPLOYED = (
 
 def _charge_palette(positive: Literal["blue", "red"]) -> list[str]:
     return _stops(lookup_table("diverging_r" if positive == "blue" else "diverging"))
+
+
+def charge_ends(positive: Literal["blue", "red"] = "blue") -> tuple[str, str]:
+    """Return the colours of a positive and a negative charge at the ends of the charge's scale."""
+    palette = _charge_palette(positive)
+    return palette[-1], palette[0]
 
 
 def charge_plane(

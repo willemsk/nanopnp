@@ -52,6 +52,7 @@ __all__ = [
     "check_box",
     "check_report",
     "dielectric_maps",
+    "dx_text",
     "face_map",
     "face_map_3d",
     "fit_grid",
@@ -633,6 +634,14 @@ def trilinear(values: np.ndarray, grid: CubicGrid) -> Callable[[np.ndarray], np.
 
 def write_dx(path: Path, values: np.ndarray, origin_nm: Sequence[float], spacing_nm: float) -> Path:
     """Write ``values[ix, iy, iz]`` as an OpenDX scalar map in angstroms."""
+    path.write_text(dx_text(values, origin_nm, spacing_nm), encoding="ascii")
+    return path
+
+
+def dx_text(
+    values: np.ndarray, origin_nm: Sequence[float], spacing_nm: float, *, digits: int = 10
+) -> str:
+    """Return ``values[ix, iy, iz]`` as OpenDX text in angstroms, to ``digits`` decimal places."""
     import numpy as np
 
     counts = " ".join(str(n) for n in values.shape)
@@ -649,8 +658,9 @@ def write_dx(path: Path, values: np.ndarray, origin_nm: Sequence[float], spacing
         f"object 2 class gridconnections counts {counts}",
         f"object 3 class array type double rank 0 items {flat.size} data follows",
     ]
-    body = ("%.10e %.10e %.10e\n" * (whole // 3)) % tuple(flat[:whole].tolist())
-    rest = " ".join(f"{value:.10e}" for value in flat[whole:].tolist())
+    one = f"%.{digits}e"
+    body = (f"{one} {one} {one}\n" * (whole // 3)) % tuple(flat[:whole].tolist())
+    rest = " ".join(f"{value:.{digits}e}" for value in flat[whole:].tolist())
     tail = [
         'attribute "dep" string "positions"',
         'object "regular positions regular connections" class field',
@@ -658,9 +668,7 @@ def write_dx(path: Path, values: np.ndarray, origin_nm: Sequence[float], spacing
         'component "connections" value 2',
         'component "data" value 3',
     ]
-    text = "\n".join(lines) + "\n" + body + (rest + "\n" if rest else "") + "\n".join(tail) + "\n"
-    path.write_text(text, encoding="ascii")
-    return path
+    return "\n".join(lines) + "\n" + body + (rest + "\n" if rest else "") + "\n".join(tail) + "\n"
 
 
 def read_dx(path: Path) -> tuple[np.ndarray, tuple[float, float, float], float]:
