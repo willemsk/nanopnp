@@ -15,6 +15,7 @@ from urllib.parse import urlencode
 from nicegui import context, events, run, ui
 from nicegui.elements.mixins.text_element import TextElement
 
+from nanopnp.charge.fields import ChargeFieldError
 from nanopnp.gui.assess import (
     Assessed,
     AssessFailed,
@@ -748,10 +749,15 @@ class _MesoPane(_ContinuumPane):
             elif self.peaks is None:
                 self.computing = True
                 self.show_charge()
-                shown = await run.io_bound(model.volumes)
+                try:
+                    shown = await run.io_bound(model.volumes)
+                except ChargeFieldError as error:
+                    shown, refused = None, f"The overlay is refused by {error}."
+                else:
+                    refused = "This model deposits no charge to overlay."
                 self.computing = False
                 if shown is None:
-                    ui.notify("This model deposits no charge to overlay.", type="warning")
+                    ui.notify(refused, type="warning")
                     self.show_charge()
                     return
                 self.peaks = {volume: shown.peak(volume) for volume in OVERLAY_TITLES}

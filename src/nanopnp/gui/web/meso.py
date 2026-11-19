@@ -258,11 +258,10 @@ class MesoModel(ContinuumModel):
             return None
 
         def read() -> ChargeVolumes | None:
-            try:
-                return charge_volumes(table, resolved)
-            except ValueError:
-                # A table that carries no charge deposits none to draw.
+            # A table that carries no charge deposits none to draw; any other refusal is a gate's.
+            if not table.charge_e.any():
                 return None
+            return charge_volumes(table, resolved)
 
         with _VOLUMES_LOCK:
             return kept(("volumes", protonation.hash, charge.hash), read)
