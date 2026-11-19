@@ -17,18 +17,20 @@ from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.gui.web.continuum_tools import continuum_page
 from nanopnp.gui.web.frame import Route, Views, current_suite, frame, heading
-from nanopnp.gui.web.meso import MesoModel
+from nanopnp.gui.web.meso import VOLUMES, MesoModel
 from nanopnp.gui.web.meso_tools import meso_page
 from nanopnp.gui.web.molecular import MolecularModel
 from nanopnp.gui.web.molview import (
     COLOURINGS,
     REPRESENTATIONS,
+    Isosurfaces,
     annotation,
     chain_rows,
     charge_rows,
     first_frame_pdb,
     frame_count,
     has_backbone,
+    overlaid,
     pqr_frame,
     pqr_pdb,
     scene,
@@ -40,6 +42,7 @@ from nanopnp.gui.web.physics_tools import physics_page
 from nanopnp.gui.web.plane import COLOURINGS as MESH_COLOURINGS
 from nanopnp.gui.web.plane import (
     IMAGES,
+    charge_ends,
     charge_plane,
     electrolyte_plane,
     image_png,
@@ -343,11 +346,34 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             return JSONResponse(chain_rows(table, pqr))
         return JSONResponse(charge_rows(table, pqr, positive=colours(positive)))
 
+    @app.get("/api/meso/{name}/volume")
+    def meso_volume(name: str, which: str = "full") -> Response:
+        """Serve one overlay volume, the charge in 3D or its mean about the axis, as OpenDX.
+
+        A sync route, so the first read's seconds of work run off the event loop.
+        """
+        if which not in VOLUMES:
+            raise HTTPException(422, f"which: {which!r} is not one of {', '.join(VOLUMES)}")
+        text = meso(name).volume_text(which)
+        if text is None:
+            raise HTTPException(404, f"continuum model {name!r} deposits no charge to overlay")
+        return Response(text, media_type="text/plain")
+
     @app.get("/api/meso/{name}/scene")
     def meso_scene(
-        name: str, colour: str = "charge", positive: str = "blue", v: str = "", subunit: int = 0
+        name: str,
+        colour: str = "charge",
+        positive: str = "blue",
+        v: str = "",
+        subunit: int = 0,
+        full: float = 0.0,
+        revolved: float = 0.0,
     ) -> JSONResponse:
-        """Serve the scene of a model's molecule from the side, cut at the axis or one subunit."""
+        """Serve the scene of a model's molecule from the side, cut at the axis or one subunit.
+
+        ``full`` and ``revolved``, where above zero, draw that overlay volume's two isosurfaces
+        at plus and minus that level, in e/nm^3.
+        """
         if colour not in ("charge", "chain"):
             raise HTTPException(422, f"colour: {colour!r} is not charge or chain")
         model = meso(name)
@@ -358,19 +384,24 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             return JSONResponse(None)
         alone = bool(subunit) and seen.chain is not None
         painted = f"colour={colour}&positive={colours(positive)}&v={v}"
-        return JSONResponse(
-            scene(
-                None,
-                structure_url=f"/api/meso/{name}/structure?v={v}",
-                annotation_url=f"/api/meso/{name}/annotation?{painted}",
-                # Atoms with no backbone, as a fixture's charges, draw as balls: a cartoon
-                # draws nothing of them.
-                representation="cartoon" if has_backbone(table, pqr) else "spacefill",
-                # A pore of two chains or more is cut at its axis; fewer are seen whole.
-                clip=not alone and seen.chain is not None,
-                side_on=replace(seen, alone=alone),
-            )
+        ends = charge_ends(colours(positive))
+        drawn = scene(
+            None,
+            structure_url=f"/api/meso/{name}/structure?v={v}",
+            annotation_url=f"/api/meso/{name}/annotation?{painted}",
+            # Atoms with no backbone, as a fixture's charges, draw as balls: a cartoon
+            # draws nothing of them.
+            representation="cartoon" if has_backbone(table, pqr) else "spacefill",
+            # A pore of two chains or more is cut at its axis; fewer are seen whole.
+            clip=not alone and seen.chain is not None,
+            side_on=replace(seen, alone=alone),
         )
+        volumes = [
+            Isosurfaces(f"/api/meso/{name}/volume?which={which}&v={v}", level, *ends)
+            for which, level in (("full", full), ("revolved", revolved))
+            if level > 0.0
+        ]
+        return JSONResponse(overlaid(drawn, volumes))
 
     def pump() -> None:
         # The server's one queue: each build, run and sweep member waits for a slot here.

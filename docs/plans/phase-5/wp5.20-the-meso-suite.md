@@ -247,6 +247,11 @@ points. The server keeps them by the protonation and charge hashes, as
 **Item 7.** The scene gains, behind *Overlay* in Charge map's pane, two volumes from `/volume`, each an isosurface at
 ±the level the pane sets for it, default a tenth of that volume's own largest `|value|`, in the charge colours at
 opacity 0.5; the pane reads "Smoothed to 0.4 nm", from `smoothing_nm`.
+> **Outcome — the overlay drawn.** `MesoModel.volumes()` keeps `charge_volumes` by the protonation and charge hashes,
+> one computed at a time; the sync `/volume` route serves each as OpenDX (`validation/apbs.py:dx_text`, four decimal
+> places) off the event loop, and `molview.overlaid` adds its two isosurfaces to the scene, clipped as the structure.
+> The pane computes it on its first toggle (`run.io_bound`). On the charged tube the 3D peak is 5.53 e/nm³ of the
+> analytic 5.62 for −2 e at 0.4 nm, and the axis mean's 0.1334 e/nm³ of the predicted 0.1335 at r = 4.75 nm.
 
 **Item 9** (Sonnet). `render_shell.py` group `meso`: the cached 2WCD project, its continuum model's charge case walked
 with `write=True` and its elements rendered; each `/meso/<tool>` light and dark; a residue picked; an edit with a

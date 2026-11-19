@@ -6,7 +6,7 @@ import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from nanopnp.charge.pqr import PQRFrame, read_pqr
 from nanopnp.charge.protonation import PAYLOAD_NAME as TABLE_PAYLOAD
@@ -28,6 +28,7 @@ __all__ = [
     "REPRESENTATIONS",
     "ChargeColours",
     "Colouring",
+    "Isosurfaces",
     "Representation",
     "SideView",
     "annotation",
@@ -35,6 +36,7 @@ __all__ = [
     "charge_rows",
     "first_frame_pdb",
     "has_backbone",
+    "overlaid",
     "pqr_frame",
     "pqr_pdb",
     "scene",
@@ -544,6 +546,30 @@ def study_side_view(table: ProtonationTable | None, pqr: PQRFrame | None) -> Sid
     return None
 
 
+@dataclass(frozen=True)
+class Isosurfaces:
+    """One volume drawn over the structure as two isosurfaces, at plus and minus its level.
+
+    Parameters
+    ----------
+    url
+        Where the page reads the volume, as OpenDX in angstroms on the server's own origin.
+    level
+        The magnitude of the two isovalues, in the volume's own units.
+    positive, negative
+        The colour of the surface at the positive and at the negative isovalue.
+    """
+
+    url: str
+    level: float
+    positive: str
+    negative: str
+
+
+OVERLAY_OPACITY = 0.5
+"""The opacity of an overlay's isosurfaces, so the structure shows through them."""
+
+
 def scene(
     model: MolecularModel | None,
     *,
@@ -711,3 +737,44 @@ def scene(
         "metadata": {"version": MVS_VERSION},
         "root": {"kind": "root", "children": children},
     }
+
+
+def overlaid(document: dict[str, Any], volumes: Sequence[Isosurfaces]) -> dict[str, Any]:
+    """Return a scene with volumes drawn over its structure, each cut as the structure is."""
+    cut: list[Any] = []
+
+    def find(node: dict[str, Any]) -> None:
+        for child in node.get("children", ()):
+            if child.get("kind") == "clip" and not cut:
+                cut.append(child)
+            find(child)
+
+    find(document["root"])
+    children: list[Any] = list(document["root"]["children"])
+    for volume in volumes:
+        surfaces: list[dict[str, Any]] = [
+            {
+                "kind": "volume_representation",
+                "params": {"type": "isosurface", "absolute_isovalue": sign * volume.level},
+                "children": [
+                    {"kind": "color", "params": {"color": colour}},
+                    {"kind": "opacity", "params": {"opacity": OVERLAY_OPACITY}},
+                    *cut,
+                ],
+            }
+            for sign, colour in ((1.0, volume.positive), (-1.0, volume.negative))
+        ]
+        children.append(
+            {
+                "kind": "download",
+                "params": {"url": volume.url},
+                "children": [
+                    {
+                        "kind": "parse",
+                        "params": {"format": "dx"},
+                        "children": [{"kind": "volume", "params": {}, "children": surfaces}],
+                    }
+                ],
+            }
+        )
+    return {**document, "root": {**document["root"], "children": children}}
