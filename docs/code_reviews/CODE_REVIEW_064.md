@@ -33,7 +33,8 @@ the fixes.
 | 12 | Nit | `test_analysis.py` row | The row built the fields "through `sampled_fields`", which returns `SampledFields`; Item 1 builds `SolutionFields` with `fields_of` | Fixed |
 | 13 | Nit | Item 1 | `sampled` calling `field_at` dropped `field_triangulation`'s cache, built once for a figure and a slider: each cut would locate on the whole mesh again | Fixed: `field_at` keeps the last four located splits by identity |
 | 14 | Nit | D6, D8 | REV-253's WP5.18 points (the fitted range's shading, the dark swatch) and REV-260's lead with the conductance were claimed with their rows but not placed | Fixed: grounding places them with the round (D12) |
+| 15 | Nit | D9 | Found when the fixes were read: D9 still queued `RunRequest(rebuild=True)` while finding 8's fix made `rebuild` the run directory | Fixed: `RunRequest(rebuild=<run>)` |
 
-Fourteen findings, all fixed in the plan. None changes an author's ruling. The words outside *Grounding* and
+Fifteen findings, all fixed in the plan; the fifteenth was found when the fixes were read. None changes an author's ruling. The words outside *Grounding* and
 *Implementation details* stand at 1,650, the cap with its 10%: the In brief was shortened to hold the fixes. The plan
 holds 12 decisions against the guideline of about six; the plan's report should say why.
