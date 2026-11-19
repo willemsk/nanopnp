@@ -93,10 +93,6 @@ class Tool:
     view: View | None = None
 
 
-def _later(*titles: str) -> tuple[Tool, ...]:
-    return tuple(Tool("", title) for title in titles)
-
-
 @dataclass(frozen=True)
 class Suite:
     """One suite of the frame: what it builds and its tools (docs/design/workbench.md).
@@ -323,7 +319,10 @@ SUITES: tuple[Suite, ...] = (
         "analysis",
         "Analysis",
         "results and comparisons",
-        _later("Results explorer", "Comparison"),
+        (
+            Tool("explorer", "Results explorer", view="page"),
+            Tool("compare", "Comparison", view="page"),
+        ),
         "use",
         "sym_o_monitoring",
         "comparison",
@@ -348,19 +347,21 @@ FRAME_CONTROLS: tuple[str, ...] = (
 TOOL_SUITES: tuple[Suite, ...] = tuple(suite for suite in SUITES if suite.tools[0].id)
 """The suites whose tools have pages: each opens its last tool used, beside its view."""
 
-VIEWS: dict[SuiteId, Literal["molecule", "plane", "pair"]] = {
+VIEWS: dict[SuiteId, Literal["molecule", "plane", "pair"] | None] = {
     "molecular": "molecule",
     "meso": "pair",
     "continuum": "plane",
     "physics": "plane",
     "study": "pair",
+    "analysis": None,
 }
-"""Each tool suite's view: the 3D molecule, the (r, z) plane, or the two side by side."""
+"""Each tool suite's view: the 3D molecule, the (r, z) plane, the two side by side, or none
+where each tool draws its own."""
 
 
 def tool_view(suite: Suite, tool: Tool) -> View:
     """Return what a tool shows beside its pane: its own view, else its suite's."""
-    return tool.view or VIEWS[suite.id]
+    return tool.view or VIEWS[suite.id] or "page"
 
 
 def tool_controls(suite: Suite, tool: Tool) -> tuple[str, ...]:

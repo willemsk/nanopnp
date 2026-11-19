@@ -837,7 +837,8 @@ class _Frame:
             self.rail_box.clear()
             with self.rail_box:
                 self.rail_items()
-        ui.navigate.to(f"/{suite}")
+        # A comparison opens in Comparison, which shows the item last opened.
+        ui.navigate.to("/analysis/compare" if item.startswith("comparison/") else f"/{suite}")
 
     def status_bar(self) -> None:
         problems = self.problems_count()
@@ -906,7 +907,7 @@ class _Frame:
                 ui.label(line)
 
     def run_entry(self, entry: Entry) -> None:
-        """Draw a run's entry, whose *Open* shows its convergence in the Runs tool."""
+        """Draw a run's entry: *Open* shows its convergence in Runs, *Result* its result."""
         with (
             ui.row()
             .classes("run-entry items-center no-wrap gap-2")
@@ -917,10 +918,22 @@ class _Frame:
                 f"flat dense no-caps data-control=queue-open-{entry.number} "
                 f'aria-label="Open the convergence of {entry.label}"'
             )
+            directory = None if entry.run is None else entry.run.directory
+            if entry.status == "done" and directory is not None:
+                ui.button("Result", on_click=lambda _, d=directory: self.open_result(d)).props(
+                    f"flat dense no-caps data-control=queue-result-{entry.number} "
+                    f'aria-label="Open the result of {entry.label}"'
+                )
+
+    def open_result(self, directory: Path) -> None:
+        """Show a finished run's result in the results explorer."""
+        self.shell.result_shown = str(directory)
+        ui.navigate.to("/analysis/explorer")
 
     def open_run(self, entry: Entry) -> None:
         """Show a run's convergence in the Runs tool, the study it runs picked."""
         self.shell.run_shown = entry.number
+        self.shell.recorded_shown = None
         if entry.study:
             self.shell.study = entry.study
         ui.navigate.to("/study/runs")

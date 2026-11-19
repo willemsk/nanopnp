@@ -59,6 +59,10 @@ class RunRequest:
     plan
         A sweep plan's file: the child runs member ``index`` of it into the plan's folder, in
         place of ``case``.
+    rebuild
+        A project's run directory whose solve was cleaned from the store: the child reproduces
+        it into the project's store, in place of ``case``, and fails naming each scalar that
+        moved.
     """
 
     case: str
@@ -69,6 +73,7 @@ class RunRequest:
     threads: int = 1
     plan: str | None = None
     index: int | None = None
+    rebuild: str | None = None
 
 
 @dataclass(frozen=True)
@@ -305,6 +310,9 @@ def _worker(request: RunRequest, events: Queue[RunEvent], cancel: EventType) -> 
         if request.plan is not None:
             events.put(_member(request, Session(store), events, EventCancel(cancel)))
             return
+        if request.rebuild is not None:
+            events.put(_rebuilt(request, events, EventCancel(cancel)))
+            return
         result = Session(store, write=request.write).run(
             Case.load(request.case),
             upto=request.upto,
@@ -322,6 +330,24 @@ def _worker(request: RunRequest, events: Queue[RunEvent], cancel: EventType) -> 
         events.put(failure_event(error))
     else:
         events.put(Finished(directory=str(result.directory)))
+
+
+def _rebuilt(request: RunRequest, events: Queue[RunEvent], cancel: EventCancel) -> RunEvent:
+    from nanopnp.api.project import Project
+
+    assert request.rebuild is not None and request.runs is not None
+    run = Path(request.rebuild)
+    # The project holds its runs folder; its rebuild compares every recorded scalar (QR-08).
+    found = Project.open(Path(request.runs).parent).rebuild(
+        run, progress=QueueProgress(events), cancel=cancel
+    )
+    if found.drifts:
+        moved = "; ".join(
+            f"{drift.path} recorded {drift.recorded}, rebuilt {drift.reproduced}"
+            for drift in found.drifts
+        )
+        return Failed(exit_code=1, error="Drift", message=f"the rebuilt run moved: {moved}")
+    return Finished(directory=str(run))
 
 
 def _member(

@@ -243,7 +243,7 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
 - [x] 5. Compaction checkpoint. **Executor:** main
 - [x] f911e0c 6. uPlot vendored, `/vendor/uplot` and `/vendor/webgui`, Matplotlib in `gui` (D6, D7); done when CON-09's test
   passes. **Executor:** general-purpose on Sonnet, high
-- [ ] 7. `gui/web/chart.py`, `assets/chart.js`, the two plots moved, `lookup_table` (D6, D7); ADR-004's NOTE, §2.6's
+- [x] 7085e44 7. `gui/web/chart.py`, `assets/chart.js`, the two plots moved, `lookup_table` (D6, D7); ADR-004's NOTE, §2.6's
   NOTE; done when `test_study_runs.py` and VER-78 pass. **Executor:** main
 - [ ] 8. `screens.py`, `gui/web/analysis.py`, `analysis_tools.py`, `pages.py`, `frame.py`, `study_tools.py`,
   `gui/solver.py` (D3 to D5, D8 to D10); VER-78 (a); done when VER-78 passes. **Executor:** main

@@ -30,6 +30,10 @@ class Shell:
     """The queue entry whose convergence the Runs tool shows, by number; None for the last."""
     looks: dict[str, str] = field(default_factory=dict)
     """How Mol* draws the structure on each Meso tool, by ``meso/<tool>``, as its pane chose."""
+    result_shown: str | None = None
+    """The run directory the results explorer shows; None for the shown study's latest."""
+    recorded_shown: str | None = None
+    """The recorded run whose convergence the Runs tool unfolds, by directory; None for none."""
 
     @property
     def keys(self) -> dict[str, str]:

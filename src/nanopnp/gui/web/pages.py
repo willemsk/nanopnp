@@ -5,14 +5,18 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Callable
 from dataclasses import replace
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast
+from urllib.parse import urlencode
 
 from fastapi import HTTPException
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from nicegui import app as nicegui_app
 from nicegui import ui
 
-from nanopnp.gui.render import RENDERER_DIRECTORY
+from nanopnp.gui.render import RENDERER_DIRECTORY, host_page, scene_stem
+from nanopnp.gui.web.analysis import AnalysisModel, FieldMap, cut_chart, dark_palette
+from nanopnp.gui.web.analysis_tools import analysis_page, comparison_maps, map_of
 from nanopnp.gui.web.assets import ASSETS, TOKENS
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
@@ -56,6 +60,7 @@ from nanopnp.gui.web.settings_page import SettingsPage
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.study_tools import study_page
 from nanopnp.gui.web.tools import OVERLAY_MOST, charge_colours, tool_page
+from nanopnp.io.manifest import RUN_RECORD_FILENAME
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from fastapi import FastAPI
@@ -171,6 +176,96 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         except ValueError as error:
             raise HTTPException(422, str(error)) from None
         return JSONResponse(drawn.json())
+
+    def analysed(run: str) -> tuple[AnalysisModel, Path]:
+        project = shell.bench.project
+        if project is None:
+            raise HTTPException(404, "no project is open")
+        root = project.root.resolve()
+        path = (root / run).resolve()
+        if not path.is_relative_to(root) or not (path / RUN_RECORD_FILENAME).is_file():
+            raise HTTPException(404, f"no run {run!r} in the project")
+        return AnalysisModel(project), path
+
+    def ranged(text: str) -> tuple[float, float] | None:
+        if not text:
+            return None
+        try:
+            low, high = (float(part) for part in text.split(","))
+        except ValueError:
+            raise HTTPException(422, f"range {text!r} is not two numbers") from None
+        return low, high
+
+    @app.get("/api/analysis/image")
+    def analysis_image(run: str, quantity: str, palette: str = "", dark: str = "") -> Response:
+        """Serve one run's map of a quantity as a PNG, NaN transparent."""
+        model, path = analysed(run)
+        try:
+            shown = map_of(model, path, quantity, palette or None)
+        except (KeyError, ValueError) as error:
+            raise HTTPException(422, str(error)) from None
+        if shown is None:
+            raise HTTPException(404, f"the fields of run {run!r} are not read yet")
+        if dark:
+            shown = replace(shown, palette=dark_palette(shown.palette))
+        return Response(shown.png(), media_type="image/png")
+
+    @app.get("/api/analysis/scene")
+    def analysis_scene(run: str, field: str, range: str = "") -> FileResponse:
+        """Serve a run's scene of one field, written once by a render child (VER-44)."""
+        _, path = analysed(run)
+        scene = path / "viewer" / f"{scene_stem(field, ranged(range))}.json"
+        if not scene.is_file():
+            raise HTTPException(404, f"no scene of {field!r} is written for run {run!r}")
+        return FileResponse(scene, media_type="application/json")
+
+    @app.get("/api/analysis/view")
+    def analysis_view(run: str, field: str, range: str = "") -> HTMLResponse:
+        """Serve the page that fetches a run's scene and draws it with the shipped renderer."""
+        analysed(run)
+        query = urlencode({"run": run, "field": field, **({"range": range} if range else {})})
+        return HTMLResponse(
+            host_page(
+                f"/api/analysis/scene?{query}", "/vendor/webgui/webgui.js", f"{field} on the mesh"
+            )
+        )
+
+    def compared_maps(name: str) -> tuple[AnalysisModel, dict[str, FieldMap]]:
+        project = shell.bench.project
+        if project is None or name not in project.items("comparison"):
+            raise HTTPException(404, f"no comparison {name!r}")
+        model = AnalysisModel(project)
+        try:
+            maps = comparison_maps(model, name)
+        except (KeyError, ValueError) as error:
+            raise HTTPException(422, str(error)) from None
+        if maps is None:
+            raise HTTPException(404, f"the fields of comparison {name!r} are not read yet")
+        return model, maps
+
+    @app.get("/api/analysis/compare/{name}/image")
+    def compare_image(name: str, which: str, dark: str = "") -> Response:
+        """Serve one map of a comparison: ``first``, ``second`` or their ``difference``."""
+        _, maps = compared_maps(name)
+        if which not in maps:
+            raise HTTPException(422, f"which {which!r} is not one of {', '.join(maps)}")
+        shown = maps[which]
+        if dark:
+            shown = replace(shown, palette=dark_palette(shown.palette))
+        return Response(shown.png(), media_type="image/png")
+
+    @app.get("/api/analysis/compare/{name}/cut")
+    def compare_cut(name: str, r: float = 0.0) -> JSONResponse:
+        """Serve a comparison's axial cut at ``r`` nm, a series per run."""
+        model, _ = compared_maps(name)
+        compared = model.comparison(name)
+        held = [model.fields(model.run_path(item)) for item in compared.runs]
+        if any(fields is None for fields in held):
+            raise HTTPException(404, f"the fields of comparison {name!r} are not read yet")
+        runs = tuple(
+            (label, fields) for label, fields in zip(compared.runs, held, strict=True) if fields
+        )
+        return JSONResponse(cut_chart(runs, compared.quantity, r).json())
 
     @app.get("/api/molecular/{name}/structure")
     def molecular_structure(name: str, frame: int = 0) -> Response:
@@ -489,6 +584,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             "continuum": continuum_page,
             "physics": physics_page,
             "study": study_page,
+            "analysis": analysis_page,
         }
         return pages[suite.id](shell, tool)
 

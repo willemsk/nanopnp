@@ -99,7 +99,10 @@
       const asked = ++this.asked;
       let drawing = null;
       try {
-        if (url) {
+        if (url && typeof url === 'object') {
+          // A tile's map comes whole, in place of its address.
+          drawing = url;
+        } else if (url) {
           drawing = await this.fetchDrawing(url, true);
           // A mesh left out that the canvas no longer holds is asked for whole.
           if (drawing.layers.some((l) => l.kind === 'mesh' && !l.vertices_nm && !this.holds(l))) {
@@ -874,7 +877,7 @@
       const at = this.toData(x, y);
       if (this.drawing.point_pick) {
         // A map whose points are asked about, as the charge's residues: the point itself.
-        this.emit('plane_point', { r: at[0], z: at[1] });
+        this.emit('plane_point', { r: at[0], z: at[1], host: this.hostId });
         return;
       }
       const picked = this.nearestVertex(x, y) || this.triangleAt(...at) || this.domainAt(...at);
@@ -927,4 +930,18 @@
   const view = makeView('plane', true);
   window.nano.canvas = view;
   window.nano.plane = (url, note) => view.show(url, note);
+  // The Analysis suite's maps, by host: each tile its own view, a host built again a new one.
+  const maps = new Map();
+  window.nano.maps = maps;
+  window.nano.map = (hostId, drawing) => {
+    for (const [id, map] of maps) if (map.host && !map.host.isConnected) maps.delete(id);
+    const host = document.getElementById(hostId);
+    if (!host) return null;
+    let map = maps.get(hostId);
+    if (!map || (map.host && map.host !== host)) {
+      map = makeView(hostId, false);
+      maps.set(hostId, map);
+    }
+    return map.show(drawing, '').then(() => { host.dataset.mapReady = '1'; });
+  };
 })();

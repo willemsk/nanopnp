@@ -11,10 +11,12 @@ from typing import Any, ClassVar, Literal, cast
 
 import yaml
 from nicegui import events, ui
+from nicegui.elements.mixins.text_element import TextElement
 from nicegui.elements.mixins.validation_element import ValidationElement
 
 from nanopnp.api.project import StudyValue
 from nanopnp.core.hashing import decode_floats
+from nanopnp.gui.convergence import ConvergenceModel
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.chart_view import ChartView
 from nanopnp.gui.web.frame import Views, heading
@@ -26,6 +28,7 @@ from nanopnp.gui.web.runs import (
     convergence_chart,
     queue_run,
     queue_sweep,
+    recorded_convergence,
     rung_rows,
     sweep_file,
     sweep_label,
@@ -229,7 +232,8 @@ class _StudyPane(_Pane[StudyModel]):
         self.sweep_mode: SweepMode = "every"
         self.rungs_box: ui.column
         self.run_summary: ui.label | None = None
-        self.run_seen: tuple[int, str, int, int] | None = None
+        # What the view drew: a queued run's number, state and counts, or a recorded run's folder.
+        self.run_seen: tuple[int, str, int, int] | tuple[str, str] | None = None
 
     # -- the study shown ----------------------------------------------------------------------
 
@@ -1148,7 +1152,11 @@ class _StudyPane(_Pane[StudyModel]):
                 entries = [picked, *entries]
             for entry in entries:
                 with ui.row().classes("items-center no-wrap gap-1"):
-                    shown = picked is not None and entry.number == picked.number
+                    shown = (
+                        self.recorded() is None
+                        and picked is not None
+                        and entry.number == picked.number
+                    )
                     ui.button(entry.line(), on_click=lambda _, e=entry: self.pick_run(e)).props(
                         f"flat dense no-caps align=left data-control=runs-pick-{entry.number} "
                         f"aria-pressed={'true' if shown else 'false'}"
@@ -1162,11 +1170,24 @@ class _StudyPane(_Pane[StudyModel]):
                     "No run of the study is queued. Run study starts one, and its convergence "
                     "is drawn in the view."
                 ).classes("later")
-        self.show_rungs(picked)
+        recorded = self.recorded()
+        if recorded is not None:
+            self.show_rungs(recorded_convergence(Path(recorded)))
+        else:
+            self.show_rungs(
+                None if picked is None or picked.run is None else picked.run.convergence
+            )
 
-    def show_rungs(self, picked: Entry | None) -> None:
+    def recorded(self) -> str | None:
+        """Return the recorded run the view unfolds, by directory, or None for a queued one."""
+        shown = self.shell.recorded_shown
+        if shown is None or self.model is None:
+            return None
+        return shown if Path(shown) in self.model.records() else None
+
+    def show_rungs(self, convergence: ConvergenceModel | None) -> None:
         self.rungs_box.clear()
-        if picked is None or picked.run is None:
+        if convergence is None:
             return
         # A rung to a block: its number and name, then each column's value, all in the pane's width.
         facts = [
@@ -1175,7 +1196,7 @@ class _StudyPane(_Pane[StudyModel]):
         with self.rungs_box:
             heading("Its rungs", 2)
             with ui.element("div").classes("run-rungs").props("data-control=run-rungs role=list"):
-                for row in rung_rows(picked.run.convergence):
+                for row in rung_rows(convergence):
                     with ui.element("div").classes("rung").props("role=listitem"):
                         ui.label(f"{row['number']}. {row['rung']}").classes("rung-name")
                         ui.label(
@@ -1188,6 +1209,7 @@ class _StudyPane(_Pane[StudyModel]):
 
     def pick_run(self, entry: Entry) -> None:
         self.shell.run_shown = entry.number
+        self.shell.recorded_shown = None
         self.run_seen = None
         self.show_runs()
         self.follow_run()
@@ -1195,6 +1217,10 @@ class _StudyPane(_Pane[StudyModel]):
     def follow_run(self) -> None:
         """Draw the picked run's convergence again where its run said more."""
         if self.tool.id != "runs":
+            return
+        recorded = self.recorded()
+        if recorded is not None:
+            self.follow_recorded(recorded)
             return
         picked = self.picked_run()
         run = None if picked is None else picked.run
@@ -1214,14 +1240,42 @@ class _StudyPane(_Pane[StudyModel]):
         self.run_seen = seen
         if changed_run:
             self.show_runs()
-        elif picked is not None:
-            self.show_rungs(picked)
+        elif picked is not None and picked.run is not None:
+            self.show_rungs(picked.run.convergence)
         if picked is None or run is None or self.run_summary is None:
             return
         self.runs_chart.element.classes(remove="runs-plot-none")
         # The chart counts the samples its axis cannot place, so the line above it does not.
         self.run_summary.text = f"{picked.label}: {run.convergence.headline}"
         self.runs_chart.show(convergence_chart(run.convergence))
+
+    def follow_recorded(self, recorded: str) -> None:
+        """Draw a recorded run's convergence, replayed from its stored history (VER-44)."""
+        if self.run_seen == ("recorded", recorded) or self.run_summary is None:
+            return
+        self.run_seen = ("recorded", recorded)
+        self.show_runs()
+        convergence = recorded_convergence(Path(recorded))
+        name = Path(recorded).name[:12]
+        if convergence is None:
+            self.runs_chart.element.classes("runs-plot-none")
+            self.run_summary.text = f"Recorded run {name}: its solve recorded no Newton history."
+            return
+        self.runs_chart.element.classes(remove="runs-plot-none")
+        # The served and other-solve notes end the headline, above the chart.
+        self.run_summary.text = f"Recorded run {name}: {convergence.headline}"
+        self.runs_chart.show(convergence_chart(convergence))
+
+    def pick_recorded(self, directory: Path) -> None:
+        shown = str(directory)
+        self.shell.recorded_shown = None if self.shell.recorded_shown == shown else shown
+        self.run_seen = None
+        self.refresh_records()
+        self.follow_run()
+
+    def open_result(self, directory: Path) -> None:
+        self.shell.result_shown = str(directory)
+        ui.navigate.to("/analysis/explorer")
 
     def cancel_entry(self, entry: Any) -> None:  # noqa: ANN401 - a queue's entry
         self.shell.queue.drop(entry)
@@ -1230,7 +1284,6 @@ class _StudyPane(_Pane[StudyModel]):
         self.refresh()
 
     def runs_view(self) -> None:
-        model = self.model
         heading("Convergence", 2)
         self.run_summary = ui.label("").classes("run-summary").props("data-control=runs-summary")
         self.runs_chart = ChartView("runs-plot", "runs-plot", classes="run-plot runs-plot")
@@ -1240,43 +1293,74 @@ class _StudyPane(_Pane[StudyModel]):
             self.runs_chart.element.classes("runs-plot-none")
         self.run_seen = None
         heading("Recorded runs", 2)
+        self.records_box = ui.column().classes("w-full")
+        self.refresh_records()
+
+    def refresh_records(self) -> None:
+        """List the study's recorded runs, each a button that unfolds its convergence."""
+        model = self.model
+        self.records_box.clear()
         records = () if model is None else model.records()
-        if not records:
-            ui.label("No run is recorded yet. Run study records one.").classes("later")
-            return
-        rows: list[tuple[str, ...]] = []
-        for directory in records[:RUNS_LISTED]:
-            stages = reached(directory)
-            done = "qoi" in stages
-            record = decode_floats(
-                json.loads((directory / RUN_RECORD_FILENAME).read_text(encoding="utf-8"))
-            )
-            quantities = record.get("quantities") if isinstance(record, dict) else None
-            # The scalar quantities, each in its unit with its prefix: the bias, the
-            # current, the conductance.
-            said = ", ".join(
-                f"{base} {self.text(value, QUANTITY_UNITS[symbol])}"
-                for name, value in (quantities.items() if isinstance(quantities, dict) else ())
-                for base, _, symbol in [name.rpartition("_")]
-                if symbol in QUANTITY_UNITS
-                and isinstance(value, int | float)
-                and not isinstance(value, bool)
-            )
-            written = datetime.fromtimestamp((directory / RUN_RECORD_FILENAME).stat().st_mtime)
-            rows.append(
-                (
-                    written.strftime("%d %b %Y, %H:%M"),
-                    "solved" if done else f"to its {stages[-1] if stages else 'start'}",
-                    said or "none",
-                    "no solve"
-                    if "solve" not in stages
-                    else _text(record.get("threads"))
-                    if isinstance(record, dict)
-                    else "",
-                    directory.name,
-                )
-            )
-        _view_table(("Written", "Reached", "Quantities", "Threads", "Folder"), rows, "runs-records")
+        with self.records_box:
+            if not records:
+                ui.label("No run is recorded yet. Run study records one.").classes("later")
+                return
+            head = ("Written", "Reached", "Quantities", "Threads", "Folder", "")
+            with ui.element("table").classes("view-table").props("data-control=runs-records"):
+                with ui.element("thead"), ui.element("tr"):
+                    for text in head:
+                        TextElement(tag="th", text=text).props("scope=col")
+                with ui.element("tbody"):
+                    for index, directory in enumerate(records[:RUNS_LISTED]):
+                        self.record_row(index, directory)
+
+    def record_row(self, index: int, directory: Path) -> None:
+        stages = reached(directory)
+        done = "qoi" in stages
+        record = decode_floats(
+            json.loads((directory / RUN_RECORD_FILENAME).read_text(encoding="utf-8"))
+        )
+        quantities = record.get("quantities") if isinstance(record, dict) else None
+        # The scalar quantities, each in its unit with its prefix: the bias, the current, the
+        # conductance.
+        said = ", ".join(
+            f"{base} {self.text(value, QUANTITY_UNITS[symbol])}"
+            for name, value in (quantities.items() if isinstance(quantities, dict) else ())
+            for base, _, symbol in [name.rpartition("_")]
+            if symbol in QUANTITY_UNITS
+            and isinstance(value, int | float)
+            and not isinstance(value, bool)
+        )
+        written = datetime.fromtimestamp((directory / RUN_RECORD_FILENAME).stat().st_mtime)
+        cells = (
+            written.strftime("%d %b %Y, %H:%M"),
+            "solved" if done else f"to its {stages[-1] if stages else 'start'}",
+            said or "none",
+            "no solve"
+            if "solve" not in stages
+            else _text(record.get("threads"))
+            if isinstance(record, dict)
+            else "",
+        )
+        pressed = self.shell.recorded_shown == str(directory)
+        with ui.element("tr"):
+            for text in cells:
+                TextElement(tag="td", text=str(text))
+            with ui.element("td"):
+                # A recorded run is picked as a queued one is: its convergence across the view.
+                ui.button(
+                    directory.name, on_click=lambda _, d=directory: self.pick_recorded(d)
+                ).props(
+                    f"flat dense no-caps data-control=runs-record-{index} "
+                    f"aria-pressed={'true' if pressed else 'false'} "
+                    f'aria-label="Show the convergence of run {directory.name}"'
+                ).classes("runs-pick" + (" runs-picked" if pressed else ""))
+            with ui.element("td"):
+                if done:
+                    ui.button("Result", on_click=lambda _, d=directory: self.open_result(d)).props(
+                        f"flat dense no-caps data-control=runs-result-{index} "
+                        f'aria-label="Open the result of run {directory.name}"'
+                    )
 
 
 def study_page(shell: Shell, tool: Tool) -> Callable[..., None]:
