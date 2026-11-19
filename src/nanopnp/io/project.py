@@ -128,6 +128,48 @@ class ProjectFile(_Strict):
         return found
 
 
+COMPARISON_SCHEMA = "nanopnp/comparison/v0.6"
+
+ComparisonView = Literal["difference", "maps", "mesh"]
+
+COMPARISON_VIEWS: tuple[ComparisonView, ...] = ("difference", "maps", "mesh")
+"""The difference over the fluids' overlap, the two maps side by side, the two fields in 3D."""
+
+
+class ComparisonFile(_Strict):
+    """A comparison: two runs, the quantity drawn and how, and no physics.
+
+    Parameters
+    ----------
+    runs
+        The two run folders, relative to the project, first then second.
+    colour_map
+        A colour map's name; None takes the default.
+    range
+        The colour scale's fixed ``(low, high)`` in SI; None spans the values drawn.
+    """
+
+    schema_: str = Field(default=COMPARISON_SCHEMA, alias="schema")
+    name: str
+    runs: tuple[str, str]
+    quantity: str = "potential"
+    view: ComparisonView = "difference"
+    colour_map: str | None = None
+    range: tuple[float, float] | None = None
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    @model_validator(mode="after")
+    def _checked(self) -> ComparisonFile:
+        if self.schema_ != COMPARISON_SCHEMA:
+            raise ValueError(f"the schema must be {COMPARISON_SCHEMA!r}. It is {self.schema_!r}.")
+        for run in self.runs:
+            if Path(run).is_absolute() or ".." in Path(run).parts:
+                raise ValueError(f"a run is named relative to the project. {run!r} is not.")
+        if self.range is not None and not self.range[0] < self.range[1]:
+            raise ValueError(f"a range runs from low to high. {list(self.range)} does not.")
+        return self
+
+
 def valid_name(name: str) -> bool:
     """Return whether ``name`` may name an item."""
     return re.fullmatch(ITEM_NAME, name) is not None
