@@ -20,9 +20,9 @@ wait for the round on 2WCD.
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.19 merged
   (`v0.6.0-alpha.19`); the fifth amendment merged (§8.2.43). **WP5.20**, [the meso suite](phase-5/wp5.20-the-meso-suite.md),
-  planned and reviewed on `claude/inspiring-carson-p9b9uc`, with the author's AT1 to AT4 (§8.2.44). **Next:**
-  `/np-implement wp 5.20`. Then WP5.21 Analysis, WP5.22 performance, WP5.23 the route,
-  WP5.24 the close. host: claude-code.
+  planned with the author's AT1 to AT4 (§8.2.44), in implementation on `claude/beautiful-hawking-sqa62e`: items 1 to 4
+  done, the library steps. **Next:** `/np-implement wp 5.20` from item 5. Then WP5.21 Analysis, WP5.22 performance,
+  WP5.23 the route, WP5.24 the close. host: claude-code.
 
 ## Not to be re-decided
 
