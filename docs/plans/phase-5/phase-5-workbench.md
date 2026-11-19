@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.19 merged (`v0.6.0-alpha.19`); WP5.20, the meso suite, next, then WP5.21 to WP5.23 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.19 merged (`v0.6.0-alpha.19`); WP5.20, the meso suite, delivered, its review and merge next; then WP5.21 to WP5.23 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -361,6 +361,19 @@ setup, Sweep and Runs. FR-31's suites, §2's v0.6 row, §8.1's Phase 5 deliverab
 (AR8). What names the tools' old places follows them: VER-78's suites in (a) and `/study/charge` in (m), the
 capability list's rows for Q14 to Q20 and Q24 to Q30, and `redraw.cjs`'s address. Q14 to Q20 and Q28 to Q30 move
 here; VER-60 as restated. Tag `v0.6.0-alpha.20`.
+
+**Delivered 19 November 2026** ([the plan](wp5.20-the-meso-suite.md)). Meso, the second Build suite, holds Density,
+Outline and Charge map at `/meso/<tool>`, each Mol* side on and cut at the axis beside the (r, z) view (FR-31; WB-43,
+WB-44; VER-78). A point of the charge map names a residue once, its copies together, and a point of the density the
+residues whose atoms reach it first (`ResidueCharges`, `DensityAtoms`; VER-60; AT1). An edited outline lists and marks
+the residues it moves into the water and into the protein (`ResidueAtoms.moved`; AT1). The charge map is the continuum
+model's own walk to stage 7 (`Project.charge_case`; FR-27). The charge in 3D and its mean about the axis are drawn over
+the molecule, smoothed to 0.4 nm (`charge_volumes`; AT2, AT4). After the round on 2WCD ([the
+record](../../design/reviews/2026-11-19-meso.md); WB-49) the map's scale opens on the 99th percentile of the charge's
+size, through a dark middle on the dark theme, and each tool sets how Mol* draws the structure.
+
+Live constraints: a free list of the structure's layers is a package of its own, placed by the author (REV-265); the
+round's polish, Outline's keyboard path and the map's default share are WP5.23's (REV-266).
 
 ### WP5.21 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
 

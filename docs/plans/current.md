@@ -1,28 +1,27 @@
 # Current work
 
-Updated 19 November 2026 (WP5.20, the meso suite, planned and reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 19 November 2026 (WP5.20, the meso suite, delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-The meso suite is planned. It sits between Molecular and Continuum and shows how the molecule becomes the pore's shape
-and charge, each picture beside the molecule cut open along its axis: Density, Outline and Charge map, moved from
-Continuum and Study. A point on the charge map names its residue once, not once per chain. As you ruled at the plan
-and its review, an edited outline marks the residues the edit moves into the water or the protein; the round shows a
-working overlay of the charge in 3D and its average around the axis, smoothed to 0.4 nm, built if kept; and
-the study graph's charge opens the continuum model's, not the study's own.
+The meso suite is built and waits for its review. Between Molecular and Continuum, it shows how the molecule becomes
+the pore's shape and charge, beside the molecule cut open along its axis: Density, Outline and Charge map. At your
+verdicts it keeps its name and the overlay of the charge in 3D; the charge map opens its colours on the 99th
+percentile of the charge, and a field changes the range; the dark theme draws zero dark; and each screen lets you
+choose how the molecule is drawn. The free list of layers you chose is a package of its own, which you place.
 
-**Your call.** Approve the plan, or name the decision to change. Recommendation: approve; the name and the screens
-wait for the round on 2WCD.
+**Your call.** Run the review, or name what to change first. Should the charge map open lower than the 99th
+percentile, as 2WCD's map still reads pale? Recommendation: decide at the last round; the field reaches any range.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.19 merged
   (`v0.6.0-alpha.19`); the fifth amendment merged (§8.2.43). **WP5.20**, [the meso suite](phase-5/wp5.20-the-meso-suite.md),
-  planned with the author's AT1 to AT4 (§8.2.44), in implementation on `claude/beautiful-hawking-sqa62e`: items 1 to 8
-  done, the suite and its tools built. **Next:** `/np-implement wp 5.20` from item 9, the round. Then WP5.21 Analysis, WP5.22 performance,
-  WP5.23 the route, WP5.24 the close. host: claude-code.
+  planned with the author's AT1 to AT4 (§8.2.44), **delivered** on `claude/beautiful-hawking-sqa62e` after its round on
+  2WCD (WB-49), its pull request open. **Next:** `/np-ship wp 5.20`. Then WP5.21 Analysis, WP5.22 performance, WP5.23
+  the route, WP5.24 the close. host: claude-code.
 
 ## Not to be re-decided
 
@@ -40,17 +39,16 @@ wait for the round on 2WCD.
   **A generated mesh is read only through `deployed_mesh`.** **Text follows the tested program** (AM1, AM2).
 - **An edited outline keeps its charge; a continuum model builds alone** (§8.2.40). **A physics model is shown
   in a picked study** (§8.2.41). **Red blocks, blue informs; refusals are ASD-STE100** (WB-42). **A thread count is recorded, never keyed** (AR3).
-- **The meso suite is next, WP5.20, holding Density, Outline and Charge map and named at its round; the 200 ms line is
-  the performance package's, WP5.22, after Analysis** (AR7, AR8; §8.2.43 AS1 to AS3). **An edit marks the atoms it
-  moves; the overlay is drafted for the round, smoothed to 0.4 nm, and built if kept; a study's charge node opens the
-  continuum model's** (§8.2.44 AT1 to AT4).
+- **Meso holds Density, Outline and Charge map; the 200 ms line is WP5.22's, after Analysis** (AR7, AR8; AS1 to
+  AS3). **An edit marks the atoms it moves; the overlay is kept; a study's charge node opens the continuum model's**
+  (AT1 to AT4). **The charge map opens on the 99th percentile; a free list of layers is its own package** (WB-49).
 
 ## Somebody else's
 
 - **The paper's figure data** for VAL-16 and VAL-17 (D6); E1's ensemble legs; **Read the Docs**;
   **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
-- **The 200 ms redraw**'s GPU run, in WP5.22 (REV-258); **the meso suite's name**, at WP5.20's round (AS3); **verdicts on each suite's prototype** (AJ8).
+- **The 200 ms redraw**'s GPU run, in WP5.22 (REV-258); **where the free list of layers is placed** (REV-265); **verdicts on each suite's prototype** (AJ8).
 - **Rulings on a cycle (H6) or drift (I4)**; **Tier 3's PQRs**.
 - **REV-156**'s speed-up is Phase 6's (Z6); a cleaned run's rebuild WP5.21's (AN5).
 

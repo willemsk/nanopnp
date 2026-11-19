@@ -1,6 +1,6 @@
 # WP5.20 — The meso suite
 
-**Status: in progress; items 1 to 8 done.** Planned 19 November 2026 on `main` (`dbe34da`). It inherits AJ8, AN7, AP1, AP2,
+**Status: delivered, 19 November 2026.** Planned 19 November 2026 on `main` (`dbe34da`). It inherits AJ8, AN7, AP1, AP2,
 AR8, AS1 and AS3, and this plan's AT1 to AT4 (§8.2.34 to §8.2.44).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
@@ -339,7 +339,7 @@ python .claude/scripts/gui/render_shell.py --only meso <scratch dir>` exits 0 wi
 - [x] 358fef3 10. `/np-gui render shell`, `review`, `publish`: the round (D8); done when the digest is published.
   **Executor:** main
 - [x] 11. Compaction checkpoint; the author's verdicts collected. **Executor:** main
-- [ ] 12. The verdicts built: the name, REV-259's and REV-261's points, the overlay kept or removed; the round's
+- [x] a9025b7 12. The verdicts built: the name, REV-259's and REV-261's points, the overlay kept or removed; the round's
   WB row; a final render reviewed (D1, D7 to D9); done when the review's blocking
   findings are fixed. **Executor:** main
 
