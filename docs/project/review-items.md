@@ -3876,5 +3876,16 @@ WP5.20's round ([the record](../design/reviews/2026-11-19-meso.md)) and its revi
 - **Mol* while a build runs.** Mol* is blank while a build runs, though the structure is stored (F13).
 - **The conservation checks below the fold.** On 2WCD the checks stand below the pane's fold in every shot, under the
   residues, the view and the overlay (the review's route). With REV-245's pane layout.
+- **The map's default share.** At the 99th percentile the 2WCD lattice still reads mostly as its middle colour with
+  specks of charge: 90 % of its charged cells are under 31 C m⁻², a tenth of the clip (the final review's D1; the
+  critique's first P1). A lower default share, or a floor on a charged cell's drawn size, is the author's call at
+  WP5.23's round; *Map range* reaches either now.
+- **The pane's scroll.** The picked residue, the strip and the link scroll out of the pane while the overlay is set
+  (the critique's second P1): a pinned line naming the pick, and the lists scrolling on their own, with REV-245's
+  pane layout.
+- **The critique's polish.** Mol*'s toolbar covers a quarter of its 168 px; the residue buttons' edge on dark is
+  `--line`, not `--control-edge`; the view's notes stand small at its foot; "kernel widths", "Kernel sharpness" and
+  "Deployed on the mesh" link to no glossary entry (WB-25); stage 4's gate writes "contour gate, loop topology",
+  with REV-242's pass over the stages' errors (the final review's F8).
 
 **Open**: WP5.23.

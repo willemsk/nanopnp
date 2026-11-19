@@ -226,16 +226,16 @@ _DIVERGING: tuple[tuple[int, int, int], ...] = (
     (180, 4, 38),
 )
 
-# Crameri's berlin (Scientific colour maps 8, MIT; as Matplotlib 3.10 ships it), eleven anchors:
-# a dark middle, for the dark theme, where a light middle reads as a bright slab.
+# A dark middle, for the dark theme, where a light middle reads as a bright slab: the four outer
+# anchors each side of Crameri's berlin (Scientific colour maps 8, MIT; as Matplotlib 3.10 ships
+# it) about a neutral grey a step above the dark canvas, so zero reads as neither sign. Nine
+# anchors over 255 entries put zero on the grey.
 _DIVERGING_DARK: tuple[tuple[int, int, int], ...] = (
     (158, 176, 255),
     (98, 166, 224),
     (50, 128, 166),
     (32, 82, 106),
-    (17, 39, 50),
-    (25, 12, 9),
-    (55, 16, 0),
+    (44, 46, 50),
     (97, 32, 11),
     (150, 74, 54),
     (202, 123, 113),

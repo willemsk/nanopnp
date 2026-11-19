@@ -23,7 +23,6 @@ from nanopnp.gui.assess import (
     AssessRequest,
     Seeded,
 )
-from nanopnp.gui.charge import CLIP_PERCENTILE
 from nanopnp.gui.geometry import ProfileEditor
 from nanopnp.gui.render import ChargeRequest, RenderedElements, RenderFailed, RenderProcess
 from nanopnp.gui.web.continuum_tools import SUPPLIED, _ContinuumPane, _keyed, _mapping
@@ -43,7 +42,7 @@ from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import charge_colours
 from nanopnp.io.models import Kind
 from nanopnp.io.project import STORE_FOLDER
-from nanopnp.plot.data import OVERLAY_SMOOTHING_NM
+from nanopnp.plot.data import CLIP_PERCENTILE, OVERLAY_SMOOTHING_NM
 
 __all__ = ["meso_page"]
 
@@ -62,8 +61,6 @@ MOVED_LISTED = 12
 """The residues each side of an edit lists, the most atoms first."""
 OVERLAY_TITLES = {"full": "Charge in 3D", "revolved": "Its mean about the axis"}
 """The overlay's two volumes, as its pane names them."""
-STRIP_SHOWN = 16
-"""About how many residues the strip shows before it scrolls: four rows of four."""
 
 # The deployed charge's render, one per run record, kept for the server's life: a window that
 # closes while it draws does not start it again.
@@ -126,6 +123,8 @@ class _MesoPane(_ContinuumPane):
         self.computing = False
         # Each layer's typed scale, in its own unit; None opens on the layer's clip.
         self.spans: dict[str, float | None] = {"lattice": None, "deployed": None}
+        self.range_mark: ui.label
+        self.range_reset: ui.button
 
     @property
     def meso(self) -> MesoModel | None:
@@ -194,6 +193,9 @@ class _MesoPane(_ContinuumPane):
         table = None if model is None else model.table()
         pqr = None if model is None or table is not None else pqr_frame(model.pqr())
         # Atoms with no backbone, as a fixture's charges, draw as balls: a cartoon draws none.
+        # With no atoms read yet, as while a build runs, the cartoon a structure takes.
+        if table is None and pqr is None:
+            return "cartoon"
         return "cartoon" if has_backbone(table, pqr) else "spacefill"
 
     def structure_row(self) -> None:
@@ -613,10 +615,12 @@ class _MesoPane(_ContinuumPane):
                 )
                 ui.label(picked).props("data-control=charge-residue role=status")
                 listed = charges.residues()
-                ui.label(
-                    f"{len(listed)} charged residues, each named once: "
-                    + ("scroll for more." if len(listed) > STRIP_SHOWN else "all shown.")
-                ).classes("field-hint").props("data-control=charge-strip-count")
+                counted = (
+                    "1 charged residue" if len(listed) == 1 else f"{len(listed)} charged residues"
+                )
+                ui.label(f"{counted}, each named once with its copies.").classes(
+                    "field-hint"
+                ).props("data-control=charge-strip-count")
                 with (
                     ui.element("div")
                     .classes("charge-strip")
@@ -652,27 +656,48 @@ class _MesoPane(_ContinuumPane):
         power = _power(clip or largest)
         factor = 10.0**power
         typed_in = f"\u00d7\u200910{str(power).translate(_SUPERSCRIPT)} {unit}" if power else unit
-        with self.named("Map range"):
-            ui.number(
-                value=float(f"{opened / factor:.3g}"),
-                min=0.0,
-                format="%.3g",
-                suffix=typed_in,
-                on_change=lambda e, f=factor: self.set_span(e.value, f),
-            ).props(
-                f"dense outlined data-control=charge-range "
-                f'aria-label="How far the colour scale runs each side of zero, in {typed_in}"'
-            )
+        typed = self.spans[self.layer] is not None
+        with ui.element("div").classes("field-row"):
+            # A typed range is marked as a changed value is, with its reset to the clip.
+            self.range_mark = ui.label("\u25c6").classes("changed mark").props("aria-hidden=true")
+            if not typed:
+                self.range_mark.classes(add="invisible")
+            ui.label("Map range").classes("field-label")
+            with ui.row().classes("items-center no-wrap"):
+                ui.number(
+                    value=float(f"{opened / factor:.3g}"),
+                    min=0.0,
+                    format="%.3g",
+                    suffix=typed_in,
+                    on_change=lambda e, f=factor: self.set_span(e.value, f),
+                ).props(
+                    f"dense outlined data-control=charge-range "
+                    f'aria-label="How far the colour scale runs each side of zero, in {typed_in}"'
+                )
+                self.range_reset = ui.button(icon="sym_o_undo", on_click=self.reset_span).props(
+                    'flat dense aria-label="Reset the map range" data-control=reset-charge-range'
+                )
+                if not typed:
+                    self.range_reset.classes(add="invisible")
         ui.label(
-            f"The scale opens on the {CLIP_PERCENTILE:g}th percentile of the charge's size; "
-            f"its largest is {_figures(largest)} {unit}."
+            f"The scale opens on {_figures(clip)} {unit}, the {CLIP_PERCENTILE:g}th percentile "
+            f"of the charge's size; its largest is {_figures(largest)} {unit}."
         ).classes("field-hint").props("data-control=charge-range-hint")
 
     async def set_span(self, value: object, factor: float) -> None:
         if not isinstance(value, int | float) or value <= 0:
             return
         self.spans[self.layer] = float(value) * factor
+        # Marked in place: the field keeps its focus while a range is typed.
+        self.range_mark.classes(remove="invisible")
+        self.range_reset.classes(remove="invisible")
         await self.redraw()
+
+    async def reset_span(self) -> None:
+        self.spans[self.layer] = None
+        await self.redraw()
+        self.shown_state = ""
+        self.refresh()
 
     def overlay_rows(self) -> None:
         model = self.meso

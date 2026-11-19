@@ -49,6 +49,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.post.export import SolutionFields
 
 __all__ = [
+    "CLIP_PERCENTILE",
     "CUTLINE_POINTS",
     "DISPLAY",
     "FIELD_ALIASES",
@@ -59,6 +60,7 @@ __all__ = [
     "QOI_UNITS",
     "SICN_FLOOR",
     "ChargeVolumes",
+    "ColourScale",
     "CorrectionCurves",
     "Count",
     "DensityAtoms",
@@ -84,6 +86,7 @@ __all__ = [
     "charge_grids",
     "charge_volumes",
     "cis_referenced_bias_V",
+    "colour_scale",
     "contour_polygon_m",
     "correction_curves",
     "default_potential_range_mV",
@@ -828,6 +831,35 @@ class DensityAtoms:
         np.minimum.at(least, self._key_of, scaled)
         order = np.argsort(least, kind="stable")[:n]
         return [(self._keys[k], float(least[k])) for k in order if np.isfinite(least[k])]
+
+
+CLIP_PERCENTILE = 99.0
+"""The share of a charge's size, in percent, its colour scale opens on (WB-49): a few atoms near
+the axis set the largest value, so a scale to it leaves the bulk of a map at its middle colour."""
+
+
+@dataclass(frozen=True)
+class ColourScale:
+    """A charge's colour scale each side of zero: its largest size, and the size it opens on."""
+
+    largest: float
+    clip: float
+
+
+def colour_scale(values: np.ndarray) -> ColourScale:
+    """Return the colour scale of a charge's values: the :data:`CLIP_PERCENTILE` of its size.
+
+    The percentile is of the values that are not zero, so the space no charge reaches does not
+    pull it down; a charge with none opens on 0.
+    """
+    import numpy as np
+
+    sizes = np.abs(np.asarray(values, dtype=np.float64))
+    sizes = sizes[np.isfinite(sizes)]
+    carried = sizes[sizes > 0.0]
+    if not carried.size:
+        return ColourScale(0.0, 0.0)
+    return ColourScale(float(carried.max()), float(np.percentile(carried, CLIP_PERCENTILE)))
 
 
 OVERLAY_SPACING_NM = 0.2

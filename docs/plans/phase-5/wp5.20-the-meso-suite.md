@@ -298,10 +298,26 @@ python .claude/scripts/gui/render_shell.py --only meso <scratch dir>` exits 0 wi
 > the scale opens on the 99th percentile of the charge's size (`gui/charge.py:clip_of`; ±175 C m⁻² on 2WCD against its
 > largest 728), set by *Map range*, typed against its power of ten, the bar's ends marked ≤ and ≥; each Meso tool sets
 > Mol*'s representation (`Shell.looks`); a free list of the structure's layers is a package of its own (REV-265). On
-> the dark theme the map runs through Crameri's *berlin*, which the canvas swaps in with the picture drawn for it. The
+> the dark theme the map runs through a dark middle, which the canvas swaps in with the picture drawn for it. The
 > review's F8 to F13 and F15 and REV-261's seven points are fixed or answered there; REV-259 is fixed, and REV-266
 > holds what stays open. The canvas keys a mesh's colour paths by their scale and palette too, so a new range or theme
 > redraws them.
+
+> **Outcome — the final review, decided.** The whole shell rendered at `c7f5faa` (424 shots; three lost their page
+> under the render's load, and the `meso` and `2wcd` groups rendered alone are clean). The `gui-reviewer` found none
+> blocking, two major and seven minor; `impeccable`'s critique scored it 30/40 (27 at the round), no P0. Fixed:
+> - F1: the scale's largest size and its clip come from `plot/data.py:colour_scale`, which the pane and the canvas
+>   only show;
+> - F2: zero on the dark map read red-brown, berlin's warm middle; the dark map keeps berlin's outer anchors about a
+>   neutral grey, (44, 46, 50) at zero;
+> - F3: a typed range is marked, with its reset, and the hint names the clip;
+> - F4, F5: the strip counts its residues, one in the singular, and claims nothing of its scroll;
+> - F6: Density's residue is keyed as its rings;
+> - F7: the *Structure* select reads Cartoon until a structure is read.
+>
+> Answered: F8 is stage 4's gate's words, with REV-242's pass; F9's dark shot draws the edit the light shot made,
+> which the server holds, as `shoot.cjs` takes the entries in order. The map's default share (D1), the pane's
+> scroll and the critique's polish are REV-266's.
 
 ### Work items
 
