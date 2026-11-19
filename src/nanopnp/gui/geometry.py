@@ -651,31 +651,33 @@ class ProfileEditor:
     ----------
     parent_digest
         ``provenance.sha256`` the edit records: the digest of the profile it was edited from.
+    start
+        The loop the edit started from, which the atoms it moves are read against.
     """
 
     vertices: list[Vertex]
     parent_digest: str
     parent_name: str
+    start: list[Vertex] = field(default_factory=list)
     _undo: list[list[Vertex]] = field(default_factory=list, repr=False)
     _redo: list[list[Vertex]] = field(default_factory=list, repr=False)
 
     @classmethod
     def from_profile(cls, profile: PoreProfile) -> ProfileEditor:
         """Start from a profile document: stage 4's, or a supplied one."""
+        vertices = [(float(r), float(z)) for r, z in profile.vertices]
         return cls(
-            vertices=[(float(r), float(z)) for r, z in profile.vertices],
+            vertices=vertices,
             parent_digest=profile_digest(profile),
             parent_name=profile.name,
+            start=list(vertices),
         )
 
     @classmethod
     def from_seed(cls, vertices: Sequence[Vertex], *, digest: str, name: str) -> ProfileEditor:
         """Start from a loop stage 4's gate refused."""
-        return cls(
-            vertices=[(float(r), float(z)) for r, z in vertices],
-            parent_digest=digest,
-            parent_name=name,
-        )
+        loop = [(float(r), float(z)) for r, z in vertices]
+        return cls(vertices=loop, parent_digest=digest, parent_name=name, start=list(loop))
 
     def _push(self) -> None:
         self._undo.append(list(self.vertices))

@@ -156,8 +156,12 @@ round.
 **Item 1.**
 - `ResidueCopies.of(structure: Artefact | None)`: from the header's `n` and `chains_cyclic_order`, a map from chain
   to its first unit's chain at the same position; `group(key)` and `copies(key)`, keys as `residue_key` makes them.
-  None, or n = 1, maps each chain to itself. Chains are named as `residue_key` names them (first character); where
-  two of the header's chains share that character, or the units number other than `n`, each chain stands alone.
+  None, or n = 1, maps each chain to itself. Chains are named by the one PDB character the protonation stage writes
+  its PQR with (`chain_letters`, `table_letters`); where the units number other than `n`, or two chains share a
+  character, each chain stands alone.
+  > **Outcome — chains named as the PQR writes them.** The first character collapsed segment chains `PROA` to `PROC`
+  > into one key, so the plan's three keys could not hold. `residue_key` now takes `chain_characters`' letter, and
+  > `molview.py` writes the same letters into the structure Mol* reads; single-character chains keep theirs.
 - `ResidueCharges.of(protonation, charge, resolved, structure=None)`. `_keys` hold group keys; `at` returns
   `(key, e_per_nm3)`, a group's value the sum over its copies; `residues()` gives `(key, name, charge_e, copies)`,
   `charge_e` the group's sum divided by `copies`, listed where `|charge_e| >= STRIP_MIN_CHARGE_E`; `markers(key)`
@@ -265,7 +269,7 @@ python .claude/scripts/gui/render_shell.py --only meso <scratch dir>` exits 0 wi
 
 | Test | Tier | Identifiers | Oracle and tolerance | Command |
 |---|---|---|---|---|
-| `tests/tier1/test_meso.py` | 1 | VER-60 | A C3 table of one charged residue per chain, built in place: `at` names it once, its value the copies' sum of `q · volume_density` to 10⁻¹²; `residues()` once with its charge per copy; `markers` every copy; under C1, and with segid chains `PROA` to `PROC`, three keys | `uv run pytest tests/tier1/test_meso.py` |
+| `tests/tier1/test_meso.py` | 1 | VER-60 | A C3 table of one charged residue per chain, built in place: `at` names it once, its value the copies' sum of `q · volume_density` to 10⁻¹²; `residues()` once with its charge per copy; `markers` every copy; under C1 three keys; segid chains `PROA` to `PROC` three keys under C1 and one with three copies under C3, the PDB text naming them A to C | `uv run pytest tests/tier1/test_meso.py` |
 | same | 1 | VER-60 | A square outline and an edit moving one vertex in: `moved` holds exactly the atoms inside the cut triangle, *out*, and none *in*; moving it out, the reverse; an unedited outline none; a seeded edit against its seed. `nearest` ranks each atom's residue first at the atom, under `protonated` and `as_loaded` | same |
 | same | 1 | VER-60 | `charge_volumes` on three atoms, one narrower than `smoothing_nm`, at a quarter of the narrowest `w`: `revolved` equals `volume_density` summed at the widened widths, to 10⁻¹²; the mean of `full_at` over 360 azimuths at five (r, z) equals `revolved` there to 10⁻⁶ relative (a periodic trapezoid, spectral in the azimuth); each grid's sum times the cell volume is the charge per frame to 10⁻⁶ (the stencil's tail is 5·10⁻⁷); a spacing above half the narrowest `w` raises | same |
 | `tests/tier1/test_project.py` | 1 | FR-27, FR-39 | The charged tube's continuum model: `charge_case` walked to `charge` keys stage 7 as the imported study's walk does; its stages are in `kept_artefacts` and survive `clean_store`; an idealised pore is refused, naming its pore | `uv run pytest tests/tier1/test_project.py` |

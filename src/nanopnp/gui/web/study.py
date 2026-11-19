@@ -189,9 +189,10 @@ class StudyModel(BuiltModel):
         resolved = self.resolved()
         if protonation is None or charge is None or resolved is None:
             return None
+        structure = stored.get("structure")
         return _kept(
             ("residues", protonation.hash, charge.hash),
-            lambda: ResidueCharges.of(protonation, charge, resolved),
+            lambda: ResidueCharges.of(protonation, charge, resolved, structure),
         )
 
     def pqr(self) -> Path | None:

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import threading
 import weakref
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -18,6 +18,7 @@ from nanopnp.core.hashing import decode_floats
 from nanopnp.density.grid import read_grid
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
+from nanopnp.density.radii import KERNEL_RADII, resolve_protonated_radii, resolve_radii
 from nanopnp.geometry.outlines import Stage5Region
 from nanopnp.geometry.profile import PAYLOAD_NAME as PROFILE_PAYLOAD
 from nanopnp.geometry.profile import load_profile
@@ -32,7 +33,7 @@ from nanopnp.mesh.quality import QualityReport, element_quality
 from nanopnp.post.export import lumen_extent_nm
 from nanopnp.solve.state import NEWTON_HISTORY_KEY
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
-from nanopnp.structure.ensemble import AlignedEnsemble
+from nanopnp.structure.ensemble import AlignedEnsemble, EnsembleFormatError, chain_characters
 from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
 from nanopnp.symmetry.reduce import ReducedMap
 
@@ -53,12 +54,17 @@ __all__ = [
     "QOI_UNITS",
     "SICN_FLOOR",
     "CorrectionCurves",
+    "Count",
+    "DensityAtoms",
     "Display",
     "MeshElements",
+    "Moved",
     "NewtonRung",
     "ProtonationCharges",
     "RegionDrawing",
+    "ResidueAtoms",
     "ResidueCharges",
+    "ResidueCopies",
     "StoredGrid",
     "SweepCurves",
     "atoms_r_z_m",
@@ -68,6 +74,7 @@ __all__ = [
     "boundary_edges",
     "case_correction_curves",
     "case_curves",
+    "chain_letters",
     "charge_grids",
     "cis_referenced_bias_V",
     "contour_polygon_m",
@@ -78,6 +85,7 @@ __all__ = [
     "field_menu",
     "field_values",
     "fields_lumen_nm",
+    "inside_outline",
     "lumen_window_nm",
     "mesh_elements",
     "newton_history",
@@ -92,6 +100,7 @@ __all__ = [
     "structure_atoms",
     "subdivided",
     "sweep_curves",
+    "table_letters",
 ]
 
 SICN_FLOOR = 0.3
@@ -375,32 +384,126 @@ REACH_WIDTHS = 4.0
 """The distance, in smearing widths, beyond which an atom's density is not summed at a point."""
 
 
+def chain_letters(chains: Iterable[str]) -> dict[str, str]:
+    """Return the one PDB character each chain is written as, which Mol* reads back.
+
+    Chains of one character keep it; where any key is longer (a segment id, ``PROA``), every chain
+    takes ``A``, ``B``, … in order of first appearance, as the protonation stage writes its PQR.
+    """
+    ordered = list(dict.fromkeys(str(chain) for chain in chains))
+    try:
+        return chain_characters(ordered)
+    except EnsembleFormatError:
+        return {chain: chain.strip()[:1] or "A" for chain in ordered}
+
+
+def table_letters(table: ProtonationTable) -> dict[str, str]:
+    """Return the chain characters a protonation table's PQR was written with."""
+    recorded = table.header.get("chains")
+    if isinstance(recorded, Mapping):
+        return {str(chain): str(letter) for chain, letter in recorded.items()}
+    return chain_letters(table.chain.tolist())
+
+
 def residue_key(chain: str, resid: int, icode: str) -> str:
     """Return the name a residue goes by on the molecule and on the map, ``<chain>:<resid><icode>``.
 
-    The chain is its one PDB column, which is all Mol* reads back; a blank chain is ``A``.
+    The chain is its one PDB column (:func:`chain_letters`), which is all Mol* reads back; a blank
+    chain is ``A``.
     """
     return f"{chain.strip()[:1] or 'A'}:{resid}{icode.strip()[:1]}"
+
+
+class ResidueCopies:
+    """Which residues are copies of one another: the chains at one position of the ring's units.
+
+    Under Cn, n ≥ 2, stage 1 checked that the chains at one position of their units hold
+    the same residue at a shared number (FR-03), so a residue is named once, under its first unit's
+    chain. Under C1, without stage 1, or where the header's units cannot be read so, each chain's
+    residue stands alone.
+    """
+
+    def __init__(self, groups: Mapping[str, tuple[str, ...]] | None = None) -> None:
+        self._members: dict[str, tuple[str, ...]] = dict(groups or {})
+        self._group: dict[str, str] = {
+            member: first for first, members in self._members.items() for member in members
+        }
+
+    @classmethod
+    def of(
+        cls, structure: Artefact | None, letters: Mapping[str, str] | None = None
+    ) -> ResidueCopies:
+        """Return the copies stage 1's header names, the chains named by ``letters``.
+
+        Parameters
+        ----------
+        letters
+            Each chain's PDB character; by default :func:`chain_letters` of the header's chains.
+        """
+        header = structure.summary if structure is not None else {}
+        n, units = header.get("n"), header.get("chains_cyclic_order")
+        if not (isinstance(n, int) and n >= 2 and isinstance(units, list) and len(units) == n):
+            return cls()
+        chains = [str(unit).split("+") for unit in units]
+        if len({len(unit) for unit in chains}) != 1:
+            return cls()
+        if letters is None:
+            listed = header.get("chains_file_order")
+            letters = chain_letters(
+                listed if isinstance(listed, list) else [c for unit in chains for c in unit]
+            )
+        named = [
+            [letters.get(chain, chain.strip()[:1] or "A") for chain in unit] for unit in chains
+        ]
+        flat = [letter for unit in named for letter in unit]
+        if len(set(flat)) != len(flat):
+            return cls()
+        return cls(
+            {
+                named[0][position]: tuple(unit[position] for unit in named)
+                for position in range(len(named[0]))
+            }
+        )
+
+    def group(self, key: str) -> str:
+        """Return the key a residue is named by: its first unit's copy's."""
+        chain, _, rest = key.partition(":")
+        return f"{self._group.get(chain, chain)}:{rest}"
+
+    def copies(self, key: str) -> tuple[str, ...]:
+        """Return the keys of every copy of a residue, its first unit's first."""
+        chain, _, rest = self.group(key).partition(":")
+        return tuple(f"{member}:{rest}" for member in self._members.get(chain, (chain,)))
 
 
 class ResidueCharges:
     """Each charged atom of a deposit, by residue: where it sits in (r, z) and what it carries.
 
     The atoms are the deposit's own, in the model frame, so a residue's markers fall where its
-    charge is on the map, and a point on the map names the residues whose charge is there.
+    charge is on the map, and a point on the map names the residues whose charge is there. A
+    residue is named once with its copies (:class:`ResidueCopies`).
     """
 
     @classmethod
     def of(
-        cls, protonation: Artefact, charge: Artefact, resolved: ResolvedCase
+        cls,
+        protonation: Artefact,
+        charge: Artefact,
+        resolved: ResolvedCase,
+        structure: Artefact | None = None,
     ) -> ResidueCharges | None:
         """Return the charges of a walk's stage-7 deposit, or None where it deposits none."""
         if CHARGE_PAYLOAD not in charge.payload or stored_lattice(charge) is None:
             return None
         table = ProtonationTable.read(Path(protonation.payload[PROTONATION_PAYLOAD]))
-        return cls(table, resolved)
+        return cls(table, resolved, ResidueCopies.of(structure, table_letters(table)))
 
-    def __init__(self, table: ProtonationTable, resolved: ResolvedCase) -> None:
+    def __init__(
+        self,
+        table: ProtonationTable,
+        resolved: ResolvedCase,
+        copies: ResidueCopies | None = None,
+    ) -> None:
         import numpy as np
 
         atoms = source_atoms(
@@ -410,48 +513,69 @@ class ResidueCharges:
         )
         self._r, self._z = atoms.r_nm, atoms.z_nm
         self._width, self._weight = atoms.width_nm, atoms.weight_e
+        self._copies = copies if copies is not None else ResidueCopies()
         # Every charged atom of every frame (an ensemble is tens of frames of tens of thousands of
         # atoms), keyed through plain lists and grouped in one pass in order of first appearance,
-        # which the list's order and its first chain follow.
+        # which the list's order follows.
+        letters = table_letters(table)
         chain, resid, icode = table.chain.tolist(), table.resid.tolist(), table.icode.tolist()
         resname = table.resname.tolist()
         rows = atoms.atom.tolist()
-        self._keys: list[str] = [
-            residue_key(str(chain[i]), int(resid[i]), str(icode[i])) for i in rows
-        ]
+        own = [residue_key(letters[str(chain[i])], int(resid[i]), str(icode[i])) for i in rows]
+        self._keys: list[str] = [self._copies.group(key) for key in own]
         self._names = [str(resname[i]).strip() for i in rows]
         grouped: dict[str, list[int]] = {}
+        present: dict[str, dict[str, None]] = {}
         for position, key in enumerate(self._keys):
             grouped.setdefault(key, []).append(position)
+            present.setdefault(key, {})[own[position]] = None
         self._rows: dict[str, np.ndarray] = {
             key: np.array(found, dtype=np.intp) for key, found in grouped.items()
         }
+        self._present: dict[str, tuple[str, ...]] = {
+            key: tuple(member for member in self._copies.copies(key) if member in present[key])
+            or tuple(present[key])
+            for key in grouped
+        }
 
     def __contains__(self, key: object) -> bool:
-        """Say whether a residue key names a residue that carries charge."""
-        return key in self._rows
+        """Say whether a residue key names a residue, or a copy of one, that carries charge."""
+        return isinstance(key, str) and self._copies.group(key) in self._rows
 
-    def residues(self) -> list[tuple[str, str, float]]:
-        """Return ``(key, name, charge_e)`` of the first chain's strongly charged residues.
+    def group(self, key: str) -> str:
+        """Return the key a residue is listed by, its copies together."""
+        return self._copies.group(key)
 
-        A residue's charge is summed over every frame's atoms.
+    def copies(self, key: str) -> tuple[str, ...]:
+        """Return the keys of a residue's copies that carry charge, its first unit's first."""
+        return self._present.get(self._copies.group(key), ())
+
+    def residues(self) -> list[tuple[str, str, float, int]]:
+        """Return ``(key, name, charge_e, copies)`` of each strongly charged residue, named once.
+
+        ``charge_e`` is one copy's: the residue's atoms of every frame and every copy, summed and
+        divided by its copies.
         """
-        first = next(iter(self._rows), "").partition(":")[0]
         found = []
         for key, rows in self._rows.items():
-            charge = float(self._weight[rows].sum())
-            if key.partition(":")[0] == first and abs(charge) >= STRIP_MIN_CHARGE_E:
-                found.append((key, self._names[int(rows[0])], charge))
+            count = len(self._present[key])
+            charge = float(self._weight[rows].sum()) / count
+            if abs(charge) >= STRIP_MIN_CHARGE_E:
+                found.append((key, self._names[int(rows[0])], charge, count))
         return found
 
     def markers(self, key: str) -> list[tuple[float, float, float]]:
-        """Return the ``(r_nm, z_nm, q_e)`` of each charged atom of a residue."""
+        """Return the ``(r_nm, z_nm, q_e)`` of each charged atom of a residue, every copy's."""
         return [
-            (float(self._r[i]), float(self._z[i]), float(self._weight[i])) for i in self._rows[key]
+            (float(self._r[i]), float(self._z[i]), float(self._weight[i]))
+            for i in self._rows[self._copies.group(key)]
         ]
 
     def at(self, r_nm: float, z_nm: float, n: int = 5) -> list[tuple[str, float]]:
-        """Return the ``n`` residues adding most charge density at a point, as ``(key, e/nm^3)``."""
+        """Return the ``n`` residues adding most charge density at a point, as ``(key, e/nm^3)``.
+
+        A residue's density is its copies' sum.
+        """
         import numpy as np
 
         reach = REACH_WIDTHS * self._width
@@ -466,6 +590,222 @@ class ResidueCharges:
             key = self._keys[i]
             totals[key] = totals.get(key, 0.0) + float(self._weight[i]) * density
         return sorted(totals.items(), key=lambda item: -abs(item[1]))[:n]
+
+
+def inside_outline(loop: np.ndarray, r_nm: np.ndarray, z_nm: np.ndarray) -> np.ndarray:
+    """Return whether each point ``(r_nm[i], z_nm[i])`` lies inside a closed ``(n, 2)`` loop.
+
+    The even-odd rule, an edge counted where ``z0 <= z < z1`` and it crosses below ``r``, as the
+    solid fraction's own test: a point on an edge facing larger ``r``, or on a lower edge, is
+    inside.
+    """
+    import numpy as np
+
+    points = np.asarray(loop, dtype=np.float64)
+    r = np.asarray(r_nm, dtype=np.float64)
+    z = np.asarray(z_nm, dtype=np.float64)
+    inside = np.zeros(r.shape, dtype=bool)
+    for start, end in zip(points, np.roll(points, -1, axis=0), strict=True):
+        low, high = min(start[1], end[1]), max(start[1], end[1])
+        crossing = (low <= z) & (z < high)
+        if not bool(crossing.any()):
+            continue
+        at = start[0] + (z[crossing] - start[1]) * (end[0] - start[0]) / (end[1] - start[1])
+        inside[crossing] ^= at < r[crossing]
+    return inside
+
+
+@dataclass(frozen=True)
+class Count:
+    """A residue's atoms an edit moves and their charge, each per copy and per frame."""
+
+    atoms: float
+    charge_e: float
+
+
+@dataclass(frozen=True)
+class Moved:
+    """The residues whose atoms an edit moves, each way, keyed as :class:`ResidueCopies` names them.
+
+    Parameters
+    ----------
+    out
+        Atoms inside the outline the edit started from and outside the edit: into the water.
+    in_
+        Atoms outside the outline the edit started from and inside the edit: into the protein.
+    """
+
+    out: dict[str, Count]
+    in_: dict[str, Count]
+
+
+class ResidueAtoms:
+    """Every atom of the protonation table, every frame, in stage 1's frame reduced to (r, z).
+
+    The outlines, built or supplied, are in stage 1's frame, so an atom's side of an outline is
+    read without the model frame's shift.
+    """
+
+    @classmethod
+    def of(cls, protonation: Artefact, structure: Artefact | None = None) -> ResidueAtoms:
+        """Return the atoms of a protonation artefact, named with stage 1's copies."""
+        table = ProtonationTable.read(Path(protonation.payload[PROTONATION_PAYLOAD]))
+        return cls(table, ResidueCopies.of(structure, table_letters(table)))
+
+    def __init__(self, table: ProtonationTable, copies: ResidueCopies | None = None) -> None:
+        import numpy as np
+
+        positions = np.asarray(table.positions_nm, dtype=np.float64)
+        self._r = np.hypot(positions[:, 0], positions[:, 1])
+        self._z = positions[:, 2].copy()
+        self._charge = np.asarray(table.charge_e, dtype=np.float64)
+        self._frames = table.frames
+        self._copies = copies if copies is not None else ResidueCopies()
+        letters = table_letters(table)
+        chain, resid, icode = table.chain.tolist(), table.resid.tolist(), table.icode.tolist()
+        own = [
+            residue_key(letters[str(c)], int(r), str(i))
+            for c, r, i in zip(chain, resid, icode, strict=True)
+        ]
+        keys = [self._copies.group(key) for key in own]
+        index = {key: number for number, key in enumerate(dict.fromkeys(keys))}
+        self._keys = list(index)
+        self._key_of = np.array([index[key] for key in keys], dtype=np.intp)
+        present: dict[str, dict[str, None]] = {}
+        for key, member in zip(keys, own, strict=True):
+            present.setdefault(key, {})[member] = None
+        self._count = np.array([len(present[key]) for key in self._keys], dtype=np.float64)
+
+    @property
+    def r_nm(self) -> np.ndarray:
+        """Return every atom's distance from the axis, in nm."""
+        return self._r
+
+    @property
+    def z_nm(self) -> np.ndarray:
+        """Return every atom's height in stage 1's frame, in nm."""
+        return self._z
+
+    def moved(self, before: np.ndarray, after: np.ndarray) -> Moved:
+        """Return the residues whose atoms ``after`` puts across ``before``, each way."""
+        import numpy as np
+
+        was = inside_outline(before, self._r, self._z)
+        now = inside_outline(after, self._r, self._z)
+        found = []
+        for mask in (was & ~now, ~was & now):
+            atoms = np.bincount(self._key_of[mask], minlength=len(self._keys)).astype(np.float64)
+            charge = np.bincount(
+                self._key_of[mask], weights=self._charge[mask], minlength=len(self._keys)
+            )
+            scale = self._frames * self._count
+            found.append(
+                {
+                    self._keys[k]: Count(float(atoms[k] / scale[k]), float(charge[k] / scale[k]))
+                    for k in np.flatnonzero(atoms)
+                }
+            )
+        return Moved(found[0], found[1])
+
+    def markers(self, key: str) -> list[tuple[float, float, float]]:
+        """Return the ``(r_nm, z_nm, q_e)`` of a residue's atoms, every copy's and frame's."""
+        import numpy as np
+
+        group = self._copies.group(key)
+        if group not in self._keys:
+            return []
+        rows = np.flatnonzero(self._key_of == self._keys.index(group))
+        return [(float(self._r[i]), float(self._z[i]), float(self._charge[i])) for i in rows]
+
+
+class DensityAtoms:
+    """Stage 2's atoms and kernel widths, as the density stage smears them, by residue."""
+
+    @classmethod
+    def of(
+        cls,
+        resolved: ResolvedCase,
+        structure: Artefact,
+        protonation: Artefact | None = None,
+    ) -> DensityAtoms:
+        """Return the atoms ``geometry.density.atoms`` names: the protonation table's, or stage 1's.
+
+        Raises
+        ------
+        ValueError
+            If the case carries no density block, or names the protonated atoms without a table.
+        """
+        import numpy as np
+
+        spec = resolved.density
+        if spec is None:
+            raise ValueError(f"case {resolved.name!r} carries no density block")
+        if spec.atoms == "protonated":
+            if protonation is None:
+                raise ValueError("the density smears the protonated atoms, and none are built")
+            table = ProtonationTable.read(Path(protonation.payload[PROTONATION_PAYLOAD]))
+            letters = table_letters(table)
+            radii = resolve_protonated_radii(KERNEL_RADII[spec.kernel], table).radii_nm
+            positions = np.asarray(table.positions_nm, dtype=np.float64)
+            chain, resid, icode = table.chain, table.resid, table.icode
+        else:
+            ensemble = AlignedEnsemble.read(structure.payload[ENSEMBLE_PAYLOAD])
+            letters = chain_letters(ensemble.chain.tolist())
+            radii = resolve_radii(
+                KERNEL_RADII[spec.kernel],
+                resname=ensemble.resname,
+                atom=ensemble.name,
+                chain=ensemble.chain,
+                resid=ensemble.resid,
+                icode=ensemble.icode,
+            ).radii_nm
+            frames = ensemble.frames
+            positions = np.asarray(ensemble.positions_nm, dtype=np.float64).reshape(-1, 3)
+            radii = np.tile(np.asarray(radii, dtype=np.float64), frames)
+            chain, resid, icode = (
+                np.tile(column, frames)
+                for column in (ensemble.chain, ensemble.resid, ensemble.icode)
+            )
+        copies = ResidueCopies.of(structure, letters)
+        keys = [
+            copies.group(residue_key(letters[str(c)], int(r), str(i)))
+            for c, r, i in zip(chain.tolist(), resid.tolist(), icode.tolist(), strict=True)
+        ]
+        return cls(
+            np.hypot(positions[:, 0], positions[:, 1]),
+            positions[:, 2],
+            spec.sharpness * np.asarray(radii, dtype=np.float64),
+            keys,
+        )
+
+    def __init__(
+        self, r_nm: np.ndarray, z_nm: np.ndarray, width_nm: np.ndarray, keys: Sequence[str]
+    ) -> None:
+        import numpy as np
+
+        self._r, self._z, self._width = r_nm, z_nm, width_nm
+        index = {key: number for number, key in enumerate(dict.fromkeys(keys))}
+        self._keys = list(index)
+        self._key_of = np.array([index[key] for key in keys], dtype=np.intp)
+
+    @property
+    def width_nm(self) -> np.ndarray:
+        """Return every atom's kernel width, in nm, in the order stage 2 deposits them."""
+        return self._width
+
+    def nearest(self, r_nm: float, z_nm: float, n: int = 5) -> list[tuple[str, float]]:
+        """Return the ``n`` residues nearest a point, as ``(key, distance in kernel widths)``.
+
+        Stage 2's density is a union of its atoms, not a sum, so a point is named by the atoms
+        whose kernel reaches it first: each residue's least ``|(r, z) - (r_i, z_i)| / w_i``.
+        """
+        import numpy as np
+
+        scaled = np.hypot(self._r - r_nm, self._z - z_nm) / self._width
+        least = np.full(len(self._keys), np.inf)
+        np.minimum.at(least, self._key_of, scaled)
+        order = np.argsort(least, kind="stable")[:n]
+        return [(self._keys[k], float(least[k])) for k in order if np.isfinite(least[k])]
 
 
 @dataclass(frozen=True)

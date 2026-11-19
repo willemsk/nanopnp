@@ -79,7 +79,7 @@ def test_ver60_the_studys_charge_on_the_mesh_shows_the_walks_record(walked, char
         walked.artefacts["protonation"], walked.artefacts["charge"], walked.resolved
     )
     assert charges is not None
-    assert [(key, name) for key, name, _ in charges.residues()] == [
+    assert [(key, name) for key, name, _, _ in charges.residues()] == [
         ("A:18", "GLU"),
         ("A:19", "GLU"),
     ]

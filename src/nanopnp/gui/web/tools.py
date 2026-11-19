@@ -2099,7 +2099,9 @@ class _MolecularPane(_Pane[MolecularModel]):
                     f"{len(listed)} states…" if listed else "0",
                     (
                         lambda: self.show_listed(
-                            "States left unapplied", _unapplied(listed), _unapplied_keys(listed)
+                            "States left unapplied",
+                            _unapplied(listed),
+                            _unapplied_keys(listed, table.get("chains")),
                         )
                     )
                     if listed
@@ -2225,12 +2227,14 @@ def _unapplied(listed: list[object]) -> list[str]:
     return lines
 
 
-def _unapplied_keys(listed: list[object]) -> list[str]:
+def _unapplied_keys(listed: list[object], recorded: object) -> list[str]:
+    # The chain characters the protonation stage wrote its PQR with, as Mol* reads them back.
+    letters = {str(k): str(v) for k, v in recorded.items()} if isinstance(recorded, dict) else {}
     keys = []
     for entry in listed:
         row = _mapping(entry)
         number = str(row.get("residue", "")).split(" ")[-1]
-        keys.append(f"{_chain_id(str(row.get('chain', '')))}:{number}")
+        keys.append(f"{_chain_id(str(row.get('chain', '')), letters)}:{number}")
     return keys
 
 
