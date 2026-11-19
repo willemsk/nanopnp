@@ -48,15 +48,24 @@ class Step:
 
 @dataclass
 class Band:
-    """One rung of the continuation ladder, and the steps reported inside it."""
+    """One rung of the continuation ladder, and the steps reported inside it.
+
+    Parameters
+    ----------
+    reporting
+        Whether the rung's model takes a Newton callback; None for a recorded rung whose history
+        does not say.
+    """
 
     name: str
     stage: int
     index: int
-    reporting: bool
+    reporting: bool | None
     tolerance: float
     steps: list[Step] = field(default_factory=list)
     closed: bool = False
+    forced_known: bool = True
+    """False for a recorded rung whose steps do not say whether they were forced."""
 
     @property
     def width(self) -> float:
@@ -84,13 +93,16 @@ class Band:
         if not self.closed or not self.steps:
             return ""
         last = self.steps[-1]
-        if last.forced or last.update > self.tolerance:
+        # Written so that a NaN update credits no update test.
+        if last.forced or not last.update <= self.tolerance:
             return "residual"
-        return "update"
+        return "update" if self.forced_known else ""
 
     def note(self) -> str:
         """Return the sentence the panel prints under this band."""
-        if not self.reporting:
+        if self.reporting is None and not self.steps:
+            return "no step recorded; this record does not say which silence"
+        if self.reporting is False:
             return "no Newton steps: this rung's model takes no Newton callback"
         if not self.steps:
             if not self.closed:
@@ -131,15 +143,24 @@ class ConvergenceModel:
     state: ConvergenceState = "idle"
     bands: list[Band] = field(default_factory=list)
     omitted_samples: int = 0
+    note: str = ""
+    """A sentence the summary ends with, as a replayed record's served solve."""
 
     def reset(self) -> None:
         """Return to the state of a run that has not reported anything."""
         self.state = "idle"
         self.bands = []
         self.omitted_samples = 0
+        self.note = ""
 
     def rung(
-        self, name: str, stage: int, index: int, total: int, reporting: bool, tolerance: float
+        self,
+        name: str,
+        stage: int,
+        index: int,
+        total: int,
+        reporting: bool | None,
+        tolerance: float,
     ) -> None:
         """Open a band for a rung the solve has announced; ``total`` is accepted and ignored."""
         del total
@@ -152,7 +173,7 @@ class ConvergenceModel:
                 name=str(name),
                 stage=int(stage),
                 index=int(index),
-                reporting=bool(reporting),
+                reporting=None if reporting is None else bool(reporting),
                 tolerance=float(tolerance),
             )
         )
@@ -225,6 +246,8 @@ class ConvergenceModel:
         text = f"{rungs}, {steps} Newton step{'s' if steps != 1 else ''}: {tail}"
         if self.omitted_samples:
             text += f" ({self.omitted_samples} sample(s) omitted: not positive)"
+        if self.note:
+            text += f". {self.note}"
         return text
 
     @property

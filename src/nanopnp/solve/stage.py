@@ -303,7 +303,15 @@ class SolveStage:
 
         def on_rung(index: int, rung: Rung) -> None:
             current[0] = index
-            history.append({"name": rung.name, "stage": rung.stage, "steps": []})
+            history.append(
+                {
+                    "name": rung.name,
+                    "stage": rung.stage,
+                    "reporting": reporting[index],
+                    "tolerance": settings.relative_tolerance,
+                    "steps": [],
+                }
+            )
             check_cancelled(cancel, f"rung {rung.name!r}")
             report(progress, LOAD_FRACTION + span * index / total, f"rung {rung.name}")
             if hook is not None:

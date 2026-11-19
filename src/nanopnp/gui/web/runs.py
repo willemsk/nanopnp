@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import math
 from collections.abc import Callable, Sequence
@@ -17,17 +18,22 @@ from nanopnp.gui.solver import RunRequest, SolverProcess
 from nanopnp.gui.web.plane import SERIES, Plane
 from nanopnp.gui.web.queue import Entry, Queue
 from nanopnp.io.artefact import SWEEP_SCHEMA
+from nanopnp.io.manifest import MANIFEST_FILENAME, RUN_RECORD_FILENAME
 from nanopnp.io.project import FOLDERS, RUNS_FOLDER, STORE_FOLDER, SWEEPS_FOLDER, ItemKind
-from nanopnp.io.store import atomic_write_bytes
+from nanopnp.io.store import Store, atomic_write_bytes
+from nanopnp.plot.data import NewtonRung, newton_history
 from nanopnp.sweep.collect import collect
 from nanopnp.sweep.document import Axis, load_sweep, loads_sweep
 from nanopnp.sweep.plan import build_plan, read_plan, write_plan
 
 __all__ = [
+    "OTHER_SOLVE_NOTE",
     "RUNG_COLUMNS",
+    "SERVED_NOTE",
     "convergence_plane",
     "queue_run",
     "queue_sweep",
+    "recorded_convergence",
     "rung_rows",
     "sweep_file",
     "sweep_label",
@@ -207,9 +213,102 @@ def queue_sweep(
 def _silence(band: Band) -> str:
     if band.steps:
         return ""
+    if band.reporting is None:
+        return "no step recorded"
     if not band.reporting:
         return "no Newton steps"
     return "converged on entry" if band.closed else ""
+
+
+SERVED_NOTE = (
+    "This run's solve was served from the store; the steps are those of the solve that made it"
+)
+"""The note a replayed record adds when its run took its solve from the store."""
+
+
+def recorded_convergence(directory: Path) -> ConvergenceModel | None:
+    """Return a recorded run's convergence, replayed from its solve's stored Newton history.
+
+    None where the run reached no solve, the store no longer holds it, or the solve predates the
+    history. A rung recorded without its tolerance takes the run's resolved Newton tolerance.
+    """
+    record = json.loads((directory / RUN_RECORD_FILENAME).read_text(encoding="utf-8"))
+    artefacts = record.get("artefacts")
+    solve = artefacts.get("solve") if isinstance(artefacts, dict) else None
+    root = record.get("store")
+    if not isinstance(solve, dict) or not root:
+        return None
+    artefact = Store(Path(str(root))).get(str(solve["schema"]), str(solve["hash"]), mark=False)
+    rungs = None if artefact is None else newton_history(artefact)
+    if artefact is None or rungs is None:
+        return None
+    # The solve's key holds the tolerance it ran with, whatever the release's default now is.
+    newton = artefact.parameters.get("newton")
+    keyed = newton.get("relative_tolerance") if isinstance(newton, dict) else None
+
+    model = ConvergenceModel()
+    for index, rung in enumerate(rungs):
+        tolerance = rung.tolerance if rung.tolerance is not None else keyed
+        model.rung(
+            rung.name,
+            rung.stage,
+            index,
+            len(rungs),
+            rung.reporting,
+            float(tolerance) if isinstance(tolerance, int | float) else math.nan,
+        )
+        model.bands[-1].forced_known = rung.forced is not None
+        trials = rung.trials if rung.trials is not None else [1] * len(rung.iteration)
+        forced = rung.forced if rung.forced is not None else [False] * len(rung.iteration)
+        for step in range(len(rung.iteration)):
+            model.step(
+                int(rung.iteration[step]),
+                float(rung.residual[step]),
+                float(rung.update[step]),
+                float(rung.damping[step]),
+                int(trials[step]),
+                bool(forced[step]),
+            )
+    model.settle(finished=True)
+    model.count_omitted()
+    stages = record.get("stages")
+    if not _made_by(rungs, directory):
+        model.note = OTHER_SOLVE_NOTE
+    elif isinstance(stages, list) and any(
+        isinstance(entry, dict) and entry.get("stage") == "solve" and entry.get("cached")
+        for entry in stages
+    ):
+        model.note = SERVED_NOTE
+    return model
+
+
+OTHER_SOLVE_NOTE = (
+    "The store's history under this solve's key is not the one this run recorded: its rungs or "
+    "their steps differ from the run's manifest, so these steps are another solve's"
+)
+"""The note a replayed record adds when the stored history differs from the run's manifest."""
+
+
+def _made_by(rungs: Sequence[NewtonRung], directory: Path) -> bool:
+    # A rebuild, or a warm-started solve of an evicted key, rewrites the history under the key the
+    # record names; the run's own manifest keeps each rung's name and Newton iterations.
+    try:
+        manifest = json.loads((directory / MANIFEST_FILENAME).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return True
+    solver = manifest.get("solver") if isinstance(manifest, dict) else None
+    run = solver.get("run") if isinstance(solver, dict) else None
+    recorded = run.get("rungs") if isinstance(run, dict) else None
+    if not isinstance(recorded, list):
+        return True
+    if len(recorded) != len(rungs):
+        return False
+    for entry, rung in zip(recorded, rungs, strict=True):
+        newton = entry.get("newton") if isinstance(entry, dict) else None
+        steps = newton.get("iterations", 0) if isinstance(newton, dict) else 0
+        if entry.get("rung") != rung.name or steps != len(rung.iteration):
+            return False
+    return True
 
 
 def convergence_plane(model: ConvergenceModel) -> Plane:
@@ -289,7 +388,7 @@ def rung_rows(model: ConvergenceModel) -> list[dict[str, str]]:
                 "key": str(index),
                 "number": str(index + 1),
                 "rung": band.name,
-                "steps": str(len(band.steps)) if band.reporting else "—",
+                "steps": str(len(band.steps)) if band.reporting or band.steps else "—",
                 "closed_on": _CLOSED[band.closed_on()],
                 "last": "—"
                 if last is None

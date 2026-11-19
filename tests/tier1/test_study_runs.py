@@ -2,11 +2,27 @@
 
 from __future__ import annotations
 
+import json
 import math
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
 
+from nanopnp.api.case import Case
+from nanopnp.api.session import Session
+from nanopnp.gui.convergence import ConvergenceModel
 from nanopnp.gui.run_model import RunModel
 from nanopnp.gui.solver import Finished, Iteration, RunEvent, Rung, Stage, Started
-from nanopnp.gui.web.runs import convergence_plane, rung_rows
+from nanopnp.gui.web.runs import (
+    OTHER_SOLVE_NOTE,
+    SERVED_NOTE,
+    convergence_plane,
+    recorded_convergence,
+    rung_rows,
+)
+from nanopnp.io.store import Store
+from nanopnp.solve.state import NEWTON_HISTORY_KEY
+from nanopnp.validation.charged_tube import write_charged_tube
 
 TOLERANCE = 1e-8
 
@@ -90,3 +106,115 @@ def test_ver44_the_unfolded_run_names_each_silence_and_what_closed_each_rung() -
     drawing = convergence_plane(served.convergence).json()
     assert drawing["layers"] == []
     assert "served from the artefact store" in drawing["notes"][0]
+
+
+class _Feed:
+    """A solve hook that drives a convergence model, as the shell's queue does."""
+
+    def __init__(self, model: ConvergenceModel) -> None:
+        self.model = model
+
+    def rung(
+        self, name: str, stage: int, index: int, total: int, reporting: bool, tolerance: float
+    ) -> None:
+        self.model.rung(name, stage, index, total, reporting, tolerance)
+
+    def step(
+        self,
+        iteration: int,
+        residual: float,
+        update: float,
+        damping: float,
+        trials: int,
+        forced: bool,
+    ) -> None:
+        self.model.step(iteration, residual, update, damping, trials, forced)
+
+    def rung_solved(self, name: str, seconds: float, iterations: int) -> None:
+        del name, seconds, iterations
+
+
+def _bands(model: ConvergenceModel) -> list[dict[str, object]]:
+    return [layer for layer in convergence_plane(model).json()["layers"] if layer["kind"] != "line"]
+
+
+def test_ver44_a_recorded_run_replays_the_convergence_its_solve_reported(tmp_path: Path) -> None:
+    # A replay that dropped which rungs report, their tolerance or a forced step would credit a
+    # recorded rung to a test, or a silence, its solve never showed.
+    live = ConvergenceModel()
+    session = Session(Store(tmp_path / "store", runs=tmp_path / "runs"))
+    run = session.run(Case.load(write_charged_tube(tmp_path / "tube")), on_solve=_Feed(live))
+    live.settle(finished=True)
+    live.count_omitted()
+    replayed = recorded_convergence(run.directory)
+    assert replayed is not None
+    assert live.bands and any(band.steps for band in live.bands)
+    assert rung_rows(replayed) == rung_rows(live)
+    assert _bands(replayed) == _bands(live)
+    assert convergence_plane(replayed).json() == convergence_plane(live).json()
+    assert replayed.summary == live.summary
+    assert replayed.note == ""
+
+    # Served from the store, the record replays its maker's steps and says so; a run whose solve
+    # was its own, its earlier stages served, says nothing of the kind.
+    again = Session(Store(tmp_path / "store", runs=tmp_path / "again")).run(
+        Case.load(tmp_path / "tube" / "case.yaml")
+    )
+    served = recorded_convergence(again.directory)
+    assert served is not None and served.summary.endswith(SERVED_NOTE)
+    assert rung_rows(served) == rung_rows(live)
+    text = (tmp_path / "tube" / "case.yaml").read_text(encoding="utf-8")
+    other = tmp_path / "tube" / "bias.yaml"
+    other.write_text(text.replace("bias_V: 0.05", "bias_V: 0.04"), encoding="utf-8")
+    biased = Session(Store(tmp_path / "store", runs=tmp_path / "biased")).run(Case.load(other))
+    assert [stage.cached for stage in biased.stages if stage.name == "mesh"] == [True]
+    own = recorded_convergence(biased.directory)
+    assert own is not None and own.note == ""
+
+    history = run.artefacts["solve"].payload[NEWTON_HISTORY_KEY]
+    original = history.read_text(encoding="utf-8")
+    stepped = next(index for index, band in enumerate(live.bands) if band.steps)
+
+    def replay_edited(edit: Callable[[list[dict[str, Any]]], None]) -> ConvergenceModel:
+        record = json.loads(original)
+        edit(record["rungs"])
+        history.write_text(json.dumps(record), encoding="utf-8")
+        found = recorded_convergence(run.directory)
+        assert found is not None
+        return found
+
+    # A forced last step closes on the residual test even with its update below the tolerance;
+    # a step that does not say whether it was forced is credited to neither test.
+    def forced_below(rungs: list[dict[str, Any]]) -> None:
+        last = rungs[stepped]["steps"][-1]
+        last["update"], last["forced"] = 0.1 * live.bands[stepped].tolerance, True
+
+    assert replay_edited(forced_below).bands[stepped].closed_on() == "residual"
+
+    def unsaid(rungs: list[dict[str, Any]]) -> None:
+        forced_below(rungs)
+        for step in rungs[stepped]["steps"]:
+            del step["forced"]
+
+    assert replay_edited(unsaid).bands[stepped].closed_on() == ""
+
+    # A history rewritten under the key, by a rebuild or a warm start, is named as another solve's.
+    def rewritten(rungs: list[dict[str, Any]]) -> None:
+        rungs[stepped]["steps"].pop()
+
+    assert replay_edited(rewritten).summary.endswith(OTHER_SOLVE_NOTE)
+
+    # A history written before the rungs recorded whether they report claims neither silence,
+    # and takes the tolerance the solve was keyed with.
+    def older_history(rungs: list[dict[str, Any]]) -> None:
+        for rung in rungs:
+            del rung["reporting"], rung["tolerance"]
+
+    older = replay_edited(older_history)
+    silent = [band for band in older.bands if not band.steps]
+    assert silent, "the charged tube's ladder has a rung with no step"
+    for band in silent:
+        assert band.note() == "no step recorded; this record does not say which silence"
+    assert [band.tolerance for band in older.bands] == [band.tolerance for band in live.bands]
+    notes = {layer["label"]: layer["note"] for layer in _bands(older)}
+    assert {notes[band.name] for band in silent} == {"no step recorded"}
