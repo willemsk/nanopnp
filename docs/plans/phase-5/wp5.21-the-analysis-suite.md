@@ -247,8 +247,8 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
   NOTE; done when `test_study_runs.py` and VER-78 pass. **Executor:** main
 - [x] 31a9e32 8. `screens.py`, `gui/web/analysis.py`, `analysis_tools.py`, `pages.py`, `frame.py`, `study_tools.py`,
   `gui/solver.py` (D3 to D5, D8 to D10); VER-78 (a); done when VER-78 passes. **Executor:** main
-- [ ] 9. `states.py` `solved`; VER-78 (o) (D11); done when (o) passes. **Executor:** main
-- [ ] 10. Compaction checkpoint. **Executor:** main
+- [x] 1f2bcbf 9. `states.py` `solved`; VER-78 (o) (D11); done when (o) passes. **Executor:** main
+- [x] 10. Compaction checkpoint. **Executor:** main
 - [ ] 11. `render_shell.py` group `analysis` (D12); done when its check passes. **Executor:** general-purpose on
   Sonnet, high
 - [ ] 12. `/np-gui render shell`, `review`, `publish`: the round (D12); done when the digest is published.
