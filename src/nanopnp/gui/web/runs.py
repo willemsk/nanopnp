@@ -34,6 +34,7 @@ __all__ = [
     "RUNG_COLUMNS",
     "SERVED_NOTE",
     "convergence_chart",
+    "queue_rebuild",
     "queue_run",
     "queue_sweep",
     "recorded_convergence",
@@ -123,6 +124,24 @@ def queue_run(
     entry = _queued(
         queue, f"{study} run" if upto is None else f"{study} to {upto}", request, study=study
     )
+    queue.pump()
+    return entry
+
+
+def queue_rebuild(queue: Queue, project: Project, run: Path, *, threads: int = 1) -> Entry:
+    """Queue the rebuild of a run whose solve was cleaned from the store (QR-08).
+
+    The entry fails naming each recorded scalar the rebuilt run moved.
+    """
+    study = run.parent.name
+    request = RunRequest(
+        case=str(run / "case.yaml"),
+        store=str(project.root / STORE_FOLDER),
+        runs=str(project.root / RUNS_FOLDER),
+        threads=threads,
+        rebuild=str(run),
+    )
+    entry = _queued(queue, f"{study} rebuild {run.name[:12]}", request, study=study)
     queue.pump()
     return entry
 

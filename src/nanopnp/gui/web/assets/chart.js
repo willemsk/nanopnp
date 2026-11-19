@@ -212,6 +212,14 @@
       },
     };
     const plot = new uPlot(opts, data, slot);
+    // A click on a sample asks about it: its panel, its x and the series it belongs to.
+    plot.over.addEventListener('click', () => {
+      const at = plot.cursor.idx;
+      if (at === null || at === undefined || typeof emitEvent !== 'function') return;
+      const near = plot.series.findIndex((s, k) => k > 0 && data[k][at] !== null && data[k][at] !== undefined);
+      if (near < 1) return;
+      emitEvent('chart_pick', { host: state.hostId, panel: index, x: data[0][at], series: series[near - 1].id });
+    });
     const [low, high] = opening(panel, data);
     plot.setScale('x', { min: low, max: high });
     return { plot, omitted, x: [low, high] };

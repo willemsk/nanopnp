@@ -74,6 +74,7 @@ __all__ = [
     "ion_text",
     "mesh_quality",
     "mesh_stored",
+    "palette_stops",
     "physics_chart",
     "physics_plane",
     "plane",
@@ -331,6 +332,11 @@ def _extent(
     # The axis is the drawing's edge, unless a section across it reaches below r = 0.
     low = r0 - pad if r0 < 0.0 else 0.0
     return low, r1 + pad, z0 - pad, z1 + pad
+
+
+def palette_stops(palette: str) -> list[str]:
+    """Return a colour map's stops as the (r, z) view's colour bar draws them."""
+    return _stops(lookup_table(palette))
 
 
 def _stops(table: np.ndarray) -> list[str]:

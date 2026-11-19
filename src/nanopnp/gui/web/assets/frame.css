@@ -1644,3 +1644,49 @@ body .parts .parts-row[aria-pressed="true"] {
   white-space: normal;
   text-align: left;
 }
+
+/* The Analysis suite: its tiles, two to a row where the view is wide enough. */
+.analysis-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  gap: var(--gap);
+}
+.analysis-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
+  padding: var(--pad);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+/* A map tile's (r, z) view, as the frame's canvas draws, in a box of its own. */
+.tile-map {
+  position: relative;
+  height: 22rem;
+  border: 1px solid var(--line);
+  background: var(--canvas-plot);
+}
+.tile-map canvas {
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+}
+.tile-map canvas:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.tile-chart .chart {
+  height: 20rem;
+  flex: none;
+}
+.tile-scene {
+  width: 100%;
+  height: 22rem;
+  border: 1px solid var(--line);
+  background: var(--canvas-3d);
+}
+.probe-row {
+  gap: var(--gap);
+  font-size: var(--text-sm);
+}
