@@ -100,6 +100,7 @@ __all__ = [
     "protonation_charges",
     "qoi_rows",
     "radial_cutline",
+    "read_newton_history",
     "reduced_map",
     "region_drawing",
     "region_edges",
@@ -1167,26 +1168,48 @@ def case_curves(electrolyte: Electrolyte, concentration_M: float) -> list[Correc
 
 @dataclass(frozen=True)
 class NewtonRung:
-    """One continuation rung's Newton steps."""
+    """One continuation rung's Newton steps.
+
+    Parameters
+    ----------
+    forced
+        Whether each step was forced; None where a step does not say.
+    reporting
+        Whether the rung's model takes a Newton callback; None where the history predates it.
+    tolerance
+        The rung's relative tolerance; None where the history predates it.
+    """
 
     name: str
     iteration: np.ndarray
     residual: np.ndarray
     update: np.ndarray
     damping: np.ndarray
+    stage: int = 0
+    trials: np.ndarray | None = None
+    forced: np.ndarray | None = None
+    reporting: bool | None = None
+    tolerance: float | None = None
 
 
 def newton_history(artefact: Artefact) -> list[NewtonRung] | None:
     """Return the recorded rungs; None for a solve cached before the history was written."""
-    import numpy as np
-
     path = _payload(artefact, NEWTON_HISTORY_KEY)
     if path is None:
         return None
+    return read_newton_history(path)
+
+
+def read_newton_history(path: Path) -> list[NewtonRung]:
+    """Return the rungs of a solve's ``newton_history.json``."""
+    import numpy as np
+
     record = cast("dict[str, Any]", decode_floats(json.loads(path.read_text(encoding="utf-8"))))
     rungs = []
     for rung in record["rungs"]:
         steps = rung["steps"]
+        reporting = rung.get("reporting")
+        tolerance = rung.get("tolerance")
         rungs.append(
             NewtonRung(
                 name=rung["name"],
@@ -1194,6 +1217,17 @@ def newton_history(artefact: Artefact) -> list[NewtonRung] | None:
                 residual=np.array([s["residual"] for s in steps], dtype=np.float64),
                 update=np.array([s["update"] for s in steps], dtype=np.float64),
                 damping=np.array([s["damping"] for s in steps], dtype=np.float64),
+                stage=int(rung.get("stage", 0)),
+                trials=np.array([s.get("trials", 1) for s in steps], dtype=np.int64),
+                # A step that does not say whether it was forced cannot be credited to the
+                # update test (NUM-16), so the rung keeps no forced record at all.
+                forced=(
+                    np.array([bool(s["forced"]) for s in steps], dtype=bool)
+                    if all("forced" in s for s in steps)
+                    else None
+                ),
+                reporting=None if reporting is None else bool(reporting),
+                tolerance=None if tolerance is None else float(tolerance),
             )
         )
     return rungs

@@ -328,9 +328,20 @@ def solve_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figur
         damping_ax = figure.add_subplot(bottom[0, 1])
         _convergence(figure, residual_ax, damping_ax, rungs)
     elif fields is not None:
-        why = "not recorded for this solve" if history is None else "not reported by this model"
-        figure.text(0.5, 0.01, f"Newton history {why}", ha="center")
+        figure.text(0.5, 0.01, f"Newton history: {_silence(history)}", ha="center")
     return figure
+
+
+def _silence(history: list[data.NewtonRung] | None) -> str:
+    # Every rung is empty here; which silence it is depends on whether its model reports.
+    if history is None:
+        return "not recorded for this solve"
+    reporting = {rung.reporting for rung in history}
+    if reporting == {False}:
+        return "not reported by this model"
+    if None in reporting:
+        return "no step recorded; this record does not say which silence"
+    return "no step taken: each rung converged on entry or takes no Newton callback"
 
 
 def _flatten(prefix: str, value: object, rows: list[tuple[str, str]]) -> None:

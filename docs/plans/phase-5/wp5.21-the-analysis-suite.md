@@ -236,7 +236,7 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
   difference tests pass and the `physics-reviewer` has read it. **Executor:** main
 - [x] bb23417 2. `post/export.py` (the fields file), `gui/render.py` (`FieldsRequest`, `document`, `colour_range`,
   `host_page`) (D2, D3); done when `test_analysis.py`'s file test passes. **Executor:** main
-- [ ] 3. `io/project.py`, `api/project.py` (comparisons, `sweeps`, `run_state`, `rebuild`); §5.3.5's NOTE (D5, D9);
+- [x] 835274a 3. `io/project.py`, `api/project.py` (comparisons, `sweeps`, `run_state`, `rebuild`); §5.3.5's NOTE (D5, D9);
   done when `test_project.py`'s comparison and rebuild tests pass. **Executor:** main
 - [ ] 4. `solve/stage.py`, `plot/data.py:newton_history`, `gui/convergence.py`, `gui/web/runs.py` (D8); done when
   `test_study_runs.py`'s replay test passes and the `physics-reviewer` has read it. **Executor:** main
