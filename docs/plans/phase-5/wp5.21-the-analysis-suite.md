@@ -8,21 +8,18 @@ clause.
 
 ## In brief
 
-**What changes.** The sixth suite, Analysis, opens a finished run. It shows the field as a map, with a cut along the
-axis and probes you place, or on its mesh in 3D. It also shows the current against the voltage, the run's numbers and
-its changed settings. Comparison saves two runs and shows them side by side on one scale, as maps or in 3D as you
-ruled, or shows their difference where both have fluid. As you ruled, every plot moves to a borrowed chart library
-whose axes you set, and you can choose any Matplotlib colour map. A run cleaned from the store is rebuilt on request
-and checked against its record. Study's recorded runs show their convergence.
+**What changes.** The sixth suite, Analysis, opens a finished run: its field as a map, with a cut along the axis and
+probes you place, or on its mesh in 3D; the current against the voltage; its numbers and changed settings. Comparison
+saves two runs, side by side on one scale as maps or in 3D, or as their difference where both have fluid. As you ruled,
+every plot moves to a borrowed chart library whose axes you set, with any Matplotlib colour map. A run cleaned from the
+store is rebuilt on request and checked against its record. Study's recorded runs show their convergence.
 
-**Cost.** About eight sessions, 12 to 18 agent hours and 16 touches with the round. The Meso suite measured five
-sessions; your rulings add about two. The install grows by about 10 MB. The checks before each push take about half a
-minute more.
+**Cost.** About eight sessions, 12 to 18 agent hours and 16 touches with the round; your rulings add about two. The
+install grows by about 10 MB; the checks before each push, about half a minute.
 
 **What could go wrong.** The 3D viewer could fail to draw in the test browser; it drew a test square here, and a
-failure shows its reason in place of a blank view. Moving the convergence plot could change what it claims of a solve;
-its tests carry over unweakened. A rebuilt run could differ from its record; the rebuild compares every number and
-names each one that moved.
+failure shows its reason. Moving the convergence plot could change what it claims of a solve; its tests carry over
+unweakened. A rebuilt run could differ from its record; the rebuild names each moved number.
 
 **Your call.** At the round on 2WCD: the tiles' layout, whether a run opens on the map or in 3D, and where a probe's
 values stand. *Recommendation:* rule them on the drawn screens.
@@ -44,9 +41,9 @@ design document's renderer table, Analysis rows, rows Q37 to Q41, links 3 and 4,
 |---|---|---|
 | D1 Fields at points, the difference | `post/fields.py`, NumPy only: `field_at` interpolates a `SolutionFields` quantity linearly on its P2 cells split in four, NaN outside its domain; `field_difference` samples both runs on one cell-centred (r, z) grid over their fluids' overlap, NaN where either lacks the cell, `second − first`. `plot/data.py:sampled` calls `field_at` | AG6; decided by the plan |
 | D2 A run's fields in the server | A render child writes `<run>/viewer/fields.npz` from `open_run(run).fields`, with the solve's hash; the server, importing no NGSolve, samples maps, cuts, probes and differences from it | VER-43's restated NOTE; decided by the plan |
-| D3 The field on the mesh | `/vendor/webgui` serves the shipped renderer; a workbench render writes `scene-<field>.json` once, which an iframe's host page fetches when a tile opens it. Comparison's pair takes the joint range | REV-28, REV-30, VER-44, CON-09; AU3, ruled by the author |
-| D4 The suite | Tools `explorer` and `compare` at `/analysis/<tool>`, `view="page"`. The explorer picks a study's run or sweep point; tiles: Field (a map, the cut's line and probes; *On the mesh*), I–V, Quantities (numbers, deviations, folder; Q37 to Q39), Axial cut. A click places the cut or a probe; typed values move them; dragging is WP5.23's | WB-06 links 3, 4; REV-238; decided by the plan |
-| D5 Comparisons | `nanopnp/comparison/v0.6`: `name`, `runs` (two run folders relative to the project), `quantity`, `view` (`difference`, `maps`, `mesh`), `colour_map`, `range`; `Project.new_comparison`, `comparison`, `set_comparison`; a missing run is a problem. Any two runs, a quantity both carry | FR-32, WB-04; AU2, AU3, ruled by the author |
+| D3 The field on the mesh | `/vendor/webgui` serves the shipped renderer; a workbench render writes `scene-<field>[-<range>].json` once, which an iframe's host page fetches when a tile opens it. Comparison's pair takes the joint range, in its own file | REV-28, REV-30, VER-44, CON-09; AU3, ruled by the author |
+| D4 The suite | Tools `explorer` and `compare` at `/analysis/<tool>`, `view="page"`. The explorer picks a study's run or sweep point; tiles: Field (a map, the cut's line and probes; *On the mesh*), I–V, Quantities (numbers, deviations, folder; Q37 to Q39), Axial cut. A click places the cut or a probe; typed values move them; a row's *Remove* unlinks one; dragging is WP5.23's | WB-06 links 3, 4; REV-238; decided by the plan |
+| D5 Comparisons | `nanopnp/comparison/v0.6`: `name`, `runs` (two run folders relative to the project), `quantity`, `view` (`difference`, `maps`, `mesh`), `colour_map`, `range`; `Project.new_comparison`, `comparison`, `set_comparison`; a missing run is a problem. Any two runs, a quantity both carry. The pair's cut and probes stand on both maps; the cut's chart holds a series per run | FR-32, WB-04; AU2, AU3, ruled by the author |
 | D6 Plots | uPlot 1.6.32 at `assets/uplot/`, served at `/vendor/uplot`; `gui/web/chart.py:Chart`, `assets/chart.js`. Every XY plot moves: Electrolyte's two, Runs' convergence, the I–V, the cuts. Each axis linear, logarithmic or square root, its range typed; drag-zoom, hover | REV-253; AU1, ruled by the author |
 | D7 Colour maps | `matplotlib>=3.8` joins the `gui` extra; `gui/geometry.py:lookup_table` takes any registered name (`_r` reversed). Defaults: viridis; diverging where the range spans zero; a difference symmetric | WB-20; AU2, ruled by the author |
 | D8 A recorded run's convergence | The solve stage adds each rung's `reporting` and `tolerance` to `newton_history.json` (no key moves); `runs.py:recorded_convergence` replays it; a rung without `reporting` claims neither silence. Runs' records are buttons (`aria-pressed`) | REV-260, VER-44; decided by the plan |
@@ -59,7 +56,8 @@ design document's renderer table, Analysis rows, rows Q37 to Q41, links 3 and 4,
 
 **D1.**
 - `post/export.py:SolutionFields` holds `whole` and `fluid` as `(points_m, cells, fields)`: P2 Triangle_6 cells, SI
-  values, the log branch exponentiated at the nodes (`sampled_fields`). `fluid` is `mesh/primitives.py:ELECTROLYTE_DOMAINS`.
+  values, the log branch exponentiated at the nodes (`sampled_fields`). `fluid` is
+  `mesh/primitives.py:ELECTROLYTE_DOMAINS`.
 - `plot/data.py:sampled` uses Matplotlib's `LinearTriInterpolator` on `subdivided(cells)`, NaN outside; `axial_cutline`,
   `radial_cutline`, `field_values` (aliases `potential`, `u_r`, `u_z`) and `field_menu` call it. Matplotlib is the
   `plot` extra only (`pyproject.toml`), and `post` sits below `plot` (`modularity-layering.yaml`).
@@ -78,7 +76,10 @@ design document's renderer table, Analysis rows, rows Q37 to Q41, links 3 and 4,
 **D3.**
 - `render.py:render` writes `viewer/scene-<field>.json` and an `.html` that embeds the same JSON (REV-30's double
   write), sweeping stale `scene-*`. `host_document` sets `window.__nanopnp_viewer`.
-- `RENDERER_SOURCE` is a `file:` URI; `gui/web` serves no webgui. `pages.py` mounts `/vendor/molstar` and
+- `render` names its pair `scene-<field>` alone and unlinks every other `scene-*` in `viewer/`, so a second range of one
+  field overwrites the first.
+- `RENDERER_SOURCE` is a `file:` URI under `RENDERER_DIRECTORY`, `gui/assets/webgui/`, not `gui/web/assets/`;
+  `gui/web` serves no webgui. `pages.py` mounts `/vendor/molstar` and
   `/vendor/katex`. VER-78 (d) fails a request off the origin.
 - `shoot.cjs --self-check` drew a webgui unit square in this container's headless Chromium (19 November 2026).
 - A fixed range needs `funcmin`, `funcmax`, `autoscale` and `gui_settings` (knowledge 07/05; `render_charge`).
@@ -106,6 +107,9 @@ design document's renderer table, Analysis rows, rows Q37 to Q41, links 3 and 4,
   the driver on a square-root axis). Both are drawn on `plane.js`'s `plot` frame. `test_study_runs.py` asserts the
   bands, the lines kept inside them and the absent threshold.
 - `test_gui_screens.py:test_con09_the_vendored_libraries_are_unmodified` checks each file's sha256 in its `NOTICE.md`.
+- VER-44 omits and counts a sample no log axis can place; `ConvergenceModel.count_omitted` counts it today.
+- REV-253's WP5.18 points (the fitted range's shading, the dark key's swatch) and REV-260's lead with the conductance
+  are the round's (D12).
 
 **D7.** `gui/geometry.py:lookup_table(palette)` holds five fixed palettes. `ImageModel.rgba` draws NaN transparent.
 `plane.py:_stops` feeds the bars.
@@ -122,10 +126,15 @@ design document's renderer table, Analysis rows, rows Q37 to Q41, links 3 and 4,
 - `api/reproduce.py:reproduce(directory, store=…, progress, cancel)` loads `case.yaml` against the recorded base. It
   refuses a moved input or mesh and a solve served from the store, and returns `Reproduction` with its drifts.
 - `clean_store(everything=True)` leaves run folders. `render.py:_state_path` raises naming a removed state.
-- `gui/solver.py:_worker` runs a case or a sweep member.
+- `gui/solver.py:_worker` runs a case or a sweep member; `RunRequest` carries strings: `case`, `store`, `runs`, `plan`.
+- `Project.set_study_value(name, path, value)` sets a study's bias.
 
-**D11.** `states.py:STATES` has four states, none of them solved. `boot` imports `write_charged_tube` (pnp-ns,
-0.05 V). Its solve takes about 8 s (`render_shell.py`).
+**D11.** `states.py:STATES` has four states, none of them solved; `boot` refuses a state outside `STATES`. `boot`
+imports `write_charged_tube` (pnp-ns, 0.05 V). Its solve takes about 8 s (`render_shell.py`). `write_sweep` is
+`gui/web/runs.py`'s; `run_plan` is `api/sweep.py`'s.
+
+**Tests.** `test_project.py` walks the charged tube to `charge` and solves nothing. `test_study_runs.py` drives
+`RunModel` from a written `LADDER` and solves nothing.
 
 **D12.** `render_shell.py:filled_cache` walks 2WCD's study to `charge`; no group solves. Example 07, at
 `size_scale: 4`, runs in about five minutes on one core.
@@ -138,11 +147,13 @@ design document's renderer table, Analysis rows, rows Q37 to Q41, links 3 and 4,
 - `field_at(fields, quantity, r_nm, z_nm) -> ndarray`: `field_values`' choice of set and component. Points in nm;
   triangles `subdivided(cells)`; `cell_nm` is the median edge of those triangles; values are barycentric. Move
   `FIELD_ALIASES`, `field_values` and `subdivided` from `plot/data.py` to `post/fields.py`, and re-export them.
-- `GRID_CELLS = 1_000_000`. `FieldDifference(quantity, unit, r_nm, z_nm, first, second, difference)`, arrays
-  `[iz, ir]`. `field_difference(first, second, quantity, *, window_nm=None, cells=GRID_CELLS)`: the box is the two
-  fluids' point boxes intersected, with r ≥ 0, and the window. The spacing is `sqrt(area / cells)`. Each run is read
-  on its own set. The mask is `isfinite` of both fluids' sampling of a constant. Refuse a quantity either run lacks,
-  naming both runs' quantities.
+  `field_at` keeps the located split of the last four `(points, cells)` pairs, by identity, as `field_triangulation`
+  does, which then goes.
+- `GRID_CELLS = 1_000_000`. `FieldDifference(quantity, unit, r_nm, z_nm, first, second, difference)`, arrays `[iz, ir]`.
+  `field_difference(first, second, quantity, *, window_nm=None, cells=GRID_CELLS)`: the box is the two fluids' point
+  boxes intersected, with r ≥ 0, and the window. The spacing is `sqrt(area / cells)`; `n_r = ceil(width / spacing)`,
+  `n_z` likewise, centres at `low + (i + ½)·width / n_r`. Each run is read on its own set. The mask is `isfinite` of
+  both fluids' sampling of a constant. Refuse a quantity either run lacks, naming both runs' quantities.
 - `field_grid(fields, quantity, *, window_nm=None, cells=GRID_CELLS) -> (r_nm, z_nm, values)`: one run's map over its
   field's box, on the grid rule `field_difference` uses.
 - `joint_range(first, second, quantity) -> (low, high)` over both runs' nodal values.
@@ -156,12 +167,16 @@ design document's renderer table, Analysis rows, rows Q37 to Q41, links 3 and 4,
   None) and `bulk:<attribute>`.
 - `render.py`: `FieldsRequest(run)` posts `RenderedFields(path, solve, quantities)`. `RenderRequest` gains
   `document: bool = True` (False writes the JSON alone) and `colour_range: tuple[float, float] | None` (written as
-  `render_charge` writes its range). `host_page(scene_url, renderer_url, title)` fetches the scene, then initialises it
-  as `host_document` does.
+  `render_charge` writes its range). With a range the stem gains `-` and the range's 8-hex digest; the sweep keeps
+  the asked pair and the field's unranged pair, and a swept scene is rendered again when asked. The server reuses a
+  file of that name.
+  `host_page(scene_url, renderer_url, title)` fetches the scene, then initialises it as `host_document` does.
 
 **Item 3.**
-- `io/project.py:COMPARISON_SCHEMA` and `ComparisonFile` (`extra="forbid"`): `view` defaults to `difference`;
-  `colour_map` and `range` default to None.
+- `io/project.py:COMPARISON_SCHEMA` and `ComparisonFile` (`extra="forbid"`): `quantity` defaults to `potential`;
+  `view` to `difference`; `colour_map` and `range` to None.
+- The test's module fixture: `write_charged_tube`, `import_case`, `session().run` of the study; then
+  `set_study_value(study, "boundary_conditions.bias_V", -0.05)` and a second run.
 - `Project.new_comparison(name, first, second) -> Path`, `comparison(name)`, `set_comparison(name, **values)` (read
   back before it is written), and `sweeps(study) -> tuple[Path, ...]` (folders holding `plan.json`).
 - `Project.run_state(run)` and `Project.rebuild(run, *, progress=None, cancel=None) -> Reproduction`.
@@ -173,17 +188,22 @@ design document's renderer table, Analysis rows, rows Q37 to Q41, links 3 and 4,
 - `Band.reporting: bool | None`. None notes "no step recorded; this record does not say which silence".
 - `recorded_convergence(directory) -> ConvergenceModel | None`. A missing tolerance takes the resolved case's
   `newton.relative_tolerance`. A record whose `solve` stage is `cached` adds the served note.
+- The replay test solves the charged tube once with `on_solve` a hook that feeds a `ConvergenceModel`, then replays
+  the run's directory.
 
 **Item 6** (Sonnet). Copy the tarball's `dist/uPlot.iife.min.js`, `dist/uPlot.min.css` and `LICENSE` (as
 `LICENSE.uplot`) into `src/nanopnp/gui/web/assets/uplot/`, with a `NOTICE.md` laid out as KaTeX's. Mount `/vendor/uplot`
-and `/vendor/webgui` in `pages.py`. Add `uplot` to the CON-09 parametrisation. Add `matplotlib>=3.8` to the `gui`
-extra and run `uv lock`. Check: `uv run pytest tests/tier1/test_gui_screens.py -k con09`.
+and `/vendor/webgui` (from `render.py:RENDERER_DIRECTORY`) in `pages.py`. Add `uplot` to the CON-09 parametrisation. Add
+`matplotlib>=3.8` to the `gui` extra and run `uv lock`. Check: `uv run pytest tests/tier1/test_gui_screens.py -k con09`.
 
 **Item 7.**
 - `Chart(axes, series, bands, marks, panels)` serialises; each axis has `scale` (`linear`, `log`, `sqrt`) and
   `range`.
-- `chart.js:nano.chart(hostId, spec)` builds uPlot. A log axis takes values, not log10. Silent rungs are null gaps.
-  Bands are drawn in a `draw` hook. Axis controls are NiceGUI fields under the chart.
+- `chart.js:nano.chart(hostId, spec)` builds uPlot. A log axis takes values, not log10; it nulls a value ≤ 0, and the
+  chart's note counts it (VER-44). Silent rungs are null gaps. Bands are drawn in a `draw` hook. Axis controls are
+  NiceGUI fields under the chart.
+- `lookup_table` looks up its five own names first (`diverging` is the diverging default, `diverging_dark` on the dark
+  theme), then `matplotlib.colormaps`; `Palette` becomes `str`.
 - `convergence_chart` and `electrolyte_chart` replace the two `Plane("plot")` builders. `test_study_runs.py` reads
   the chart, its assertions unchanged in meaning.
 
@@ -191,13 +211,15 @@ extra and run `uv lock`. Check: `uv run pytest tests/tier1/test_gui_screens.py -
 - `gui/web/analysis.py:AnalysisModel` reads the runs, the sweeps, `run_state` and the fields files, keeping four, and
   the comparisons. `analysis_tools.py`.
 - Routes under `/api/analysis/`: `scene?run=&field=` (the JSON file), `view?run=&field=&range=` (the host page),
-  `image?run=&quantity=` (one run's map) and `compare/{name}/image?which=first|second|difference`.
+  `image?run=&quantity=` (one run's map), `compare/{name}/image?which=first|second|difference` and
+  `compare/{name}/cut`.
+- `RunRequest.rebuild: str | None`, the run directory; the child opens `Project(<runs>/..)`.
 - The cut is a `line` layer and probes a `points` layer. A tile is ready once its canvas, chart or iframe flag
   (ready or error) has drawn.
 
 **Item 9.** `boot("solved")`: as `charged-tube`; then `session.run(study)` written, `write_sweep` over
 `boundary_conditions.bias_V` `[-0.05, 0.05]`, `run_plan`, `collect`, and `new_comparison("tube-bias", run, member at
-−0.05 V)`. `solved` stays out of `STATES`.
+−0.05 V)`. `solved` stays out of `STATES`; `boot`'s guard admits it.
 
 **Item 11** (Sonnet). In `render_shell.py`, group `analysis`. Copy the 2WCD cache. Sweep its study over `bias_V`
 `[-0.1, -0.05, 0.05, 0.1]`. Add a linked variant flipping one charged residue, a study over it at 0.05 V, and a
@@ -236,12 +258,12 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
 
 | Test | Tier | Identifiers | Oracle and tolerance | Command |
 |---|---|---|---|---|
-| `tests/tier1/test_analysis.py` | 1 | FR-32 (AG6) | Two `ModelSolution`s populated as `test_field_export.py:_populated`, but linear, on cylinder pores of radius 2 and 2.5 nm at different `maxh`, through `sampled_fields`: each scalar's difference is the analytic one at every unmasked cell to 10⁻¹⁰ of its range (P2 holds a linear field; the split interpolates it exactly); one run twice gives exactly 0.0; a cell 10⁻³ nm inside both fluids is kept, one in either membrane or past either box NaN; the potential is masked to the fluids' overlap | `uv run pytest tests/tier1/test_analysis.py` |
+| `tests/tier1/test_analysis.py` | 1 | FR-32 (AG6) | Two `ModelSolution`s populated as `test_field_export.py:_populated`, but linear, on cylinder pores of radius 2 and 2.5 nm at different `maxh`: each scalar's difference is the analytic one at every unmasked cell to 10⁻¹⁰ of its range (P2 holds a linear field; the split interpolates it exactly); one run twice gives exactly 0.0; a cell 10⁻³ nm inside both fluids is kept, one in either membrane or past either box NaN; the potential is masked to the fluids' overlap. Built by `fields_of` | `uv run pytest tests/tier1/test_analysis.py` |
 | same | 1 | FR-27 | A `SolutionFields` written to the fields file reads back array-equal, with its solve hash | same |
 | `tests/tier1/test_project.py` | 1 | FR-32, FR-27, QR-08 | A comparison of the charged tube's runs is written, read back, listed and exported with its runs; its run removed, a problem, not a refusal. After `clean_store(everything=True)`, `run_state` is `removed`; `rebuild` returns the record's solve hash to the store and every quantity within 10⁻⁶ | `uv run pytest tests/tier1/test_project.py` |
-| `tests/tier1/test_study_runs.py` | 1 | VER-44 | The charged tube solved live and its stored history replayed by `recorded_convergence` give equal rung rows and chart bands; a history without `reporting` notes neither silence; the existing assertions hold over the chart | `uv run pytest tests/tier1/test_study_runs.py` |
-| `tests/tier1/test_gui_screens.py` | 1 | VER-78, CON-09, VER-44 | (a) every state loads `/analysis/<tool>`; (o) in `solved` the explorer draws its run's map, a two-point I–V and its conductance; *On the mesh* loads `/vendor/webgui/webgui.js`, fetches `scene-*.json` from the origin, its flag ready; the comparison draws its difference, its pair's scenes one `funcmin` and `funcmax`; uPlot's files unmodified. Each assertion separate | `uv run pytest tests/tier1/test_gui_screens.py` |
-| The per-push VER-62 walks | 1, 2 | VER-62 | Unmoved by the history's new keys | `.claude/hooks/gate.sh run` |
+| `tests/tier1/test_study_runs.py` | 1 | VER-44 | The charged tube solved live and its stored history replayed by `recorded_convergence` give equal rung rows and chart bands; a history without `reporting` notes neither silence; a sample ≤ 0 on a log axis is null and counted; the existing assertions hold over the chart | `uv run pytest tests/tier1/test_study_runs.py` |
+| `tests/tier1/test_gui_screens.py` | 1 | VER-78, CON-09, VER-44 | (a) every state loads `/analysis/<tool>`; (o) in `solved` the explorer draws its run's map, a two-point I–V and its conductance; *On the mesh* loads `/vendor/webgui/webgui.js`, fetches `/api/analysis/scene` from the origin, its flag ready; the comparison draws its difference and its cut's two series, its pair's scenes one `funcmin` and `funcmax`; uPlot's files unmodified. Each assertion separate | `uv run pytest tests/tier1/test_gui_screens.py` |
+| The per-push VER-62 walks | 1, 2 | VER-62 | Unmoved by the history's keys | `.claude/hooks/gate.sh run` |
 
 ### Out of scope
 
@@ -251,4 +273,4 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
 
 ### Open questions
 
-None blocking. The tiles' layout, the opening view and the probes' place are the round's (D12).
+None blocking; the round's are in *Your call* (D12).
