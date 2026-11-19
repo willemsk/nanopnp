@@ -889,3 +889,18 @@ charge spread over at least 0.4 nm (AT4). The entry's heading ended "§8.2.44 AT
 
 > and the deposit's charge on a 3D grid with
 > its mean about the axis, for REV-240's overlay (AT2).
+
+## Amended 19 November 2026, at WP5.21's plan (§8.2.45 AU1 to AU3)
+
+At WP5.21's plan the author ruled that every plot is drawn by a borrowed chart library whose axes the user sets (AU1),
+that any Matplotlib colour map is offered per map (AU2), and that Comparison's pair is two maps on one grid, switched
+to two 3D field views on one range (AU3). The plan also took REV-260 and AN5's rebuild, which their rows placed in
+WP5.21. The entry read:
+
+> ### WP5.21 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
+>
+> Library step first: the difference of two runs' fields over the overlap of their fluid domains, in `post/`, masked where
+> either lacks the point (AG6). Then, after the prototype round on 2WCD (AJ8), the results explorer and its tiles: a field
+> drawn by `webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut.
+> Probes and cuts are linked to their field, and a run to its result (FR-33). Comparison shows two runs side by side on
+> one scale or as their difference. A run whose solution the store's clean-up removed rebuilds it when viewed (AN5). Q37 to Q41 move here. Tag `v0.6.0-alpha.21`.

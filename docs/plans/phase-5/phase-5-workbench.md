@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.19 merged (`v0.6.0-alpha.19`); WP5.20, the meso suite, delivered, its review and merge next; then WP5.21 to WP5.23 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.20 merged (`v0.6.0-alpha.19`, WP5.20's `v0.6.0-alpha.20` to be pushed); WP5.21, the Analysis suite, planned; then WP5.22, WP5.23 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -362,7 +362,7 @@ setup, Sweep and Runs. FR-31's suites, §2's v0.6 row, §8.1's Phase 5 deliverab
 capability list's rows for Q14 to Q20 and Q24 to Q30, and `redraw.cjs`'s address. Q14 to Q20 and Q28 to Q30 move
 here; VER-60 as restated. Tag `v0.6.0-alpha.20`.
 
-**Delivered 19 November 2026** ([the plan](wp5.20-the-meso-suite.md)). Meso, the second Build suite, holds Density,
+**Delivered 19 November 2026** ([the plan](wp5.20-the-meso-suite.md)); merged 19 November 2026. Meso, the second Build suite, holds Density,
 Outline and Charge map at `/meso/<tool>`, each Mol* side on and cut at the axis beside the (r, z) view (FR-31; WB-43,
 WB-44; VER-78). A point of the charge map names a residue once, its copies together, and a point of the density the
 residues whose atoms reach it first (`ResidueCharges`, `DensityAtoms`; VER-60; AT1). An edited outline lists and marks
@@ -375,13 +375,17 @@ size, through a dark middle on the dark theme, and each tool sets how Mol* draws
 Live constraints: a free list of the structure's layers is a package of its own, placed by the author (REV-265); the
 round's polish, Outline's keyboard path and the map's default share are WP5.23's (REV-266).
 
-### WP5.21 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
+### WP5.21 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30, REV-253, REV-260; AG6; AN5; §8.2.45 AU1 to AU3)
 
-Library step first: the difference of two runs' fields over the overlap of their fluid domains, in `post/`, masked where
-either lacks the point (AG6). Then, after the prototype round on 2WCD (AJ8), the results explorer and its tiles: a field
-drawn by `webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut.
-Probes and cuts are linked to their field, and a run to its result (FR-33). Comparison shows two runs side by side on
-one scale or as their difference. A run whose solution the store's clean-up removed rebuilds it when viewed (AN5). Q37 to Q41 move here. Tag `v0.6.0-alpha.21`.
+Library steps first: the difference of two runs' fields over the overlap of their fluid domains, in `post/`, masked where
+either lacks the point (AG6); a comparison as a project item; a run whose solution the store's clean-up removed,
+rebuilt on request and checked against its record (AN5); each rung's reporting and tolerance kept with its Newton
+history, so a recorded run's convergence is drawn in Runs (REV-260). Every plot moves to uPlot, vendored, its axes set
+by the user (AU1; REV-253), and any Matplotlib colour map is offered per map (AU2). Then, after the prototype round on
+2WCD (AJ8), the results explorer and its tiles: a field drawn as a map with its axial cut and probes, or on its mesh by
+`webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities. Probes and cuts are
+linked to their field, and a run to its result (FR-33). Comparison shows two runs side by side on one scale, as maps or
+switched to the mesh, or as their difference (AU3). Q37 to Q41 move here. Tag `v0.6.0-alpha.21`.
 
 ### WP5.22 — The performance package (WB-23; REV-258; §8.2.31 AG7; §8.2.42 AR7; §8.2.43 AS2)
 
@@ -459,7 +463,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.18, Physics | 1 | A physics model edited in the suite resolves to the case it shows; VER-78 |
 | WP5.19, Study | 1, 2 | VER-44 and VER-60 as restated; FR-39's study and its sweep; VER-36's pair by resolved bias; VER-35 to a stage; VER-59's supplied spacing; a run's thread count keying nothing (VER-62); VER-78; the 200 ms measure (criterion 6) |
 | WP5.20, the meso suite | 1, 2 | VER-60 as restated: a point names a residue once on a C<sub>n</sub> structure, an edit names the atoms it moves; the overlay's mean about the axis is the 3D charge's; VER-62 unmoved by the moved tools; VER-78 as amended, each moved tool's page at its new address |
-| WP5.21, Analysis | 1 | AG6's difference: exact for a linear field, zero for identical runs; VER-78 |
+| WP5.21, Analysis | 1 | AG6's difference: exact for a linear field, zero for identical runs; a comparison item and a cleaned run rebuilt (FR-32, AN5); a recorded run's convergence as the live one (VER-44); uPlot unmodified (CON-09); VER-78 |
 | WP5.22, performance | 1 | VER-62 and VER-78 unmoved by the pick path's fix; criterion 6, timed by `redraw.cjs --headed` on a GPU |
 | WP5.23, route and Qt's removal; WP5.24, the close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 |
 
