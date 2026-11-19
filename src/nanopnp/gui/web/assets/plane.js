@@ -1,8 +1,7 @@
 // The workbench's (r, z) view: one canvas per window, beside Mol*, built once and kept, which draws
 // the layers the server writes (gui/web/plane.py). Equal scale, r to the right and z up; a drag pans,
-// the wheel zooms about the pointer, and a pick or an edit goes back to the server by emitEvent. A
-// drawing of the plot frame is a graph instead: each axis scaled alone to its extent, not panned.
-// A queued run's convergence draws on a canvas of its own, made the same way (nano.plot).
+// the wheel zooms about the pointer, and a pick or an edit goes back to the server by emitEvent.
+// A plot of y against x is a chart's (chart.js).
 (() => {
   const MARGIN = { left: 56, right: 12, top: 10, bottom: 40 };
   const ROLES = {
@@ -13,12 +12,10 @@
     boundary: ['--canvas-plot-ink', 2.5, []], worst: ['--warn', 1.5, [6, 4]],
     plane: ['--muted', 1.5, [6, 4]],
   };
-  // A plot: its ticks per axis, its curves' width, its rules' dash, its bands' fill, the legend's gap.
-  const PLOT_TICKS = 5, CURVE_W = 2, RULE_DASH = [6, 4], BAND_ALPHA = 0.15, KEY_GAP = 12, MARK_R = 2.5;
+  // A line of no role: its width.
+  const CURVE_W = 2;
   const SUPERSCRIPT = { '-': '\u207b', 0: '\u2070', 1: '\u00b9', 2: '\u00b2', 3: '\u00b3', 4: '\u2074',
     5: '\u2075', 6: '\u2076', 7: '\u2077', 8: '\u2078', 9: '\u2079' };
-  // The narrowest plot the legend stands beside; a narrower one takes it inside, top right.
-  const PLOT_MIN_W = 200;
   // The solids a drawing fills lightly under their outline, so a slab reads as one.
   const FILLED = ['membrane', 'pore', 'exclusion'];
   const PICK_PX = 8;
@@ -49,7 +46,7 @@
   };
   const frames = () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
 
-  // A view on one host: the frame's (r, z) canvas, which marks the screen ready, or a plot's.
+  // A view on one host: the frame's (r, z) canvas, which marks the screen ready.
   const makeView = (hostId, marks) => ({
     hostId, marks,
     // How many times the canvas was built in this window: the frame builds it once (VER-78 m).
@@ -96,16 +93,13 @@
     },
 
     // Show a drawing the server writes, building the canvas the first time; null shows the note.
-    // A plot's drawing may come whole, in place of its address.
     async show(url, note) {
       if (this.marks) document.body.dataset.screenReady = '0';
       if (this.canvas === null) this.build();
       const asked = ++this.asked;
       let drawing = null;
       try {
-        if (url && typeof url === 'object') {
-          drawing = url;
-        } else if (url) {
+        if (url) {
           drawing = await this.fetchDrawing(url, true);
           // A mesh left out that the canvas no longer holds is asked for whole.
           if (drawing.layers.some((l) => l.kind === 'mesh' && !l.vertices_nm && !this.holds(l))) {
@@ -134,11 +128,7 @@
       this.picked = null;
       this.notes.textContent = drawing.notes.join(' ');
       this.notes.hidden = drawing.notes.length === 0;
-      // A plot is always fitted to its extent: there is nothing to fit back to.
-      this.fitButton.hidden = drawing.frame === 'plot';
-      const named = drawing.frame === 'plot'
-        ? `Plot of ${drawing.axes[1]} against ${drawing.axes[0]}`
-        : `(r, z) view, ${drawing.axes.join(' against ')}`;
+      const named = `(r, z) view, ${drawing.axes.join(' against ')}`;
       this.canvas.setAttribute('aria-label', `${named}`
         + `: ${drawing.layers.map((l) => l.id).join(', ') || 'nothing drawn'}`);
       // The host may have been shown in this same update: its size settles a frame later.
@@ -177,7 +167,7 @@
     // The height above the drawing kept for its key, where the key is too wide to stand over the
     // drawing's corner: there it would cover the drawing and the axis's numbers.
     keyReserve() {
-      if (!this.drawing || this.drawing.frame === 'plot') return 0;
+      if (!this.drawing) return 0;
       this.reserve = 0;
       const key = this.keyLayout(this.canvas.getContext('2d'), this.plot());
       return key && key.width > this.plot().w / 2 ? key.height + 8 : 0;
@@ -325,10 +315,6 @@
       ctx.fillStyle = token('--canvas-plot') || '#ffffff';
       ctx.fillRect(0, 0, this.canvas.width / ratio, this.canvas.height / ratio);
       this.boxes = [];
-      if (this.drawing.frame === 'plot') {
-        this.drawPlot(ctx, area);
-        return;
-      }
       // Nothing drawn: no axes either, whose numbers no artefact gives; the note says why.
       if (!this.drawing.layers.length) return;
       ctx.save();
@@ -489,153 +475,13 @@
       if (layer.role === 'contour') this.vertices(ctx, layer);
     },
 
-    // A line's colour, width and dash: its role's, unless it names its own colour; a plot's curve
-    // is a solid line in its colour, and its rule a dashed one in the canvas's ink.
+    // A line's colour, width and dash: its role's, unless it names its own colour; a line of no
+    // role is a solid one in its colour.
     lineStyle(layer) {
       const ink = token('--canvas-plot-ink') || '#16181d';
-      if (layer.kind === 'rule') return [ink, 1.5, RULE_DASH];
       if (layer.kind === 'line' && !layer.role) return [layer.colour || ink, CURVE_W, layer.dash || []];
       const [colour, width, dash] = ROLES[layer.role] || ['--canvas-plot-ink', 1.5, []];
       return [layer.colour || token(colour) || ink, width, dash];
-    },
-
-    // A plot: its graphs one above the other, sharing one key beside them; each graph's extent
-    // fills its area, each axis scaled alone.
-    drawPlot(ctx, area) {
-      if (!this.drawing.layers.length) return;
-      this.key = this.keyLayout(ctx, area);
-      const beside = !this.drawing.key_below && area.w - (this.key ? this.key.width : 0) - KEY_GAP >= PLOT_MIN_W;
-      if (this.key && beside) {
-        // The legend stands beside the plot, where it hides no curve.
-        area.w -= this.key.width + KEY_GAP;
-        this.key.x = area.x + area.w + KEY_GAP;
-        this.key.top = area.y;
-      } else if (this.key) {
-        // Asked below, or too narrow beside it: the key stands below the plot, its rows in columns.
-        const across = this.key.width;
-        const columns = Math.max(1, Math.floor((area.w + MARGIN.left) / across));
-        const rows = Math.ceil(this.key.entries.length / columns);
-        Object.assign(this.key, {
-          columns, columnWidth: across, width: Math.min(columns * across, area.w + MARGIN.left),
-          height: rows * KEY_ROW + 8,
-        });
-        area.h -= this.key.height + KEY_GAP;
-        this.key.x = area.x - MARGIN.left + 4;
-        this.key.top = area.y + area.h + MARGIN.bottom + KEY_GAP / 2;
-      }
-      const panels = this.drawing.panels
-        || [{ axes: this.drawing.axes, extent_nm: this.drawing.extent_nm, scale: 'linear' }];
-      // Each graph below the first leaves room for the one above's ticks and title.
-      const gap = MARGIN.bottom + MARGIN.top;
-      const height = (area.h - gap * (panels.length - 1)) / panels.length;
-      panels.forEach((panel, index) => {
-        const box = { x: area.x, y: area.y + index * (height + gap), w: area.w, h: height };
-        this.drawPanel(ctx, box, panel, index);
-      });
-      this.legend(ctx);
-    },
-
-    // One graph: the bands first, then the rules, then the curves over both.
-    drawPanel(ctx, area, panel, index) {
-      const scaled = panel.scale === 'sqrt' ? (v) => Math.sqrt(Math.max(v, 0)) : (v) => v;
-      const [x0, x1, y0, y1] = panel.extent_nm;
-      const sx = area.w / ((scaled(x1) - scaled(x0)) || 1), sy = area.h / ((y1 - y0) || 1);
-      const at = (x, y) => [area.x + (scaled(x) - scaled(x0)) * sx, area.y + area.h - (y - y0) * sy];
-      const layers = this.drawing.layers.filter((l) => (l.panel || 0) === index);
-      ctx.save();
-      ctx.beginPath();
-      // A curve along the frame's top or bottom is drawn whole, not halved by the clip.
-      ctx.rect(area.x, area.y - CURVE_W, area.w, area.h + 2 * CURVE_W);
-      ctx.clip();
-      ctx.fillStyle = token('--canvas-plot-ink') || '#16181d';
-      ctx.globalAlpha = BAND_ALPHA;
-      for (const layer of layers) {
-        if (layer.kind !== 'band' || layer.shaded === false) continue;
-        const [left] = at(layer.x[0], y0), [right] = at(layer.x[1], y0);
-        ctx.fillRect(left, area.y, right - left, area.h);
-      }
-      ctx.globalAlpha = 1;
-      for (const layer of layers) if (layer.kind === 'band' && layer.label) this.bandLabel(ctx, area, layer, at, y0);
-      ctx.lineJoin = 'round';
-      for (const kind of ['rule', 'line']) {
-        for (const layer of layers) {
-          if (layer.kind !== kind) continue;
-          const [colour, width, dash] = this.lineStyle(layer);
-          ctx.strokeStyle = colour;
-          ctx.lineWidth = width;
-          ctx.setLineDash(dash);
-          ctx.beginPath();
-          if (kind === 'rule') {
-            const [x] = at(layer.x, y0);
-            ctx.moveTo(x, area.y);
-            ctx.lineTo(x, area.y + area.h);
-          } else {
-            const p = layer.points_nm;
-            for (let k = 0; k < p.length; k += 2) {
-              const [x, y] = at(p[k], p[k + 1]);
-              if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-            }
-          }
-          ctx.stroke();
-          if (kind === 'line' && layer.marks) {
-            // Each sample marked, so that a rung of one step shows its point.
-            ctx.fillStyle = colour;
-            const p = layer.points_nm;
-            for (let k = 0; k < p.length; k += 2) {
-              const [x, y] = at(p[k], p[k + 1]);
-              ctx.beginPath();
-              ctx.arc(x, y, MARK_R, 0, 2 * Math.PI);
-              ctx.fill();
-            }
-          }
-        }
-      }
-      ctx.restore();
-      const text = (value) => Number(value.toPrecision(6)).toString().replace('-', '−');
-      const ticks = (low, high, place) => Array.from({ length: PLOT_TICKS }, (_, k) => {
-        const value = low + (k * (high - low)) / (PLOT_TICKS - 1);
-        return [place(value), text(value)];
-      });
-      const xTicks = panel.ticks
-        ? panel.ticks.map((value) => [at(value, y0)[0], text(value)])
-        : ticks(x0, x1, (x) => at(x, y0)[0]);
-      // A logarithmic axis is drawn in decades: its values are their powers of ten.
-      const power = (value) => `10${String(Math.round(value)).replace(/./g, (c) => SUPERSCRIPT[c] || c)}`;
-      const yText = panel.y_scale === 'log' ? power : text;
-      const yTicks = panel.y_ticks
-        ? panel.y_ticks.map((value) => [at(x0, value)[1], yText(value)])
-        : ticks(y0, y1, (y) => at(x0, y)[1]);
-      this.frameAxes(ctx, area, xTicks, yTicks, panel.axes);
-    },
-
-    // A band's name, and what it holds where it holds no curve, inside it at the top: across where
-    // the band is wide enough, else up its left edge, ending at its top.
-    bandLabel(ctx, area, layer, at, y0) {
-      const [left] = at(layer.x[0], y0), [right] = at(layer.x[1], y0);
-      const lines = [layer.label, ...(layer.note ? [layer.note] : [])];
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(left, area.y, right - left, area.h);
-      ctx.clip();
-      ctx.fillStyle = token('--canvas-plot-ink') || '#16181d';
-      ctx.font = `11px ${token('--font-ui') || 'sans-serif'}`;
-      ctx.textBaseline = 'top';
-      ctx.textAlign = 'left';
-      const widest = Math.max(...lines.map((line) => ctx.measureText(line).width));
-      if (right - left >= widest + 8) {
-        lines.forEach((line, k) => ctx.fillText(line, left + 4, area.y + 4 + k * 13));
-      } else if (layer.short && !layer.note) {
-        // A narrow band that holds its curves is named by its number, which the rung table reads.
-        if (right - left >= ctx.measureText(layer.short).width + 4) {
-          ctx.fillText(layer.short, left + 2, area.y + 4);
-        }
-      } else {
-        ctx.translate(left + 4, area.y + 4);
-        ctx.rotate(-Math.PI / 2);
-        ctx.textAlign = 'right';
-        lines.forEach((line, k) => ctx.fillText(line, 0, k * 13));
-      }
-      ctx.restore();
     },
 
     // An outline's vertices, once they stand apart on the screen.
@@ -831,14 +677,6 @@
           entries.push({
             kind: 'swatch', text: layer.title, colour: layer.fill, alpha: layer.picked ? 0.9 : 0.55,
           });
-        } else if (layer.kind === 'band') {
-          // A band labelled inside, as a run's rung, is not keyed.
-          if (layer.title) {
-            entries.push({
-              kind: 'swatch', text: layer.title, colour: token('--canvas-plot-ink') || '#16181d',
-              alpha: BAND_ALPHA,
-            });
-          }
         } else if (layer.kind === 'points') {
           if (layer.title && layer.ring) {
             // Rings as the drawing marks them, one of each colour it uses.
@@ -889,12 +727,10 @@
       ctx.strokeRect(x + 0.5, top + 0.5, width - 1, height - 1);
       const text = token('--ink') || '#16181d';
       const edge = token('--colourbar-outline') || token('--canvas-plot-ink') || '#16181d';
-      // A key below a narrow plot lays its rows out in columns.
-      const columns = this.key.columns || 1, across = this.key.columnWidth || width;
-      let y = top + 4, column = 0;
+      let y = top + 4;
       ctx.textBaseline = 'middle';
       for (const entry of entries) {
-        const left = x + column * across;
+        const left = x;
         ctx.textAlign = 'left';
         if (entry.kind === 'bar') {
           // The quantity, the bar, its ends, then the unit: each on its own line, apart.
@@ -954,11 +790,7 @@
         }
         ctx.fillStyle = text;
         ctx.fillText(entry.text, left + 28 + (entry.kind === 'rings' ? 14 * (entry.colours.length - 1) : 0), y + 9);
-        column += 1;
-        if (column === columns) {
-          column = 0;
-          y += KEY_ROW;
-        }
+        y += KEY_ROW;
       }
     },
 
@@ -1014,13 +846,7 @@
       return [event.clientX - box.left, event.clientY - box.top];
     },
 
-    // A plot is neither panned nor zoomed, and holds nothing to pick.
-    plotted() {
-      return Boolean(this.drawing && this.drawing.frame === 'plot');
-    },
-
     down(event) {
-      if (this.plotted()) return;
       this.canvas.setPointerCapture(event.pointerId);
       this.drag = { start: this.point(event), centre: [...this.centre], moved: false };
     },
@@ -1059,7 +885,6 @@
 
     wheel(event) {
       // Over a plot the wheel scrolls the page.
-      if (this.plotted()) return;
       event.preventDefault();
       const [x, y] = this.point(event);
       const [r, z] = this.toData(x, y);
@@ -1100,19 +925,6 @@
   });
 
   const view = makeView('plane', true);
-  // The plots of the queue's runs, by host: a host built again takes a new canvas.
-  const plots = new Map();
   window.nano.canvas = view;
   window.nano.plane = (url, note) => view.show(url, note);
-  window.nano.plot = (hostId, drawing) => {
-    const host = document.getElementById(hostId);
-    for (const [id, plot] of plots) if (plot.host && !plot.host.isConnected) plots.delete(id);
-    if (!host) return null;
-    let plot = plots.get(hostId);
-    if (!plot || (plot.host && plot.host !== host)) {
-      plot = makeView(hostId, false);
-      plots.set(hostId, plot);
-    }
-    return plot.show(drawing, '');
-  };
 })();

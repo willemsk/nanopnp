@@ -46,7 +46,6 @@ from nanopnp.gui.web.plane import (
     IMAGES,
     charge_ends,
     charge_plane,
-    electrolyte_plane,
     image_png,
     physics_plane,
     plane,
@@ -144,13 +143,13 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
     @app.get("/api/physics/{name}/plane")
     def physics_view(
         name: str,
-        tool: str = "electrolyte",
+        tool: str = "conditions",
         within: str = "",
         pick: str = "",
         held: str = "",
         mesh: str = "",
     ) -> JSONResponse:
-        """Serve what the view draws of a physics model for one tool, inside the study shown."""
+        """Serve what the (r, z) view draws of a physics model, inside the study shown."""
         project = shell.bench.project
         if project is None or name not in project.items("physics"):
             raise HTTPException(404, f"no physics model {name!r}")
@@ -160,12 +159,6 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             case: Case | None = project.physics_case(name, model.within())
         except REFUSED:
             case = None
-        if case is None and tool == "electrolyte":
-            # A model with no salt forms no case, but its own block draws the curves against the
-            # driver, which read no salt.
-            electrolyte = model.own_electrolyte()
-            if electrolyte is not None:
-                return JSONResponse(electrolyte_plane(electrolyte, None).json())
         try:
             drawn = physics_plane(
                 case,
@@ -482,6 +475,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         (TOKENS, "/tokens.css"),
         (ASSETS / "bridge.js", "/bridge.js"),
         (ASSETS / "plane.js", "/plane.js"),
+        (ASSETS / "chart.js", "/chart.js"),
         (ASSETS / "workbench.css", "/workbench.css"),
         (ASSETS / "frame.js", "/frame.js"),
         (ASSETS / "frame.css", "/frame.css"),
@@ -555,9 +549,12 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         ui.add_head_html(
             '<link rel="stylesheet" href="/vendor/molstar/molstar.css">'
             + '<link rel="stylesheet" href="/vendor/katex/katex.min.css">'
+            + '<link rel="stylesheet" href="/vendor/uplot/uPlot.min.css">'
             + STYLESHEETS
             + '<script src="/vendor/molstar/molstar.js"></script><script src="/bridge.js"></script>'
             + '<script src="/plane.js"></script>'
+            + '<script src="/vendor/uplot/uPlot.iife.min.js"></script>'
+            + '<script src="/chart.js"></script>'
             + '<script src="/vendor/katex/katex.min.js"></script>'
         )
         with frame(

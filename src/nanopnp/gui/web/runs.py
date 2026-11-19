@@ -15,7 +15,10 @@ from nanopnp.api.project import Project
 from nanopnp.gui.convergence import RESIDUAL, UPDATE, Band, ConvergenceModel
 from nanopnp.gui.run_model import RunControl
 from nanopnp.gui.solver import RunRequest, SolverProcess
-from nanopnp.gui.web.plane import SERIES, Plane
+from nanopnp.gui.web.chart import Axis as ChartAxis
+from nanopnp.gui.web.chart import Band as ChartBand
+from nanopnp.gui.web.chart import Chart, Panel, Series
+from nanopnp.gui.web.plane import SERIES
 from nanopnp.gui.web.queue import Entry, Queue
 from nanopnp.io.artefact import SWEEP_SCHEMA
 from nanopnp.io.manifest import MANIFEST_FILENAME, RUN_RECORD_FILENAME
@@ -30,7 +33,7 @@ __all__ = [
     "OTHER_SOLVE_NOTE",
     "RUNG_COLUMNS",
     "SERVED_NOTE",
-    "convergence_plane",
+    "convergence_chart",
     "queue_run",
     "queue_sweep",
     "recorded_convergence",
@@ -311,69 +314,65 @@ def _made_by(rungs: Sequence[NewtonRung], directory: Path) -> bool:
     return True
 
 
-def convergence_plane(model: ConvergenceModel) -> Plane:
-    """Return a run's convergence plot: a band per rung, the residual and the update on decades.
+def convergence_chart(model: ConvergenceModel) -> Chart:
+    """Return a run's convergence chart: a band per rung, the residual and the update on decades.
 
-    A silent rung's band says which silence it is; no threshold is drawn, the tolerance being
-    the rung's own. A solve served from the store draws nothing and says so.
+    A silent rung's band says which silence it is, and each curve breaks at every band's start,
+    so none is drawn across a rung. No threshold is drawn, the tolerance being the rung's own. A
+    solve served from the store draws nothing and says so.
     """
+    x_label, y_label = _AXES
+    named = "The convergence of the run"
     if not model.bands:
-        return Plane("plot", _AXES, (0.0, 1.0, -1.0, 1.0), (), (model.summary,))
+        empty = Panel(ChartAxis(x_label, range=(0.0, 1.0)), ChartAxis(y_label, "log", (0.1, 10.0)))
+        return Chart((empty,), notes=(model.summary,), label=f"{named}: nothing drawn")
     x_low, x_high = model.x_range
     y_low, y_high = model.y_range
-    layers: list[dict[str, Any]] = []
-    for index, band in enumerate(model.bands):
-        layers.append(
-            {
-                "id": f"rung-{index}",
-                "kind": "band",
-                "x": list(model.extent(band)),
-                "label": band.name,
-                # A band too narrow for its name shows the rung's number, as the table does.
-                "short": str(index + 1),
-                "note": _silence(band),
-                "shaded": index % 2 == 0,
-                "panel": 0,
-            }
+    bands = tuple(
+        ChartBand(
+            f"rung-{index}",
+            model.extent(band),
+            label=band.name,
+            # A band too narrow for its name shows the rung's number, as the table does.
+            short=str(index + 1),
+            note=_silence(band),
+            shaded=index % 2 == 0,
         )
-    for series, title, colour, dash in (
-        (RESIDUAL, "Residual", SERIES[0], []),
-        (UPDATE, "Relative update", SERIES[1], [5, 3]),
+        for index, band in enumerate(model.bands)
+    )
+    series: list[Series] = []
+    for kind, title, colour, dash in (
+        (RESIDUAL, "Residual", SERIES[0], ()),
+        (UPDATE, "Relative update", SERIES[1], (5.0, 3.0)),
     ):
-        for index, band in enumerate(model.bands):
-            points = model.points(band, series)
-            if not points:
-                continue
-            layers.append(
-                {
-                    "id": f"{series}-{index}",
-                    "kind": "line",
-                    "title": title,
-                    "points_nm": [value for point in points for value in point],
-                    "colour": colour,
-                    "dash": dash,
-                    "marks": True,
-                    "panel": 0,
-                }
-            )
+        x: list[float] = []
+        y: list[float | None] = []
+        for band in model.bands:
+            x.append(model.extent(band)[0])
+            y.append(None)
+            for at, value in model.samples(band, kind):
+                x.append(at)
+                y.append(value)
+        series.append(Series(kind, title, tuple(x), tuple(y), colour, dash, marks=True))
     step = max(1, math.ceil((x_high - x_low) / 8))
-    panel = {
-        "axes": list(_AXES),
-        "extent_nm": [x_low, x_high, y_low, y_high],
-        "scale": "linear",
-        "ticks": [float(tick) for tick in range(0, math.floor(x_high) + 1, step)],
-        "y_scale": "log",
-        "y_ticks": list(model.ticks()),
-    }
-    # The count of samples omitted is in the summary the entry shows above the plot. The key
-    # stands below, so the plot keeps the side pane's width.
-    return Plane(
-        "plot",
-        _AXES,
-        (x_low, x_high, y_low, y_high),
-        tuple(layers),
-        panels=(panel,),
-        key_below=True,
+    panel = Panel(
+        ChartAxis(
+            x_label,
+            range=(x_low, x_high),
+            ticks=tuple(float(tick) for tick in range(0, math.floor(x_high) + 1, step)),
+        ),
+        ChartAxis(
+            y_label,
+            "log",
+            range=(10.0**y_low, 10.0**y_high),
+            ticks=tuple(10.0**decade for decade in model.ticks()),
+        ),
+    )
+    return Chart(
+        (panel,),
+        tuple(series),
+        bands,
+        label=f"{named}: {', '.join(band.name for band in model.bands)}",
     )
 
 

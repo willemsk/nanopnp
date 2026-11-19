@@ -228,7 +228,15 @@ class ConvergenceModel:
 
     @property
     def summary(self) -> str:
-        """Return the line the panel shows above the plot."""
+        """Return the line the panel shows above the plot, with the samples its log axis omits."""
+        return self._line(omitted=True)
+
+    @property
+    def headline(self) -> str:
+        """Return the summary without the omitted samples, for a chart that counts its own."""
+        return self._line(omitted=False)
+
+    def _line(self, *, omitted: bool) -> str:
         if self.state == "idle":
             return "no solve has been watched yet"
         if self.state == "served":
@@ -244,7 +252,7 @@ class ConvergenceModel:
             "stopped": "stopped before the ladder finished",
         }[self.state]
         text = f"{rungs}, {steps} Newton step{'s' if steps != 1 else ''}: {tail}"
-        if self.omitted_samples:
+        if omitted and self.omitted_samples:
             text += f" ({self.omitted_samples} sample(s) omitted: not positive)"
         if self.note:
             text += f". {self.note}"
@@ -280,6 +288,14 @@ class ConvergenceModel:
                 continue
             drawn.append((start + step.iteration - 0.5, math.log10(value)))
         return tuple(drawn)
+
+    def samples(self, band: Band, series: Series) -> tuple[tuple[float, float], ...]:
+        """Return one band's ``(x, y)`` samples for one series, as reported, decimated."""
+        start, _ = self.extent(band)
+        return tuple(
+            (start + step.iteration - 0.5, step.value(series))
+            for step in _decimate(band.steps, MAX_POINTS_PER_BAND)
+        )
 
     @property
     def y_range(self) -> tuple[float, float]:

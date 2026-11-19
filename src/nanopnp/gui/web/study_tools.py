@@ -16,13 +16,14 @@ from nicegui.elements.mixins.validation_element import ValidationElement
 from nanopnp.api.project import StudyValue
 from nanopnp.core.hashing import decode_floats
 from nanopnp.gui.web.builds import REFUSED
+from nanopnp.gui.web.chart_view import ChartView
 from nanopnp.gui.web.frame import Views, heading
 from nanopnp.gui.web.physics_tools import _field_tex, _mtext, _tex
 from nanopnp.gui.web.plane import ROLE_TITLES
 from nanopnp.gui.web.queue import Entry
 from nanopnp.gui.web.runs import (
     RUNG_COLUMNS,
-    convergence_plane,
+    convergence_chart,
     queue_run,
     queue_sweep,
     rung_rows,
@@ -1217,10 +1218,10 @@ class _StudyPane(_Pane[StudyModel]):
             self.show_rungs(picked)
         if picked is None or run is None or self.run_summary is None:
             return
-        self.runs_plot.classes(remove="runs-plot-none")
-        self.run_summary.text = f"{picked.label}: {run.convergence.summary}"
-        drawing = json.dumps(convergence_plane(run.convergence).json())
-        ui.run_javascript(f"nano.plot('runs-plot', {drawing})")
+        self.runs_chart.element.classes(remove="runs-plot-none")
+        # The chart counts the samples its axis cannot place, so the line above it does not.
+        self.run_summary.text = f"{picked.label}: {run.convergence.headline}"
+        self.runs_chart.show(convergence_chart(run.convergence))
 
     def cancel_entry(self, entry: Any) -> None:  # noqa: ANN401 - a queue's entry
         self.shell.queue.drop(entry)
@@ -1232,16 +1233,11 @@ class _StudyPane(_Pane[StudyModel]):
         model = self.model
         heading("Convergence", 2)
         self.run_summary = ui.label("").classes("run-summary").props("data-control=runs-summary")
-        named = 'aria-label="The convergence of the run"'
-        self.runs_plot = (
-            ui.element("div")
-            .props(f"id=runs-plot data-control=runs-plot role=img {named}")
-            .classes("run-plot runs-plot")
-        )
+        self.runs_chart = ChartView("runs-plot", "runs-plot", classes="run-plot runs-plot")
         if self.picked_run() is None:
             self.run_summary.text = "No run of the study is in the queue. Run study starts one."
             # No frame stands empty: the plot's host shows once a run is picked.
-            self.runs_plot.classes("runs-plot-none")
+            self.runs_chart.element.classes("runs-plot-none")
         self.run_seen = None
         heading("Recorded runs", 2)
         records = () if model is None else model.records()

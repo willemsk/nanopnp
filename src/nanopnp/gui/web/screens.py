@@ -59,7 +59,7 @@ class Screen:
     controls: tuple[str, ...]
 
 
-View = Literal["molecule", "plane", "pair", "page"]
+View = Literal["molecule", "plane", "pair", "chart", "page"]
 """What a tool shows beside its pane."""
 
 
@@ -273,7 +273,7 @@ SUITES: tuple[Suite, ...] = (
                     "numerics.wall_distance.sources",
                     "numerics.wall_distance.max_distance_nm",
                 ),
-                view="plane",
+                view="chart",
             ),
             Tool(
                 "conditions",

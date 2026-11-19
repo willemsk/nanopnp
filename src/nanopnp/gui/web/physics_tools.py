@@ -7,14 +7,22 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 from urllib.parse import urlencode
 
-from nicegui import ui
+from nicegui import run, ui
 from nicegui.elements.mixins.text_element import TextElement
 
 from nanopnp.core.paths import correction_source, names_a_path
 from nanopnp.gui.web.builds import REFUSED
+from nanopnp.gui.web.chart import Chart
 from nanopnp.gui.web.frame import Views, heading
 from nanopnp.gui.web.physics import PhysicsModel
-from nanopnp.gui.web.plane import ROLE_TITLES, ion_text, mesh_stored, shown_solids
+from nanopnp.gui.web.plane import (
+    ROLE_TITLES,
+    electrolyte_chart,
+    ion_text,
+    mesh_stored,
+    physics_chart,
+    shown_solids,
+)
 from nanopnp.gui.web.screens import CORRECTED, Tool, field_control
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import FIELDS, _Pane, _value_of, current_name
@@ -443,7 +451,7 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         super().after_write(path)
         if path.startswith("electrolyte.corrections.") and path.endswith(".model"):
             self.correction_parts(path)
-        if self.tool.view == "plane":
+        if self.tool.view in ("plane", "chart"):
             self.soon(self.show)
 
     def correction_parts(self, path: str) -> None:
@@ -837,7 +845,33 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 timeout=10,
             )
             return
+        if self.tool.view == "chart":
+            # None only while the server stops.
+            chart = await run.io_bound(self.chart)
+            if chart is not None:
+                await self.built.show_chart(chart)
+            return
         await self.built.show_plane(self.plane_url(), "" if self.model else self.subject())
+
+    def chart(self) -> Chart:
+        """Return Electrolyte's graphs of the model inside the study shown.
+
+        A model that forms no case, as one with no salt, still draws its own block's curves
+        against the driver, which read no salt.
+        """
+        model = self.model
+        if model is None or self.project is None:
+            return physics_chart(None, note=self.subject())
+        try:
+            # A case the study refuses still loads: the chart says it does not resolve.
+            case: Case | None = self.project.physics_case(model.name, model.within())
+        except REFUSED:
+            case = None
+        if case is None:
+            electrolyte = model.own_electrolyte()
+            if electrolyte is not None:
+                return electrolyte_chart(electrolyte, None)
+        return physics_chart(case)
 
     async def restyle(self, what: str, value: str) -> None:
         self.look[what] = value

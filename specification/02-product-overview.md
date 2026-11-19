@@ -88,6 +88,10 @@ NOTE (§2.5, §2.6; lands with WP5.23, Qt's removal): §2.5's execution modes re
 CLI; HPC job arrays; the browser workbench"; the PySide6 row goes, and NiceGUI and FastAPI (MIT, BSD-3,
 the workbench's server and front end) join.
 
+NOTE (§2.6, the workbench, v0.6). The `gui` extra takes Matplotlib (its own permissive licence), whose
+registered colour maps the workbench offers by name (§8.2.45 AU2), and the front end vendors uPlot
+1.6.32 (MIT) unmodified as separate files for its charts (§8.2.45 AU1; CON-09).
+
 Assumptions: the published physics, parameters and COMSOL implementation details are CC-BY-4.0 and
 suffice for reimplementation; a COMSOL licence remains available during development for
 reference-solution generation; MD trajectories are supplied as input.
