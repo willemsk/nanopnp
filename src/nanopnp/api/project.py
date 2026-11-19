@@ -182,7 +182,7 @@ class Project:
     def __init__(self, root: Path, document: ProjectFile) -> None:
         self._root = root
         self._file = document
-        self._built: dict[tuple[str, str], tuple[str, frozenset[str]]] = {}
+        self._built: dict[tuple[str, str, str], tuple[str, frozenset[str]]] = {}
 
     @property
     def root(self) -> Path:
@@ -305,7 +305,17 @@ class Project:
         named: set[str] = set(holding)
         for kind, upto in BUILD_UPTO.items():
             for name in self._file.names(kind):
-                named.update(self._built_stages(kind, name, upto))
+                try:
+                    case = self.build_case(kind, name)
+                except _REFUSED:
+                    continue
+                named.update(self._built_stages(kind, name, upto, case))
+        for name in self._file.names("continuum"):
+            try:
+                case = self.charge_case(name)
+            except _REFUSED:
+                continue
+            named.update(self._built_stages("continuum", name, "charge", case))
         for folder in (self._root / RUNS_FOLDER, self._root / SWEEPS_FOLDER):
             if not folder.is_dir():
                 continue
@@ -346,16 +356,15 @@ class Project:
             return store.evict(keep=frozenset())
         return store.evict(keep=self.kept_artefacts(holding), to_bytes=cap_bytes)
 
-    def _built_stages(self, kind: ModelKind, name: str, upto: str) -> frozenset[str]:
+    def _built_stages(self, kind: ModelKind, name: str, upto: str, case: Case) -> frozenset[str]:
         # Keying stage 1 hashes the structure, so the identities are held until the model's
         # resolved text or one of its input files changes.
         try:
-            case = self.build_case(kind, name)
             stamp = hashlib.sha256(case.dumps().encode("utf-8"))
             for value in sorted(input_paths(case).values()):
                 status = Path(value).stat()
                 stamp.update(f"{value}\0{status.st_size}\0{status.st_mtime_ns}\0".encode())
-            held = self._built.get((kind, name))
+            held = self._built.get((kind, name, upto))
             if held is not None and held[0] == stamp.hexdigest():
                 return held[1]
             resolved = resolve(case, base=case.source.base)
@@ -371,7 +380,7 @@ class Project:
         # nothing of it to keep.
         found = frozenset(identity.hash for identity in walked if not identity.built)
         if not any(identity.built for identity in walked):
-            self._built[kind, name] = (stamp.hexdigest(), found)
+            self._built[kind, name, upto] = (stamp.hexdigest(), found)
         return found
 
     def open_item(self, item: str) -> None:
@@ -606,6 +615,45 @@ class Project:
             source = f"<continuum model {name} built alone over molecular model {molecular}>"
         document = {"schema": SCHEMA, "name": name, **merge_layers([*layers, body])}
         return Case.loads(_text(document), base=location.parent, source=source)
+
+    def charge_case(self, name: str) -> Case:
+        """Return the case that deposits the charge continuum model ``name`` is shown with.
+
+        It is the model's build case to ``charge``: its values over ``BUILD_LAYER`` and the
+        molecular model ``molecular_for`` names, layered under a supplied outline too, so stage 7
+        deposits that molecule's charge in the outline's frame.
+
+        Raises
+        ------
+        ProjectError
+            If the model draws an idealised pore or supplies its mesh, or the project holds no
+            molecular model.
+        CaseValidationError
+            If the model's file is refused or its values form no case.
+        """
+        location = self.path("continuum", name)
+        body = read_model_file("continuum", location).body
+        if _holds(body, "geometry.pore") or _holds(body, "inputs.mesh"):
+            raise ProjectError(
+                f"Continuum model {name} draws its own pore; it deposits no molecule's charge."
+            )
+        molecular = self.molecular_for(name)
+        if molecular is None:
+            raise ProjectError(
+                f"Continuum model {name} has no molecular model to deposit the charge of; the "
+                "project holds none."
+            )
+        layers = [
+            _build_layer(idealised=False),
+            read_model_file("molecular", self.path("molecular", molecular)).body,
+            body,
+        ]
+        document = {"schema": SCHEMA, "name": name, **merge_layers(layers)}
+        return Case.loads(
+            _text(document),
+            base=location.parent,
+            source=f"<continuum model {name} charged over molecular model {molecular}>",
+        )
 
     def molecular_for(self, name: str) -> str | None:
         """Return the molecular model continuum model ``name`` is built alone over, or None.

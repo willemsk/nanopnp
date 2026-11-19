@@ -243,7 +243,7 @@ python .claude/scripts/gui/render_shell.py --only meso <scratch dir>` exits 0 wi
 
 ### Work items
 
-- [ ] 1. `plot/data.py` (`ResidueCopies`, `ResidueCharges`, `ResidueAtoms`, `inside_outline`), `gui/geometry.py`
+- [x] 2851bbf 1. `plot/data.py` (`ResidueCopies`, `ResidueCharges`, `ResidueAtoms`, `inside_outline`), `gui/geometry.py`
   (D5, D6); done when `test_meso.py`'s copy and moved-atom tests pass and the `physics-reviewer` has read it.
   **Executor:** main
 - [ ] 2. `api/project.py` (`charge_case`, `kept_artefacts`) (D4); done when `test_project.py`'s charge case passes.

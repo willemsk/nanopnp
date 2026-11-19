@@ -360,7 +360,12 @@ study merges over the values of one molecular model: the one chosen for it, held
 reads none, and an idealised pore's layer holds the membrane's permittivity alone. Its stages 1 to 6 key as those of a
 study pairing the two at 0.15 M NaCl. A wall sized `auto` follows the study's salt only where `λ_D/5` falls below the
 0.05 nm ceiling, above about 1.5 M NaCl, so a study there builds a mesh of its own; an explicit wall size or
-`wall_for_concentration_M` is shared by every study. The store's clean-up keeps what each build stored.
+`wall_for_concentration_M` is shared by every study. A continuum model's charge is built alone to `charge` the same
+way (`Project.charge_case`; §8.2.42 AR8): its values over the build layer and its molecular model, layered under a
+supplied outline too, so stage 7 deposits that molecule's charge in the outline's frame (§8.2.40 AP1); a model that
+declares `geometry.pore` or supplies `inputs.mesh`, or a project with no molecular model, is refused, naming it. Its
+stage 7 keys as a study's at the build layer's charge settings and physics. The store's clean-up keeps what each build
+stored.
 `set_exposed` writes an entry's name and range as well, replacing the path's entry in its place.
 
 A physics model is built by no stage of its own; the workbench shows it inside a study (§8.2.41 AQ1).
