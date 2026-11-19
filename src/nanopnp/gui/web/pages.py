@@ -17,12 +17,14 @@ from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.gui.web.continuum_tools import continuum_page
 from nanopnp.gui.web.frame import Route, Views, current_suite, frame, heading
+from nanopnp.gui.web.meso import MesoModel
 from nanopnp.gui.web.meso_tools import meso_page
 from nanopnp.gui.web.molecular import MolecularModel
 from nanopnp.gui.web.molview import (
     COLOURINGS,
     REPRESENTATIONS,
     annotation,
+    chain_rows,
     charge_rows,
     first_frame_pdb,
     frame_count,
@@ -48,7 +50,6 @@ from nanopnp.gui.web.plane import (
 from nanopnp.gui.web.screens import SUITES, TOOL_SUITES, VIEWS, Suite, Tool, tool_view
 from nanopnp.gui.web.settings_page import SettingsPage
 from nanopnp.gui.web.shell import Shell
-from nanopnp.gui.web.study import StudyModel
 from nanopnp.gui.web.study_tools import study_page
 from nanopnp.gui.web.tools import OVERLAY_MOST, charge_colours, tool_page
 
@@ -103,14 +104,16 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
     @app.get("/api/continuum/{name}/plane")
     def continuum_plane(
         name: str,
-        tool: str = "geometry",
+        tool: str = "region",
         image: str = "mean",
         colour: str = "material",
         band: str = "",
         pick: str = "",
         held: str = "",
     ) -> JSONResponse:
-        """Serve what the (r, z) view draws of a model for one tool, less the mesh it holds."""
+        """Serve what Region or Mesh draws of a model in the (r, z) view, less the mesh held."""
+        if tool not in ("region", "mesh"):
+            raise HTTPException(422, f"tool: {tool!r} is not Region or Mesh")
         if image not in IMAGES or colour not in MESH_COLOURINGS:
             raise HTTPException(422, "an unknown picture or colouring")
         try:
@@ -169,16 +172,6 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             raise HTTPException(422, str(error)) from None
         return JSONResponse(drawn.json())
 
-    @app.get("/api/continuum/{name}/image")
-    def continuum_image(name: str, layer: str = "mean") -> Response:
-        """Serve one picture of a model's built stages as a PNG."""
-        if layer not in IMAGES:
-            raise HTTPException(422, f"layer: {layer!r} is not one of {', '.join(IMAGES)}")
-        found = image_png(continuum(name), layer)
-        if found is None:
-            raise HTTPException(404, f"the {layer} picture of {name!r} is not built")
-        return Response(found, media_type="image/png")
-
     @app.get("/api/molecular/{name}/structure")
     def molecular_structure(name: str, frame: int = 0) -> Response:
         """Serve what the view draws of a model: one built frame, else its source file."""
@@ -234,25 +227,64 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
                 )
             )
 
-    def study(name: str) -> StudyModel:
+    def meso(name: str) -> MesoModel:
         project = shell.bench.project
-        if project is None or name not in project.items("study"):
-            raise HTTPException(404, f"no study {name!r}")
-        return StudyModel(project, name, shell.queue)
+        if project is None or name not in project.items("continuum"):
+            raise HTTPException(404, f"no continuum model {name!r}")
+        return MesoModel(project, name, shell.queue)
 
     def colours(positive: str) -> Literal["blue", "red"]:
         if positive not in ("blue", "red"):
             raise HTTPException(422, f"positive: {positive!r} is not blue or red")
         return cast("Literal['blue', 'red']", positive)
 
-    @app.get("/api/study/{name}/charge/plane")
-    def study_charge(
+    @app.get("/api/meso/{name}/plane")
+    def meso_plane(
+        name: str, tool: str = "density", image: str = "", residue: str = ""
+    ) -> JSONResponse:
+        """Serve what Density or Outline draws of a model in stage 1's frame, a residue marked."""
+        if tool not in ("density", "outline"):
+            raise HTTPException(422, f"tool: {tool!r} is not density or outline")
+        model = meso(name)
+        try:
+            with model.keyed_once():
+                atoms = model.residue_atoms() if residue else None
+                markers = [] if atoms is None else atoms.markers(residue)
+                drawn = plane(
+                    model,
+                    tool,
+                    image=image or ("density" if tool == "density" else "mean"),
+                    marked=(atoms.group(residue), markers) if atoms and markers else None,
+                )
+        except ValueError as error:
+            raise HTTPException(422, str(error)) from None
+        return JSONResponse(drawn.json())
+
+    @app.get("/api/meso/{name}/image")
+    def meso_image(name: str, layer: str = "mean") -> Response:
+        """Serve one picture of a model's stages 2 and 3 as a PNG."""
+        if layer not in IMAGES:
+            raise HTTPException(422, f"layer: {layer!r} is not one of {', '.join(IMAGES)}")
+        found = image_png(meso(name), layer)
+        if found is None:
+            raise HTTPException(404, f"the {layer} picture of {name!r} is not built")
+        return Response(found, media_type="image/png")
+
+    @app.get("/api/meso/{name}/atoms")
+    def meso_atoms(name: str, r: float, z: float) -> JSONResponse:
+        """Serve the residues whose atoms stage 2 smears nearest a point, in kernel widths."""
+        atoms = meso(name).density_atoms()
+        found = [] if atoms is None else atoms.nearest(abs(r), z)
+        return JSONResponse([{"key": key, "widths": widths} for key, widths in found])
+
+    @app.get("/api/meso/{name}/charge/plane")
+    def meso_charge(
         name: str, layer: str = "lattice", residue: str = "", positive: str = "blue"
     ) -> JSONResponse:
-        """Serve a study's charge on the mesh as the (r, z) view draws it, a residue marked."""
+        """Serve a model's charge on the mesh as the (r, z) view draws it, a residue marked."""
         if layer not in ("lattice", "deployed"):
             raise HTTPException(422, f"layer: {layer!r} is not lattice or deployed")
-        model = study(name)
+        model = meso(name)
         with model.keyed_once():
             charge = model.artefacts().get("charge")
             charges = model.charges()
@@ -261,7 +293,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             drawn = charge_plane(
                 model.charge_map(),
                 model.conservation(),
-                image_url=f"/api/study/{name}/charge/image?positive={positive}&v={digest}",
+                image_url=f"/api/meso/{name}/charge/image?positive={positive}&v={digest}",
                 positive=colours(positive),
                 deployed=model.elements(),
                 layer="deployed" if layer == "deployed" else "lattice",
@@ -269,12 +301,12 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             )
         return JSONResponse(drawn.json())
 
-    @app.get("/api/study/{name}/charge/image")
-    def study_charge_image(name: str, positive: str = "blue") -> Response:
-        """Serve a study's charge lattice as a PNG, a positive charge in the named colour."""
-        shown = study(name).charge_map()
+    @app.get("/api/meso/{name}/charge/image")
+    def meso_charge_image(name: str, positive: str = "blue") -> Response:
+        """Serve a model's charge lattice as a PNG, a positive charge in the named colour."""
+        shown = meso(name).charge_map()
         if shown is None:
-            raise HTTPException(404, f"study {name!r} stores no charge lattice")
+            raise HTTPException(404, f"continuum model {name!r} stores no charge lattice")
         import numpy as np
 
         blue = colours(positive) == "blue"
@@ -283,50 +315,54 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         image = replace(shown.image, values=values, palette="diverging_r" if blue else "diverging")
         return Response(png(image.rgba(), image.width, image.height), media_type="image/png")
 
-    @app.get("/api/study/{name}/residues")
-    def study_residues(name: str, r: float, z: float) -> JSONResponse:
+    @app.get("/api/meso/{name}/residues")
+    def meso_residues(name: str, r: float, z: float) -> JSONResponse:
         """Serve the residues that add most charge at a point of the map, the most first."""
-        charges = study(name).charges()
+        charges = meso(name).charges()
         found = [] if charges is None else charges.at(r, z)
         return JSONResponse([{"key": key, "e_per_nm3": value} for key, value in found])
 
-    @app.get("/api/study/{name}/structure")
-    def study_structure(name: str) -> Response:
-        """Serve the study's atoms as PDB text: its protonated first frame, else its PQR."""
-        model = study(name)
+    @app.get("/api/meso/{name}/structure")
+    def meso_structure(name: str) -> Response:
+        """Serve the model's atoms as PDB text: its protonated first frame, else its PQR."""
+        model = meso(name)
         table = model.table()
         pqr = None if table is not None else pqr_frame(model.pqr())
         text = first_frame_pdb(table) if table is not None else "" if pqr is None else pqr_pdb(pqr)
         return Response(text, media_type="chemical/x-pdb")
 
-    @app.get("/api/study/{name}/annotation")
-    def study_annotation(name: str, positive: str = "blue") -> JSONResponse:
-        """Serve one colour per residue by its net charge, as a MolViewSpec annotation."""
-        model = study(name)
+    @app.get("/api/meso/{name}/annotation")
+    def meso_annotation(name: str, colour: str = "charge", positive: str = "blue") -> JSONResponse:
+        """Serve one colour per residue, by its chain or its net charge, as an annotation."""
+        if colour not in ("charge", "chain"):
+            raise HTTPException(422, f"colour: {colour!r} is not charge or chain")
+        model = meso(name)
         table = model.table()
         pqr = None if table is not None else pqr_frame(model.pqr())
+        if colour == "chain":
+            return JSONResponse(chain_rows(table, pqr))
         return JSONResponse(charge_rows(table, pqr, positive=colours(positive)))
 
-    @app.get("/api/study/{name}/scene")
-    def study_scene(
-        name: str, positive: str = "blue", v: str = "", subunit: int = 0
+    @app.get("/api/meso/{name}/scene")
+    def meso_scene(
+        name: str, colour: str = "charge", positive: str = "blue", v: str = "", subunit: int = 0
     ) -> JSONResponse:
-        """Serve the scene of a study's structure from the side, cut at the axis or one subunit.
-
-        Its residues are coloured by their charge.
-        """
-        model = study(name)
+        """Serve the scene of a model's molecule from the side, cut at the axis or one subunit."""
+        if colour not in ("charge", "chain"):
+            raise HTTPException(422, f"colour: {colour!r} is not charge or chain")
+        model = meso(name)
         table = model.table()
         pqr = None if table is not None else pqr_frame(model.pqr())
         seen = study_side_view(table, pqr)
         if seen is None:
             return JSONResponse(None)
         alone = bool(subunit) and seen.chain is not None
+        painted = f"colour={colour}&positive={colours(positive)}&v={v}"
         return JSONResponse(
             scene(
                 None,
-                structure_url=f"/api/study/{name}/structure?v={v}",
-                annotation_url=f"/api/study/{name}/annotation?positive={colours(positive)}&v={v}",
+                structure_url=f"/api/meso/{name}/structure?v={v}",
+                annotation_url=f"/api/meso/{name}/annotation?{painted}",
                 # Atoms with no backbone, as a fixture's charges, draw as balls: a cartoon
                 # draws nothing of them.
                 representation="cartoon" if has_backbone(table, pqr) else "spacefill",

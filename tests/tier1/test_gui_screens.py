@@ -243,7 +243,7 @@ def test_ver78_l_a_project_value_writes_the_project_file(browser: Browser, tmp_p
         process.wait(STOP_WITHIN_S)
 
 
-def test_ver78_m_charge_on_the_mesh_shows_both_views_each_built_once(
+def test_ver78_m_the_charge_map_shows_both_views_each_built_once(
     browser: Browser, tmp_path: Path
 ) -> None:
     process, found = _start("--state", "charged-tube", entry=CLI, config=tmp_path)
@@ -252,7 +252,7 @@ def test_ver78_m_charge_on_the_mesh_shows_both_views_each_built_once(
     page = browser.new_page(viewport={"width": 1000, "height": 640})
     try:
         page.goto(url)
-        _ready(page, origin + "/study/charge")
+        _ready(page, origin + "/meso/charge")
         page.evaluate("window.marker = 'kept'")
         assert page.locator("[data-control=molecule]").is_visible()
         assert page.locator("[data-control=plane]").is_visible()
@@ -261,8 +261,8 @@ def test_ver78_m_charge_on_the_mesh_shows_both_views_each_built_once(
         page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
         assert not page.locator("[data-control=plane]").is_visible()
         # The suite's icon opens the tool last used in it, both views as they were left.
-        page.locator("[data-control=suite-study]").click()
-        page.wait_for_url(origin + "/study/charge", timeout=READY_WAIT_MS)
+        page.locator("[data-control=suite-meso]").click()
+        page.wait_for_url(origin + "/meso/charge", timeout=READY_WAIT_MS)
         page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
         assert page.evaluate("window.marker") == "kept"
         assert page.evaluate("window.nano.builds") == 1
@@ -319,7 +319,7 @@ def test_ver78_m_two_continuum_tools_build_the_canvas_once_and_keep_the_molecule
         _ready(page, origin + "/molecular/prepare")
         page.evaluate("window.marker = 'kept'")
         page.locator("[data-control=suite-continuum]").click()
-        page.wait_for_url(origin + "/continuum/geometry", timeout=READY_WAIT_MS)
+        page.wait_for_url(origin + "/continuum/region", timeout=READY_WAIT_MS)
         page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
         page.locator("[data-control=tool-link-mesh]").click()
         page.wait_for_url(origin + "/continuum/mesh", timeout=READY_WAIT_MS)
@@ -353,9 +353,6 @@ def test_ver78_m_continuum_and_physics_tools_share_the_canvas_and_keep_the_molec
         _ready(page, origin + "/molecular/prepare")
         page.evaluate("window.marker = 'kept'")
         page.locator("[data-control=suite-continuum]").click()
-        page.wait_for_url(origin + "/continuum/geometry", timeout=READY_WAIT_MS)
-        page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
-        page.locator("[data-control=tool-link-region]").click()
         page.wait_for_url(origin + "/continuum/region", timeout=READY_WAIT_MS)
         page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
         # Equations draws its own view: the frame's region is hidden beside it.

@@ -1,4 +1,4 @@
-"""Charge on the mesh: the map, the deployed charge and the residue link carry the walk's record."""
+"""Meso's Charge map: the map, the deployed charge and the residue link carry the walk's record."""
 
 from __future__ import annotations
 
@@ -10,20 +10,23 @@ import pytest
 
 from nanopnp import Case
 from nanopnp.api.project import Project
+from nanopnp.api.session import Session
 from nanopnp.charge.stage import stored_lattice
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.gui.charge import ConservationView, charge_image
 from nanopnp.gui.render import ChargeRequest, render_charge_elements
+from nanopnp.gui.web.meso import MesoModel
 from nanopnp.gui.web.plane import charge_plane, deployed_layer
-from nanopnp.gui.web.study import StudyModel
+from nanopnp.io.project import STORE_FOLDER
+from nanopnp.io.store import Store
 from nanopnp.pipeline.run import RunResult
 from nanopnp.plot.data import ResidueCharges
 from nanopnp.post.export import FIXED_CHARGE_ATTRIBUTE
 
 
 @pytest.fixture(scope="module")
-def studied(charged_tube, tmp_path_factory: pytest.TempPathFactory) -> tuple[StudyModel, RunResult]:
-    work = tmp_path_factory.mktemp("study-charge")
+def charged(charged_tube, tmp_path_factory: pytest.TempPathFactory) -> tuple[MesoModel, RunResult]:
+    work = tmp_path_factory.mktemp("meso-charge")
     case = charged_tube.write(work / "case")
     pqr = case.parent / "atoms.pqr"
     lines = pqr.read_text().splitlines()
@@ -33,15 +36,17 @@ def studied(charged_tube, tmp_path_factory: pytest.TempPathFactory) -> tuple[Stu
     assert lines[first] != lines[second]
     pqr.write_text("\n".join(lines) + "\n", encoding="utf-8")
     project = Project.create(work / "project")
-    study = project.import_case(Case.load(case))
-    # The walk the Study suite's build runs: the study's own file, its record in runs/<study>/.
-    walked = project.session().run(project.study(study), upto="charge")
-    return StudyModel(project, study), walked
+    project.import_case(Case.load(case))
+    (continuum,) = project.items("continuum")
+    # The walk Meso's build runs: the continuum model's charge case, its record under the store.
+    session = Session(Store(project.root / STORE_FOLDER))
+    walked = session.run(project.charge_case(continuum), upto="charge")
+    return MesoModel(project, continuum), walked
 
 
 @pytest.fixture(scope="module")
-def walked(studied: tuple[StudyModel, RunResult]) -> RunResult:
-    return studied[1]
+def walked(charged: tuple[MesoModel, RunResult]) -> RunResult:
+    return charged[1]
 
 
 def _volumes_m3(vertices_nm: np.ndarray, triangles: np.ndarray) -> np.ndarray:
@@ -53,7 +58,7 @@ def _volumes_m3(vertices_nm: np.ndarray, triangles: np.ndarray) -> np.ndarray:
     return np.asarray(2.0 * math.pi * area * corners[:, :, 0].mean(axis=1) * 1e-27)
 
 
-def test_ver60_the_studys_charge_on_the_mesh_shows_the_walks_record(walked, charged_tube) -> None:
+def test_ver60_the_charge_map_shows_the_walks_record(walked, charged_tube) -> None:
     # A map, a mesh layer or a residue that disagrees with the record shows a charge the solve did
     # not assemble.
     recorded = walked.artefacts["charge"].summary["charge"]["conservation"]
@@ -91,10 +96,10 @@ def test_ver60_the_studys_charge_on_the_mesh_shows_the_walks_record(walked, char
         assert math.copysign(1.0, ranked[0][1]) == math.copysign(1.0, q_e)
 
 
-def test_ver60_the_study_suite_draws_the_stages_and_planes_the_walk_recorded(studied) -> None:
-    # A study that keys its stages apart from its walk, or draws a worst plane the record does
-    # not name, shows a charge other than the one its run assembles.
-    model, walked = studied
+def test_ver60_the_charge_map_draws_the_stages_and_planes_the_walk_recorded(charged) -> None:
+    # A model that keys its stages apart from its walk, or draws a worst plane the record does
+    # not name, shows a charge other than the one its walk deposited.
+    model, walked = charged
     stored = model.artefacts()
     assert set(stored) == set(model.walked())
     assert {stage: found.hash for stage, found in stored.items()} == {

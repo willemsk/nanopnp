@@ -238,6 +238,11 @@ points. The server keeps them by the protonation and charge hashes, as
   each charged state's Charge map has its record.
 - The graph's node is *Charge map*; a click opens `continuum/<c>`, sets `built_with` to the study's molecular model where
   it differs, and goes to `/meso/charge`.
+> **Outcome — Meso's pane extends the continuum pane.** `meso_tools.py:_MesoPane` extends `_ContinuumPane`, which keeps
+> *Built over*, Region and Mesh; Pore geometry's editor moved into Meso whole. `MesoModel.molecular()` names the
+> molecular model under a supplied outline too, as `charge_case` layers it. Density offers stage 2's section and stage
+> 3's maps, Outline stage 3's. `ResidueAtoms` gained `group`, `copies` and `name` for the moved list, and
+> `molview.chain_rows` colours a table's residues by chain.
 
 **Item 7.** The scene gains, behind *Overlay* in Charge map's pane, two volumes from `/volume`, each an isosurface at
 ±the level the pane sets for it, default a tenth of that volume's own largest `|value|`, in the charge colours at

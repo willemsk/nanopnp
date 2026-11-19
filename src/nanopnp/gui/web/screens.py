@@ -205,18 +205,6 @@ SUITES: tuple[Suite, ...] = (
         "a continuum model",
         (
             Tool(
-                "geometry",
-                "Pore geometry",
-                (
-                    "geometry.density.grid_spacing_nm",
-                    "geometry.density.sharpness",
-                    "geometry.density.atoms",
-                    "geometry.contour.isolevel",
-                    "geometry.contour.smoothing",
-                    "geometry.contour.simplify_tol_nm",
-                ),
-            ),
-            Tool(
                 "region",
                 "Region",
                 (
@@ -325,7 +313,6 @@ SUITES: tuple[Suite, ...] = (
                 view="page",
             ),
             Tool("sweep", "Sweep", view="page"),
-            Tool("charge", "Charge on the mesh", view="pair"),
             Tool("runs", "Runs", view="page"),
         ),
         "use",

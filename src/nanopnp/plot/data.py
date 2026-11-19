@@ -678,14 +678,29 @@ class ResidueAtoms:
         self._keys = list(index)
         self._key_of = np.array([index[key] for key in keys], dtype=np.intp)
         present: dict[str, dict[str, None]] = {}
-        for key, member in zip(keys, own, strict=True):
+        self._names: dict[str, str] = {}
+        for key, member, name in zip(keys, own, table.resname.tolist(), strict=True):
             present.setdefault(key, {})[member] = None
+            self._names.setdefault(key, str(name).strip())
+        self._present = {key: tuple(members) for key, members in present.items()}
         self._count = np.array([len(present[key]) for key in self._keys], dtype=np.float64)
 
     @property
     def r_nm(self) -> np.ndarray:
         """Return every atom's distance from the axis, in nm."""
         return self._r
+
+    def group(self, key: str) -> str:
+        """Return the key a residue is named by, its copies together."""
+        return self._copies.group(key)
+
+    def copies(self, key: str) -> tuple[str, ...]:
+        """Return the keys of a residue's copies the table holds, its first unit's first."""
+        return self._present.get(self._copies.group(key), ())
+
+    def name(self, key: str) -> str:
+        """Return a residue's name as the table writes it, or empty where it holds none."""
+        return self._names.get(self._copies.group(key), "")
 
     @property
     def z_nm(self) -> np.ndarray:

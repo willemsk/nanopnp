@@ -83,7 +83,7 @@ Frame = Literal["structure", "model", "plot"]
 _T = TypeVar("_T")
 
 IMAGES: tuple[str, ...] = ("density", "mean", "cn_variance", "raw_variance")
-"""The pictures Pore geometry draws under its outline: stage 2's section, then stage 3's maps."""
+"""The pictures Density draws, stage 2's section then stage 3's maps; Outline draws stage 3's."""
 
 IMAGE_BARS: dict[str, tuple[str, str]] = {
     "density": ("Density, stage 2", "fraction of space filled"),
@@ -134,6 +134,12 @@ ROUND_NM = 5
 
 MARGIN = 0.08
 """The share of the drawing's span the first view leaves around it."""
+
+MESO_TOOLS: tuple[str, ...] = ("density", "outline")
+"""The tools that draw in stage 1's frame: Meso's density and outline."""
+
+STAGE_THREE: tuple[str, ...] = ("mean", "cn_variance", "raw_variance")
+"""The pictures of stage 3's map, which the outline is drawn over."""
 
 FRAMED = frozenset({"contour", "pore", "exclusion", "probe", "lumen"})
 """The outlines the first view frames, with the pictures: the pore, not the membrane."""
@@ -350,7 +356,7 @@ def _image(
     return {
         "id": identifier,
         "kind": "image",
-        "url": f"/api/continuum/{model.name}/image?layer={identifier}&v={digest[:12]}",
+        "url": f"/api/meso/{model.name}/image?layer={identifier}&v={digest[:12]}",
         "extent_nm": [round(v, ROUND_NM) for v in picture.extent_nm],
         "scale": list(picture.scale),
         "title": picture.title,
@@ -450,9 +456,12 @@ def _supplied(model: ContinuumModel) -> np.ndarray | None:
 
 
 def _outline_layers(
-    model: ContinuumModel, held: dict[str, Artefact], *, image: str
-) -> tuple[list[dict[str, Any]], list[str], str]:
-    """Return stages 2 to 4's layers in stage 1's frame, the notes and the r axis's name."""
+    model: ContinuumModel, held: dict[str, Artefact], *, image: str, outlined: bool = True
+) -> tuple[list[dict[str, Any]], list[str], str, np.ndarray | None]:
+    """Return stages 2 to 4's layers in stage 1's frame, the notes, the r axis's name and the loop.
+
+    ``outlined`` draws the outline and the probe over the picture; the loop is returned either way.
+    """
     layers: list[dict[str, Any]] = []
     notes: list[str] = []
     axis = "r (nm)"
@@ -461,17 +470,20 @@ def _outline_layers(
         layers.append(_image(model, image, _picture(held[stage], image), held[stage].hash))
         if image == "density":
             axis = "x (nm), section y = 0"
-    loop = contour_polygon_m(held["contour"]) if "contour" in held else None
+    built = contour_polygon_m(held["contour"]) if "contour" in held else None
     supplied = _supplied(model)
-    if loop is not None:
-        layers.append(_polygon("contour", "contour", loop * 1e9, "Outline, stage 4"))
+    loop = built * 1e9 if built is not None else supplied
+    if built is not None and outlined:
+        layers.append(_polygon("contour", "contour", built * 1e9, "Outline, stage 4"))
         layers += _probe(held["contour"])
     elif supplied is not None:
-        layers.append(_polygon("contour", "contour", supplied, "Outline, supplied"))
+        if outlined:
+            layers.append(_polygon("contour", "contour", supplied, "Outline, supplied"))
         notes.append("The model supplies its outline (inputs.profile): stages 2 to 4 do not run.")
     if not layers:
-        notes.append(_unbuilt(model, "Nothing is built yet: build the geometry to draw it."))
-    return layers, notes, axis
+        built_by = "the outline" if outlined else "the density"
+        notes.append(_unbuilt(model, f"Nothing is built yet: build {built_by} to draw it."))
+    return layers, notes, axis, loop
 
 
 def _unbuilt(model: ContinuumModel, note: str) -> str:
@@ -753,10 +765,9 @@ def deployed_layer(path: Path, *, positive: Literal["blue", "red"] = "blue") -> 
 
 
 CHARGE_AXES = ("r (nm)", "z (nm)")
-NO_LATTICE = "The study's charge stores no lattice to draw: it is supplied on the mesh."
+NO_LATTICE = "The charge stores no lattice to draw: it is supplied on the mesh."
 NO_DEPLOYED = (
-    "The deployed charge is read from the study's run record. Build the charge on the mesh to "
-    "write one."
+    "The deployed charge is read from the charge's run record. Build the charge map to write one."
 )
 
 
@@ -774,7 +785,7 @@ def charge_plane(
     layer: Literal["lattice", "deployed"] = "lattice",
     picked: tuple[str, Sequence[tuple[float, float, float]]] | None = None,
 ) -> Plane:
-    """Return a study's charge on the mesh: the lattice or the deployed charge, with its bar.
+    """Return the charge on the mesh: the lattice or the deployed charge, with its bar.
 
     Each worst plane of the conservation record is a dashed line across the map, and a picked
     residue's charged atoms are rings in the charge's own colours. A click asks about its point.
@@ -851,6 +862,17 @@ def charge_plane(
     return Plane("model", CHARGE_AXES, framed, tuple(layers), tuple(notes), point_pick=bool(layers))
 
 
+def _atoms_layer(residue: str, atoms: Sequence[tuple[float, float, float]]) -> dict[str, Any]:
+    """Return a residue's atoms as points at (r, z), on a density section at x = r."""
+    return {
+        "id": "residue",
+        "kind": "points",
+        "points_nm": _flat((r, z) for r, z, _ in atoms),
+        "colours": [SERIES[4]] * len(atoms),
+        "title": f"Residue {residue}, its atoms",
+    }
+
+
 def _edited(model: ContinuumModel, layers: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Put the hand edit held in place of the outline, over the outline it was edited from."""
     editor = model.editor()
@@ -875,13 +897,17 @@ def plane(
     band: tuple[float, float] | None = None,
     pick: str = "",
     mesh_held: str = "",
+    marked: tuple[str, Sequence[tuple[float, float, float]]] | None = None,
 ) -> Plane:
-    """Return what the (r, z) view draws for one Continuum tool of a model.
+    """Return what the (r, z) view draws for one tool of a continuum model, Meso's or its own.
+
+    Density draws its picture and the membrane, and a click asks about its point; Outline draws
+    stage 3's picture under the outline, the probe and the edit held.
 
     Parameters
     ----------
     image
-        The picture Pore geometry draws, one of :data:`IMAGES`.
+        The picture Density or Outline draws, one of :data:`IMAGES`; Outline's, of stage 3.
     colour
         What the Mesh tool colours its elements by, one of :data:`COLOURINGS`.
     band
@@ -892,24 +918,25 @@ def plane(
     mesh_held
         The content hash of the mesh whose vertices, triangles and materials the view holds,
         which the drawing then leaves out.
-    mesh
-        Whether the Conditions view draws the stored mesh in place of the region's domains.
+    marked
+        A residue's key and its atoms, each ``(r_nm, z_nm, q_e)`` in stage 1's frame, marked on
+        Density's and Outline's drawings.
 
     Raises
     ------
     ValueError
         If the tool, the picture, the colouring or the pick is not one this view draws.
     """
-    if image not in IMAGES:
-        raise ValueError(f"image {image!r} is not one of {', '.join(IMAGES)}")
+    if image not in (STAGE_THREE if tool == "outline" else IMAGES):
+        raise ValueError(f"image {image!r} is not one of {tool}'s pictures")
     if colour not in COLOURINGS:
         raise ValueError(f"colour {colour!r} is not one of {', '.join(COLOURINGS)}")
-    if tool not in ("geometry", "region", "mesh"):
-        raise ValueError(f"tool {tool!r} is not a Continuum tool")
+    if tool not in (*MESO_TOOLS, "region", "mesh"):
+        raise ValueError(f"tool {tool!r} is not a tool of a continuum model's (r, z) view")
     if pick and pick not in (DOMAINS if tool == "region" else PARTS):
         raise ValueError(f"pick {pick!r} is not a domain or a part of the {tool} tool")
     blank = (0.0, 10.0, -10.0, 10.0)
-    frame: Frame = "structure" if tool == "geometry" else "model"
+    frame: Frame = "structure" if tool in MESO_TOOLS else "model"
     if model is None:
         empty = ("No continuum model is open.",)
         return Plane(frame, ("r (nm)", "z (nm)"), _extent([], blank), (), empty)
@@ -917,14 +944,25 @@ def plane(
         refused = ("The model's file forms no case, so nothing is drawn: see the pane.",)
         return Plane(frame, ("r (nm)", "z (nm)"), _extent([], blank), (), refused)
     held = model.artefacts()
-    if tool == "geometry":
-        layers, notes, axis = _outline_layers(model, held, image=image)
-        outline = next((layer["points_nm"] for layer in layers if layer["id"] == "contour"), None)
-        layers = _edited(model, layers)
+    if tool in MESO_TOOLS:
+        outlined = tool == "outline"
+        layers, notes, axis, loop = _outline_layers(model, held, image=image, outlined=outlined)
+        if outlined:
+            layers = _edited(model, layers)
         membrane, _, _ = _values(model)
         extent = _extent(layers, blank)
+        outline = None if loop is None else _flat(loop)
         layers += _membrane(membrane, outline, r_high=extent[1])
-        return Plane("structure", (axis, "z (nm)"), extent, tuple(layers), tuple(notes))
+        if marked is not None and marked[1]:
+            layers.append(_atoms_layer(*marked))
+        return Plane(
+            "structure",
+            (axis, "z (nm)"),
+            extent,
+            tuple(layers),
+            tuple(notes),
+            point_pick=not outlined,
+        )
     outlines, drawing = _region_layers(
         held, filled=tool == "region", picked=pick if tool == "region" else ""
     )

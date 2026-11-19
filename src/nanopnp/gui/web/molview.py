@@ -31,6 +31,7 @@ __all__ = [
     "Representation",
     "SideView",
     "annotation",
+    "chain_rows",
     "charge_rows",
     "first_frame_pdb",
     "has_backbone",
@@ -386,6 +387,37 @@ def charge_rows(
     in the named colour, as the charge map's.
     """
     return _charge_rows(_residue_charges(table, pqr), positive, _letters(table, pqr))
+
+
+def chain_rows(
+    table: ProtonationTable | None, pqr: PQRFrame | None = None
+) -> list[dict[str, object]]:
+    """Return one colour per residue by its chain, a hue per chain: the table's, else the PQR's."""
+    if table is not None:
+        keys = zip(
+            (str(c) for c in table.residue_chain.tolist()),
+            (int(r) for r in table.residue_resid.tolist()),
+            (str(i) for i in table.residue_icode.tolist()),
+            strict=True,
+        )
+        residues = list(dict.fromkeys(keys))
+    elif pqr is not None:
+        residues = list(
+            dict.fromkeys(
+                zip(
+                    (str(c) for c in pqr.chain.tolist()),
+                    (int(r) for r in pqr.resid.tolist()),
+                    (str(i) for i in pqr.icode.tolist()),
+                    strict=True,
+                )
+            )
+        )
+    else:
+        return []
+    letters = _letters(table, pqr)
+    order = list(dict.fromkeys(chain for chain, _, _ in residues))
+    hue = {c: CHAIN_COLOURS[i % len(CHAIN_COLOURS)] for i, c in enumerate(order)}
+    return [_row(chain, resid, icode, hue[chain], letters) for chain, resid, icode in residues]
 
 
 def _letters(table: ProtonationTable | None, pqr: PQRFrame | None) -> dict[str, str]:

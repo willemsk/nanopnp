@@ -198,7 +198,6 @@ BUILDS: dict[str, tuple[str | None, str, str]] = {
     "view": (None, "", "charge"),
     "density": ("symmetry", "Build density", ""),
     "outline": ("contour", "Build outline", ""),
-    "geometry": ("contour", "Build geometry", ""),
     "region": ("region", "Build region", ""),
     "mesh": ("mesh", "Build mesh", ""),
     "equations": (None, "", ""),
@@ -208,7 +207,7 @@ BUILDS: dict[str, tuple[str | None, str, str]] = {
     "overview": (None, "", ""),
     "setup": (None, "", ""),
     "sweep": (None, "", ""),
-    "charge": ("charge", "Build charge on the mesh", ""),
+    "charge": ("charge", "Build charge map", ""),
     "runs": (None, "", ""),
 }
 
@@ -220,7 +219,7 @@ STAGE_TITLES = {
     "contour": "Contour",
     "region": "Region",
     "mesh": "Mesh",
-    "charge": "Charge on the mesh",
+    "charge": "Charge map",
 }
 # Each state's glyph and word (the glyph never stands alone), and its colour class.
 STATES = {

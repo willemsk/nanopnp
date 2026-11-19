@@ -137,13 +137,15 @@ window.nano = {
     });
     await this.once(this.viewer.plugin.behaviors.state.isBusy, (busy) => !busy);
   },
-  show(key) {
-    this.picked = key;
+  // Select a residue, or each of a list: a residue's copies under Cn are picked together.
+  show(keys) {
+    this.picked = keys;
+    const wanted = new Set(Array.isArray(keys) ? keys : [keys]);
     const { Queries, QueryContext, StructureSelection } = this.lib;
     const structure = this.structure();
     if (!structure) { this.drawn(); return; }
     const query = Queries.generators.atoms({
-      residueTest: (ctx) => this.key(ctx.element) === key,
+      residueTest: (ctx) => wanted.has(this.key(ctx.element)),
     });
     const loci = StructureSelection.toLociWithSourceUnits(query(new QueryContext(structure)));
     this.viewer.plugin.managers.structure.selection.fromLoci('set', loci);

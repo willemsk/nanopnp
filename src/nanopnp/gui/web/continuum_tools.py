@@ -3,30 +3,18 @@
 from __future__ import annotations
 
 import functools
-import shutil
-import tempfile
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any, ClassVar, Concatenate, ParamSpec, TypeVar
 from urllib.parse import urlencode
 
-from nicegui import context, events, ui
+from nicegui import events, ui
 
-from nanopnp.gui.assess import (
-    Assessed,
-    AssessFailed,
-    Assessment,
-    AssessProcess,
-    AssessRequest,
-    Seeded,
-)
-from nanopnp.gui.geometry import ProfileEditor, lookup_table
+from nanopnp.gui.geometry import lookup_table
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.gui.web.frame import Views, heading
 from nanopnp.gui.web.plane import (
     COLOURINGS,
     DOMAINS,
-    IMAGES,
     MATERIAL_COLOURS,
     PARTS,
     mesh_quality,
@@ -35,23 +23,15 @@ from nanopnp.gui.web.screens import Tool
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import _Pane, current_name
 from nanopnp.io.models import Kind
-from nanopnp.io.project import STORE_FOLDER
 from nanopnp.mesh.quality import QUALITY_FLOOR
 from nanopnp.mesh.sizing import SIZES, case_sizes
 
 __all__ = ["continuum_page", "current_continuum"]
 
-IMAGE_TITLES = {
-    "density": "Density section, stage 2",
-    "mean": "Mean, stage 3",
-    "cn_variance": "Cn variance, stage 3",
-    "raw_variance": "Raw variance, stage 3",
-}
 COLOUR_TITLES = {"material": "Material", "sicn": "SICN", "gamma": "Gamma"}
 TIMES = "\N{MULTIPLICATION SIGN}"
 BINS = 10
 """The histogram's bars, each a tenth of the quality's range."""
-POINT_GROUP = "structure.symmetry.point_group"
 PORE_RADIUS = "geometry.pore.radius_nm"
 OUTLINE_STAGES = ("geometry.density.", "geometry.contour.")
 """The values of stages 2 to 4, which a supplied outline leaves unread."""
@@ -80,12 +60,7 @@ DOMAIN_FIELDS: dict[str, tuple[str, ...]] = {
     "electrolyte": ("geometry.reservoir.radius_nm", PORE_RADIUS),
 }
 """The Region tool's values each domain picked shows."""
-OUTLINE_TOOLS = ("geometry", "outline")
-"""The tools that draw the outline and edit it."""
-PORE_TOOLS = ("geometry", "density", "outline")
-"""The tools of stages 2 to 4, which a supplied outline leaves unbuilt."""
 TOOL_STAGES = {
-    "geometry": "contour",
     "density": "symmetry",
     "outline": "contour",
     "region": "region",
@@ -113,20 +88,26 @@ def _keyed(method: Callable[Concatenate[_S, _P], None]) -> Callable[Concatenate[
     return keyed
 
 
-def current_continuum(shell: Shell) -> ContinuumModel | None:
+def current_continuum(
+    shell: Shell, model_type: type[ContinuumModel] = ContinuumModel
+) -> ContinuumModel | None:
     """Return the continuum model the tools edit: the open one, else the project's first."""
     project, name = shell.bench.project, current_name(shell, "continuum")
     if project is None or name is None:
         return None
-    return ContinuumModel(project, name, shell.queue)
+    return model_type(project, name, shell.queue)
 
 
 class _ContinuumPane(_Pane[ContinuumModel]):
+    """A pane of a continuum model's tools: its pick of a molecular model, its region and mesh."""
+
     kind: ClassVar[str] = "continuum"
     model_kind: ClassVar[Kind] = "continuum"
+    model_type: ClassVar[type[ContinuumModel]] = ContinuumModel
+    """What the pane reads the continuum model as."""
 
     def __init__(self, shell: Shell, tool: Tool, built: Views, focus: str) -> None:
-        super().__init__(shell, tool, built, focus, current_continuum(shell))
+        super().__init__(shell, tool, built, focus, current_continuum(shell, self.model_type))
         self.look: dict[str, str] = {"image": "mean", "colour": "material", "band": "", "pick": ""}
         # A part or a domain named by the address opens picked.
         for part, _, path, _ in PART_ROWS:
@@ -135,15 +116,8 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         self.parts_box: ui.column
         self.part_box: ui.column
         self.domain_select: ui.select
-        self.vertex: int | None = None
-        self.assess: AssessProcess | None = None
-        self.assessed: Assessment | str | None = None
-        self.folder = Path()
-        self.edit_box: ui.column
         self.histogram_box: ui.column
         self.picked_label: ui.label
-        self.vertex_r: ui.number
-        self.vertex_z: ui.number
         self.walked: tuple[str, ...] = ()
         self.supplied: str | None = None
 
@@ -164,12 +138,15 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             self.domain_choice()
         if self.tool.id == "mesh":
             self.quality_verdict()
-        if self.tool.id in OUTLINE_TOOLS:
-            self.outline_verdict()
+        self.built_over()
+
+    def built_over(self) -> None:
+        """Draw the pick of the molecular model the model is built over, where it reads one."""
         model = self.model
-        if model is None or self.project is None:
+        if model is None or self.project is None or not self.usable():
             return
-        if self.supplied is not None or not self.usable():
+        # A model drawing its own pore reads no molecular model.
+        if self.supplied is not None and model.molecular() is None:
             return
         names = list(self.project.items("molecular"))
         chosen = model.molecular()
@@ -196,29 +173,11 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         # The stages it walks follow the pairing, and with them the pane's values and actions.
         await self.built.reopen()
 
-    def outline_verdict(self) -> None:
-        held = {} if self.model is None or not self.usable() else self.model.artefacts()
-        if "contour" not in held:
-            return
-        # A stored outline passed stage 4's checks: the stage refuses one that does not.
-        summary = held["contour"].summary
-        narrowest = _mapping(summary.get("constriction"))
-        ui.label(
-            f"✓ Stage 4's checks passed: narrowest radius {self.text(narrowest.get('r_nm'), 'nm')} "
-            f"at z = {self.text(narrowest.get('z_nm'), 'nm')}, "
-            f"{summary.get('vertex_count', '?')} vertices."
-        ).classes("state-ok").props("data-control=contour-verdict")
-
     def own_status(self) -> None:
         if self.model is None:
             return
         said = SUPPLIED.get(self.supplied or "", "reads no structure")
-        if self.tool.id in PORE_TOOLS and "contour" not in self.walked:
-            ui.label(
-                f"This model {said}: stages 2 to 4 do not run, so their values are not read. "
-                "Its outline is drawn and edited here."
-            )
-        elif self.supplied is not None:
+        if self.supplied is not None:
             ui.label(f"This model {said}, so it reads no molecular model.")
         elif (molecular := self.model.molecular()) is not None:
             ui.label(f"Built over molecular model {molecular}, outside any study.")
@@ -233,7 +192,10 @@ class _ContinuumPane(_Pane[ContinuumModel]):
 
     def build_held(self) -> str | None:
         if self.model is not None and self.model.editor() is not None:
-            return "Save the edited outline or discard it first: a build reads the model's file."
+            return (
+                "Save the edited outline or discard it first, in Meso \u203a Outline: a build "
+                "reads the model's file."
+            )
         return None
 
     def unbuilt(self, tool_id: str) -> str | None:
@@ -253,344 +215,16 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             if isinstance(control, ui.select | ui.number | ui.input):
                 control.disable()
 
-    def geometry_section(self) -> None:
-        self.picture_choice()
-        self.outline_editor()
-
-    def picture_choice(self) -> None:
-        """Draw the point group the map is averaged over and the picture drawn under the outline."""
-        case = None if self.model is None else self.model.case()
-        if case is not None and case.structure is not None:
-            group = case.structure.symmetry.point_group
-            with self.named("Point group"):
-                ui.link(
-                    f"{group}, set in Prepare",
-                    f"/molecular/prepare?field={POINT_GROUP}",
-                ).props("data-control=geometry-point-group")
-        heading("Picture", 2)
-        with self.named("Drawn under the outline"):
-            ui.select(
-                {name: IMAGE_TITLES[name] for name in IMAGES},
-                value=self.look["image"],
-                on_change=lambda e: self.restyle("image", str(e.value)),
-            ).props(
-                'dense outlined options-dense data-control=plane-image aria-label="Picture"'
-            ).set_enabled(self.model is not None and "contour" in self.walked)
-
-    def outline_editor(self) -> None:
-        """Draw the outline's editor."""
-        heading("Outline", 2)
-        self.edit_box = ui.column().classes("w-full gap-1").props("data-control=contour-edit")
-        self.show_edit()
-        ui.label(
-            "Later: the pore's (r, z) domain drawn by hand, with lines, arcs and booleans, "
-            "comes with the sketcher in a later phase."
-        ).classes("later later-banner")
-
-    # -- the outline's editor ----------------------------------------------------------
-
-    def measurable(self) -> bool:
-        """Say whether an edit can be measured: the model walks stages 2 to 4 over a structure."""
-        return "contour" in self.walked
-
-    @_keyed
-    def show_edit(self) -> None:
-        self.edit_box.clear()
-        model = self.model
-        with self.edit_box:
-            if model is None:
-                ui.label("No continuum model is open, so there is no outline to edit.").classes(
-                    "later"
-                )
-                return
-            editor = model.editor()
-            if editor is None:
-                with ui.row().classes("items-center no-wrap"):
-                    # An outline is there to edit once stage 4 is built, or where it is supplied.
-                    outlined = model.profile() is not None or (
-                        model.states().get("contour") == "built"
-                    )
-                    ui.button("Edit outline", on_click=self.start_edit).props(
-                        "outline dense no-caps data-control=contour-start"
-                    ).set_enabled(self.usable() and outlined and not self.assessing())
-                    if self.measurable():
-                        mapped = model.states().get("symmetry") == "built"
-                        ui.button("Seed from the map", on_click=self.seed).props(
-                            "outline dense no-caps data-control=contour-seed"
-                        ).set_enabled(self.usable() and mapped and not self.assessing())
-                if self.measurable():
-                    ui.label(
-                        "Edit the built outline. If stage 4 blocks the outline, Seed from the "
-                        "map traces a loop from the stored map to edit."
-                    ).classes("later")
-                self.show_assessment()
-                return
-            parent = (
-                "stage 4's outline"
-                if editor.parent_name.startswith("contour-")
-                else f"the outline {editor.parent_name}"
-            )
-            state = (
-                f"Editing {parent}: {len(editor.vertices)} vertices, edited; not saved."
-                if editor.can_undo
-                else f"Editing {parent}: no change yet."
-            )
-            ui.label(state).props("data-control=contour-state")
-            with ui.row().classes("items-center no-wrap"):
-                ui.button(icon="sym_o_undo", on_click=self.undo).props(
-                    'flat dense aria-label="Undo the last edit" data-control=contour-undo'
-                ).set_enabled(editor.can_undo)
-                ui.button(icon="sym_o_redo", on_click=self.redo).props(
-                    'flat dense aria-label="Redo the edit undone" data-control=contour-redo'
-                ).set_enabled(editor.can_redo)
-                ui.button("Delete vertex", on_click=self.delete_vertex).props(
-                    "outline dense no-caps data-control=contour-delete"
-                ).set_enabled(self.vertex is not None)
-                ui.button("Measure", on_click=self.measure_edit).props(
-                    "outline dense no-caps data-control=contour-measure"
-                ).set_enabled(self.measurable() and not self.assessing())
-            if self.vertex is not None and self.vertex < len(editor.vertices):
-                r, z = editor.vertices[self.vertex]
-                with self.named(f"Vertex {self.vertex}"):
-                    with ui.row().classes("items-center no-wrap"):
-                        self.vertex_r = (
-                            ui.number(value=round(r, 4), suffix="nm", step=0.01)
-                            .props('dense outlined data-control=contour-r aria-label="r, in nm"')
-                            .style("width: 7.5rem")
-                        )
-                        self.vertex_z = (
-                            ui.number(value=round(z, 4), suffix="nm", step=0.01)
-                            .props('dense outlined data-control=contour-z aria-label="z, in nm"')
-                            .style("width: 7.5rem")
-                        )
-                        ui.button("Move", on_click=self.move_vertex).props(
-                            "outline dense no-caps data-control=contour-move"
-                        )
-            else:
-                ui.label(
-                    "Pick a vertex in the view to move or delete it; double-click an edge to "
-                    "insert one."
-                ).classes("later")
-            problem = editor.problem
-            if problem is not None:
-                self.card("warn", "The loop would not load", problem, None)
-            if not self.measurable():
-                ui.label(
-                    "This model reads no structure to measure an edit against; a study that "
-                    "pairs it with a molecular model runs the checks."
-                ).classes("later")
-            self.show_assessment()
-            with ui.row().classes("items-center no-wrap"):
-                ui.button("Discard edit…", on_click=self.ask_discard).props(
-                    "flat dense no-caps data-control=contour-discard"
-                )
-                ui.button("Save edit…", on_click=self.ask_save).props(
-                    "unelevated dense no-caps color=primary data-control=contour-save"
-                ).set_enabled(problem is None)
-
-    def show_assessment(self) -> None:
-        said = self.assessed
-        if said is None:
-            if self.assessing():
-                ui.label("Measuring the loop…").props("role=status")
-            return
-        if isinstance(said, str):
-            self.card("err", "Not measured", said, None)
-            return
-        if said.passed:
-            ui.label("✓ The loop meets every check of stage 4.").classes("state-ok")
-            return
-        for refusal in said.failures:
-            self.card("err", f"Fails the {refusal.criterion} check", refusal.message, None)
-
-    def assessing(self) -> bool:
-        return self.assess is not None and self.assess.running
-
-    def start_assess(self, vertices: tuple[tuple[float, float], ...] | None) -> None:
-        model = self.model
-        case = None if model is None else model.case()
-        # One that ended is still held until the next tick reads its answer and removes its folder.
-        if model is None or case is None or self.assess is not None:
-            return
-        self.folder = Path(tempfile.mkdtemp(prefix="nanopnp-assess-"))
-        written = self.folder / f"{model.name}.case.yaml"
-        written.write_text(case.dumps(), encoding="utf-8")
-        self.assess = AssessProcess(
-            AssessRequest(
-                case=str(written), store=str(model.project.root / STORE_FOLDER), vertices=vertices
-            )
-        )
-        self.assessed = None
-        self.assess.start()
-        self.show_edit()
-
-    async def poll_assess(self) -> None:
-        if self.assess is None or self.model is None:
-            return
-        ended = not self.assess.running
-        for event in self.assess.drain():
-            if isinstance(event, Assessed):
-                self.assessed = event.assessment
-            elif isinstance(event, Seeded):
-                seed = event.seed
-                self.model.hold_edit(
-                    ProfileEditor.from_seed(seed.vertices, digest=seed.digest, name=seed.name)
-                )
-                self.assessed = seed.assessment
-            elif isinstance(event, AssessFailed):
-                self.assessed = event.message
-            ended = True
-        if ended:
-            self.assess = None
-            shutil.rmtree(self.folder, ignore_errors=True)
-            self.show_edit()
-            self.refresh()
-            await self.show()
-
-    async def start_edit(self) -> None:
-        if self.model is None:
-            return
-        try:
-            self.model.start_edit()
-        except ValueError as error:
-            ui.notify(str(error), type="negative", multi_line=True)
-            return
-        # The refresh deletes the button this click came from, and with it the slot's client.
-        client = context.client
-        await self.edited()
-        # The editor opens at the pane's foot: bring it into view.
-        client.run_javascript(
-            "document.querySelector('[data-control=contour-edit]')"
-            "?.scrollIntoView({block: 'start', behavior: 'smooth'})"
-        )
-
-    def seed(self) -> None:
-        self.start_assess(None)
-
-    def measure_edit(self) -> None:
-        editor = None if self.model is None else self.model.editor()
-        if editor is not None:
-            self.start_assess(tuple(editor.vertices))
-
-    async def edited(self) -> None:
-        self.assessed = None
-        # The view first: the control that asked runs its script in its own slot, which the
-        # box's rebuild deletes.
-        await self.show()
-        self.show_edit()
-        self.refresh()
-
-    async def undo(self) -> None:
-        editor = None if self.model is None else self.model.editor()
-        if editor is not None and editor.undo():
-            await self.edited()
-
-    async def redo(self) -> None:
-        editor = None if self.model is None else self.model.editor()
-        if editor is not None and editor.redo():
-            await self.edited()
-
-    async def move_vertex(self) -> None:
-        editor = None if self.model is None else self.model.editor()
-        r, z = self.vertex_r.value, self.vertex_z.value
-        if editor is None or self.vertex is None or r is None or z is None:
-            return
-        editor.move(self.vertex, float(r), float(z))
-        await self.edited()
-
-    async def delete_vertex(self, index: int | None = None) -> None:
-        editor = None if self.model is None else self.model.editor()
-        chosen = self.vertex if index is None else index
-        if editor is None or chosen is None:
-            return
-        try:
-            editor.delete(chosen)
-        except (ValueError, IndexError) as error:
-            ui.notify(str(error), type="warning", multi_line=True)
-            return
-        self.vertex = None
-        await self.edited()
-
-    def ask_discard(self) -> None:
-        with ui.dialog() as dialog, ui.card().classes("dialog").props("data-control=confirm"):
-            heading("Discard the edit?", 2)
-            ui.label("The edited outline is not saved; the model keeps its own.")
-            with ui.row().classes("justify-end w-full"):
-                ui.button("Cancel", on_click=dialog.close).props("flat no-caps autofocus")
-                ui.button("Discard edit", on_click=lambda: self.discard(dialog)).props(
-                    "no-caps color=negative data-control=confirm-accept"
-                )
-        dialog.open()
-
-    async def discard(self, dialog: ui.dialog) -> None:
-        dialog.close()
-        if self.model is not None:
-            self.model.drop_edit()
-        self.vertex = None
-        await self.edited()
-
-    def ask_save(self) -> None:
-        if self.model is None:
-            return
-        with ui.dialog() as dialog, ui.card().classes("dialog").props("data-control=contour-ask"):
-            heading("Save the edit as a continuum model", 2)
-            ui.label(
-                "The new model supplies the edited outline as inputs.profile. A study runs it with "
-                "its molecular model's structure and charge."
-            ).classes("later")
-            name = ui.input("Name", value=f"{self.model.name}-edit").props(
-                "autofocus outlined dense data-control=contour-name"
-            )
-            with ui.row().classes("justify-end w-full"):
-                ui.button("Cancel", on_click=dialog.close).props("flat no-caps")
-                ui.button("Save", on_click=lambda: self.save_edit(dialog, name)).props(
-                    "unelevated no-caps color=primary data-control=contour-save-accept"
-                )
-        dialog.open()
-
-    def save_edit(self, dialog: ui.dialog, name: ui.input) -> None:
-        model = self.model
-        chosen = str(name.value or "").strip()
-        if model is None or not chosen:
-            name.error = "Give the new model a name."
-            return
-        try:
-            model.save_edit(chosen)
-        except ValueError as error:
-            name.error = str(error).replace(f"{model.project.root}/", "")
-            return
-        dialog.close()
-        model.project.open_item(f"continuum/{chosen}")
-        ui.run_javascript("window.location.assign('/continuum/geometry')")
-
-    # -- the view's events ---------------------------------------------------------
-
     def listen(self) -> None:
         self.built.listen("plane_pick", self.on_plane_pick)
-        self.built.listen("plane_insert", self.on_plane_insert)
-        self.built.listen("plane_delete", self.on_plane_delete)
         self.built.listen("plane_value", self.on_plane_value)
 
     def on_plane_pick(self, event: events.GenericEventArguments) -> None:
         layer, index = str(event.args.get("layer", "")), int(event.args.get("index", 0))
-        if layer == "contour" and self.tool.id in OUTLINE_TOOLS:
-            self.vertex = index
-            self.show_edit()
-        elif layer == "mesh" and self.tool.id == "mesh":
+        if layer == "mesh" and self.tool.id == "mesh":
             self.show_element(index)
         elif layer.startswith("domain-") and self.tool.id == "region":
             self.domain_select.set_value(layer.removeprefix("domain-"))
-
-    async def on_plane_insert(self, event: events.GenericEventArguments) -> None:
-        editor = None if self.model is None else self.model.editor()
-        if editor is None or self.tool.id not in OUTLINE_TOOLS:
-            return
-        self.vertex = editor.insert(int(event.args.get("edge", 0)))
-        await self.edited()
-
-    async def on_plane_delete(self, event: events.GenericEventArguments) -> None:
-        if self.tool.id in OUTLINE_TOOLS:
-            await self.delete_vertex(int(event.args.get("index", 0)))
 
     async def on_plane_value(self, event: events.GenericEventArguments) -> None:
         path, value = str(event.args.get("path", "")), event.args.get("value")
@@ -608,10 +242,6 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             finally:
                 self.writing = True
         await self.show()
-
-    async def tick(self) -> None:
-        await self.poll_assess()
-        await super().tick()
 
     def region_section(self) -> None:
         # An idealised pore is declared by its radius, which only such a model holds.
@@ -978,13 +608,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             return []
         held = model.artefacts()
         rows: list[tuple[str, str, Callable[[], None] | None]] = []
-        if self.tool.id in OUTLINE_TOOLS and "contour" in held:
-            # The vertices and the narrowest radius lead the pane, with stage 4's verdict.
-            summary = held["contour"].summary
-            rows.append(
-                ("Smallest feature", self.text(summary.get("min_feature_size_nm"), "nm"), None)
-            )
-        elif self.tool.id == "region" and "region" in held:
+        if self.tool.id == "region" and "region" in held:
             areas = _mapping(held["region"].summary.get("face_areas_nm2"))
             for name, area in areas.items():
                 rows.append((f"Area, {name}", self.text(area, "nm²"), None))
