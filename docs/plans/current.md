@@ -1,27 +1,26 @@
 # Current work
 
-Updated 19 November 2026 (WP5.20, the meso suite, delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
-branch is not shipped.
+Updated 19 November 2026 (WP5.21, the Analysis suite, planned). Navigation only; `SPECIFICATION.md` governs; an
+unmerged branch is not shipped.
 
 ## In brief
 
-The meso suite is built and waits for its review. Between Molecular and Continuum, it shows how the molecule becomes
-the pore's shape and charge, beside the molecule cut open along its axis: Density, Outline and Charge map. At your
-verdicts it keeps its name and the overlay of the charge in 3D; the charge map opens its colours on the 99th
-percentile of the charge, and a field changes the range; the dark theme draws zero dark; and each screen lets you
-choose how the molecule is drawn. The free list of layers you chose is a package of its own, which you place.
+The Analysis suite is planned. It opens a finished run: its field as a map, with a cut along the axis and probes, or
+on its mesh in 3D; its current against voltage; its numbers. Comparison saves two runs, side by side on one scale or as
+their difference. As you ruled, every plot moves to a borrowed chart library whose axes you set, any Matplotlib colour
+map can be chosen, and Comparison's pair switches between maps and 3D. A run cleaned from the store is rebuilt on
+request and checked against its record. About eight sessions, with the round.
 
-**Your call.** Run the review, or name what to change first. Should the charge map open lower than the 99th
-percentile, as 2WCD's map still reads pale? Recommendation: decide at the last round; the field reaches any range.
+**Your call.** Read the plan's review, then let it run. At the round: the tiles' layout and whether a run opens on the
+map or in 3D. Recommendation: rule them on the drawn screens.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.19 merged
-  (`v0.6.0-alpha.19`); the fifth amendment merged (§8.2.43). **WP5.20**, [the meso suite](phase-5/wp5.20-the-meso-suite.md),
-  planned with the author's AT1 to AT4 (§8.2.44), **delivered** on `claude/beautiful-hawking-sqa62e` after its round on
-  2WCD (WB-49), its pull request open. **Next:** `/np-ship wp 5.20`. Then WP5.21 Analysis, WP5.22 performance, WP5.23
-  the route, WP5.24 the close. host: claude-code.
+- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.20 merged
+  (`v0.6.0-alpha.19`; WP5.20's `v0.6.0-alpha.20` to be pushed). **WP5.21**, [the Analysis suite](phase-5/wp5.21-the-analysis-suite.md),
+  planned with the author's AU1 to AU3 (§8.2.45), its pull request open. **Next:** `/np-plan wp 5.21 review`, then
+  `/np-implement wp 5.21`. Then WP5.22 performance, WP5.23 the route, WP5.24 the close. host: claude-code.
 
 ## Not to be re-decided
 
@@ -42,6 +41,8 @@ percentile, as 2WCD's map still reads pale? Recommendation: decide at the last r
 - **Meso holds Density, Outline and Charge map; the 200 ms line is WP5.22's, after Analysis** (AR7, AR8; AS1 to
   AS3). **An edit marks the atoms it moves; the overlay is kept; a study's charge node opens the continuum model's**
   (AT1 to AT4). **The charge map opens on the 99th percentile; a free list of layers is its own package** (WB-49).
+  **Every plot is uPlot's, its axes the user's; any Matplotlib map; Comparison's pair switches between maps and 3D**
+  (AU1 to AU3).
 
 ## Somebody else's
 
@@ -50,7 +51,7 @@ percentile, as 2WCD's map still reads pale? Recommendation: decide at the last r
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
 - **The 200 ms redraw**'s GPU run, in WP5.22 (REV-258); **where the free list of layers is placed** (REV-265); **verdicts on each suite's prototype** (AJ8).
 - **Rulings on a cycle (H6) or drift (I4)**; **Tier 3's PQRs**.
-- **REV-156**'s speed-up is Phase 6's (Z6); a cleaned run's rebuild WP5.21's (AN5).
+- **REV-156**'s speed-up is Phase 6's (Z6).
 
 ## On demand
 

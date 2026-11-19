@@ -366,3 +366,6 @@ AT1: 'open: WP5.20 (VER-60''s restated NOTE; the design document''s Outline row)
 AT2: 'the Phase 5 plan''s WP5.20 entry; open: WP5.20 (the design document''s Charge map row; REV-240)'
 AT3: 'open: WP5.20 (the design document''s Study setup and Charge map rows)'
 AT4: 'AT2''s consequence; the Phase 5 plan''s WP5.20 entry; open: WP5.20 (the design document''s Charge map row; REV-240)'
+AU1: 'open: WP5.21 (ADR-004''s NOTE on the front end; the design document''s renderer table; REV-253)'
+AU2: 'WB-20; open: WP5.21 (§2.6''s NOTE on the workbench''s dependencies; REV-240''s colour-map point)'
+AU3: 'open: WP5.21 (the design document''s Comparison row)'

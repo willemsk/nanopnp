@@ -9,7 +9,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 ## Phase 5
 
 - [Phase 5 plan: the record](phase-5/phase-5-record.md): in progress; WP5.01 delivered (awaiting `/np-ship`), WP5.02 after `v0.5.0`.
-- [Phase 5 (Graphical interface): a molecular and continuum workbench in the browser](phase-5/phase-5-workbench.md): in progress; WP5.01 to WP5.19 merged (`v0.6.0-alpha.19`); WP5.20, the meso suite, delivered, its review and merge next; then WP5.21 to WP5.23 and the close.
+- [Phase 5 (Graphical interface): a molecular and continuum workbench in the browser](phase-5/phase-5-workbench.md): in progress; WP5.01 to WP5.20 merged (`v0.6.0-alpha.19`, WP5.20's `v0.6.0-alpha.20` to be pushed); WP5.21, the Analysis suite, planned; then WP5.22, WP5.23 and the close.
 - [WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written](phase-5/wp5.01-workbench-design-study.md): delivered, 27 October 2026.
 - [WP5.02 — The framework spike and the visual-feedback workflow](phase-5/wp5.02-framework-spike.md): delivered, 2 November 2026.
 - [WP5.03 — Protonation before the density](phase-5/wp5.03-protonation-before-the-density.md): merged, 3 November 2026 (`v0.6.0-alpha.3`).
@@ -30,6 +30,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP5.18 — The Physics suite](phase-5/wp5.18-the-physics-suite.md): delivered, 16 November 2026.
 - [WP5.19 — The Study suite](phase-5/wp5.19-the-study-suite.md): delivered, 18 November 2026.
 - [WP5.20 — The meso suite](phase-5/wp5.20-the-meso-suite.md): delivered, 19 November 2026.
+- [WP5.21 — The Analysis suite](phase-5/wp5.21-the-analysis-suite.md): planned, not started.
 
 ## Phase 4
 
