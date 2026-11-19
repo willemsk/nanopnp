@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import html
 import json
 import logging
 import multiprocessing
@@ -26,6 +28,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "CHARGE_ELEMENTS_FILENAME",
     "CHI_RANGE",
+    "FIELDS_FILENAME",
     "MESH_SCENE_STEM",
     "READY_FLAG",
     "RENDERER_DIRECTORY",
@@ -36,6 +39,7 @@ __all__ = [
     "ChargeQuantity",
     "ChargeRequest",
     "DeployedCoefficient",
+    "FieldsRequest",
     "MeshRequest",
     "RenderFailed",
     "RenderProcess",
@@ -43,15 +47,19 @@ __all__ = [
     "Rendered",
     "RenderedCharge",
     "RenderedElements",
+    "RenderedFields",
     "RenderedMesh",
     "deployed_coefficient",
     "host_document",
+    "host_page",
     "readiness_script",
     "render",
     "render_charge",
     "render_charge_elements",
+    "render_fields",
     "render_mesh",
     "renderer_source",
+    "scene_stem",
 ]
 
 # The webgui version netgen.webgui's template pins for the locked NGSolve; test_gui_render reads the
@@ -157,6 +165,75 @@ def host_document(scene: str, *, renderer: str, title: str) -> str:
     )
 
 
+_PAGE = Template("""<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>$title</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no"/>
+    <style>
+      body { margin: 0; overflow: hidden; background: #ffffff; }
+      canvas { cursor: grab; }
+      canvas:active { cursor: grabbing; }
+    </style>
+  </head>
+  <body>
+    <script src="$renderer"></script>
+    <script>
+      window.$flag = {
+        ready: false,
+        renderer_loaded: typeof webgui !== "undefined",
+        error: "",
+        renderer: $renderer_literal
+      };
+      fetch($scene_literal)
+        .then(function (answer) {
+          if (!answer.ok) {
+            throw new Error("the scene " + $scene_literal + " answered " + answer.status);
+          }
+          return answer.json();
+        })
+        .then(function (render_data) {
+          var scene = new webgui.Scene();
+          scene.init(document.body, render_data, {preserveDrawingBuffer: false});
+          window.$flag.ready = true;
+        })
+        .catch(function (error) {
+          window.$flag.error = String(error);
+        });
+    </script>
+  </body>
+</html>
+""")
+
+
+def host_page(scene_url: str, renderer_url: str, title: str) -> str:
+    """Return the HTML page that fetches one scene and draws it.
+
+    The scene is not embedded, so a page is a few hundred bytes however large the scene.
+    """
+    return _PAGE.substitute(
+        title=html.escape(title),
+        renderer=html.escape(renderer_url, quote=True),
+        renderer_literal=json.dumps(renderer_url).replace("</", "<\\/"),
+        scene_literal=json.dumps(scene_url).replace("</", "<\\/"),
+        flag=READY_FLAG,
+    )
+
+
+def scene_stem(field: str, colour_range: tuple[float, float] | None = None) -> str:
+    """Return the file stem of one field's scene, ranged or not, under a run's ``viewer/``.
+
+    A fixed range adds the first eight hex digits of its digest, so two ranges of one field are
+    two files.
+    """
+    stem = "scene-" + "".join(character if character.isalnum() else "-" for character in field)
+    if colour_range is None:
+        return stem
+    digest = hashlib.sha256(json.dumps([float(value) for value in colour_range]).encode())
+    return f"{stem}-{digest.hexdigest()[:8]}"
+
+
 @dataclass(frozen=True)
 class RenderRequest:
     """What the child is asked for: a finished run and one of its fields.
@@ -165,16 +242,29 @@ class RenderRequest:
     ----------
     field
         The attribute name, or ``""`` for the model's first field.
+    document
+        Write the host document beside the scene; False writes the scene alone, for a page that
+        fetches it.
+    colour_range
+        The colour map's fixed ``(min, max)``; None autoscales.
     """
 
     run: str
     field: str = ""
     renderer: str = RENDERER_SOURCE
+    document: bool = True
+    colour_range: tuple[float, float] | None = None
 
 
 @dataclass(frozen=True)
 class Rendered:
-    """A scene was written; the paths and the field vocabulary of the solution."""
+    """A scene was written; the paths and the field vocabulary of the solution.
+
+    Parameters
+    ----------
+    document
+        The host document's path; ``""`` where none was asked for.
+    """
 
     document: str
     scene: str
@@ -217,6 +307,26 @@ class RenderedMesh:
     materials: tuple[str, ...]
     quality: dict[str, object]
     wall: dict[str, object]
+
+
+FIELDS_FILENAME = "fields.npz"
+"""The file under a run's ``viewer/`` holding its solved fields at the P2 nodes."""
+
+
+@dataclass(frozen=True)
+class FieldsRequest:
+    """What the analysis asks for: a run's solved fields, written for a server without NGSolve."""
+
+    run: str
+
+
+@dataclass(frozen=True)
+class RenderedFields:
+    """A run's fields were written; the file, the solve that made them and what they hold."""
+
+    path: str
+    solve: str
+    quantities: tuple[str, ...]
 
 
 CHARGE_ELEMENTS_FILENAME = "charge.elements.npz"
@@ -281,7 +391,9 @@ class RenderedElements:
     elements: int
 
 
-RenderEvent: TypeAlias = Rendered | RenderedMesh | RenderedCharge | RenderedElements | RenderFailed
+RenderEvent: TypeAlias = (
+    Rendered | RenderedMesh | RenderedCharge | RenderedElements | RenderedFields | RenderFailed
+)
 
 
 def _state_path(run: Path) -> Path:
@@ -395,6 +507,20 @@ def _element_count(mesh: Mesh, domain: str | None) -> int:
     return int(np.count_nonzero(wanted[materials]))
 
 
+def _fix_range(scene: dict[str, object], colour_range: tuple[float, float]) -> None:
+    # webgui autoscales unless the scene's three keys and gui_settings' three all fix the range
+    # (knowledge/07-software-stack/05-gui-and-packaging.md).
+    scene["funcmin"], scene["funcmax"] = colour_range
+    scene["autoscale"] = False
+    settings = scene.get("gui_settings")
+    scene["gui_settings"] = {
+        **(settings if isinstance(settings, dict) else {}),
+        "autoscale": False,
+        "colormap_min": colour_range[0],
+        "colormap_max": colour_range[1],
+    }
+
+
 def _replace(path: Path, text: str) -> None:
     part = path.with_name(f"{path.name}.part")
     part.write_text(text, encoding="utf-8")
@@ -448,24 +574,35 @@ def render(request: RenderRequest) -> Rendered:
     drawn = drawn * field_scale(declared.name, model.scales)
     scene = Draw(drawn, region, show=False, order=declared.order).GetData()
     elements = _element_count(mesh, declared.domain)
+    if request.colour_range is not None:
+        _fix_range(scene, request.colour_range)
 
     directory = run / VIEWER_DIRNAME
     directory.mkdir(parents=True, exist_ok=True)
-    stem = "".join(character if character.isalnum() else "-" for character in wanted)
-    scene_path = directory / f"scene-{stem}.json"
-    document_path = directory / f"scene-{stem}.html"
+    stem = scene_stem(wanted, request.colour_range)
+    scene_path = directory / f"{stem}.json"
+    document_path = directory / f"{stem}.html"
+    unranged = scene_stem(wanted)
+    kept = {
+        scene_path,
+        document_path,
+        directory / f"{unranged}.json",
+        directory / f"{unranged}.html",
+    }
     payload = json.dumps(scene)
-    # One field's pair at a time: each copy is tens of megabytes at the reference mesh size.
+    # One field's pair at a time, with its unranged pair: each copy is tens of megabytes at the
+    # reference mesh size.
     for stale in directory.glob("scene-*"):
-        if stale not in (scene_path, document_path) and stale.is_file():
+        if stale not in kept and stale.is_file():
             stale.unlink()
     # Written beside and renamed, so a render stopped part-way leaves no half-written document;
     # a killed child's .part is swept on the next render.
     _replace(scene_path, payload)
-    _replace(document_path, host_document(payload, renderer=request.renderer, title=wanted))
-    logger.info("scene for %s written to %s (%d bytes)", wanted, document_path, len(payload))
+    if request.document:
+        _replace(document_path, host_document(payload, renderer=request.renderer, title=wanted))
+    logger.info("scene for %s written to %s (%d bytes)", wanted, scene_path, len(payload))
     return Rendered(
-        document=str(document_path),
+        document=str(document_path) if request.document else "",
         scene=str(scene_path),
         field=wanted,
         fields=names,
@@ -620,14 +757,7 @@ def render_charge(request: ChargeRequest) -> RenderedCharge:
     else:
         limit = sampled[1]
         colour_range = CHI_RANGE
-    scene["funcmin"], scene["funcmax"] = colour_range
-    scene["autoscale"] = False
-    scene["gui_settings"] = {
-        **scene.get("gui_settings", {}),
-        "autoscale": False,
-        "colormap_min": colour_range[0],
-        "colormap_max": colour_range[1],
-    }
+    _fix_range(scene, colour_range)
 
     scene_path, document_path = _write_scene(
         run, request.quantity, scene, renderer=request.renderer, title=deployed.name
@@ -695,12 +825,36 @@ def render_charge_elements(request: ChargeRequest) -> RenderedElements:
     )
 
 
-AnyRequest: TypeAlias = RenderRequest | MeshRequest | ChargeRequest
+def render_fields(request: FieldsRequest) -> RenderedFields:
+    """Restore a finished run and write its solved fields into its ``viewer/``.
+
+    Raises FileNotFoundError if the run records no converged state or the store lost it.
+    """
+    from nanopnp.pipeline.run import open_run
+    from nanopnp.post.export import write_solution_fields
+
+    run = Path(request.run)
+    # Its diagnostics name a run that never solved and a state the store lost.
+    _state_path(run)
+    opened = open_run(run)
+    solve = opened.artefacts["solve"]
+    fields = opened.fields
+    path = write_solution_fields(fields, run / VIEWER_DIRNAME / FIELDS_FILENAME, solve=solve.hash)
+    return RenderedFields(
+        path=str(path),
+        solve=solve.hash,
+        quantities=tuple(sorted({*fields.whole[2], *fields.fluid[2]})),
+    )
+
+
+AnyRequest: TypeAlias = RenderRequest | MeshRequest | ChargeRequest | FieldsRequest
 
 
 def _worker(request: AnyRequest, events: Queue[RenderEvent]) -> None:
     try:
-        if isinstance(request, MeshRequest):
+        if isinstance(request, FieldsRequest):
+            events.put(render_fields(request))
+        elif isinstance(request, MeshRequest):
             events.put(render_mesh(request))
         elif isinstance(request, ChargeRequest) and request.elements:
             events.put(render_charge_elements(request))

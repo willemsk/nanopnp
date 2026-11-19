@@ -8,7 +8,7 @@ import logging
 import threading
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from nanopnp.charge.stage import ResolvedFields, read_fields
 from nanopnp.core.scaling import Scales
@@ -35,6 +35,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 __all__ = [
     "EXPORT_SCHEMA",
+    "FIELDS_FILE_SCHEMA",
     "FIXED_CHARGE_ATTRIBUTE",
     "OMEGA_STEM",
     "OMEGA_W_STEM",
@@ -49,10 +50,12 @@ __all__ = [
     "logarithmic_fields",
     "lumen_extent_nm",
     "p2_nodes",
+    "read_solution_fields",
     "restored",
     "sample_at",
     "sampled_fields",
     "solution_fields",
+    "write_solution_fields",
 ]
 
 logger = logging.getLogger(__name__)
@@ -462,6 +465,82 @@ def fields_of(state: ModelSolution) -> SolutionFields:
             for species in state.model.species
         },
     )
+
+
+FIELDS_FILE_SCHEMA = "nanopnp/fields/v0.6"
+"""The schema a fields file is written under."""
+
+
+def write_solution_fields(fields: SolutionFields, path: Path, *, solve: str) -> Path:
+    """Write ``fields`` and the hash of the solve that made them to one ``.npz``; return it.
+
+    Written beside and renamed, so a write stopped part-way leaves no file a reader takes.
+    """
+    import numpy as np
+
+    arrays: dict[str, Any] = {
+        "schema": np.array(FIELDS_FILE_SCHEMA),
+        "solve": np.array(solve),
+        "model": np.array(fields.model),
+        "wall_extent_nm": np.array(
+            [] if fields.wall_extent_nm is None else fields.wall_extent_nm, dtype=np.float64
+        ),
+    }
+    for name, (points, cells, values) in (("whole", fields.whole), ("fluid", fields.fluid)):
+        arrays[f"{name}_points_m"] = np.asarray(points, dtype=np.float64)
+        arrays[f"{name}_cells"] = np.asarray(cells)
+        for attribute, held in values.items():
+            arrays[f"{name}:{attribute}"] = np.asarray(held, dtype=np.float64)
+    for attribute, bulk in fields.bulk_mol_m3.items():
+        arrays[f"bulk:{attribute}"] = np.array(bulk, dtype=np.float64)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    partial = path.with_name(f"{path.stem}.partial.npz")
+    np.savez(partial, **arrays)
+    partial.replace(path)
+    return path
+
+
+def read_solution_fields(path: Path) -> tuple[SolutionFields, str]:
+    """Return the fields of a fields file and the hash of the solve that made them.
+
+    Raises
+    ------
+    ValueError
+        The file is not a fields file of this schema.
+    """
+    import numpy as np
+
+    with np.load(path, allow_pickle=False) as handle:
+        held = {key: handle[key] for key in handle.files}
+    schema = str(held.pop("schema", ""))
+    if schema != FIELDS_FILE_SCHEMA:
+        raise ValueError(
+            f"{path} is not a fields file of {FIELDS_FILE_SCHEMA}; it names {schema or 'no schema'}"
+        )
+    extent = held.pop("wall_extent_nm")
+    sets: dict[str, tuple[np.ndarray, np.ndarray, dict[str, np.ndarray]]] = {}
+    for name in ("whole", "fluid"):
+        sets[name] = (
+            held.pop(f"{name}_points_m"),
+            held.pop(f"{name}_cells"),
+            {
+                key.split(":", 1)[1]: value
+                for key, value in held.items()
+                if key.startswith(f"{name}:")
+            },
+        )
+    fields = SolutionFields(
+        model=str(held["model"]),
+        whole=sets["whole"],
+        fluid=sets["fluid"],
+        wall_extent_nm=None if extent.size == 0 else (float(extent[0]), float(extent[1])),
+        bulk_mol_m3={
+            key.split(":", 1)[1]: float(value)
+            for key, value in held.items()
+            if key.startswith("bulk:")
+        },
+    )
+    return fields, str(held["solve"])
 
 
 def export_fields(
