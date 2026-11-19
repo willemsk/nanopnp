@@ -22,6 +22,45 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.6.0-alpha.20]
+
+WP5.20: the meso suite, Phase 5's twentieth package; tag `v0.6.0-alpha.20` once merged (§8.2.44 AT1 to AT4; WB-43,
+WB-44, WB-49; REV-259, REV-261's charge points; REV-240's overlay; REV-244's suite). A suite between Molecular and
+Continuum draws the pore's shape and charge from the molecule, beside the molecule cut at its axis. No golden moves. The
+[plan](docs/plans/phase-5/wp5.20-the-meso-suite.md) records the work.
+
+- **Added**:
+  - Meso, the second Build suite, each tool a page at `/meso/<tool>` beside Mol*, side on and cut at the axis (FR-31;
+    FR-33):
+    - *Density*: stage 2's density and the reduced maps; a picked or typed point names the residues whose atoms
+      reach it first, each at its distance in its atom's kernel widths (AT1);
+    - *Outline*: stage 4's outline, built and edited, and the residues an edit moves into the water and into the
+      protein, each with its copies, atoms and charge, marked in Mol* (AT1);
+    - *Charge map*: the continuum model's own walk to stage 7, the lattice or the deployed charge, a residue named
+      once with its copies and linked both ways, the conservation checks, and an overlay of the charge in 3D and its
+      mean about the axis, smoothed to 0.4 nm (VER-60; AT2, AT4).
+  - Each Meso tool's *Structure*: how Mol* draws the molecule, cartoon, ball and stick, spheres or surface (WB-49).
+  - The charge map's *Map range*: its colour scale opens on the 99th percentile of the charge's size, its bar's ends
+    marked where values pass them (WB-49).
+  - `Project.charge_case`, a continuum model's case over its molecular model, walked to its charge, and
+    `kept_artefacts`, the store digests a record or a model's build names, which a clean keeps (FR-27;
+    FR-39).
+  - `plot/data.py`: `ResidueCopies`, `ResidueCharges.residues`, `DensityAtoms`, `ResidueAtoms.moved`,
+    `inside_outline`, `charge_volumes` and `colour_scale`.
+- **Changed**:
+  - Continuum's tools are Region, Mesh and Exposed values; Pore geometry's maps and outline are Meso's Density and
+    Outline (WB-43; amends WB-41).
+  - Study's Charge on the mesh is Meso's Charge map; a study graph's charge opens it on the study's continuum model
+    (AT3).
+  - A value's problem is placed in the suite that edits its value, by the model's kind (WB-43).
+  - On the dark theme the charge map runs through a dark middle; units read as the panes write them, C m⁻², C m⁻³
+    and e nm⁻³ (WB-49).
+  - A worst plane within its tolerance is dashed in the muted grey; a key too wide for the drawing's corner stands
+    above the drawing; a colour bar's ends are powers of ten where far from unity.
+  - Stage 4's refusal is titled *Outline*, its numbers set with raised powers and the minus sign.
+- **Removed**:
+  - Study's `/study/charge` and Continuum's `/continuum/geometry`, their tools moved to Meso.
+
 ## [0.6.0-alpha.19]
 
 WP5.19: the Study suite, Phase 5's nineteenth package; tag `v0.6.0-alpha.19` once merged (§8.2.42 AR3 to AR8; WB-43 to
