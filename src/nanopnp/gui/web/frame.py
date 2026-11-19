@@ -176,10 +176,13 @@ class Views(Protocol):
         while the drawing's frame stays the same.
         """
 
-    async def show_pair(self, scene_url: str | None, plane_url: str | None, key: str = "") -> None:
+    async def show_pair(
+        self, scene_url: str | None, plane_url: str | None, key: str = "", note: str = ""
+    ) -> None:
         """Show the Mol* host and the (r, z) canvas side by side, each built once; mark it ready.
 
-        ``key`` names the structure, as for :meth:`show_molecule`.
+        ``key`` names the structure, as for :meth:`show_molecule`; ``note`` says, in the canvas,
+        why it draws nothing where ``plane_url`` is None.
         """
 
     def changes_moved(self) -> None:
@@ -403,7 +406,9 @@ class _Frame:
         for host, element in self.hosts.items():
             element.set_visibility(host == name)
 
-    async def show_pair(self, scene_url: str | None, plane_url: str | None, key: str = "") -> None:
+    async def show_pair(
+        self, scene_url: str | None, plane_url: str | None, key: str = "", note: str = ""
+    ) -> None:
         """Show the Mol* host and the (r, z) canvas side by side, each built once; mark it ready."""
         self.view.set_visibility(True)
         self.view.classes(add="view-pair")
@@ -413,7 +418,7 @@ class _Frame:
         await ui.run_javascript(f"nano.scene({scene}, {json.dumps(key)})", timeout=60)
         # The canvas last: its drawing marks the screen ready once both have drawn.
         drawing = "null" if plane_url is None else json.dumps(plane_url)
-        await ui.run_javascript(f"nano.plane({drawing}, '')", timeout=60)
+        await ui.run_javascript(f"nano.plane({drawing}, {json.dumps(note)})", timeout=60)
 
     async def show_molecule(self, scene_url: str | None, key: str = "") -> None:
         """Show the frame's Mol* host, built once, with a scene; mark the screen ready."""

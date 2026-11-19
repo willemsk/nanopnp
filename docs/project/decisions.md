@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,452. By source: history ruling 366; plan decision row 726; REV row 264; MOD row 18; OPN row 9; WB row 48; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
+Rows: 1,455. By source: history ruling 366; plan decision row 726; REV row 266; MOD row 18; OPN row 9; WB row 49; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
 
-By decider: author 601; open 5; session, own call 843; session, put to the author 3.
+By decider: author 603; open 5; session, own call 844; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1377,12 +1377,14 @@ By decider: author 601; open 5; session, own call 843; session, put to the autho
 | REV-256 | session, own call | `docs/project/review-findings.md` |  | WP5.19 | A field's message, its text size and a field of several boxes, in every suite | WP5.19 | fixed |
 | REV-257 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | The blend's nearest-solid jump carries no dielectric force | WP5.18 | open |
 | REV-258 | author | `docs/project/review-findings.md` |  | WP5.22 | The 200 ms redraw, measured on a GPU, and the front end's share fixed | WP5.22, §8.2.42 AR7 and §8.2.43 AS2 (WP5.19) | deferred |
-| REV-259 | author | `docs/project/review-findings.md` |  | WP5.20 | A bridge suite between Molecular and Continuum | WP5.20, §8.2.42 AR8 and §8.2.43 AS1 (WP5.19) | open |
+| REV-259 | author | `docs/project/review-findings.md` |  | WP5.20 | A bridge suite between Molecular and Continuum | WP5.20, §8.2.42 AR8 and §8.2.43 AS1 (WP5.19) | fixed |
 | REV-260 | session, own call | `docs/project/review-findings.md` |  | WP5.21 | A recorded run's convergence, picked in Runs | WP5.21 (WP5.19) | open |
 | REV-261 | session, own call | `docs/project/review-findings.md` |  | WP5.23 | What the Study suite's final review left open | WP5.23 (WP5.19) | open |
 | REV-262 | session, own call | `docs/project/review-findings.md` |  | WP5.23 | An exposed value's first name, and Exposed values' list as Study setup draws it | a question for the author, WP5.23 (WP5.19) | open |
 | REV-263 | author | `docs/project/review-findings.md` |  | WP5.23 | What code review 060 of the Study suite left open | ruled by the author, 18 November 2026: WP5.23 (WP5.19) | open |
 | REV-264 | author | `docs/project/review-findings.md` |  | WP5.21 | A reproduction of a record stopped at its solve compares no number of the solve | ruled by the author, 18 November 2026: WP5.21 (WP5.19) | open |
+| REV-265 | author | `docs/project/review-findings.md` |  | WP5.20 | A free list of the structure's layers in Meso's Mol* view | ruled by the author, 19 November 2026: a package of its own, placed at the phase's next amendment (WP5.20) | open |
+| REV-266 | session, own call | `docs/project/review-findings.md` |  | WP5.23 | What the Meso suite's round left open | WP5.23 (WP5.20) | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |
@@ -1453,6 +1455,7 @@ By decider: author 601; open 5; session, own call 843; session, put to the autho
 | WB-46 | author | `docs/design/workbench.md` |  | WP5.01 | Overview's case, the sweep's two modes, *New study* / Of Overview: "I would show only what is set, with the option to unfold to full."; of Sweep: "Can we implement two ways to run the sweep in case of multiple variables… | docs/design/workbench.md | in the design document |
 | WB-47 | author | `docs/design/workbench.md` |  | WP5.01 | A field's message, its text and a field of several boxes / Of REV-256's mockups: "Keep the "Today" variant for the Error, the Proposed for the box." | docs/design/workbench.md | in the design document |
 | WB-48 | author | `docs/design/workbench.md` |  | WP5.01 | Where a molecular or continuum model's exposed values are chosen / Asked at the Study round (REV-252), "A list tool per suite" | docs/design/workbench.md | in the design document |
+| WB-49 | author | `docs/design/workbench.md` |  | WP5.01 | The Meso round: the charge map's range and dark middle, the structure's look, the overlay / The author, marking the Meso drafts (`reviews/2026-11-19-meso.md`): of Charge map, "Charges are barely visible on the map. Mayb… | docs/design/workbench.md | in the design document |
 | current.md bullet | author | `docs/plans/current.md` |  |  | Process rules** are §8.4. **Cost fixes follow measurement** (M2). **Phase 5 is a browser workbench, §8.2.17 S1 to | §8.4, §8.2.17 S1 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | The `MOD-nn` rulings stand** (§8.2.8). **A moved edge edits `modularity-layering.yaml` in its commit (VER-61)**; a | §8.2.8, VER-61 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | A `Case` is the case document; a `Session` runs it for every caller** (§8.2.23). **The front end is NiceGUI; Mol | §8.2.23 | in force (cache) |

@@ -29,7 +29,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP5.17 — The Continuum suite](phase-5/wp5.17-the-continuum-suite.md): delivered 12 November 2026.
 - [WP5.18 — The Physics suite](phase-5/wp5.18-the-physics-suite.md): delivered, 16 November 2026.
 - [WP5.19 — The Study suite](phase-5/wp5.19-the-study-suite.md): delivered, 18 November 2026.
-- [WP5.20 — The meso suite](phase-5/wp5.20-the-meso-suite.md): planned, not started.
+- [WP5.20 — The meso suite](phase-5/wp5.20-the-meso-suite.md): in progress; items 1 to 8 done.
 
 ## Phase 4
 

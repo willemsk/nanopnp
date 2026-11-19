@@ -285,31 +285,51 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
 
     @app.get("/api/meso/{name}/charge/plane")
     def meso_charge(
-        name: str, layer: str = "lattice", residue: str = "", positive: str = "blue"
+        name: str,
+        layer: str = "lattice",
+        residue: str = "",
+        positive: str = "blue",
+        span: float = 0.0,
     ) -> JSONResponse:
-        """Serve a model's charge on the mesh as the (r, z) view draws it, a residue marked."""
+        """Serve a model's charge on the mesh as the (r, z) view draws it, a residue marked.
+
+        ``span``, where above zero, is how far the colour scale runs each side of zero, in the
+        layer's unit; by default it opens on the layer's clip.
+        """
         if layer not in ("lattice", "deployed"):
             raise HTTPException(422, f"layer: {layer!r} is not lattice or deployed")
+        opened = span if span > 0.0 else None
         model = meso(name)
         with model.keyed_once():
             charge = model.artefacts().get("charge")
             charges = model.charges()
             markers = charges.markers(residue) if charges is not None and residue in charges else []
             digest = "" if charge is None else charge.hash[:12]
+            spanned = "" if opened is None else f"&span={opened:.6g}"
             drawn = charge_plane(
                 model.charge_map(),
                 model.conservation(),
-                image_url=f"/api/meso/{name}/charge/image?positive={positive}&v={digest}",
+                image_url=(
+                    f"/api/meso/{name}/charge/image?positive={positive}&v={digest}{spanned}"
+                ),
                 positive=colours(positive),
                 deployed=model.elements(),
                 layer="deployed" if layer == "deployed" else "lattice",
                 picked=(residue, markers) if markers else None,
+                span=opened,
             )
         return JSONResponse(drawn.json())
 
     @app.get("/api/meso/{name}/charge/image")
-    def meso_charge_image(name: str, positive: str = "blue") -> Response:
-        """Serve a model's charge lattice as a PNG, a positive charge in the named colour."""
+    def meso_charge_image(
+        name: str, positive: str = "blue", span: float = 0.0, middle: str = "light"
+    ) -> Response:
+        """Serve a model's charge lattice as a PNG, a positive charge in the named colour.
+
+        ``span`` is as the drawing's; ``middle=dark`` draws zero dark, for the dark theme.
+        """
+        if middle not in ("light", "dark"):
+            raise HTTPException(422, f"middle: {middle!r} is not light or dark")
         shown = meso(name).charge_map()
         if shown is None:
             raise HTTPException(404, f"continuum model {name!r} stores no charge lattice")
@@ -318,7 +338,16 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         blue = colours(positive) == "blue"
         # Where the lattice carries no charge the canvas shows through, on either theme.
         values = np.where(shown.image.values == 0.0, np.nan, shown.image.values)
-        image = replace(shown.image, values=values, palette="diverging_r" if blue else "diverging")
+        top = span if span > 0.0 else shown.clip if shown.clip > 0.0 else shown.image.scale[1]
+        dark = middle == "dark"
+        image = replace(
+            shown.image,
+            values=values,
+            scale=(-top, top),
+            palette=("diverging_dark_r" if dark else "diverging_r")
+            if blue
+            else ("diverging_dark" if dark else "diverging"),
+        )
         return Response(png(image.rgba(), image.width, image.height), media_type="image/png")
 
     @app.get("/api/meso/{name}/residues")
@@ -375,7 +404,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         return Response(text, media_type="text/plain")
 
     @app.get("/api/meso/{name}/scene")
-    def meso_scene(
+    def meso_scene(  # noqa: PLR0913
         name: str,
         colour: str = "charge",
         positive: str = "blue",
@@ -384,16 +413,24 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         full: float = 0.0,
         revolved: float = 0.0,
         edit: str = "",
+        representation: str = "",
     ) -> JSONResponse:
         """Serve the scene of a model's molecule from the side, cut at the axis or one subunit.
 
         ``full`` and ``revolved``, where above zero, draw that overlay volume's two isosurfaces
         at plus and minus that level, in e/nm^3. ``edit`` names the held edit the ``moved``
         colouring is drawn for, so a new edit takes a new annotation and the same structure.
+        ``representation`` is one of Mol*'s looks; by default a cartoon, or balls where the
+        atoms hold no backbone.
         """
         if colour not in MESO_COLOURINGS:
             raise HTTPException(
                 422, f"colour: {colour!r} is not one of {', '.join(MESO_COLOURINGS)}"
+            )
+        if representation and representation not in REPRESENTATIONS:
+            raise HTTPException(
+                422,
+                f"representation: {representation!r} is not one of {', '.join(REPRESENTATIONS)}",
             )
         model = meso(name)
         table = model.table()
@@ -410,7 +447,11 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             annotation_url=f"/api/meso/{name}/annotation?{painted}",
             # Atoms with no backbone, as a fixture's charges, draw as balls: a cartoon
             # draws nothing of them.
-            representation="cartoon" if has_backbone(table, pqr) else "spacefill",
+            representation=representation
+            if representation
+            else "cartoon"
+            if has_backbone(table, pqr)
+            else "spacefill",
             # A pore of two chains or more is cut at its axis; fewer are seen whole.
             clip=not alone and seen.chain is not None,
             side_on=replace(seen, alone=alone),

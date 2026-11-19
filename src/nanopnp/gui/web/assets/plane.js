@@ -11,6 +11,7 @@
     reservoir: ['--muted', 1, [6, 4]], probe: ['--warn', 1.5, [4, 3]], lumen: ['--ok', 1.5, []],
     original: ['--muted', 1.5, [3, 3]], picked: ['--accent', 3, []], domain: ['--canvas-plot-ink', 1, []],
     boundary: ['--canvas-plot-ink', 2.5, []], worst: ['--warn', 1.5, [6, 4]],
+    plane: ['--muted', 1.5, [6, 4]],
   };
   // A plot: its ticks per axis, its curves' width, its rules' dash, its bands' fill, the legend's gap.
   const PLOT_TICKS = 5, CURVE_W = 2, RULE_DASH = [6, 4], BAND_ALPHA = 0.15, KEY_GAP = 12, MARK_R = 2.5;
@@ -24,14 +25,27 @@
   // A marked point's ring, in px: a residue's atoms over the charge map.
   const POINT_R = 5;
   // The key's rows: a line or a swatch, a colour bar, and the bar's width, in px.
-  const KEY_ROW = 18, KEY_BAR = 46, KEY_BAR_W = 120;
+  const KEY_ROW = 18, KEY_BAR = 58, KEY_BAR_W = 120;
   const EDGES_FROM_PX = 7;
   const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  // What is not picked is drawn in a grey that recedes on either theme's canvas.
-  const receding = () => {
+  const lightCanvas = () => {
     const hex = (token('--canvas-plot') || '#ffffff').replace('#', '');
-    const light = hex.length >= 6 && parseInt(hex.slice(0, 2), 16) > 128;
-    return light ? '#d8d8d8' : '#4a4d55';
+    return hex.length >= 6 && parseInt(hex.slice(0, 2), 16) > 128;
+  };
+  // What is not picked is drawn in a grey that recedes on either theme's canvas.
+  const receding = () => (lightCanvas() ? '#d8d8d8' : '#4a4d55');
+  // A number in three figures; one far from unity as a power of ten, its minus signs U+2212.
+  const figures = (value) => {
+    const far = value !== 0 && (Math.abs(value) >= 1e4 || Math.abs(value) < 1e-3);
+    if (!far) return Number(value.toPrecision(3)).toString().replace('-', '\u2212');
+    const [mantissa, exponent] = value.toExponential(2).split('e');
+    const power = String(Number(exponent)).split('').map((c) => SUPERSCRIPT[c]).join('');
+    return `${mantissa}\u2009\u00d7\u200910${power}`.replace('-', '\u2212');
+  };
+  // A bar's end, in three figures or a power of ten; a clipped scale's ends say so.
+  const barEnd = (value, clipped) => {
+    const text = figures(value);
+    return clipped ? `${value < 0 ? '\u2264' : '\u2265'}\u2009${text}` : text;
   };
   const frames = () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
 
@@ -70,7 +84,7 @@
       this.host.append(this.canvas, this.notes, fit);
       new ResizeObserver(() => this.resized()).observe(this.host);
       // The theme sets the root's attributes, and the canvas draws in its tokens.
-      new MutationObserver(() => this.draw()).observe(document.documentElement, {
+      new MutationObserver(() => { this.themed(); this.draw(); }).observe(document.documentElement, {
         attributes: true, attributeFilter: ['data-theme', 'style', 'class'],
       });
       this.canvas.addEventListener('pointerdown', (e) => this.down(e));
@@ -106,7 +120,9 @@
         frame: null, axes: ['r (nm)', 'z (nm)'], extent_nm: [-1, 10, -10, 10], layers: [],
         notes: note ? [note] : [],
       };
-      await Promise.all(drawing.layers.filter((l) => l.kind === 'image').map((l) => this.image(l.url)));
+      // Both themes' pictures, so that a change of theme draws at once.
+      await Promise.all(drawing.layers.filter((l) => l.kind === 'image')
+        .flatMap((l) => [l.url, ...(l.dark && l.dark.url ? [l.dark.url] : [])]).map((u) => this.image(u)));
       if (asked !== this.asked) return;
       // The view keeps its pan and zoom unless the frame changes, or the drawing first has
       // something to frame.
@@ -114,6 +130,7 @@
       if (drawing.frame !== this.frame || (!framed && drawing.framed)) this.fitted = false;
       this.frame = drawing.frame;
       this.drawing = drawing;
+      this.themed();
       this.picked = null;
       this.notes.textContent = drawing.notes.join(' ');
       this.notes.hidden = drawing.notes.length === 0;
@@ -152,17 +169,46 @@
       this.canvas.height = Math.round(height * ratio);
       this.canvas.style.width = `${width}px`;
       this.canvas.style.height = `${height}px`;
+      this.reserve = this.keyReserve();
       if (!this.fitted && this.drawing) this.fit(this.drawing.extent_nm);
       this.draw();
+    },
+
+    // The height above the drawing kept for its key, where the key is too wide to stand over the
+    // drawing's corner: there it would cover the drawing and the axis's numbers.
+    keyReserve() {
+      if (!this.drawing || this.drawing.frame === 'plot') return 0;
+      this.reserve = 0;
+      const key = this.keyLayout(this.canvas.getContext('2d'), this.plot());
+      return key && key.width > this.plot().w / 2 ? key.height + 8 : 0;
+    },
+
+    // Each layer that carries a dark look takes it on a dark canvas, and its light one back.
+    themed() {
+      if (!this.drawing) return;
+      const dark = !lightCanvas();
+      for (const layer of this.drawing.layers) {
+        if (!layer.dark) continue;
+        layer.light = layer.light
+          || { palette: layer.palette, url: layer.url, bar: layer.bar && layer.bar.palette };
+        const look = dark ? layer.dark : layer.light;
+        if (look.palette && look.palette !== layer.palette) {
+          layer.palette = look.palette;
+          this.paths.delete(layer);
+        }
+        if (look.url) layer.url = look.url;
+        if (look.bar && layer.bar) layer.bar.palette = look.bar;
+      }
     },
 
     plot() {
       const ratio = window.devicePixelRatio || 1;
       const width = this.canvas.width / ratio, height = this.canvas.height / ratio;
+      const reserve = this.reserve || 0;
       return {
-        x: MARGIN.left, y: MARGIN.top,
+        x: MARGIN.left, y: MARGIN.top + reserve,
         w: Math.max(width - MARGIN.left - MARGIN.right, 1),
-        h: Math.max(height - MARGIN.top - MARGIN.bottom, 1),
+        h: Math.max(height - MARGIN.top - MARGIN.bottom - reserve, 1),
       };
     },
 
@@ -214,7 +260,9 @@
     pathsOf(layer) {
       let found = this.paths.get(layer);
       if (found) return found;
-      const keyed = layer.kind === 'mesh' ? `${layer.mesh} ${layer.colour} ${layer.focus ?? ''}` : '';
+      // A mesh's paths are its colours': its colouring, focus, scale and palette.
+      const keyed = layer.kind === 'mesh'
+        ? `${layer.mesh} ${layer.colour} ${layer.focus ?? ''} ${layer.scale} ${layer.palette.join('')}` : '';
       found = (keyed && this.meshPaths.get(keyed)) || this.buildPaths(layer);
       if (keyed) this.meshPaths.set(keyed, found);
       this.paths.set(layer, found);
@@ -306,6 +354,11 @@
       this.axes(ctx, area);
       // The key is laid out first, so that a label at the top right moves below it.
       this.key = this.keyLayout(ctx, area);
+      if (this.key && this.reserve) {
+        // Too wide for the drawing's corner: it stands above the drawing, at its right.
+        this.key.top = MARGIN.top;
+        this.key.x = Math.max(4, area.x + area.w - this.key.width);
+      }
       for (const layer of layers) if (layer.kind === 'label') this.label(ctx, layer, area);
       this.legend(ctx);
     },
@@ -787,7 +840,10 @@
             });
           }
         } else if (layer.kind === 'points') {
-          if (layer.title) {
+          if (layer.title && layer.ring) {
+            // Rings as the drawing marks them, one of each colour it uses.
+            entries.push({ kind: 'rings', text: layer.title, colours: [...new Set(layer.colours)] });
+          } else if (layer.title) {
             entries.push({ kind: 'line', text: layer.title, style: [layer.colours[0] || token('--canvas-plot-ink'), 2, []] });
           }
         } else if (layer.title && layer.kind !== 'domain' && !titles.has(layer.title)) {
@@ -800,11 +856,18 @@
       let width = 0, height = 8;
       for (const entry of entries) {
         if (entry.kind === 'bar') {
-          width = Math.max(width, KEY_BAR_W + 8, ctx.measureText(entry.quantity).width + 8,
+          // The bar is as wide as its two ends need, apart.
+          ctx.font = `12px ${token('--font-num') || 'monospace'}`;
+          const ends = ctx.measureText(barEnd(entry.low, entry.clipped)).width
+            + ctx.measureText(barEnd(entry.high, entry.clipped)).width;
+          ctx.font = `12px ${token('--font-ui') || 'sans-serif'}`;
+          entry.barW = Math.max(KEY_BAR_W, ends + 16);
+          width = Math.max(width, entry.barW + 8, ctx.measureText(entry.quantity).width + 8,
             ctx.measureText(entry.unit).width + 8);
           height += KEY_BAR;
         } else {
-          width = Math.max(width, ctx.measureText(entry.text).width + 32);
+          const lead = entry.kind === 'rings' ? 14 * (entry.colours.length - 1) : 0;
+          width = Math.max(width, ctx.measureText(entry.text).width + 32 + lead);
           height += KEY_ROW;
         }
       }
@@ -826,11 +889,6 @@
       ctx.strokeRect(x + 0.5, top + 0.5, width - 1, height - 1);
       const text = token('--ink') || '#16181d';
       const edge = token('--colourbar-outline') || token('--canvas-plot-ink') || '#16181d';
-      // A bar's ends in three figures; one far from unity in powers of ten, which fits its width.
-      const shown = (value) => {
-        const far = value !== 0 && (Math.abs(value) >= 1e4 || Math.abs(value) < 1e-3);
-        return (far ? value.toExponential(2) : Number(value.toPrecision(3)).toString()).replace('-', '−');
-      };
       // A key below a narrow plot lays its rows out in columns.
       const columns = this.key.columns || 1, across = this.key.columnWidth || width;
       let y = top + 4, column = 0;
@@ -839,24 +897,25 @@
         const left = x + column * across;
         ctx.textAlign = 'left';
         if (entry.kind === 'bar') {
+          // The quantity, the bar, its ends, then the unit: each on its own line, apart.
           ctx.fillStyle = text;
           ctx.font = `12px ${ui}`;
-          ctx.fillText(entry.quantity, x + 6, y + 7);
-          const steps = entry.palette.length;
+          ctx.fillText(entry.quantity, x + 6, y + 8);
+          const steps = entry.palette.length, barW = entry.barW || KEY_BAR_W;
           for (let k = 0; k < steps; k += 1) {
             ctx.fillStyle = entry.palette[k];
-            ctx.fillRect(x + 6 + (k * KEY_BAR_W) / steps, y + 15, KEY_BAR_W / steps + 0.5, 9);
+            ctx.fillRect(x + 6 + (k * barW) / steps, y + 17, barW / steps + 0.5, 9);
           }
           ctx.strokeStyle = edge;
-          ctx.strokeRect(x + 6.5, y + 15.5, KEY_BAR_W, 9);
+          ctx.strokeRect(x + 6.5, y + 17.5, barW, 9);
           ctx.fillStyle = text;
           ctx.font = `12px ${token('--font-num') || 'monospace'}`;
-          ctx.fillText(shown(entry.low), x + 6, y + 31);
+          ctx.fillText(barEnd(entry.low, entry.clipped), x + 6, y + 36);
           ctx.textAlign = 'right';
-          ctx.fillText(shown(entry.high), x + 6 + KEY_BAR_W, y + 31);
+          ctx.fillText(barEnd(entry.high, entry.clipped), x + 6 + barW, y + 36);
           ctx.textAlign = 'left';
           ctx.font = `12px ${ui}`;
-          ctx.fillText(entry.unit, x + 6, y + 41);
+          ctx.fillText(entry.unit, x + 6, y + 50);
           y += KEY_BAR;
           continue;
         }
@@ -873,6 +932,15 @@
           ctx.globalAlpha = 1;
           ctx.strokeStyle = edge;
           ctx.strokeRect(left + 6.5, y + 3.5, 12, 12);
+        } else if (entry.kind === 'rings') {
+          entry.colours.forEach((colour, k) => {
+            ctx.beginPath();
+            ctx.arc(left + 13 + 14 * k, y + 9, POINT_R, 0, 2 * Math.PI);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = colour;
+            ctx.setLineDash([]);
+            ctx.stroke();
+          });
         } else {
           const [colour, lineWidth, dash] = entry.style;
           ctx.strokeStyle = colour;
@@ -885,7 +953,7 @@
           ctx.setLineDash([]);
         }
         ctx.fillStyle = text;
-        ctx.fillText(entry.text, left + 28, y + 9);
+        ctx.fillText(entry.text, left + 28 + (entry.kind === 'rings' ? 14 * (entry.colours.length - 1) : 0), y + 9);
         column += 1;
         if (column === columns) {
           column = 0;

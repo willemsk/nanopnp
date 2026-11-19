@@ -226,13 +226,34 @@ _DIVERGING: tuple[tuple[int, int, int], ...] = (
     (180, 4, 38),
 )
 
-Palette: TypeAlias = Literal["viridis", "diverging", "diverging_r"]
-"""``diverging`` runs from blue to red; ``diverging_r`` from red to blue, positive blue."""
+# Crameri's berlin (Scientific colour maps 8, MIT; as Matplotlib 3.10 ships it), eleven anchors:
+# a dark middle, for the dark theme, where a light middle reads as a bright slab.
+_DIVERGING_DARK: tuple[tuple[int, int, int], ...] = (
+    (158, 176, 255),
+    (98, 166, 224),
+    (50, 128, 166),
+    (32, 82, 106),
+    (17, 39, 50),
+    (25, 12, 9),
+    (55, 16, 0),
+    (97, 32, 11),
+    (150, 74, 54),
+    (202, 123, 113),
+    (255, 173, 173),
+)
+
+Palette: TypeAlias = Literal[
+    "viridis", "diverging", "diverging_r", "diverging_dark", "diverging_dark_r"
+]
+"""``diverging`` runs from blue to red; ``diverging_r`` from red to blue, positive blue; the
+``_dark`` pair the same ways through a dark middle."""
 
 _PALETTES: dict[str, tuple[tuple[tuple[int, int, int], ...], int]] = {
     "viridis": (_VIRIDIS, 256),
     "diverging": (_DIVERGING, 255),
     "diverging_r": (_DIVERGING[::-1], 255),
+    "diverging_dark": (_DIVERGING_DARK, 255),
+    "diverging_dark_r": (_DIVERGING_DARK[::-1], 255),
 }
 
 

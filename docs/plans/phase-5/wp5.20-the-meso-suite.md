@@ -293,6 +293,16 @@ python .claude/scripts/gui/render_shell.py --only meso <scratch dir>` exits 0 wi
 > Two of 424 shots lost their page under the full render's load; each group rendered alone loads every shot. The
 > digest has 19 picks over 70 shots: [the round](https://claude.ai/artifact/QtpwQnBQ69ooDgrTkP2y8M).
 
+> **Outcome — the verdicts built.** The author marked 17 picks `keep` and 2 `change` ([the
+> record](../../design/reviews/2026-11-19-meso.md); WB-49). Charge map's note asked for options, put at the collect:
+> the scale opens on the 99th percentile of the charge's size (`gui/charge.py:clip_of`; ±175 C m⁻² on 2WCD against its
+> largest 728), set by *Map range*, typed against its power of ten, the bar's ends marked ≤ and ≥; each Meso tool sets
+> Mol*'s representation (`Shell.looks`); a free list of the structure's layers is a package of its own (REV-265). On
+> the dark theme the map runs through Crameri's *berlin*, which the canvas swaps in with the picture drawn for it. The
+> review's F8 to F13 and F15 and REV-261's seven points are fixed or answered there; REV-259 is fixed, and REV-266
+> holds what stays open. The canvas keys a mesh's colour paths by their scale and palette too, so a new range or theme
+> redraws them.
+
 ### Work items
 
 - [x] 2851bbf 1. `plot/data.py` (`ResidueCopies`, `ResidueCharges`, `ResidueAtoms`, `inside_outline`), `gui/geometry.py`
