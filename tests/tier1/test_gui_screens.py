@@ -540,3 +540,114 @@ def test_con09_the_vendored_libraries_are_unmodified(library: str) -> None:
     for path in shipped:
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         assert digest in notice, f"{path.name} differs from the build NOTICE.md names"
+
+
+@pytest.fixture(scope="module")
+def solved(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
+    # The charged tube solved, swept over its bias and compared: a server shared by the (o) tests.
+    process, found = _start(
+        "--state", "solved", entry=CLI, config=tmp_path_factory.mktemp("config-solved")
+    )
+    yield found.group(1)
+    assert process.stdin is not None
+    process.stdin.close()
+    process.wait(STOP_WITHIN_S)
+
+
+SOLVE_WAIT_MS = 180_000
+
+
+def _opened(browser: Browser, url: str, path: str) -> tuple[Page, list[str], list[str]]:
+    origin = url.split("/?")[0]
+    errors: list[str] = []
+    requests: list[str] = []
+    page = browser.new_page(viewport={"width": 1440, "height": 900})
+    page.on("pageerror", lambda error: errors.append(f"page error: {error}"))
+    page.on("console", lambda m: errors.append(f"console: {m.text}") if m.type == "error" else None)
+    page.on("request", lambda r: requests.append(r.url))
+    page.goto(url)
+    _ready(page, origin + path)
+    return page, errors, requests
+
+
+def _viewer(page: Page, control: str) -> dict[str, object]:
+    script = (
+        "(control) => { const f = document.querySelector(`iframe[data-control=${control}]`);"
+        " const v = f && f.contentWindow && f.contentWindow.__nanopnp_viewer;"
+        " return v && (v.ready || v.error) ? v : null; }"
+    )
+    page.wait_for_function(script, arg=control, timeout=SOLVE_WAIT_MS)
+    return dict(page.evaluate(script, control))
+
+
+def test_ver78_o_the_explorer_draws_its_runs_map_and_a_two_point_iv(
+    solved: str, browser: Browser
+) -> None:
+    page, errors, _ = _opened(browser, solved, "/analysis/explorer")
+    try:
+        page.wait_for_selector('#analysis-map[data-map-ready="1"]', timeout=SOLVE_WAIT_MS)
+        iv = page.evaluate(
+            "(() => { const c = nano.charts.get('analysis-iv-chart');"
+            " return {x: c.spec.series[0].x, notes: c.notes.textContent}; })()"
+        )
+    finally:
+        page.close()
+    assert sorted(set(iv["x"])) == [-50.0, 50.0], iv
+    assert re.search(r"Slope of the line through the \d+ points: [\d.]+ nS", iv["notes"]), iv
+    assert errors == []
+
+
+def test_ver78_o_on_the_mesh_fetches_the_scene_from_the_origin_and_draws_it(
+    solved: str, browser: Browser
+) -> None:
+    origin = solved.split("/?")[0]
+    page, errors, requests = _opened(browser, solved, "/analysis/explorer")
+    try:
+        page.wait_for_selector('#analysis-map[data-map-ready="1"]', timeout=SOLVE_WAIT_MS)
+        page.locator("[data-control=analysis-on-mesh]").click()
+        page.wait_for_selector("iframe[data-control=analysis-scene]", timeout=SOLVE_WAIT_MS)
+        viewer = _viewer(page, "analysis-scene")
+    finally:
+        page.close()
+    assert viewer["ready"] is True, viewer
+    assert origin + "/vendor/webgui/webgui.js" in requests
+    assert any(url.startswith(origin + "/api/analysis/scene?") for url in requests)
+    assert errors == []
+
+
+def test_ver78_o_the_comparison_draws_its_difference_and_its_cuts_two_series(
+    solved: str, browser: Browser
+) -> None:
+    page, errors, _ = _opened(browser, solved, "/analysis/compare")
+    try:
+        page.wait_for_selector(
+            '#analysis-map-difference[data-map-ready="1"]', timeout=SOLVE_WAIT_MS
+        )
+        series = page.evaluate(
+            "nano.charts.get('analysis-cut-chart').spec.series"
+            ".map((s) => s.y.filter((v) => v !== null).length)"
+        )
+    finally:
+        page.close()
+    assert len(series) == 2 and all(count > 0 for count in series), series
+    assert errors == []
+
+
+def test_ver78_o_the_pairs_scenes_take_one_colour_range(solved: str, browser: Browser) -> None:
+    origin = solved.split("/?")[0]
+    page, errors, requests = _opened(browser, solved, "/analysis/compare")
+    try:
+        page.get_by_role("button", name="On the mesh").click()
+        for index in (0, 1):
+            page.wait_for_selector(
+                f"iframe[data-control=analysis-scene-{index}]", timeout=SOLVE_WAIT_MS
+            )
+            assert _viewer(page, f"analysis-scene-{index}")["ready"] is True
+        fetched = sorted({url for url in requests if "/api/analysis/scene?" in url})
+        scenes = [page.request.get(url).json() for url in fetched]
+    finally:
+        page.close()
+    ranges = {(scene["funcmin"], scene["funcmax"]) for scene in scenes}
+    assert len(scenes) == 2 and len(ranges) == 1, ranges
+    assert all(url.startswith((origin, "data:", "blob:")) for url in requests)
+    assert errors == []

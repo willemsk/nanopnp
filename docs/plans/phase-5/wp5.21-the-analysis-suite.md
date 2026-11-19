@@ -245,7 +245,7 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
   passes. **Executor:** general-purpose on Sonnet, high
 - [x] 7085e44 7. `gui/web/chart.py`, `assets/chart.js`, the two plots moved, `lookup_table` (D6, D7); ADR-004's NOTE, §2.6's
   NOTE; done when `test_study_runs.py` and VER-78 pass. **Executor:** main
-- [ ] 8. `screens.py`, `gui/web/analysis.py`, `analysis_tools.py`, `pages.py`, `frame.py`, `study_tools.py`,
+- [x] 31a9e32 8. `screens.py`, `gui/web/analysis.py`, `analysis_tools.py`, `pages.py`, `frame.py`, `study_tools.py`,
   `gui/solver.py` (D3 to D5, D8 to D10); VER-78 (a); done when VER-78 passes. **Executor:** main
 - [ ] 9. `states.py` `solved`; VER-78 (o) (D11); done when (o) passes. **Executor:** main
 - [ ] 10. Compaction checkpoint. **Executor:** main

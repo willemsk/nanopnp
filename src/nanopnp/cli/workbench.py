@@ -103,7 +103,8 @@ def _gui(args: argparse.Namespace) -> int:
             )
     # Named by string: gui sits above cli in the layer order, so an import would point upward.
     server = importlib.import_module("nanopnp.gui.web.server")
-    if args.state is not None and args.state not in server.STATES:
+    # The solved state, VER-78 (o)'s alone, is admitted though not listed.
+    if args.state is not None and args.state not in (*server.STATES, server.SOLVED):
         _refuse(args, f"--state {args.state!r}: the states are {', '.join(server.STATES)}")
     if args.project is not None and args.state is not None:
         _refuse(args, "give a project folder or --state, not both")
