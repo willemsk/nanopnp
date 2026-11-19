@@ -3887,5 +3887,10 @@ WP5.20's round ([the record](../design/reviews/2026-11-19-meso.md)) and its revi
   `--line`, not `--control-edge`; the view's notes stand small at its foot; "kernel widths", "Kernel sharpness" and
   "Deployed on the mesh" link to no glossary entry (WB-25); stage 4's gate writes "contour gate, loop topology",
   with REV-242's pass over the stages' errors (the final review's F8).
+- **A residue its first unit lacks.** Stage 1 accepts a chain holding part of the residues, and a residue is listed by
+  its first unit's chain (`plot/data.py:ResidueCopies.group`), so one missing from that chain is named by a key none
+  of its atoms carries: GLU 12 of chains B and C is listed as `A:12`. Its charge per copy, its copies and Mol*'s marks
+  are right; only the name is wrong (the ship's physics read). A residue is to be named by its first present copy,
+  alike in `ResidueCharges`, `ResidueAtoms` and `DensityAtoms`, whose keys the pane links.
 
 **Open**: WP5.23.

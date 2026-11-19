@@ -879,7 +879,7 @@ class ChargeVolumes:
     Each atom's charge is spread over a Gaussian of width at least ``smoothing_nm``, so the grid
     resolves it; ``revolved`` is the closed-form mean about the axis of the same Gaussians, so it
     is the mean of ``full`` over the azimuth but for each Gaussian's cut-off at
-    :data:`REACH_WIDTHS` widths, below 10^-7 of its peak.
+    :data:`REACH_WIDTHS` widths, where it is 1.1 x 10^-7 of its peak.
     """
 
     def __init__(
