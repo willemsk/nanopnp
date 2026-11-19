@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, ClassVar, TypeVar
 from nanopnp.api.project import own_outline
 from nanopnp.charge.protonation import PAYLOAD_NAME, ProtonationTable
 from nanopnp.charge.stage import stored_lattice
-from nanopnp.gui.charge import ChargeMap, ConservationView, charge_image, clip_of
+from nanopnp.gui.charge import ChargeMap, ConservationView, charge_image
 from nanopnp.gui.render import CHARGE_ELEMENTS_FILENAME, VIEWER_DIRNAME
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
@@ -28,6 +28,7 @@ from nanopnp.plot.data import (
     ResidueAtoms,
     ResidueCharges,
     charge_volumes,
+    colour_scale,
 )
 from nanopnp.validation.apbs import dx_text
 
@@ -157,8 +158,8 @@ class MesoModel(ContinuumModel):
             with np.load(path) as held:
                 values = np.asarray(held["values"], dtype=np.float64)
                 units = str(held["units"])
-            largest = float(np.abs(values).max()) if values.size else 0.0
-            return largest, clip_of(values), units
+            scale = colour_scale(values)
+            return scale.largest, scale.clip, units
 
         return kept(("scale", str(path), str(path.stat().st_mtime_ns)), read)
 

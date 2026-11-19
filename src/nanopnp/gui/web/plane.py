@@ -17,7 +17,6 @@ from nanopnp.core.stages import describe
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
 from nanopnp.geometry.profile import load_profile
-from nanopnp.gui.charge import clip_of
 from nanopnp.gui.geometry import ImageModel, density_section, lookup_table, reduced_image
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
@@ -34,6 +33,7 @@ from nanopnp.plot.data import (
     axis_label,
     boundary_edges,
     case_curves,
+    colour_scale,
     contour_polygon_m,
     mesh_elements,
     mesh_of,
@@ -734,7 +734,7 @@ def deployed_layer(
 
     ``path`` is the file :func:`nanopnp.gui.render.render_charge_elements` wrote. The charge's
     scale is symmetric about zero, a positive charge in the named colour, and runs to ``span``,
-    or else opens on :func:`~nanopnp.gui.charge.clip_of`'s share of its size.
+    or else opens on :func:`~nanopnp.plot.data.colour_scale`'s share of its size.
     """
     import numpy as np
 
@@ -745,10 +745,11 @@ def deployed_layer(
         material = np.asarray(held["material"], dtype=np.int64)
         name, units = str(held["name"]), str(held["units"])
     charge = name == FIXED_CHARGE_ATTRIBUTE
-    limit = float(np.abs(values).max()) if values.size else 0.0
+    scale_of = colour_scale(values)
+    limit = scale_of.largest
     top = 1.0
     if charge:
-        top = _span(limit, clip_of(values), span)
+        top = _span(limit, scale_of.clip, span)
         scale = [-top, top]
         palette = _charge_palette(positive)
     else:
@@ -917,6 +918,7 @@ def _atoms_layer(residue: str, atoms: Sequence[tuple[float, float, float]]) -> d
         "points_nm": _flat((r, z) for r, z, _ in atoms),
         "colours": [SERIES[4]] * len(atoms),
         "title": f"Residue {residue}, its atoms",
+        "ring": True,
     }
 
 
