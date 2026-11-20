@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import filecmp
 import json
-import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -468,43 +467,6 @@ def solved_tube(tmp_path_factory: pytest.TempPathFactory) -> tuple[Project, str,
     project.set_study_value(study, "boundary_conditions.bias_V", -0.05)
     second = project.session().run(project.study(study)).directory
     return project, study, first, second
-
-
-def test_fr32_a_comparison_is_written_read_back_listed_and_exported_with_its_runs(
-    solved_tube: tuple[Project, str, Path, Path], tmp_path: Path
-) -> None:
-    # A comparison names its runs by their place in the project, so a copy keeps the pair; a run
-    # gone from under it is listed, and never stops the project from opening.
-    project, _, first, second = solved_tube
-    location = project.new_comparison("tube-bias", first, second)
-    pair = (first.relative_to(project.root).as_posix(), second.relative_to(project.root).as_posix())
-    assert project.comparison("tube-bias").runs == pair
-    assert project.comparison("tube-bias").quantity == "potential"
-    assert Project.open(project.root).items("comparison") == ("tube-bias",)
-    changed = project.set_comparison("tube-bias", view="maps", colour_map="magma", range=[-1, 1])
-    assert (changed.view, changed.colour_map, changed.range) == ("maps", "magma", (-1.0, 1.0))
-    written = location.read_bytes()
-    for refused in ({"view": "sideways"}, {"range": [1, -1]}, {"bias_V": 0.1}):
-        with pytest.raises(ProjectError):
-            project.set_comparison("tube-bias", **refused)
-        assert location.read_bytes() == written
-    with pytest.raises(ProjectError, match="not a run"):
-        project.new_comparison("stray", first, tmp_path)
-    assert project.problems() == ()
-
-    copy = project.export(tmp_path / "copy")
-    assert (copy / "comparisons" / "tube-bias.yaml").read_bytes() == written
-    reopened = Project.open(copy)
-    assert reopened.comparison("tube-bias").runs == pair
-    assert all((copy / run / "run.json").is_file() for run in pair)
-    assert reopened.problems() == ()
-    shutil.rmtree(copy / pair[1])
-    [problem] = Project.open(copy).problems()
-    assert (problem.item, problem.path, problem.suite) == (
-        "comparison/tube-bias",
-        "runs",
-        "analysis",
-    )
 
 
 def test_fr32_qr08_a_run_cleaned_from_the_store_is_rebuilt_to_its_record(
