@@ -178,7 +178,9 @@ _PAGE = Template("""<!DOCTYPE html>
       /* The renderer centres its colour bar's first label on the bar's end, 13 px in: the
          margin keeps a minus sign whole, and the root clips the canvas's overhang. */
       html { overflow: hidden; }
-      body { margin: 0 0 0 16px; position: relative; background: #ffffff; }
+      body { margin: 0 0 0 16px; position: relative; background: #ffffff; color: #16181d; }
+      /* The renderer draws on dark grey where the text it sits in is light. */
+      html.dark body { background: #1a1a1a; color: #e8eaef; }
       canvas { cursor: grab; }
       canvas:active { cursor: grabbing; }
     </style>
@@ -192,6 +194,15 @@ _PAGE = Template("""<!DOCTYPE html>
         error: "",
         renderer: $renderer_literal
       };
+      // The workbench around the frame sets the theme; a page opened alone stays light.
+      try {
+        if (window.parent !== window
+            && window.parent.document.body.classList.contains("body--dark")) {
+          document.documentElement.classList.add("dark");
+        }
+      } catch (error) {}
+      // [r0, r1, z0, z1] in the mesh's units: the camera opens on it, as the map's close-up.
+      var frame = $frame_literal;
       fetch($scene_literal)
         .then(function (answer) {
           if (!answer.ok) {
@@ -200,6 +211,16 @@ _PAGE = Template("""<!DOCTYPE html>
           return answer.json();
         })
         .then(function (render_data) {
+          if (frame) {
+            var x = (frame[0] + frame[1]) / 2, y = (frame[2] + frame[3]) / 2;
+            var k = 2 / Math.hypot(frame[1] - frame[0], frame[3] - frame[2]);
+            render_data.gui_settings = Object.assign({}, render_data.gui_settings, {
+              camera: {
+                mat: {elements: [k, 0, 0, 0, 0, k, 0, 0, 0, 0, k, 0, -k * x, -k * y, 0, 1]},
+                center: {x: x, y: y, z: 0}
+              }
+            });
+          }
           var scene = new webgui.Scene();
           scene.init(document.body, render_data, {preserveDrawingBuffer: false});
           window.$flag.ready = true;
@@ -213,16 +234,25 @@ _PAGE = Template("""<!DOCTYPE html>
 """)
 
 
-def host_page(scene_url: str, renderer_url: str, title: str) -> str:
+def host_page(
+    scene_url: str,
+    renderer_url: str,
+    title: str,
+    *,
+    frame_nm: tuple[float, float, float, float] | None = None,
+) -> str:
     """Return the HTML page that fetches one scene and draws it.
 
-    The scene is not embedded, so a page is a few hundred bytes however large the scene.
+    The scene is not embedded, so a page is a few hundred bytes however large the scene. Its
+    background follows the workbench's theme; ``frame_nm``, ``(r0, r1, z0, z1)`` in the mesh's
+    units, is the region its camera opens on, the whole mesh where None.
     """
     return _PAGE.substitute(
         title=html.escape(title),
         renderer=html.escape(renderer_url, quote=True),
         renderer_literal=json.dumps(renderer_url).replace("</", "<\\/"),
         scene_literal=json.dumps(scene_url).replace("</", "<\\/"),
+        frame_literal=json.dumps(None if frame_nm is None else [float(v) for v in frame_nm]),
         flag=READY_FLAG,
     )
 

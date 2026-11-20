@@ -1,6 +1,6 @@
 # WP5.21 — The Analysis suite
 
-**Status: planned, not started.** Planned 19 November 2026 on `main` (`2eaf29f`). It inherits AG6, AJ8, AN5, WB-06's
+**Status: delivered, 20 November 2026.** Planned 19 November 2026 on `main` (`2eaf29f`). It inherits AG6, AJ8, AN5, WB-06's
 links and this plan's AU1 to AU3 (§8.2.31 to §8.2.45).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
@@ -256,6 +256,25 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
 - [x] 13. Compaction checkpoint; the author's verdicts collected. **Executor:** main
 - [ ] 14. The verdicts built; the round's WB row; the texts of *Amended when it lands*; a final render reviewed (D4 to
   D7, D12); done when the review's blocking findings are fixed. **Executor:** main
+
+> **Outcome — the round's verdicts ([the record](../../design/reviews/2026-11-20-analysis.md)).** 8 keep, 6 change, 1
+> drop of 15 picks. Built at item 14 (WB-50): a *Map · 3D* switch in the field tile's title bar; the 3D view on the
+> map's range, framed on the pore through the scene's camera settings, its background the theme's; an *Outline*
+> option; Comparison's *Mirrored* view (`view: mirrored`); *Solve again* for a cleaned run (D9's rebuild, renamed);
+> the rungs as a table; a click placed to 0.01 nm. The tiles' layout, the probes' pane, the quantities shown and the
+> chart library go to a tree of results, a design round and a package before WP5.22 (WB-51, REV-268). The author took
+> a wording rule and sixteen examples, applied here; WP5.23 sweeps the rest (WB-52, REV-269).
+
+> **Outcome — REV-264, ruled to this package at WP5.19's ship.** The solve records, per converged field, its r-weighted
+> L2 norm, its gradient's and each component's integral (`field_norms`, in its summary, the manifest's solver group and
+> the run record); a reproduction that re-enters the solve compares them within 10⁻⁶ of each number, or of 10⁻⁶ of the
+> largest of its kind, NUM-16's floor (QR-08's NOTE; `test_reproducibility.py`). The gradient and the signed integral
+> answer the physics review's point that a whole-domain norm is dominated by the reservoirs and blind to a reversed
+> flow. A record written before them says it compared no number of the solve.
+
+> **Outcome — the render's copied runs.** `render_shell.py:retarget` rewrote every JSON and YAML under a copied run, its
+> manifest and case among them, which broke the manifest's hash; the earlier rounds drew 3D only from scenes already
+> written. It now leaves `manifest.json` and `case.yaml` as the run wrote them, as a project's export does.
 
 ### Verification
 

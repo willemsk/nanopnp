@@ -130,10 +130,11 @@ class ProjectFile(_Strict):
 
 COMPARISON_SCHEMA = "nanopnp/comparison/v0.6"
 
-ComparisonView = Literal["difference", "maps", "mesh"]
+ComparisonView = Literal["difference", "maps", "mirrored", "mesh"]
 
-COMPARISON_VIEWS: tuple[ComparisonView, ...] = ("difference", "maps", "mesh")
-"""The difference over the fluids' overlap, the two maps side by side, the two fields in 3D."""
+COMPARISON_VIEWS: tuple[ComparisonView, ...] = ("difference", "maps", "mirrored", "mesh")
+"""The difference over the fluids' overlap, the two maps side by side, the two as one map mirrored
+about the axis, the two fields in 3D."""
 
 
 class ComparisonFile(_Strict):

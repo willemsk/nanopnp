@@ -49,7 +49,8 @@ refused, naming both, before anything is written. The copy is written beside the
 into place whole, so a refused or failed export leaves nothing.
 A **comparison** (`comparisons/<name>.yaml`, `nanopnp/comparison/v0.6`) holds `name`, `runs` (two run
 folders of the project, first then second, relative to it), `quantity` (`potential` by default), `view`
-(`difference`, the default, `maps` or `mesh`), `colour_map` and `range` (None by default), and no physics.
+(`difference`, the default, `maps`, `mirrored`, the two maps as one with the first reflected about the axis, or
+`mesh`), `colour_map` and `range` (None by default), and no physics.
 `Project.new_comparison` writes one over two runs, `Project.comparison` reads it and
 `Project.set_comparison` sets its values, each written only once it reads back. A run it names that holds
 no `run.json` is a problem at `runs`, never a refusal to open; an export copies the file unchanged, its

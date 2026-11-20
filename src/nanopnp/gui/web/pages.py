@@ -238,13 +238,26 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         return FileResponse(scene, media_type="application/json")
 
     @app.get("/api/analysis/view")
-    def analysis_view(run: str, field: str, range: str = "") -> HTMLResponse:
-        """Serve the page that fetches a run's scene and draws it with the shipped renderer."""
+    def analysis_view(run: str, field: str, range: str = "", frame: str = "") -> HTMLResponse:
+        """Serve the page that fetches a run's scene and draws it with the shipped renderer.
+
+        ``frame``, ``r0,r1,z0,z1`` in nm, is the region the camera opens on.
+        """
         analysed(run)
         query = urlencode({"run": run, "field": field, **({"range": range} if range else {})})
+        opened: tuple[float, float, float, float] | None = None
+        if frame:
+            try:
+                r0, r1, z0, z1 = (float(value) for value in frame.split(","))
+            except ValueError:
+                raise HTTPException(422, f"frame: {frame!r} is not r0,r1,z0,z1") from None
+            opened = (r0, r1, z0, z1)
         return HTMLResponse(
             host_page(
-                f"/api/analysis/scene?{query}", "/vendor/webgui/webgui.js", f"{field} on the mesh"
+                f"/api/analysis/scene?{query}",
+                "/vendor/webgui/webgui.js",
+                f"{field} on the mesh",
+                frame_nm=opened,
             )
         )
 

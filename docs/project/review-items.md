@@ -310,6 +310,8 @@ walk (open question 1 of the [WP38 plan](../plans/phase-4/wp38-io-split.md)).
 
 **Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.21, the Analysis suite.
 
+**Fixed** in WP5.21: a run's scene is written only when a tile opens it, by a render child the tile asks (`gui/render.py:RenderRequest`), and a finished run renders nothing eagerly.
+
 ### REV-29 — The cylindrical-pore fixture is copied into four test modules
 
 *Area:* verification. *Severity:* low. *Found:* PR #32 (WP15).
@@ -331,6 +333,8 @@ walk (open question 1 of the [WP38 plan](../plans/phase-4/wp38-io-split.md)).
 **Placed** (§8.2.31 AG1, 3 November 2026): WP5.21, the Analysis suite.
 
 **Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.21, the Analysis suite.
+
+**Fixed** in WP5.21: the render child writes each scene once, `scene-<field>[-<range>].json` in the run's `viewer/`, and the server serves that file to the host page, which fetches it (VER-44's restated NOTE).
 
 ### REV-31 — The bundle's size is not recorded
 
@@ -3210,6 +3214,8 @@ isosurfaces over the structure.
 *The overlay settled in WP5.20* ([the record](../design/reviews/2026-11-19-meso.md)): the author kept both volumes at their level, so the charge
 screen's overlay is built. The variation view, the maps and the safeguards stay as carried above.
 
+*The colour maps settled in WP5.21* (AU2): each field map and each comparison offers every Matplotlib colour map by name, and its reverse; a comparison records its map. The variation view and the safeguards stay as carried above.
+
 ### REV-241: What the final review of the Molecular tools left open
 
 The GUI review and `impeccable`'s critique of the finished tools (WP5.16 item 12, render `shell-r2` at `def8265`; no
@@ -3513,6 +3519,8 @@ than the band it names.
 
 **Open**: with the analysis suite, which needs a general plotting module, built or borrowed.
 
+**Fixed** in WP5.21 (AU1): every plot of x against y is a uPlot chart whose axes the user sets, linear, logarithmic or square root, each range typed, with drag-zoom and hover. The library is chosen again with REV-268's tree of results.
+
 ### REV-254: The stages' diagnostics and the other suites' words in ASD-STE100
 
 At WP5.18's collect the author asked for simple sentences in ASD-STE100 and chose to rewrite the library's refusal
@@ -3752,6 +3760,8 @@ run's answer, its conductance at its bias).
 **Open**: WP5.21, which links a run to its result (FR-33): the records in the pane, picked with `aria-pressed`, each
 drawn from its stored history.
 
+**Fixed** in WP5.21's item 4: Runs' recorded runs are buttons (`aria-pressed`), and the one picked draws its convergence replayed from its stored history, each rung with its reporting and tolerance (VER-44's restated NOTE).
+
 ### REV-261: What the Study suite's final review left open
 
 WP5.19's final render (392 shots; no page error and no contrast, non-text or target finding) was reviewed by the
@@ -3848,6 +3858,13 @@ final residuals or the field, is a tolerance to argue in QR-08's NOTE.
 
 **Open**, ruled by the author on 18 November 2026 at `/np-ship wp 5.19`: WP5.21, which opens a run's result, decides it.
 
+**Fixed** in WP5.21's item 14, as the author ruled on 20 November 2026 ("go with your recommendation"): the solve
+records each converged field's weighted L2 norm in its summary and in the run record (`field_norms`), and a
+reproduction that re-enters the solve compares each within QR-08's tolerance of 10⁻⁶, so a record stopped at its solve
+compares the numbers the solve made; a rebuild is such a reproduction. QR-08's NOTE says so;
+`tests/tier2/test_reproducibility.py::test_qr08_a_run_stopped_at_its_solve_compares_each_fields_norm` moves one norm by
+10⁻³ and finds the one drift, named.
+
 ### REV-265: A free list of the structure's layers in Meso's Mol* view
 
 At WP5.20's round the author asked for display options in Meso's Mol* view: "having some display options like
@@ -3906,23 +3923,57 @@ WP5.20's round ([the record](../design/reviews/2026-11-19-meso.md)) and its revi
 WP5.21's review of its round's render (Item 12: the GUI reviewer's findings and the critique) fixed the computed
 slope, the 3D bar's clipped minus, the typed probe, link 3's chip, the map's range and its 99th-percentile opening,
 the pair's scale centred on zero over the fluid, each run's recorded numbers, the controls that do nothing in 3D,
-Runs' clipped *Result*, the legends' dashes, the colour direction (WB-39) and the pane's scroll. The tiles' layout,
-the 3D view's range, wireframe, framing and background, and the map's outline go to the author at the round. These
-stay:
-
-- **Quantities.** The tile lists the record's rows in the library's order and words ("two pi included", "routes
-  checked"), the conductance not first (the review's 16).
+Runs' clipped *Result*, the legends' dashes, the colour direction (WB-39) and the pane's scroll. At the round
+(20 November 2026, WB-50) item 14 built the 3D view's range, framing and background, the map's outline, the
+mirrored pair, *Solve again* and the rungs' table (the review's 10, 25 and 28). The tiles' layout, the probes'
+place, the quantities shown and their order, and the charts' library (the review's 3, 16, 20 and 21; the critique's
+5 and 15) went to REV-268's tree of results; the words to REV-269. These stay, WP5.23's:
 - **Words and type.** "Changed" names the count and the run's deviations (17); the map's axes and the quantities
   are in the number face, minus signs are hyphens, a bias breaks from its unit, the Run select clips the bias (18).
-- **Charts.** uPlot's live legend shows "—" until hovered (20; the critique's 5); the I–V's shown run is a small
-  dot (21; the critique's 15); the convergence chart labels no rung 1 to 3, 5 or 8 and mixes 10⁵, 0.01 and 10⁻¹¹ on
-  its log axis (22; the critique's 14); a fresh model's flat factors are not drawn and its square-root ticks are not
-  round (23); the series share the info and warn hues (the critique's 16).
-- **The no-run states.** "Study's Runs starts one." is no link, the refused state does not say Continuum's problem
-  stops the study (26), and the empty state draws an empty box (27).
+- **Charts**, unless REV-268's library settles them: the convergence chart labels no rung 1 to 3, 5 or 8 and mixes
+  10⁵, 0.01 and 10⁻¹¹ on its log axis (22; the critique's 14); a fresh model's flat factors are not drawn and its
+  square-root ticks are not round (23); the series share the info and warn hues (the critique's 16).
+- **The no-run states.** The pointer to Study's Runs is no link (REV-269 words it), the refused state does not say
+  Continuum's problem stops the study (26), and the empty state draws an empty box (27).
 - **Frames.** A tile's frames nest three deep, a map's key stands on the data (the critique's 11, 12), and *Axes*
   does not say an axis was set (the critique's 13).
 - **Doubts to check.** The I–V joins every run of a study, which may differ in more than the bias; Electrolyte's
   viscosity runs flat at 2.0, the plot's top, a clamp or a clip; the uncharged state shows a failed queue entry
   beside "no run yet"; figure export (FR-28) has no later-phase banner.
 
+### REV-268: Analysis as an editable tree of results, and the charts' library
+
+At WP5.21's round the author asked for Analysis to be reorganised: "a lot of screen real-estate is being given to the
+\"Results\" explorer tool settings. This should be more efficiently organized. Perhaps a good way would be to organize
+the different views into an customizable editable tree, like it is done in COMSOL. Plots and graphs would be generated
+using different plotting tools (surface, scatters, etc) based on existing/newly defined variables/constants. This will
+likely need a new grilling and a dedicated WP." The probes are to stand "in a pane of their own, like in COMSOL", the
+quantities shown are to be chosen, and uPlot (AU1) is to be revisited: "it seem to be rather limiting in
+capabilities". Asked, the author placed it in "a new package, before speed" and chose to "decide with the tree"
+which library draws the plots (WB-51).
+
+What the round decides: the tree's nodes (a run or a comparison as data; groups of plots; probes; the quantities
+shown; the cut), what a plot tool takes (a surface, contours, arrows, a line along a cut, a scatter, the I–V), how a
+variable or constant is newly defined and where it is computed (in the library, never in the shell: QR-13), how the
+tree is saved in the project, how it meets the link rulings (WB-06), and the library every plot uses: NiceGUI ships
+Plotly (MIT) and ECharts (Apache-2.0), so either adds no dependency, and Plotly also draws (r, z) maps and contours.
+The review's 3 (the tiles' layout), 16 (the quantities' order and words), 20 and 21 (the legend's "—", the shown run's
+dot) and the critique's 5 and 15 are its.
+
+**Open**, ruled by the author on 20 November 2026: `/np-gui grill` on the tree with the author, then `/np-plan amend 5`
+places its package after WP5.21 and before WP5.22. WP5.21 ships its tiles and uPlot as they are.
+
+### REV-269: The workbench's wording
+
+At WP5.21's round the author asked to remove a way of wording "throughout the package": "\"Its rungs\" --> \"The
+rungs\" … (other example: \"What the model shows.\", \"Study's Runs starts one\"). Let's discuss how." Labels name a
+thing by its owner ("Its value", "Its mean about the axis"), headings are clauses ("What the map draws", "How the rows
+make points"), and a pointer names a place in the possessive. Asked how, the author chose "Examples first" (WB-52):
+sixteen strings across the suites, before and after, and a draft rule of five points were published for verdicts at
+`https://claude.ai/artifact/Aa7jSmQKSrY6enQPZnMACy` on 20 November 2026. The author took the rule and each of the
+sixteen: the rule stands in the design document's *Look and feel* (WB-52), and WP5.21's item 14 applied the sixteen
+(*Rungs*, *Physics model*, *Boundary conditions*, *Value*, *Variable*, *Combine rows as*, *Representation*,
+*Azimuthal mean*, and the pointers in Analysis as links to Study).
+
+**Open**, ruled by the author on 20 November 2026: WP5.23 sweeps every other screen's text by the rule, with a check
+that flags the patterns.

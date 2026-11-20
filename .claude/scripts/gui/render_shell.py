@@ -757,7 +757,8 @@ def retarget(folder: Path, old: Path, new: Path) -> None:
 
     A run's record, which names its store, and a sweep's members hold absolute folders, so a
     project moved or copied would otherwise point back at the one it came from. A sweep member's
-    run folder is in the store.
+    run folder is in the store. A run's manifest and case stay as the run wrote them: the manifest
+    is hashed, and the case must be the one it embeds.
     """
     forms = {str(old), str(old.resolve())}
     for part in ("runs", "sweeps", f"{STORE_FOLDER}/runs"):
@@ -766,6 +767,7 @@ def retarget(folder: Path, old: Path, new: Path) -> None:
                 not file.is_file()
                 or file.suffix not in (".json", ".yaml")
                 or "viewer" in file.parts
+                or file.name in ("manifest.json", "case.yaml")
             ):
                 continue
             text = file.read_text(encoding="utf-8")
@@ -892,7 +894,8 @@ EXPLORER_EXTRAS: tuple[tuple[str, list[str], int], ...] = (
     # The cut's chart is below the field and the I-V; a click on its heading scrolls it into view.
     ("cut", [MAP, "[data-control=analysis-cut] h2"], ANALYSIS_WAIT_MS),
     ("probe", [f"{PLACING} button:has-text('Probe')", MAP], ANALYSIS_WAIT_MS),
-    ("on-mesh", ["[data-control=analysis-on-mesh]"], MESH_WAIT_MS),
+    ("outline", ["[data-control=analysis-outline]"], ANALYSIS_WAIT_MS),
+    ("on-mesh", ["[data-control=analysis-on-mesh] button:has-text('3D')"], MESH_WAIT_MS),
     # The two last: the run picked is held by the server, so each shot after it opens on it.
     (
         "sweep-point",
@@ -905,14 +908,15 @@ EXPLORER_EXTRAS: tuple[tuple[str, list[str], int], ...] = (
         ANALYSIS_WAIT_MS,
     ),
 )
-"""The explorer in states of its own: a cut, a probe, the field on the mesh, a point of the bias
-sweep, and the study of the linked variant."""
+"""The explorer in states of its own: a cut, a probe, the outline, the field on the mesh, a point of
+the bias sweep, and the study of the linked variant."""
 COMPARE_VIEWS = (
     ("difference", "Difference", ANALYSIS_WAIT_MS),
     ("maps", "Side by side", ANALYSIS_WAIT_MS),
-    ("mesh", "On the mesh", MESH_WAIT_MS),
+    ("mirrored", "Mirrored", ANALYSIS_WAIT_MS),
+    ("mesh", "3D", MESH_WAIT_MS),
 )
-"""The comparison's three views; each is written to its file, so the next shot of the server finds
+"""The comparison's four views; each is written to its file, so the next shot of the server finds
 it, and each shot chooses its own."""
 
 

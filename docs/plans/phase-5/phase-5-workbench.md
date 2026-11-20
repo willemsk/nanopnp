@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.20 merged (`v0.6.0-alpha.19`, WP5.20's `v0.6.0-alpha.20` to be pushed); WP5.21, the Analysis suite, planned; then WP5.22, WP5.23 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.20 merged (`v0.6.0-alpha.19`, WP5.20's `v0.6.0-alpha.20` to be pushed); WP5.21, the Analysis suite, delivered (its pull request open); then a package for REV-268's tree of results, WP5.22, WP5.23 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -386,6 +386,16 @@ by the user (AU1; REV-253), and any Matplotlib colour map is offered per map (AU
 `webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities. Probes and cuts are
 linked to their field, and a run to its result (FR-33). Comparison shows two runs side by side on one scale, as maps or
 switched to the mesh, or as their difference (AU3). Q37 to Q41 move here. Tag `v0.6.0-alpha.21`.
+
+**Delivered 20 November 2026** ([the plan](wp5.21-the-analysis-suite.md)). Analysis, the sixth suite, holds the results
+explorer and Comparison at `/analysis/<tool>` (FR-31; VER-78 (a), (o)). The explorer draws a run's field as a map on the
+pore's close-up, its scale on the 99th percentile, with a cut and probes linked to it, an outline, or in 3D on its mesh
+on the map's range, framed on the pore; its I–V and recorded quantities (Q37 to Q41; FR-33; VER-44). Comparisons are
+project items, drawn as their difference, side by side, mirrored or in 3D (FR-32; AG6; AU3). Every plot is a uPlot
+chart whose axes the user sets, any Matplotlib map per map (AU1, AU2; REV-253). A cleaned run is solved again and
+checked (AN5); a solve records its fields' norms, which a reproduction compares (QR-08; REV-264). After the round on
+2WCD ([the record](../../design/reviews/2026-11-20-analysis.md); WB-50 to WB-52) a tree of results, with the chart
+library chosen again, is a package before WP5.22 (REV-268), and the wording rule the author took is applied to sixteen strings, WP5.23 sweeping the rest (REV-269).
 
 ### WP5.22 — The performance package (WB-23; REV-258; §8.2.31 AG7; §8.2.42 AR7; §8.2.43 AS2)
 

@@ -93,6 +93,7 @@ __all__ = [
     "field_menu",
     "field_values",
     "fields_lumen_nm",
+    "fluid_outline_nm",
     "inside_outline",
     "lumen_window_nm",
     "mesh_elements",
@@ -1331,6 +1332,30 @@ def field_menu(fields: SolutionFields, *, radial: bool = True) -> dict[str, str]
 def default_potential_range_mV(bias_mV: float) -> float:
     """Return the potential colour range to start from: twice the bias, at least 10 mV."""
     return max(10.0, 2.0 * abs(bias_mV))
+
+
+def fluid_outline_nm(fields: SolutionFields) -> np.ndarray:
+    """Return the fluid's boundary off the axis as segments, rows ``(r0, z0, r1, z1)`` in nm.
+
+    An edge of the fluid's cells that only one cell holds bounds the fluid: the pore's wall, the
+    membrane's faces and the box. The axis is a boundary of the mesh, not of the fluid.
+    """
+    import numpy as np
+
+    points_m, cells, _ = fields.fluid
+    points_nm = np.asarray(points_m, dtype=np.float64)[:, :2] * 1e9
+    corners = np.asarray(cells, dtype=np.int64)[:, :3]
+    edges = np.sort(
+        np.concatenate([corners[:, [0, 1]], corners[:, [1, 2]], corners[:, [2, 0]]]), axis=1
+    )
+    unique, counts = np.unique(edges, axis=0, return_counts=True)
+    bounding = unique[counts == 1]
+    ends = points_nm[bounding]
+    # Each end on the axis to a thousandth of the smallest edge: the axis is not drawn.
+    tolerance = 1e-3 * float(np.min(np.linalg.norm(ends[:, 1] - ends[:, 0], axis=1)))
+    on_axis = (np.abs(ends[:, 0, 0]) <= tolerance) & (np.abs(ends[:, 1, 0]) <= tolerance)
+    segments: np.ndarray = ends[~on_axis].reshape(-1, 4)
+    return segments
 
 
 def fields_lumen_nm(fields: SolutionFields) -> tuple[float, float]:
