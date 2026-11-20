@@ -183,22 +183,17 @@ def _render(key: tuple[Path, str], request: FieldsRequest | RenderRequest) -> No
     _RENDERS[key] = process
 
 
-def _drained() -> bool:
-    # Drain every child; True where one answered, so a page draws what it wrote.
-    moved = False
+def _drain() -> None:
+    # Every page drains every child; a page redraws once a render it waits on has ended.
     for key, process in list(_RENDERS.items()):
         for event in process.drain():
-            moved = True
             if isinstance(event, RenderFailed):
                 _FAILED[key] = event.message
         if not process.running and process.answered:
             del _RENDERS[key]
-            moved = True
         elif not process.running and not process.answered:
             _FAILED[key] = "the render child ended without answering"
             del _RENDERS[key]
-            moved = True
-    return moved
 
 
 def _probe_rows(
@@ -249,6 +244,8 @@ class _AnalysisPage:
         self.status: ui.element
         self.view_box: ui.element
         self.ready = False
+        # The renders this page waits on: it redraws when one ends, whichever page drained it.
+        self.waiting: set[tuple[Path, str]] = set()
 
     # -- the page ---------------------------------------------------------------------------
 
@@ -293,8 +290,15 @@ class _AnalysisPage:
             ui.label(text)
 
     async def tick(self) -> None:
-        if _drained() and self.ready:
+        _drain()
+        ended = {key for key in self.waiting if key not in _RENDERS}
+        if ended and self.ready:
+            self.waiting -= ended
             await self.redraw()
+
+    def wait(self, key: tuple[Path, str], request: FieldsRequest | RenderRequest) -> None:
+        _render(key, request)
+        self.waiting.add(key)
 
     async def redraw(self) -> None:
         self.pane.clear()
@@ -411,7 +415,7 @@ class _AnalysisPage:
             if key in _FAILED:
                 self.say(f"The run's fields did not read: {_FAILED[key]}")
             else:
-                _render(key, FieldsRequest(run=str(choice.directory)))
+                self.wait(key, FieldsRequest(run=str(choice.directory)))
                 self.say("Reading the run's fields…")
         else:
             self.say(f"{choice.label}, of study {choice.study}.")
@@ -649,7 +653,7 @@ class _AnalysisPage:
         elif key in _FAILED:
             ui.label(f"The field did not draw on the mesh: {_FAILED[key]}").classes("state-err")
         else:
-            _render(
+            self.wait(
                 key,
                 RenderRequest(
                     run=str(run_dir), field=scene, document=False, colour_range=colour_range
@@ -715,7 +719,7 @@ class _AnalysisPage:
         held = [self.model.fields(path) for path in runs]
         for path, fields in zip(runs, held, strict=True):
             if fields is None and self.model.state(path) == "solved":
-                _render((path, "fields"), FieldsRequest(run=str(path)))
+                self.wait((path, "fields"), FieldsRequest(run=str(path)))
         if any(fields is None for fields in held):
             self.say("Reading the two runs' fields…")
         else:
