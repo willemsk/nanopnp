@@ -25,13 +25,20 @@ Groups, each shot light and dark:
 - ``study``: the Study tools on a copy of the 2WCD project, its study walked to its charge with a
   run record, and a sweep over the bias: each tool, the whole case and *New study*; then the charged
   tube run once from Study setup and its convergence in Runs (``shell-study-<name>-<scheme>``).
+- ``analysis``: the Analysis tools on a copy of the 2WCD project holding its study solved, swept
+  over the bias, a linked variant with one residue neutral solved in a study of its own, and a
+  comparison of the two studies' runs: each tool, a cut, a probe, the field on the mesh, a sweep
+  point, the variant's study, the comparison's three views, and a copy whose store was cleaned,
+  where a run offers *Rebuild* (``shell-analysis-<name>-<scheme>``).
 
 The 2WCD project is built once into ``cache/2wcd-<key>/`` beside ``<out-dir>``, ``key`` being 12 hex
 digits of the SHA-256 of the case file and the deposited structure; its first walk fills the
-project's store, so a later render reads the charge from it. A cache is built in a temporary
-sibling and renamed, so a half-built one is never used. Starts one server per state, all at once,
-writes ``manifest.json``, runs `shoot.cjs`, and stops the servers by closing their standard input.
-Exits with `shoot.cjs`'s status (2 if a page did not load), or 1 if a server did not start.
+project's store, so a later render reads the charge from it. The analysis project is built once
+into ``cache/analysis-<key>/`` from a copy of it, its solves and fields written. A cache is built
+in a temporary sibling and renamed, so a half-built one is never used. Starts one server per
+state, all at once, writes ``manifest.json``, runs `shoot.cjs`, and stops the servers by closing
+their standard input. Exits with `shoot.cjs`'s status (2 if a page did not load), or 1 if a
+server did not start.
 """
 
 from __future__ import annotations
@@ -51,8 +58,17 @@ import yaml
 from nanopnp.api.case import Case
 from nanopnp.api.project import Project
 from nanopnp.api.session import Session
-from nanopnp.gui.render import ChargeRequest, render_charge_elements
+from nanopnp.api.sweep import run_plan
+from nanopnp.gui.render import (
+    ChargeRequest,
+    FieldsRequest,
+    RenderRequest,
+    render,
+    render_charge_elements,
+    render_fields,
+)
 from nanopnp.gui.web import server, theme
+from nanopnp.gui.web.analysis import AnalysisModel, quantities_of, scene_field
 from nanopnp.gui.web.runs import write_sweep
 from nanopnp.gui.web.screens import SCREENS
 from nanopnp.gui.web.settings import SETTINGS_FILENAME
@@ -60,7 +76,10 @@ from nanopnp.gui.web.states import STATES
 from nanopnp.io.project import STORE_FOLDER
 from nanopnp.io.store import Store
 from nanopnp.pipeline.run import RunResult
-from nanopnp.sweep.document import Axis
+from nanopnp.post.fields import joint_range
+from nanopnp.sweep.collect import collect
+from nanopnp.sweep.document import Axis, load_sweep
+from nanopnp.sweep.plan import build_plan, write_plan
 from nanopnp.validation.charged_tube import write_charged_tube
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -82,6 +101,7 @@ GROUPS = (
     "continuum",
     "physics",
     "study",
+    "analysis",
 )
 THEME_NAME = "dusk"
 START_S = 1800
@@ -713,6 +733,223 @@ def study_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[
     return manifest
 
 
+ANALYSIS_BIASES_V = [-0.1, -0.05, 0.05, 0.1]
+"""The biases the analysis project's study is swept over: the case's own 0.05 V among them."""
+ANALYSIS_BIAS_V = 0.05
+"""The bias the variant's study sets, which is the case's own, so the two runs differ in charge."""
+BIAS_PATH = "boundary_conditions.bias_V"
+FLIPPED = "ASP"
+"""The residue the linked variant flips: the first of this name the structure carries."""
+COMPARED = "charged-against-neutral"
+"""The comparison of the two studies' runs."""
+
+
+def first_residue(structure: Path, name: str) -> str:
+    """Return the first residue of this name in a PDB file, as a charge edit names it."""
+    for line in structure.read_text(encoding="utf-8").splitlines():
+        if line.startswith("ATOM") and line[17:20] == name:
+            return f"{name} {int(line[22:26])}{line[26].strip()}"
+    raise ValueError(f"{structure} holds no {name}")
+
+
+def retarget(folder: Path, old: Path, new: Path) -> None:
+    """Name ``new`` in place of ``old`` in the records of a project's runs and sweeps.
+
+    A run's record, which names its store, and a sweep's members hold absolute folders, so a
+    project moved or copied would otherwise point back at the one it came from. A sweep member's
+    run folder is in the store.
+    """
+    forms = {str(old), str(old.resolve())}
+    for part in ("runs", "sweeps", f"{STORE_FOLDER}/runs"):
+        for file in sorted((folder / part).rglob("*")) if (folder / part).is_dir() else ():
+            if (
+                not file.is_file()
+                or file.suffix not in (".json", ".yaml")
+                or "viewer" in file.parts
+            ):
+                continue
+            text = file.read_text(encoding="utf-8")
+            moved = text
+            for form in forms:
+                moved = moved.replace(form, str(new.resolve()))
+            if moved != text:
+                file.write_text(moved, encoding="utf-8")
+
+
+def solve_analysis(project: Project) -> tuple[Path, Path, list[Path]]:
+    """Solve the study, its bias sweep and the variant's study; return their run folders.
+
+    The tuple is the study's run, the variant's run and every sweep member's, as ``_solve`` of the
+    fixture states makes them.
+    """
+    session = project.session()
+    (study,) = project.items("study")
+    first = session.run(project.study(study))
+    assert first.directory is not None
+    points = [{BIAS_PATH: value} for value in ANALYSIS_BIASES_V]
+    source = write_sweep(project, study, [Axis(name="bias", assignments=points)])
+    plan = build_plan(load_sweep(source), source=source, check_meshes=False)
+    directory = session.store.sweep_directory(plan.name, plan.hash)
+    write_plan(plan, directory)
+    members = run_plan(plan, directory, session=session, workers=2)
+    collect(plan, directory, members=members)
+    swept = [Path(member.directory) for member in members if member.directory is not None]
+    assert len(swept) == len(ANALYSIS_BIASES_V), "every point of the sweep is a run"
+
+    (molecular,) = project.items("molecular")
+    (continuum,) = project.items("continuum")
+    (physics,) = project.items("physics")
+    (structure,) = sorted((project.root / "inputs").glob("*.pdb"))
+    residue = first_residue(structure, FLIPPED)
+    variant = f"{molecular.split('-')[0]}-{residue.replace(' ', '').lower()}n"
+    project.save_variant(molecular, variant, [{"residue": residue, "state": "neutral"}])
+    project.new_study(variant, variant, continuum, physics)
+    project.set_study_value(variant, BIAS_PATH, ANALYSIS_BIAS_V)
+    second = session.run(project.study(variant))
+    assert second.directory is not None
+    project.new_comparison(
+        COMPARED,
+        first.directory.relative_to(project.root).as_posix(),
+        second.directory.relative_to(project.root).as_posix(),
+    )
+    return first.directory, second.directory, swept
+
+
+def draw_analysis(project: Project, first: Path, second: Path, runs: list[Path]) -> None:
+    """Write every run's fields, and the scenes the explorer and the comparison draw on the mesh.
+
+    Each is drawn here, so that a page does not wait on a render child for it. The comparison
+    takes the quantity the explorer opens on, so that one field's scenes serve both, a run
+    keeping one field's scenes at a time.
+    """
+    for run in runs:
+        render_fields(FieldsRequest(run=str(run)))
+    model = AnalysisModel(project)
+    held = [model.fields(run) for run in (first, second)]
+    assert held[0] is not None and held[1] is not None
+    quantity = quantities_of(held[0])[0]
+    compared = project.comparison(COMPARED)
+    if scene_field(quantity) != scene_field(compared.quantity):
+        compared = project.set_comparison(COMPARED, quantity=quantity)
+    render(RenderRequest(run=str(first), field=scene_field(quantity), document=False))
+    joint = joint_range(held[0], held[1], compared.quantity)
+    for run in (first, second):
+        request = RenderRequest(
+            run=str(run), field=scene_field(compared.quantity), document=False, colour_range=joint
+        )
+        render(request)
+
+
+def build_analysis(folder: Path, source: Path) -> None:
+    """Build the analysis project in ``folder`` from a copy of the 2WCD project at ``source``."""
+    folder.mkdir(parents=True)
+    shutil.copytree(source, folder / "project")
+    project = Project.open(folder / "project")
+    first, second, swept = solve_analysis(project)
+    draw_analysis(project, first, second, [first, second, *swept])
+
+
+def analysis_cache(out: Path) -> Path:
+    """Return the analysis project of the cache beside ``out``, built now if it is not there."""
+    cache = out.resolve().parent / "cache" / f"analysis-{cache_key()}"
+    if cache.is_dir():
+        print(f"analysis project reused from {cache}", file=sys.stderr)
+    else:
+        print(f"analysis project building in {cache}", file=sys.stderr)
+        pending = cache.with_name(f"{cache.name}.building-{os.getpid()}")
+        shutil.rmtree(pending, ignore_errors=True)
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            build_analysis(pending, cached_project(out))
+            retarget(pending / "project", pending / "project", cache / "project")
+            pending.rename(cache)
+        finally:
+            shutil.rmtree(pending, ignore_errors=True)
+    return cache / "project"
+
+
+def analysis_project(out: Path, name: str) -> Path:
+    """Return a copy of the cached analysis project, named ``name`` among the render's projects."""
+    source = analysis_cache(out)
+    folder = out.resolve() / "projects" / name
+    if folder.exists():
+        shutil.rmtree(folder)
+    shutil.copytree(source, folder)
+    retarget(folder, source, folder)
+    return folder
+
+
+ANALYSIS_TOOLS = ("explorer", "compare")
+MAP = "#analysis-map canvas"
+PLACING = "[data-control=analysis-placing]"
+VIEW = "[data-control=analysis-view]"
+MESH_WAIT_MS = 40000
+"""How long a shot waits for a scene: the viewer fetches a scene of tens of megabytes."""
+ANALYSIS_WAIT_MS = 4000
+"""How long a shot waits for its tiles: the maps are drawn after the page is ready."""
+EXPLORER_EXTRAS: tuple[tuple[str, list[str], int], ...] = (
+    # A click on the map places a cut, the default placing, or with Probe chosen a probe.
+    # The cut's chart is below the field and the I-V; a click on its heading scrolls it into view.
+    ("cut", [MAP, "[data-control=analysis-cut] h2"], ANALYSIS_WAIT_MS),
+    ("probe", [f"{PLACING} button:has-text('Probe')", MAP], ANALYSIS_WAIT_MS),
+    ("on-mesh", ["[data-control=analysis-on-mesh]"], MESH_WAIT_MS),
+    # The two last: the run picked is held by the server, so each shot after it opens on it.
+    (
+        "sweep-point",
+        ["[data-control=analysis-run]", '.q-menu .q-item:has-text("point 1,")'],
+        ANALYSIS_WAIT_MS,
+    ),
+    (
+        "variant",
+        ["[data-control=analysis-study]", '.q-menu .q-item:has-text("{variant}")'],
+        ANALYSIS_WAIT_MS,
+    ),
+)
+"""The explorer in states of its own: a cut, a probe, the field on the mesh, a point of the bias
+sweep, and the study of the linked variant."""
+COMPARE_VIEWS = (
+    ("difference", "Difference", ANALYSIS_WAIT_MS),
+    ("maps", "Side by side", ANALYSIS_WAIT_MS),
+    ("mesh", "On the mesh", MESH_WAIT_MS),
+)
+"""The comparison's three views; each is written to its file, so the next shot of the server finds
+it, and each shot chooses its own."""
+
+
+def analysis_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[str, Any]]:
+    """Return the Analysis tools on a solved 2WCD project, and on a copy whose store was cleaned."""
+    folder = analysis_project(out, "analysis-2wcd")
+    cleaned = analysis_project(out, "analysis-cleaned")
+    # Every solve of the copy leaves the store: its runs read as removed.
+    Project.open(cleaned).clean_store(everything=True)
+    base = Project.open(cached_project(out)).items("study")[0]
+    (variant,) = (name for name in Project.open(folder).items("study") if name != base)
+    launched = {
+        "solved": launch("--project", str(folder)),
+        "cleaned": launch("--project", str(cleaned)),
+    }
+    servers.extend(launched.values())
+    first = {name: first_address(process, name) for name, process in launched.items()}
+    manifest: list[dict[str, Any]] = []
+
+    def shoot(name: str, server: str, path: str, click: list[str] | None, wait_ms: int) -> None:
+        for scheme in SCHEMES:
+            shot = entry(f"shell-analysis-{name}", first[server], path, scheme, click)
+            shot["wait_ms"] = wait_ms
+            manifest.append(shot)
+
+    for tool in ANALYSIS_TOOLS:
+        shoot(tool, "solved", f"/analysis/{tool}", None, ANALYSIS_WAIT_MS)
+    for name, click, wait_ms in EXPLORER_EXTRAS:
+        steps = [step.format(variant=variant) if "{variant}" in step else step for step in click]
+        shoot(f"explorer-{name}", "solved", "/analysis/explorer", steps, wait_ms)
+    for name, title, wait_ms in COMPARE_VIEWS:
+        click = [f"{VIEW} button:has-text('{title}')"]
+        shoot(f"compare-{name}", "solved", "/analysis/compare", click, wait_ms)
+    shoot("explorer-rebuild", "cleaned", "/analysis/explorer", None, ANALYSIS_WAIT_MS)
+    return manifest
+
+
 GROUP_ENTRIES = {
     "states": states_entries,
     "2wcd": project_entries,
@@ -723,6 +960,7 @@ GROUP_ENTRIES = {
     "continuum": continuum_entries,
     "physics": physics_entries,
     "study": study_entries,
+    "analysis": analysis_entries,
 }
 
 
@@ -744,9 +982,9 @@ def main(argv: list[str]) -> int:
     try:
         # The groups start their servers side by side: a server's start is its imports, and the
         # 2WCD project's is its walk.
-        # Five groups read the 2WCD cache, so it is built and its store filled before they start
+        # Six groups read the 2WCD cache, so it is built and its store filled before they start
         # side by side.
-        if {"2wcd", "molecular", "meso", "continuum", "study"} & set(groups):
+        if {"2wcd", "molecular", "meso", "continuum", "study", "analysis"} & set(groups):
             filled_cache(out)
         with ThreadPoolExecutor(len(groups)) as pool:
             pending = [pool.submit(GROUP_ENTRIES[group], out, servers) for group in groups]
