@@ -37,6 +37,7 @@ from nanopnp.core.stages import (
     walk_order,
 )
 from nanopnp.io.artefact import (
+    FIELD_NORMS,
     Artefact,
     CaseArtefact,
     StageInputs,
@@ -363,6 +364,16 @@ class RunResult:
         return solution_fields(inputs, solution)
 
     @property
+    def field_norms(self) -> dict[str, Canonicalisable]:
+        """Each converged field's weighted norms and integrals; empty where no solve was reached."""
+        solve = self.artefacts.get("solve")
+        found = solve.summary.get(FIELD_NORMS) if solve is not None else None
+        if not isinstance(found, Mapping):
+            return {}
+        decoded = decode_floats(dict(found))
+        return dict(decoded) if isinstance(decoded, dict) else {}
+
+    @property
     def threads(self) -> int | None:
         """The thread count the solve ran with; None where it ran unpinned or was not reached."""
         solve = self.artefacts.get("solve")
@@ -391,6 +402,7 @@ class RunResult:
                 for name, artefact in sorted(self.artefacts.items())
             },
             "quantities": dict(self.quantities),
+            FIELD_NORMS: dict(self.field_norms),
             "files": [str(path) for path in self.files],
             "threads": self.threads,
         }

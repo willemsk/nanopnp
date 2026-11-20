@@ -16,9 +16,12 @@ from nanopnp.api.reproduce import (
     InputMovedError,
     ReproductionError,
     compare,
+    compare_norms,
     reproduce,
 )
+from nanopnp.core.hashing import decode_floats
 from nanopnp.geometry.pore import CylinderPore
+from nanopnp.io.artefact import FIELD_NORMS
 from nanopnp.io.store import Store
 from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.pipeline.run import RUN_RECORD_FILENAME
@@ -213,6 +216,63 @@ def test_ver35_a_run_stopped_at_its_charge_reproduces_to_that_stage(tmp_path: Pa
         assert str(pqr) in str(moved.value)
     finally:
         pqr.write_bytes(original)
+
+
+# A record stopped at its solve compared no number the solve made, so a Newton or assembly change
+# that left every key alone still reported the run reproduced (REV-264).
+def test_qr08_a_run_stopped_at_its_solve_compares_each_fields_norms(tmp_path: Path) -> None:
+    case_path = write_charged_tube(tmp_path / "tube")
+    made = Session(Store(tmp_path / "store"), workspace=tmp_path / "fields").run(
+        Case.load(case_path), upto="solve"
+    )
+    written = (made.directory / RUN_RECORD_FILENAME).read_text(encoding="utf-8")
+    norms = decode_floats(json.loads(written)[FIELD_NORMS])
+    assert isinstance(norms, dict) and len(norms) >= 2, norms
+    for entry in norms.values():
+        assert entry["l2"] > 0.0 and entry["gradient"] >= 0.0, entry
+        assert any(key.startswith("integral") for key in entry), entry
+
+    found = reproduce(made.directory)
+    assert found.reproduced, [drift.summary() for drift in found.drifts]
+    assert found.quantities == {}
+    assert found.unchecked == ()
+    assert found.worst is not None and found.worst <= DEFAULT_TOLERANCE
+    logger.info("a solve-stopped record: field norms reproduced to %.3e", found.worst)
+
+    name = sorted(norms)[0]
+    moved = json.loads(written)
+    moved[FIELD_NORMS] = {
+        **norms,
+        name: {**norms[name], "gradient": norms[name]["gradient"] * 1.001},
+    }
+    (made.directory / RUN_RECORD_FILENAME).write_text(json.dumps(moved), encoding="utf-8")
+    try:
+        drifted = reproduce(made.directory)
+        assert not drifted.reproduced
+        assert [drift.path for drift in drifted.drifts] == [f"{FIELD_NORMS}.{name}.gradient"]
+    finally:
+        (made.directory / RUN_RECORD_FILENAME).write_text(written, encoding="utf-8")
+
+
+# A field Newton resolves only to NUM-16's absolute floor, the flow at zero bias, drifted at
+# round-off relative to its own tiny norm and failed a run that had reproduced.
+def test_qr08_a_field_norm_under_the_floor_is_compared_against_the_floor() -> None:
+    recorded = {"c": {"l2": 2.0, "integral": 1.0}, "u": {"l2": 1e-18, "integral_z": 1e-19}}
+    jittered = {"c": {"l2": 2.0, "integral": 1.0}, "u": {"l2": 2e-18, "integral_z": -1e-19}}
+    drifts, worst = compare_norms(recorded, jittered)
+    assert drifts == (), drifts
+    assert worst is not None and worst < 1e-9
+
+    reversed_flow = {"c": {"l2": 2.0, "integral": 1.0}, "u": {"l2": 0.5, "integral_z": -0.2}}
+    held = {"c": {"l2": 2.0, "integral": 1.0}, "u": {"l2": 0.5, "integral_z": 0.2}}
+    drifts, _ = compare_norms(held, reversed_flow)
+    assert [drift.path for drift in drifts] == [f"{FIELD_NORMS}.u.integral_z"]
+
+    drifts, _ = compare_norms(held, {"c": held["c"]})
+    assert sorted(drift.path for drift in drifts) == [
+        f"{FIELD_NORMS}.u.integral_z",
+        f"{FIELD_NORMS}.u.l2",
+    ]
 
 
 # QR-12

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import os
 from collections.abc import Callable
 from dataclasses import replace
@@ -27,7 +28,7 @@ from nanopnp.core.stages import (
     describe,
     report,
 )
-from nanopnp.io.artefact import Artefact, SolutionArtefact, StageInputs
+from nanopnp.io.artefact import FIELD_NORMS, Artefact, SolutionArtefact, StageInputs
 from nanopnp.io.workspace import require_workspace, scratch_directory
 from nanopnp.materials.stage import MaterialsStage
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
@@ -63,6 +64,51 @@ logger = logging.getLogger(__name__)
 
 
 LOAD_FRACTION = 0.05
+
+
+def _field_norms(solution: ModelSolution, measures: Measures) -> dict[str, dict[str, float]]:
+    # What a reproduction stopped at its solve compares, since the solve's key covers its inputs
+    # and not the state it reached: per field, the r-weighted L2 norm, that of its gradient, which
+    # weighs the pore and the double layer the reservoirs' volume would swamp, and each
+    # component's r-weighted integral, which a reversed flow changes the sign of.
+    import ngsolve as ngs
+
+    mesh = solution.space.mesh
+    found: dict[str, dict[str, float]] = {}
+    for field in solution.model.fields:
+        if field.element == "number":
+            continue
+        value = solution.component(field.name)
+        # The squared value of an order-p field times r is of degree 2p + 1.
+        extra = max(0, 2 * field.order + 1 - measures.integration_order())
+
+        def squared_norm(
+            integrand: Expression, what: str, name: str = field.name, extra: int = extra
+        ) -> float:
+            squared = measures.integrate(
+                integrand, mesh, extra_order=extra, what=f"the squared {what} of {name}"
+            )
+            if squared < 0.0:
+                raise ValueError(
+                    f"the squared {what} of {name} integrates to {squared:.3e} < 0: the r weight "
+                    "is negative somewhere, so the mesh crosses the axis"
+                )
+            return math.sqrt(squared)
+
+        entry = {
+            "l2": squared_norm(ngs.InnerProduct(value, value), "norm"),
+            "gradient": squared_norm(
+                ngs.InnerProduct(ngs.grad(value), ngs.grad(value)), "gradient norm"
+            ),
+        }
+        components = (value,) if field.element == "h1" else (value[0], value[1])
+        for index, component in enumerate(components):
+            key = "integral" if len(components) == 1 else f"integral_{'rz'[index]}"
+            entry[key] = measures.integrate(
+                component, mesh, extra_order=extra, what=f"the integral of {field.name}"
+            )
+        found[field.name] = entry
+    return found
 
 
 def _input_hashes(mesh: Artefact, materials: Artefact, fields: Artefact | None) -> dict[str, str]:
@@ -244,6 +290,7 @@ class SolveStage:
                 **result.summary(),
                 **_field_summary(fields),
                 **_wall_distance_summary(wall_distance),
+                FIELD_NORMS: _field_norms(result.solution, measures),
                 "warm_start": cold_start(cold_reason) if warm is None else warm.summary(),
                 "threads": _threads(),
             },

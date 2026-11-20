@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 from nanopnp.api.case import Case
 from nanopnp.api.session import Session
 from nanopnp.core.hashing import Canonicalisable, decode_floats, file_hash
+from nanopnp.io.artefact import FIELD_NORMS
 from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME, environment
 from nanopnp.io.manifest import read as read_manifest
 from nanopnp.io.store import Store
@@ -89,6 +90,8 @@ class Reproduction:
         The largest relative difference over every scalar compared, or None.
     drifts
         The scalars outside the tolerance, or unequal where they are not numbers.
+    unchecked
+        What the record could not be compared on, each said in words.
     """
 
     directory: Path
@@ -100,6 +103,7 @@ class Reproduction:
     environment: tuple[EnvironmentDrift, ...]
     tolerance: float
     upto: str | None = None
+    unchecked: tuple[str, ...] = ()
 
     @property
     def reproduced(self) -> bool:
@@ -116,6 +120,7 @@ class Reproduction:
             "upto": self.upto,
             "worst_relative_difference": self.worst,
             "compared": len(self.quantities),
+            "not_compared": list(self.unchecked),
             "drifts": [drift.summary() for drift in self.drifts],
             "environment": [difference.summary() for difference in self.environment],
             "stages": [record.summary() for record in self.run.stages],
@@ -283,6 +288,50 @@ def _recorded_run(directory: Path) -> Mapping[str, Canonicalisable]:
     return record
 
 
+FLOOR = 1e-6
+"""The share of the largest of a kind that a field's number is compared against at least: the
+absolute floor of NUM-16's update test, under which Newton does not resolve a field."""
+
+
+def compare_norms(
+    recorded: Mapping[str, Canonicalisable],
+    reproduced: Mapping[str, Canonicalisable],
+    *,
+    tolerance: float = DEFAULT_TOLERANCE,
+) -> tuple[tuple[Drift, ...], float | None]:
+    """Compare the solve's recorded field norms and integrals; return the drifts and the worst.
+
+    Each number is compared relative to itself, or to ``FLOOR`` times the largest of its kind
+    over the fields where it is smaller, as Newton converges a field (NUM-16). A number on one
+    side only is a drift: the model's fields changed.
+    """
+    left = {path: value for path, value in _flatten(dict(recorded)).items()}
+    right = {path: value for path, value in _flatten(dict(reproduced)).items()}
+    largest: dict[str, float] = {}
+    for path, value in left.items():
+        if isinstance(value, int | float) and not isinstance(value, bool) and math.isfinite(value):
+            kind = path.rsplit(".", 1)[-1].split("_")[0]
+            largest[kind] = max(largest.get(kind, 0.0), abs(float(value)))
+    drifts: list[Drift] = []
+    worst: float | None = None
+    for path in sorted(set(left) | set(right)):
+        was, now = left.get(path), right.get(path)
+        where = f"{FIELD_NORMS}.{path}"
+        if not isinstance(was, int | float) or not isinstance(now, int | float):
+            drifts.append(Drift(path=where, recorded=was, reproduced=now, relative=None))
+            continue
+        kind = path.rsplit(".", 1)[-1].split("_")[0]
+        scale = max(abs(float(was)), FLOOR * max(largest.get(kind, 0.0), 1.0))
+        if not (math.isfinite(was) and math.isfinite(now)):
+            relative = 0.0 if was == now else math.inf
+        else:
+            relative = abs(float(now) - float(was)) / scale
+        worst = relative if worst is None else max(worst, relative)
+        if relative > tolerance:
+            drifts.append(Drift(path=where, recorded=was, reproduced=now, relative=relative))
+    return tuple(drifts), worst
+
+
 def _recorded_stages(record: Mapping[str, Canonicalisable], *, where: Path) -> list[str]:
     entries = record.get("stages")
     names = (
@@ -446,8 +495,24 @@ def reproduce(
             quantity_drifts, quantity_worst = compare(
                 recorded, result.quantities, tolerance=tolerance
             )
-        drifts = stage_drifts + charge_drifts + quantity_drifts
-        found = [value for value in (charge_worst, quantity_worst) if value is not None]
+        # The solve's key covers its inputs, not the state it reached: the fields' norms are the
+        # numbers a reproduction stopped at its solve compares (REV-264).
+        norm_drifts: tuple[Drift, ...] = ()
+        norm_worst: float | None = None
+        unchecked: tuple[str, ...] = ()
+        held_norms = record.get(FIELD_NORMS)
+        if "solve" in result.artefacts and isinstance(held_norms, dict) and held_norms:
+            norm_drifts, norm_worst = compare_norms(
+                held_norms, result.field_norms, tolerance=tolerance
+            )
+        elif "solve" in result.artefacts:
+            unchecked = (
+                "the solve's state: the record was written before the solve recorded its "
+                "fields' norms, so no number of the solve is compared",
+            )
+            logger.warning("%s: %s", where, unchecked[0])
+        drifts = stage_drifts + charge_drifts + quantity_drifts + norm_drifts
+        found = [value for value in (charge_worst, quantity_worst, norm_worst) if value is not None]
         worst = max(found) if found else None
 
     reproduction = Reproduction(
@@ -460,6 +525,7 @@ def reproduce(
         environment=drift,
         tolerance=tolerance,
         upto=last,
+        unchecked=unchecked,
     )
     logger.info(
         "reproduced %s: %d quantities, worst relative difference %s",
