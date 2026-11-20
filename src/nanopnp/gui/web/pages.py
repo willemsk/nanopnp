@@ -197,11 +197,29 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         return low, high
 
     @app.get("/api/analysis/image")
-    def analysis_image(run: str, quantity: str, palette: str = "", dark: str = "") -> Response:
-        """Serve one run's map of a quantity as a PNG, NaN transparent."""
+    def analysis_image(
+        run: str,
+        quantity: str,
+        palette: str = "",
+        dark: str = "",
+        frame: str = "",
+        range: str = "",
+    ) -> Response:
+        """Serve one run's map of a quantity as a PNG, NaN transparent.
+
+        ``frame=whole`` spans the run's whole domain; else the map is the pore's close-up.
+        """
         model, path = analysed(run)
         try:
-            shown = map_of(model, path, quantity, palette or None)
+            shown = map_of(
+                model,
+                path,
+                quantity,
+                palette or None,
+                ranged(range),
+                whole=frame == "whole",
+                positive=charge_colours(shell),
+            )
         except (KeyError, ValueError) as error:
             raise HTTPException(422, str(error)) from None
         if shown is None:
@@ -230,13 +248,15 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             )
         )
 
-    def compared_maps(name: str) -> tuple[AnalysisModel, dict[str, FieldMap]]:
+    def compared_maps(
+        name: str, *, whole: bool = False
+    ) -> tuple[AnalysisModel, dict[str, FieldMap]]:
         project = shell.bench.project
         if project is None or name not in project.items("comparison"):
             raise HTTPException(404, f"no comparison {name!r}")
         model = AnalysisModel(project)
         try:
-            maps = comparison_maps(model, name)
+            maps = comparison_maps(model, name, whole=whole, positive=charge_colours(shell))
         except (KeyError, ValueError) as error:
             raise HTTPException(422, str(error)) from None
         if maps is None:
@@ -244,9 +264,9 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         return model, maps
 
     @app.get("/api/analysis/compare/{name}/image")
-    def compare_image(name: str, which: str, dark: str = "") -> Response:
+    def compare_image(name: str, which: str, dark: str = "", frame: str = "") -> Response:
         """Serve one map of a comparison: ``first``, ``second`` or their ``difference``."""
-        _, maps = compared_maps(name)
+        _, maps = compared_maps(name, whole=frame == "whole")
         if which not in maps:
             raise HTTPException(422, f"which {which!r} is not one of {', '.join(maps)}")
         shown = maps[which]

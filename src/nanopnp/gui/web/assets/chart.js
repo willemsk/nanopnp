@@ -36,7 +36,8 @@
   const scaleOf = (axis) => {
     const base = axis.scale === 'log' ? { distr: 3, log: 10 }
       : axis.scale === 'sqrt' ? { ...sqrtScale } : { distr: 1 };
-    return { ...base, auto: true };
+    // An x scale is a number, not uPlot's default of a time.
+    return { ...base, auto: true, time: false };
   };
 
   // Five ticks evenly apart on a square-root axis, each in two figures.
@@ -201,7 +202,12 @@
           value: (u, v) => figures(v),
         })),
       ],
-      legend: { show: series.length > 0, live: true },
+      legend: {
+        show: series.length > 0,
+        live: true,
+        // A swatch is a line sample with the series' dash, so a dashed curve is told apart.
+        markers: { dash: (u, k) => (u.series[k].dash && u.series[k].dash.length ? 'dashed' : 'solid') },
+      },
       cursor: {
         drag: { x: true, y: false },
         bind: { dblclick: (u) => () => { state.reset(index); return null; } },

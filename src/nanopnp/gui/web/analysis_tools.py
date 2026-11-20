@@ -22,6 +22,7 @@ from nanopnp.gui.render import (
 from nanopnp.gui.web.analysis import (
     AnalysisModel,
     FieldMap,
+    Positive,
     RunChoice,
     cut_chart,
     difference_map,
@@ -29,6 +30,7 @@ from nanopnp.gui.web.analysis import (
     iv_chart,
     map_drawing,
     pair_maps,
+    pore_window,
     quantities_of,
     scene_field,
 )
@@ -37,8 +39,9 @@ from nanopnp.gui.web.frame import Views, heading
 from nanopnp.gui.web.runs import queue_rebuild
 from nanopnp.gui.web.screens import SUITES, Tool
 from nanopnp.gui.web.shell import Shell
+from nanopnp.gui.web.tools import charge_colours
 from nanopnp.io.project import COMPARISON_VIEWS, ComparisonFile
-from nanopnp.post.fields import field_at, field_unit, joint_range
+from nanopnp.post.fields import field_at, field_unit, joint_range, quantity_name
 
 __all__ = ["analysis_page", "comparison_maps", "map_of"]
 
@@ -53,6 +56,23 @@ _KEPT_MAPS = 8
 
 VIEW_NAMES = {"difference": "Difference", "maps": "Side by side", "mesh": "On the mesh"}
 """Each view a comparison opens on, as its control names it."""
+
+FRAMES = {"pore": "The pore", "whole": "Whole domain"}
+"""What a map and its axial cut span, as the control names it: the pore's close-up opens."""
+
+AUTOMATIC = "Automatic: diverging across 0, else viridis"
+"""The colour map field's entry for the map's own choice."""
+
+
+def _palettes() -> dict[str, str]:
+    return {"": AUTOMATIC, **{name: name for name in colour_maps()}}
+
+
+def _named(quantities: list[str] | tuple[str, ...]) -> dict[str, str]:
+    return {
+        key: f"{quantity_name(key)} ({field_unit(key)})" if field_unit(key) else quantity_name(key)
+        for key in quantities
+    }
 
 
 def _kept(key: tuple[object, ...], make: Callable[[], FieldMap]) -> FieldMap:
@@ -71,19 +91,38 @@ def map_of(
     quantity: str,
     palette: str | None = None,
     colour_range: tuple[float, float] | None = None,
+    *,
+    whole: bool = False,
+    positive: Positive = "blue",
 ) -> FieldMap | None:
-    """Return one run's map of a quantity, kept for the picture's request; None without fields."""
+    """Return one run's map of a quantity, kept for the picture's request; None without fields.
+
+    It spans the pore's close-up, or with ``whole`` the run's whole domain.
+    """
     fields = model.fields(run)
     if fields is None:
         return None
-    key = ("run", run, model.solve_hash(run), quantity, palette, colour_range)
+    key = ("run", run, model.solve_hash(run), quantity, palette, colour_range, whole, positive)
+    window = None if whole else pore_window(fields)
     return _kept(
-        key, lambda: field_map(fields, quantity, palette=palette, colour_range=colour_range)
+        key,
+        lambda: field_map(
+            fields,
+            quantity,
+            palette=palette,
+            colour_range=colour_range,
+            window_nm=window,
+            positive=positive,
+        ),
     )
 
 
-def comparison_maps(model: AnalysisModel, name: str) -> dict[str, FieldMap] | None:
+def comparison_maps(
+    model: AnalysisModel, name: str, *, whole: bool = False, positive: Positive = "blue"
+) -> dict[str, FieldMap] | None:
     """Return a comparison's maps, ``first``, ``second`` and ``difference``; None without fields.
+
+    They span the close-up that holds both pores, or with ``whole`` the fluids' overlap.
 
     Raises
     ------
@@ -97,30 +136,32 @@ def comparison_maps(model: AnalysisModel, name: str) -> dict[str, FieldMap] | No
         return None
     shown = (compared.quantity, compared.colour_map, compared.range)
     stamp = (model.solve_hash(first_run), model.solve_hash(second_run))
-    pair = (first_run, second_run, *stamp, *shown)
-    left = _kept(
-        ("first", *pair),
-        lambda: pair_maps(
+    pair = (first_run, second_run, *stamp, *shown, whole, positive)
+    window = None if whole else pore_window(first, second)
+
+    def paired() -> tuple[FieldMap, FieldMap]:
+        return pair_maps(
             first,
             second,
             compared.quantity,
             palette=compared.colour_map,
             colour_range=compared.range,
-        )[0],
-    )
-    right = _kept(
-        ("second", *pair),
-        lambda: pair_maps(
-            first,
-            second,
-            compared.quantity,
-            palette=compared.colour_map,
-            colour_range=compared.range,
-        )[1],
-    )
+            window_nm=window,
+            positive=positive,
+        )
+
+    left = _kept(("first", *pair), lambda: paired()[0])
+    right = _kept(("second", *pair), lambda: paired()[1])
     difference = _kept(
         ("difference", *pair),
-        lambda: difference_map(first, second, compared.quantity, palette=compared.colour_map),
+        lambda: difference_map(
+            first,
+            second,
+            compared.quantity,
+            palette=compared.colour_map,
+            window_nm=window,
+            positive=positive,
+        ),
     )
     return {"first": left, "second": right, "difference": difference}
 
@@ -198,6 +239,10 @@ class _AnalysisPage:
         self.placing = "cut"
         self.probes: list[tuple[float, float]] = []
         self.on_mesh = False
+        self.whole = False
+        self.colour_range: tuple[float, float] | None = None
+        # Link 3: a click on the map places the cut or a probe, until unlinked (WB-06).
+        self.linked = True
         self.compared: str | None = None
         self.seen: object = None
         self.pane: ui.column
@@ -329,7 +374,8 @@ class _AnalysisPage:
                 if self.quantity not in quantities:
                     self.quantity = quantities[0]
                 self.field_controls(quantities)
-                self.probe_controls(fields)
+                if not self.on_mesh:
+                    self.probe_controls(fields)
         with self.view_box, ui.element("div").classes("analysis-tiles"):
             with self.tile("Field", "analysis-field"):
                 await self.field_tile(choice, fields)
@@ -338,21 +384,25 @@ class _AnalysisPage:
                 chart.show(iv_chart(self.model.choices(choice.study), choice.directory))
             with self.tile("Quantities", "analysis-quantities"):
                 self.quantities_tile(choice)
-            with self.tile("Axial cut", "analysis-cut"):
+            with self.tile(f"Axial cut, r = {self.cut_r_nm:.3g} nm", "analysis-cut"):
                 if fields is None:
-                    ui.label("The cut draws once the run's fields are read.").classes("later")
+                    ui.label(self.unread(choice, "cut")).classes("later")
                 else:
                     cut = ChartView(
                         "analysis-cut-chart", "analysis-cut-chart", classes="tile-chart"
                     )
-                    cut.show(cut_chart(((choice.label, fields),), self.quantity, self.cut_r_nm))
+                    window = None if self.whole else pore_window(fields)
+                    cut.show(
+                        cut_chart(((choice.label, fields),), self.quantity, self.cut_r_nm, window)
+                    )
 
     def explain(self, choice: RunChoice, state: str, read: bool) -> None:
         assert self.model is not None
         if state == "removed":
             self.say(
                 "This run's solve was cleaned from the store. Rebuild it to see its fields: the "
-                "rebuild is checked against its record."
+                "rebuild solves the run again, as long as its first solve took, and is checked "
+                "against its record."
             )
         elif state == "unsolved":
             self.say("This run did not reach its solve: it has no fields.")
@@ -365,6 +415,53 @@ class _AnalysisPage:
                 self.say("Reading the run's fields…")
         else:
             self.say(f"{choice.label}, of study {choice.study}.")
+
+    def unread(self, choice: RunChoice, what: str = "map") -> str:
+        assert self.model is not None
+        state = self.model.state(choice.directory)
+        if state == "removed":
+            return f"Rebuild the run to draw its {what}."
+        if state == "unsolved":
+            return f"The run has no fields to draw a {what} of."
+        return f"The {what} draws once the run's fields are read."
+
+    def run_name(self, run_dir: Path) -> str:
+        assert self.model is not None
+        for study in self.model.studies():
+            for choice in self.model.choices(study):
+                if choice.directory == run_dir:
+                    return f"{choice.label}, of study {study}"
+        return _relative(self.model, run_dir)
+
+    def recorded_line(self, run_dir: Path, lead: str = "Recorded") -> None:
+        assert self.model is not None
+        for study in self.model.studies():
+            for choice in self.model.choices(study):
+                if choice.directory != run_dir:
+                    continue
+                parts = []
+                if choice.current_A is not None:
+                    parts.append(f"current {choice.current_A * 1e9:.4g} nA")
+                if choice.conductance_S is not None:
+                    parts.append(f"conductance {choice.conductance_S * 1e9:.4g} nS")
+                if parts:
+                    ui.label(f"{lead}: {', '.join(parts)}").classes("field-hint")
+                return
+
+    def link_chip(self) -> None:
+        with ui.row().classes("items-center no-wrap"):
+            ui.badge(
+                "Map, cut and probes linked"
+                if self.linked
+                else "Not linked: a click places nothing"
+            ).props("data-control=analysis-link-state")
+            ui.button("Unlink" if self.linked else "Link", on_click=self.toggle_link).props(
+                "flat dense no-caps data-control=analysis-link"
+            )
+
+    async def toggle_link(self) -> None:
+        self.linked = not self.linked
+        await self.redraw()
 
     def tile(self, title: str, control: str) -> Any:  # noqa: ANN401 - a NiceGUI element
         with (
@@ -380,18 +477,21 @@ class _AnalysisPage:
             ui.label(text).classes("later")
 
     def field_controls(self, quantities: tuple[str, ...]) -> None:
-        names = {
-            key: f"{key} ({field_unit(key)})" if field_unit(key) else key for key in quantities
-        }
-        ui.select(names, value=self.quantity, label="Quantity", on_change=self.on_quantity).props(
-            "dense data-control=analysis-quantity"
-        ).classes("w-full")
         ui.select(
-            ["", *colour_maps()],
+            _named(quantities), value=self.quantity, label="Quantity", on_change=self.on_quantity
+        ).props("dense data-control=analysis-quantity").classes("w-full")
+        if self.on_mesh:
+            # The 3D view draws in the renderer's own colour map and span (AU2).
+            return
+        ui.select(
+            _palettes(),
             value=self.palette or "",
             label="Colour map",
             on_change=self.on_palette,
         ).props("dense data-control=analysis-colour-map").classes("w-full")
+        self.range_fields(self.colour_range, self.on_range)
+        self.frame_control()
+        ui.label("A click on the map places").classes("field-hint")
         ui.toggle(
             {"cut": "Cut", "probe": "Probe"}, value=self.placing, on_change=self.on_placing
         ).props(
@@ -401,10 +501,66 @@ class _AnalysisPage:
             "dense debounce=600 data-control=analysis-cut-r"
         )
 
+    def range_fields(
+        self,
+        typed: tuple[float, float] | None,
+        changed: Callable[[tuple[float, float] | None], Any],
+    ) -> None:
+        unit = field_unit(self.quantity)
+        with (
+            ui.row()
+            .classes("no-wrap items-start w-full")
+            .props('role=group aria-label="Colour range"')
+        ):
+            low = ui.number(
+                f"Colours from ({unit})" if unit else "Colours from",
+                value=None if typed is None else typed[0],
+                placeholder="auto",
+            ).props("dense debounce=600 data-control=analysis-range-from")
+            high = ui.number(
+                f"to ({unit})" if unit else "to",
+                value=None if typed is None else typed[1],
+                placeholder="auto",
+            ).props("dense debounce=600 data-control=analysis-range-to")
+
+        async def typed_range() -> None:
+            ends = (low.value, high.value)
+            if None in ends:
+                await changed(None)
+            elif float(ends[0]) < float(ends[1]):
+                await changed((float(ends[0]), float(ends[1])))
+
+        low.on_value_change(typed_range)
+        high.on_value_change(typed_range)
+
+    def frame_control(self) -> None:
+        ui.label("The map and the cut span").classes("field-hint")
+        ui.toggle(FRAMES, value="whole" if self.whole else "pore", on_change=self.on_frame).props(
+            'dense no-caps data-control=analysis-frame aria-label="The map and the cut span"'
+        )
+
     def probe_controls(self, fields: Any) -> None:  # noqa: ANN401 - a run's SolutionFields
         heading("Probes", 3)
+        with (
+            ui.row().classes("no-wrap items-end w-full").props('role=group aria-label="New probe"')
+        ):
+            r_field = ui.number("r (nm)", value=0.0).props("dense data-control=analysis-probe-r")
+            z_field = ui.number("z (nm)", value=0.0).props("dense data-control=analysis-probe-z")
+
+            async def add() -> None:
+                if isinstance(r_field.value, int | float) and isinstance(
+                    z_field.value, int | float
+                ):
+                    self.probes.append((max(0.0, float(r_field.value)), float(z_field.value)))
+                    await self.redraw()
+
+            ui.button("Add probe", on_click=add).props(
+                "outline dense no-caps data-control=analysis-probe-add"
+            ).style("white-space: nowrap; flex: none")
         if not self.probes:
-            ui.label("A click on the map with Probe chosen places one.").classes("field-hint")
+            ui.label("Type a probe's r and z, or choose Probe and click the map.").classes(
+                "field-hint"
+            )
             return
         values = _probe_rows(fields, self.quantity, self.probes)
         for index, ((r_nm, z_nm), value) in enumerate(zip(self.probes, values, strict=True)):
@@ -420,18 +576,34 @@ class _AnalysisPage:
 
     async def field_tile(self, choice: RunChoice, fields: Any) -> None:  # noqa: ANN401
         assert self.model is not None
+        if fields is None:
+            ui.label(self.unread(choice)).classes("later")
+            return
         pressed = "true" if self.on_mesh else "false"
         ui.button("On the mesh", on_click=self.toggle_mesh).props(
             f"flat dense no-caps data-control=analysis-on-mesh aria-pressed={pressed}"
-        )
-        if fields is None:
-            ui.label("The map draws once the run's fields are read.").classes("later")
-            return
+        ).classes("mesh-toggle self-start")
         if self.on_mesh:
+            ui.label(
+                "The 3D view draws in the renderer's own colour map; the cut and the probes are "
+                "the map's."
+            ).classes("field-hint")
             self.scene_frame(choice.directory, scene_field(self.quantity), None, "analysis-scene")
             return
         shown = await run.io_bound(
-            map_of, self.model, choice.directory, self.quantity, self.palette
+            lambda: (
+                map_of(
+                    self.model,
+                    choice.directory,
+                    self.quantity,
+                    self.palette,
+                    self.colour_range,
+                    whole=self.whole,
+                    positive=charge_colours(self.shell),
+                )
+                if self.model is not None
+                else None
+            )
         )
         if shown is None:
             return
@@ -440,6 +612,12 @@ class _AnalysisPage:
                 "run": _relative(self.model, choice.directory),
                 "quantity": self.quantity,
                 "palette": self.palette or "",
+                **({"frame": "whole"} if self.whole else {}),
+                **(
+                    {"range": f"{self.colour_range[0]!r},{self.colour_range[1]!r}"}
+                    if self.colour_range is not None
+                    else {}
+                ),
             }
         )
         drawing = map_drawing(
@@ -449,6 +627,7 @@ class _AnalysisPage:
             probes=tuple(self.probes),
         )
         ui.element("div").props("id=analysis-map data-control=analysis-map").classes("tile-map")
+        self.link_chip()
         await ui.run_javascript(
             f"nano.map('analysis-map', {json.dumps(drawing.json())})", timeout=60
         )
@@ -540,7 +719,8 @@ class _AnalysisPage:
         if any(fields is None for fields in held):
             self.say("Reading the two runs' fields…")
         else:
-            self.say(f"{compared.runs[0]} against {compared.runs[1]}.")
+            first, second = (self.run_name(path) for path in runs)
+            self.say(f"First: {first}. Second: {second}.")
         with self.pane:
             self.comparison_controls(compared, held)
         with self.view_box, ui.element("div").classes("analysis-tiles"):
@@ -591,7 +771,7 @@ class _AnalysisPage:
         if compared.quantity not in both:
             both.insert(0, compared.quantity)
         ui.select(
-            both,
+            _named(both),
             value=compared.quantity,
             label="Quantity",
             on_change=lambda e: self.set_compared(quantity=e.value),
@@ -602,11 +782,15 @@ class _AnalysisPage:
             on_change=lambda e: self.set_compared(view=e.value),
         ).props('dense no-caps data-control=analysis-view aria-label="The comparison shows"')
         ui.select(
-            ["", *colour_maps()],
+            _palettes(),
             value=compared.colour_map or "",
             label="Colour map",
             on_change=lambda e: self.set_compared(colour_map=e.value or None),
         ).props("dense data-control=analysis-colour-map").classes("w-full")
+        if compared.view == "maps":
+            self.range_fields(compared.range, self.on_compared_range)
+        if compared.view != "mesh":
+            self.frame_control()
         ui.number("Cut at r (nm)", value=self.cut_r_nm, on_change=self.on_cut).props(
             "dense debounce=600 data-control=analysis-cut-r"
         )
@@ -621,24 +805,47 @@ class _AnalysisPage:
             if ready:
                 joint = joint_range(held[0], held[1], compared.quantity)
                 for index, path in enumerate(runs):
-                    with self.tile(compared.runs[index], f"analysis-pair-{index}"):
+                    with self.tile(self.run_name(path), f"analysis-pair-{index}"):
+                        self.recorded_line(path)
                         self.scene_frame(
                             path, scene_field(compared.quantity), joint, f"analysis-scene-{index}"
                         )
         else:
-            maps = await run.io_bound(comparison_maps, self.model, name) if ready else None
+            maps = (
+                await run.io_bound(
+                    lambda: (
+                        comparison_maps(
+                            self.model,
+                            name,
+                            whole=self.whole,
+                            positive=charge_colours(self.shell),
+                        )
+                        if self.model is not None
+                        else None
+                    )
+                )
+                if ready
+                else None
+            )
             shown = ("difference",) if compared.view == "difference" else ("first", "second")
             for which in shown:
                 title = (
                     "Second less first"
                     if which == "difference"
-                    else compared.runs[0 if which == "first" else 1]
+                    else self.run_name(runs[0 if which == "first" else 1])
                 )
                 with self.tile(title, f"analysis-compare-{which}"):
+                    if which == "difference":
+                        for path, lead in zip(runs, ("First", "Second"), strict=True):
+                            self.recorded_line(path, lead)
+                    else:
+                        self.recorded_line(runs[0 if which == "first" else 1])
                     if maps is None:
                         ui.label("The map draws once both runs' fields are read.").classes("later")
                         continue
-                    query = urlencode({"which": which})
+                    query = urlencode(
+                        {"which": which, **({"frame": "whole"} if self.whole else {})}
+                    )
                     drawing = map_drawing(
                         maps[which],
                         f"/api/analysis/compare/{name}/image?{query}",
@@ -647,19 +854,25 @@ class _AnalysisPage:
                     )
                     host = f"analysis-map-{which}"
                     ui.element("div").props(f"id={host} data-control={host}").classes("tile-map")
+                    if which == shown[0]:
+                        self.link_chip()
                     await ui.run_javascript(
                         f"nano.map('{host}', {json.dumps(drawing.json())})", timeout=60
                     )
-        with self.tile("Axial cut", "analysis-cut"):
+        with self.tile(f"Axial cut, r = {self.cut_r_nm:.3g} nm", "analysis-cut"):
             if not ready:
                 ui.label("The cut draws once both runs' fields are read.").classes("later")
             else:
                 cut = ChartView("analysis-cut-chart", "analysis-cut-chart", classes="tile-chart")
                 cut.show(
                     cut_chart(
-                        tuple(zip(compared.runs, held, strict=True)),
+                        tuple(
+                            (self.run_name(path), fields)
+                            for path, fields in zip(runs, held, strict=True)
+                        ),
                         compared.quantity,
                         self.cut_r_nm,
+                        None if self.whole else pore_window(*held),
                     )
                 )
 
@@ -690,10 +903,23 @@ class _AnalysisPage:
 
     async def on_quantity(self, event: events.ValueChangeEventArguments[Any]) -> None:
         self.quantity = event.value
+        # A typed range is in the quantity's unit, so another quantity opens on its own.
+        self.colour_range = None
         await self.redraw()
 
     async def on_palette(self, event: events.ValueChangeEventArguments[Any]) -> None:
         self.palette = event.value or None
+        await self.redraw()
+
+    async def on_compared_range(self, typed: tuple[float, float] | None) -> None:
+        await self.set_compared(range=typed)
+
+    async def on_range(self, typed: tuple[float, float] | None) -> None:
+        self.colour_range = typed
+        await self.redraw()
+
+    async def on_frame(self, event: events.ValueChangeEventArguments[Any]) -> None:
+        self.whole = event.value == "whole"
         await self.redraw()
 
     def on_placing(self, event: events.ValueChangeEventArguments[Any]) -> None:
@@ -711,6 +937,8 @@ class _AnalysisPage:
     async def on_point(self, event: events.GenericEventArguments) -> None:
         args = event.args if isinstance(event.args, dict) else {}
         if not str(args.get("host", "")).startswith("analysis-map"):
+            return
+        if not self.linked:
             return
         r_nm, z_nm = float(args.get("r", 0.0)), float(args.get("z", 0.0))
         if self.placing == "probe":

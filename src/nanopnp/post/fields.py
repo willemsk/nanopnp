@@ -28,6 +28,7 @@ __all__ = [
     "field_unit",
     "field_values",
     "joint_range",
+    "quantity_name",
     "subdivided",
 ]
 
@@ -110,6 +111,24 @@ def field_unit(quantity: str) -> str:
     """Return the SI unit of a quantity from its attribute key's suffix; ``""`` for none."""
     key = FIELD_ALIASES.get(quantity, (quantity, None))[0]
     return next((unit for suffix, unit in _UNITS if key.endswith(suffix)), "")
+
+
+_NAMES: dict[tuple[str, int | None], str] = {
+    ("phi_V", None): "potential φ",
+    ("u_m_s", 0): "radial velocity u_r",
+    ("u_m_s", 1): "axial velocity u_z",
+    ("p_Pa", None): "pressure p",
+}
+
+
+def quantity_name(quantity: str) -> str:
+    """Return a quantity as a reader names it, ``potential φ`` for ``phi_V``; else the key."""
+    key, component = FIELD_ALIASES.get(quantity, (quantity, None))
+    if (key, component) in _NAMES:
+        return _NAMES[(key, component)]
+    if key.startswith("c_") and key.endswith("_mol_m3"):
+        return f"{key.removeprefix('c_').removesuffix('_mol_m3')} concentration"
+    return quantity
 
 
 @dataclass(frozen=True)

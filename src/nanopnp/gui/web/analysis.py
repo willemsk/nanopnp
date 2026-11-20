@@ -7,7 +7,7 @@ import math
 import threading
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 from nanopnp.api.project import Project, RunState
 from nanopnp.core.hashing import decode_floats
@@ -17,15 +17,16 @@ from nanopnp.gui.web.chart import Axis, Chart, Panel, Series
 from nanopnp.gui.web.plane import SERIES, Plane, palette_stops, png
 from nanopnp.io.manifest import MANIFEST_FILENAME, RUN_RECORD_FILENAME
 from nanopnp.io.project import ComparisonFile
-from nanopnp.plot.data import qoi_rows
+from nanopnp.plot.data import fields_lumen_nm, qoi_rows
 from nanopnp.post.export import read_solution_fields
 from nanopnp.post.fields import (
     FIELD_ALIASES,
+    Window,
     field_at,
     field_difference,
     field_grid,
     field_unit,
-    joint_range,
+    quantity_name,
 )
 from nanopnp.sweep.collect import read_members
 
@@ -37,8 +38,10 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 __all__ = [
     "CUT_POINTS",
     "MAP_CELLS",
+    "MAP_PERCENTILE",
     "AnalysisModel",
     "FieldMap",
+    "Positive",
     "RunChoice",
     "cut_chart",
     "dark_palette",
@@ -47,10 +50,14 @@ __all__ = [
     "iv_chart",
     "map_drawing",
     "pair_maps",
+    "pore_window",
     "quantities_of",
     "scene_field",
-    "slope_conductance_S",
 ]
+
+MAP_PERCENTILE = 99.0
+"""The percentile of a quantity's size a map's scale across zero opens on, as the charge map's
+does (WB-49): a few nodes beside a charged atom then do not wash out the rest."""
 
 MAP_CELLS = 250_000
 """The cells of a map the explorer draws: a quarter of the difference's grid, for a map that
@@ -83,6 +90,7 @@ class RunChoice:
     current_A: float | None
     sweep: str = ""
     status: str = "ok"
+    conductance_S: float | None = None
 
 
 @dataclass(frozen=True)
@@ -96,6 +104,7 @@ class FieldMap:
     values: np.ndarray
     scale: tuple[float, float]
     palette: str
+    note: str = ""
 
     def image(self) -> ImageModel:
         """Return the map as the (r, z) view's picture model."""
@@ -160,6 +169,7 @@ class AnalysisModel:
                     f"Run {directory.name[:8]}, {_bias_text(bias)}",
                     bias,
                     _number(quantities.get("current_A")),
+                    conductance_S=_number(quantities.get("conductance_S")),
                 )
             )
         for sweep in self.project.sweeps(study):
@@ -182,6 +192,7 @@ class AnalysisModel:
                         _number(quantities.get("current_A")),
                         sweep=sweep.name,
                         status=member.status,
+                        conductance_S=_number(quantities.get("conductance_S")),
                     )
                 )
         return tuple(found)
@@ -277,10 +288,26 @@ def scene_field(quantity: str) -> str:
     return FIELD_ALIASES.get(quantity, (quantity, None))[0]
 
 
-def _palette(scale: tuple[float, float], palette: str | None) -> str:
+def pore_window(*fields: SolutionFields) -> Window:
+    """Return the close-up of the pore that holds each run's: ``(0, r, -z, z)`` in nm."""
+    windows = [fields_lumen_nm(one) for one in fields]
+    r_nm = max(r for r, _ in windows)
+    z_nm = max(z for _, z in windows)
+    return (0.0, r_nm, -z_nm, z_nm)
+
+
+Positive = Literal["blue", "red"]
+
+
+def _diverging(positive: Positive) -> str:
+    # The workbench's diverging map runs blue to red; positive blue is it reversed (WB-39).
+    return "diverging_r" if positive == "blue" else "diverging"
+
+
+def _palette(scale: tuple[float, float], palette: str | None, positive: Positive) -> str:
     if palette:
         return palette
-    return "diverging" if scale[0] < 0.0 < scale[1] else "viridis"
+    return _diverging(positive) if scale[0] < 0.0 < scale[1] else "viridis"
 
 
 def dark_palette(palette: str) -> str:
@@ -288,20 +315,25 @@ def dark_palette(palette: str) -> str:
     return {"diverging": "diverging_dark", "diverging_r": "diverging_dark_r"}.get(palette, palette)
 
 
-def _scale(values: np.ndarray, colour_range: tuple[float, float] | None) -> tuple[float, float]:
+def _scale(
+    values: np.ndarray, colour_range: tuple[float, float] | None
+) -> tuple[tuple[float, float], bool]:
+    """Return the scale and whether it clips the values: across zero, their size's percentile."""
     import numpy as np
 
     if colour_range is not None:
-        return colour_range
+        return colour_range, False
     finite = values[np.isfinite(values)]
     if not finite.size:
-        return (0.0, 1.0)
+        return (0.0, 1.0), False
     low, high = float(finite.min()), float(finite.max())
     if low < 0.0 < high:
         # A range across zero takes a diverging map, centred on zero.
-        top = max(-low, high)
-        return (-top, top)
-    return (low, high) if high > low else (low - 0.5, high + 0.5)
+        largest = max(-low, high)
+        top = float(np.percentile(np.abs(finite), MAP_PERCENTILE))
+        top = top if top > 0.0 else largest
+        return (-top, top), top < largest
+    return ((low, high) if high > low else (low - 0.5, high + 0.5)), False
 
 
 def field_map(
@@ -310,16 +342,33 @@ def field_map(
     *,
     palette: str | None = None,
     colour_range: tuple[float, float] | None = None,
+    window_nm: Window | None = None,
+    positive: Positive = "blue",
     cells: int = MAP_CELLS,
 ) -> FieldMap:
-    """Return one run's map of a quantity over its field's box.
+    """Return one run's map of a quantity over its field's box, cut to ``window_nm``.
 
-    Its scale is the typed range, else the values' own, centred on zero where they cross it.
+    Its scale is the typed range, else the values' own, centred on zero where they cross it,
+    where the colour ``positive`` names takes the positive side.
     """
-    r_nm, z_nm, values = field_grid(fields, quantity, cells=cells)
-    scale = _scale(values, colour_range)
+    r_nm, z_nm, values = field_grid(fields, quantity, window_nm=window_nm, cells=cells)
+    scale, clipped = _scale(values, colour_range)
+    unit = field_unit(quantity)
+    note = (
+        f"Colours to ±{scale[1]:.3g}{f' {unit}' if unit else ''}, the {MAP_PERCENTILE:g}th "
+        "percentile of |values|; beyond, the end colours."
+        if clipped
+        else ""
+    )
     return FieldMap(
-        quantity, field_unit(quantity), r_nm, z_nm, values, scale, _palette(scale, palette)
+        quantity_name(quantity),
+        unit,
+        r_nm,
+        z_nm,
+        values,
+        scale,
+        _palette(scale, palette, positive),
+        note,
     )
 
 
@@ -330,24 +379,26 @@ def difference_map(
     *,
     palette: str | None = None,
     colour_range: tuple[float, float] | None = None,
+    window_nm: Window | None = None,
+    positive: Positive = "blue",
     cells: int = MAP_CELLS,
 ) -> FieldMap:
     """Return the second run less the first on their fluids' overlap, its scale symmetric."""
     import numpy as np
 
-    found = field_difference(first, second, quantity, cells=cells)
+    found = field_difference(first, second, quantity, window_nm=window_nm, cells=cells)
     if colour_range is None:
         finite = found.difference[np.isfinite(found.difference)]
         top = float(np.abs(finite).max()) if finite.size else 0.0
         colour_range = (-top, top) if top > 0.0 else (-1.0, 1.0)
     return FieldMap(
-        f"{quantity}, second less first",
+        f"{quantity_name(quantity)}, second less first",
         found.unit,
         found.r_nm,
         found.z_nm,
         found.difference,
         colour_range,
-        palette or "diverging",
+        palette or _diverging(positive),
     )
 
 
@@ -358,15 +409,20 @@ def pair_maps(
     *,
     palette: str | None = None,
     colour_range: tuple[float, float] | None = None,
+    window_nm: Window | None = None,
+    positive: Positive = "blue",
     cells: int = MAP_CELLS,
 ) -> tuple[FieldMap, FieldMap]:
-    """Return the two runs' maps on the difference's grid, on one scale: their joint range."""
-    found = field_difference(first, second, quantity, cells=cells)
-    scale = colour_range or joint_range(first, second, quantity)
-    shown = _palette(scale, palette)
+    """Return the two runs' maps on the difference's grid, on one scale over what both draw."""
+    import numpy as np
+
+    found = field_difference(first, second, quantity, window_nm=window_nm, cells=cells)
+    # The scale is the fluid's both maps draw, centred on zero where it spans it.
+    scale = colour_range or _scale(np.concatenate([found.first, found.second]), None)[0]
+    shown, name = _palette(scale, palette, positive), quantity_name(quantity)
     return (
-        FieldMap(quantity, found.unit, found.r_nm, found.z_nm, found.first, scale, shown),
-        FieldMap(quantity, found.unit, found.r_nm, found.z_nm, found.second, scale, shown),
+        FieldMap(name, found.unit, found.r_nm, found.z_nm, found.first, scale, shown),
+        FieldMap(name, found.unit, found.r_nm, found.z_nm, found.second, scale, shown),
     )
 
 
@@ -432,11 +488,15 @@ def map_drawing(
             }
         )
     finite = bool(np.isfinite(shown.values).any())
-    notes = (note,) if note else () if finite else ("The quantity is nowhere defined here.",)
+    notes = tuple(
+        text
+        for text in (note, shown.note, "" if finite else "The quantity is nowhere defined here.")
+        if text
+    )
     return Plane("model", _MAP_AXES, extent, tuple(layers), notes, point_pick=True)
 
 
-def _z_samples(fields: tuple[SolutionFields, ...]) -> np.ndarray:
+def _z_samples(fields: tuple[SolutionFields, ...], window_nm: Window | None = None) -> np.ndarray:
     import numpy as np
 
     lows, highs = [], []
@@ -444,18 +504,27 @@ def _z_samples(fields: tuple[SolutionFields, ...]) -> np.ndarray:
         z_nm = np.asarray(one.whole[0], dtype=np.float64)[:, 1] * 1e9
         lows.append(float(z_nm.min()))
         highs.append(float(z_nm.max()))
+    if window_nm is not None:
+        lows.append(window_nm[2])
+        highs.append(window_nm[3])
     return np.linspace(max(lows), min(highs), CUT_POINTS)
 
 
-def cut_chart(runs: tuple[tuple[str, SolutionFields], ...], quantity: str, r_nm: float) -> Chart:
+def cut_chart(
+    runs: tuple[tuple[str, SolutionFields], ...],
+    quantity: str,
+    r_nm: float,
+    window_nm: Window | None = None,
+) -> Chart:
     """Return the axial cut at ``r_nm``: the quantity along z, a series per run.
 
-    The cut spans the z every run's domain covers; a point outside a run's domain is a gap.
+    The cut spans the z every run's domain and ``window_nm`` cover; a point outside a run's
+    domain is a gap.
     """
     import numpy as np
 
     unit = field_unit(quantity)
-    z_nm = _z_samples(tuple(fields for _, fields in runs))
+    z_nm = _z_samples(tuple(fields for _, fields in runs), window_nm)
     series = []
     for index, (label, fields) in enumerate(runs):
         values = field_at(fields, quantity, np.full_like(z_nm, r_nm), z_nm)
@@ -469,34 +538,20 @@ def cut_chart(runs: tuple[tuple[str, SolutionFields], ...], quantity: str, r_nm:
                 () if index == 0 else (5.0, 3.0),
             )
         )
-    panel = Panel(Axis("z (nm)"), Axis(f"{quantity} ({unit})" if unit else quantity))
+    name = quantity_name(quantity)
+    panel = Panel(Axis("z (nm)"), Axis(f"{name} ({unit})" if unit else name))
     return Chart(
         (panel,),
         tuple(series),
-        label=f"{quantity} along z at r = {r_nm:.3g} nm",
+        label=f"{name} along z at r = {r_nm:.3g} nm",
     )
-
-
-def slope_conductance_S(points: list[tuple[float, float]]) -> float | None:
-    """Return the slope of the least-squares line through ``(bias_V, current_A)`` points.
-
-    None for fewer than two points at distinct biases.
-    """
-    if len({bias for bias, _ in points}) < 2:
-        return None
-    n = len(points)
-    mean_v = sum(bias for bias, _ in points) / n
-    mean_i = sum(current for _, current in points) / n
-    across = sum((bias - mean_v) * (current - mean_i) for bias, current in points)
-    spread = sum((bias - mean_v) ** 2 for bias, _ in points)
-    return across / spread
 
 
 def iv_chart(choices: tuple[RunChoice, ...], picked: Path | None = None) -> Chart:
     """Return the current against the bias of a study's runs and its sweeps' members.
 
-    Each point is a run with both numbers recorded; the note gives the slope of the line through
-    them, a conductance only where the current is linear in the bias.
+    Each point is a run with both numbers recorded; the note gives the shown run's recorded
+    conductance, a number of its record and none the chart makes.
     """
     points = sorted(
         (choice.bias_V, choice.current_A, choice.directory)
@@ -520,14 +575,14 @@ def iv_chart(choices: tuple[RunChoice, ...], picked: Path | None = None) -> Char
         series.append(
             Series("picked", "Shown run", (x[k],), (points[k][1] * 1e9,), SERIES[3], marks=True)
         )
-    slope = slope_conductance_S([(bias, current) for bias, current, _ in points])
-    notes = (
-        ("Fewer than two biases are recorded: no slope is drawn.",)
-        if slope is None
-        else (
-            f"Slope of the line through the {len(points)} points: {slope * 1e9:.4g} nS, "
-            "the conductance where the current is linear in the bias.",
+    notes: list[str] = []
+    if len({bias for bias, _, _ in points}) < 2:
+        notes.append("One bias is recorded: sweep the bias to draw the current against it.")
+    picked_choice = next((choice for choice in choices if choice.directory == picked), None)
+    if picked_choice is not None and picked_choice.conductance_S is not None:
+        notes.append(
+            f"The shown run's recorded conductance, its current over its bias: "
+            f"{picked_choice.conductance_S * 1e9:.4g} nS."
         )
-    )
     panel = Panel(Axis("bias (mV)"), Axis("current (nA)"))
-    return Chart((panel,), tuple(series), notes=notes, label="Current against bias")
+    return Chart((panel,), tuple(series), notes=tuple(notes), label="Current against bias")

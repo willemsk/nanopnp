@@ -936,9 +936,13 @@ body a.tool-link.tool-link-open {
 .chart .u-legend .u-series > * {
   padding: 0 0.2rem;
 }
+/* A swatch is a line sample in the series' colour and dash, not a square of colour alone. */
 .chart .u-legend .u-marker {
-  width: 0.8em;
-  height: 0.8em;
+  width: 1.6em;
+  height: 0;
+  border-width: 2px 0 0 0 !important;
+  background: transparent !important;
+  vertical-align: middle;
 }
 .chart .u-select {
   background: color-mix(in srgb, var(--accent) 18%, transparent);
@@ -997,6 +1001,10 @@ body a.tool-link.tool-link-open {
 .main-row:has(.tool-pane) .view-chart {
   height: calc(100vh - 8.5rem);
   min-height: 20rem;
+}
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
 }
 /* The Runs tool's view: the picked run's convergence across it (WB-45). */
 .runs-plot .chart {
@@ -1659,6 +1667,23 @@ body .parts .parts-row[aria-pressed="true"] {
   padding: var(--pad);
   border: 1px solid var(--line);
   border-radius: var(--radius);
+}
+/* The pressed state of *On the mesh*, marked as Meso's *One subunit* is. */
+.mesh-toggle {
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-2, 8px);
+}
+.mesh-toggle[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  background: var(--sel);
+  font-weight: 600;
+}
+/* The Analysis view scrolls its tiles alone, so the pane that drives them stays in view. */
+.main-row:has(.tool-pane) .analysis-view {
+  max-height: calc(100vh - 8.5rem);
+  overflow-y: auto;
 }
 /* A map tile's (r, z) view, as the frame's canvas draws, in a box of its own. */
 .tile-map {

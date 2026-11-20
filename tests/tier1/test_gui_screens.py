@@ -593,7 +593,7 @@ def test_ver78_o_the_explorer_draws_its_runs_map_and_a_two_point_iv(
     finally:
         page.close()
     assert sorted(set(iv["x"])) == [-50.0, 50.0], iv
-    assert re.search(r"Slope of the line through the \d+ points: [\d.]+ nS", iv["notes"]), iv
+    assert re.search(r"recorded conductance, its current over its bias: [\d.]+ nS", iv["notes"]), iv
     assert errors == []
 
 
