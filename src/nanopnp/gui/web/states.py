@@ -43,9 +43,9 @@ STATES: tuple[str, ...] = ("empty", "charged-tube", "uncharged", "refused")
 carries no charge from a structure, and a case refused."""
 
 SOLVED = "solved"
-"""The state VER-78 (o) alone opens, outside :data:`STATES`: the charged tube solved at its 0.05 V,
-a sweep of its bias over -0.05 and 0.05 V, and comparison ``tube-bias`` of the run with the sweep's
-point at -0.05 V."""
+"""The state the Analysis suite's browser tests alone open, outside :data:`STATES`: the charged
+tube solved at its 0.05 V, a sweep of its bias over -0.05 and 0.05 V, and comparison ``tube-bias``
+of the run with the sweep's point at -0.05 V."""
 
 _BIAS = "boundary_conditions.bias_V"
 

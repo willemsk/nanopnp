@@ -54,11 +54,12 @@ __all__ = [
     "pore_window",
     "quantities_of",
     "scene_field",
+    "size_range",
 ]
 
 MAP_PERCENTILE = 99.0
 """The percentile of a quantity's size a map's scale across zero opens on, as the charge map's
-does (WB-49): a few nodes beside a charged atom then do not wash out the rest."""
+does: a few nodes beside a charged atom then do not wash out the rest."""
 
 MAP_CELLS = 250_000
 """The cells of a map the explorer draws: a quarter of the difference's grid, for a map that
@@ -139,6 +140,13 @@ def _json(path: Path) -> dict[str, Any]:
     return found if isinstance(found, dict) else {}
 
 
+def _written(directory: Path) -> float:
+    try:
+        return (directory / RUN_RECORD_FILENAME).stat().st_mtime
+    except OSError:
+        return 0.0
+
+
 def _bias_text(bias_V: float | None) -> str:
     return "no bias recorded" if bias_V is None else f"{bias_V * 1e3:+.4g} mV"
 
@@ -160,7 +168,8 @@ class AnalysisModel:
     def choices(self, study: str) -> tuple[RunChoice, ...]:
         """Return a study's runs, newest first, then its sweeps' members in their order."""
         found: list[RunChoice] = []
-        for directory in reversed(self.project.runs(study)):
+        # A run's folder is named by its hash, so its record's time orders the runs.
+        for directory in sorted(self.project.runs(study), key=_written, reverse=True):
             quantities = _json(directory / RUN_RECORD_FILENAME).get("quantities") or {}
             bias = _number(quantities.get("bias_V"))
             found.append(
@@ -207,12 +216,12 @@ class AnalysisModel:
         return self.project.run_state(run)
 
     def quantity_rows(self, run: Path) -> list[dict[str, str]]:
-        """Return a run's quantities of interest as rows of quantity, value and unit (Q38)."""
+        """Return a run's quantities of interest as rows of quantity, value and unit."""
         quantities = self.record(run).get("quantities")
         return qoi_rows(quantities) if isinstance(quantities, dict) else []
 
     def deviations(self, run: Path) -> list[str]:
-        """Return each switch the run set away from its validated default (Q39; FR-25)."""
+        """Return each switch the run set away from its validated default."""
         found = _json(run / MANIFEST_FILENAME).get("deviations")
         switches = found.get("switches") if isinstance(found, dict) else None
         return [
@@ -289,6 +298,32 @@ def scene_field(quantity: str) -> str:
     return FIELD_ALIASES.get(quantity, (quantity, None))[0]
 
 
+def size_range(first: SolutionFields, second: SolutionFields, quantity: str) -> tuple[float, float]:
+    """Return the lowest and highest size of a component's vector over both runs' nodes.
+
+    The 3D view draws a component's vector whole and colours it by its size, so a pair's one
+    range is the size's, not the component's.
+
+    Raises
+    ------
+    KeyError
+        If either run holds no vector of that name.
+    """
+    import numpy as np
+
+    key = scene_field(quantity)
+    sizes = []
+    for fields in (first, second):
+        held = next(
+            (values[key] for _, _, values in (fields.whole, fields.fluid) if key in values), None
+        )
+        if held is None:
+            raise KeyError(f"no vector {key!r} for {quantity!r} in both runs")
+        sizes.append(np.linalg.norm(np.asarray(held, dtype=np.float64), axis=1))
+    found = np.concatenate(sizes)
+    return float(np.nanmin(found)), float(np.nanmax(found))
+
+
 def pore_window(*fields: SolutionFields) -> Window:
     """Return the close-up of the pore that holds each run's: ``(0, r, -z, z)`` in nm."""
     windows = [fields_lumen_nm(one) for one in fields]
@@ -301,7 +336,7 @@ Positive = Literal["blue", "red"]
 
 
 def _diverging(positive: Positive) -> str:
-    # The workbench's diverging map runs blue to red; positive blue is it reversed (WB-39).
+    # The workbench's diverging map runs blue to red; positive blue is it reversed.
     return "diverging_r" if positive == "blue" else "diverging"
 
 

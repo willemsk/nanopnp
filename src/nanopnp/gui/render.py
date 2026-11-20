@@ -8,6 +8,7 @@ import json
 import logging
 import multiprocessing
 import queue as queue_module
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from string import Template
@@ -630,15 +631,27 @@ def render(request: RenderRequest) -> Rendered:
     scene_path = directory / f"{stem}.json"
     document_path = directory / f"{stem}.html"
     unranged = scene_stem(wanted)
+    # The field's latest other ranged scene stays too: the explorer's map range and a comparison's
+    # pair range are two scenes of one field, which would otherwise evict each other.
+    ranged = re.compile(rf"{re.escape(unranged)}-[0-9a-f]{{8}}\.json")
+    others = sorted(
+        (
+            path
+            for path in directory.glob(f"{unranged}-*.json")
+            if path != scene_path and ranged.fullmatch(path.name)
+        ),
+        key=lambda path: path.stat().st_mtime,
+    )[-1:]
     kept = {
         scene_path,
         document_path,
         directory / f"{unranged}.json",
         directory / f"{unranged}.html",
+        *(path.with_suffix(suffix) for path in others for suffix in (".json", ".html")),
     }
     payload = json.dumps(scene)
-    # One field's pair at a time, with its unranged pair: each copy is tens of megabytes at the
-    # reference mesh size.
+    # One field's scenes at a time, unranged and at most two ranges: each copy is tens of
+    # megabytes at the reference mesh size.
     for stale in directory.glob("scene-*"):
         if stale not in kept and stale.is_file():
             stale.unlink()

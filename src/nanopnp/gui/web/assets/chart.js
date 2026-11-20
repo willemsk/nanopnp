@@ -1,6 +1,6 @@
 // The workbench's charts: plots of y against x that the vendored uPlot draws, from what the server
 // writes (gui/web/chart.py). Each panel is one uPlot, the panels one above the other. A logarithmic
-// axis leaves out a sample it cannot place, and the chart's note counts it (VER-44). A band is
+// axis leaves out a sample it cannot place, and the chart's note counts it. A band is
 // shaded behind the curves and named inside, a rule dashed over them; both are keyed under the
 // chart. A drag zooms the x axis and a double click returns it to the range the chart opens on.
 (() => {
@@ -218,13 +218,21 @@
       },
     };
     const plot = new uPlot(opts, data, slot);
-    // A click on a sample asks about it: its panel, its x and the series it belongs to.
-    plot.over.addEventListener('click', () => {
+    // A click on a sample asks about it: its panel, its x and y and the series it belongs to. A
+    // drag that zooms ends in a click too, so only a click where the press was asks.
+    let pressed = null;
+    plot.over.addEventListener('mousedown', (event) => { pressed = [event.clientX, event.clientY]; });
+    plot.over.addEventListener('click', (event) => {
+      const moved = pressed && Math.hypot(event.clientX - pressed[0], event.clientY - pressed[1]) > 3;
+      pressed = null;
+      if (moved) return;
       const at = plot.cursor.idx;
       if (at === null || at === undefined || typeof emitEvent !== 'function') return;
       const near = plot.series.findIndex((s, k) => k > 0 && data[k][at] !== null && data[k][at] !== undefined);
       if (near < 1) return;
-      emitEvent('chart_pick', { host: state.hostId, panel: index, x: data[0][at], series: series[near - 1].id });
+      emitEvent('chart_pick', {
+        host: state.hostId, panel: index, x: data[0][at], y: data[near][at], series: series[near - 1].id,
+      });
     });
     const [low, high] = opening(panel, data);
     plot.setScale('x', { min: low, max: high });

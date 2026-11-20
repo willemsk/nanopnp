@@ -337,7 +337,7 @@ def _rebuilt(request: RunRequest, events: Queue[RunEvent], cancel: EventCancel) 
 
     assert request.rebuild is not None and request.runs is not None
     run = Path(request.rebuild)
-    # The project holds its runs folder; its rebuild compares every recorded scalar (QR-08).
+    # The project holds its runs folder; its rebuild compares every recorded scalar.
     found = Project.open(Path(request.runs).parent).rebuild(
         run, progress=QueueProgress(events), cancel=cancel
     )

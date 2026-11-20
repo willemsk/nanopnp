@@ -146,7 +146,7 @@ def _typed(
         return None, ""
     low, high = float(low), float(high)
     if not (math.isfinite(low) and math.isfinite(high)) or low >= high:
-        return None, "From is below To; the axis fits the samples until it is."
+        return None, "From must be below To; the axis fits the samples until it is."
     if scale == "log" and low <= 0.0:
         return None, "A logarithmic axis starts above 0; the axis fits the samples until it does."
     return (low, high), ""

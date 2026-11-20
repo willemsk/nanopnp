@@ -156,7 +156,7 @@ class _MesoPane(_ContinuumPane):
             if self.tool.id == "outline":
                 ui.label(f"{lead} here.")
             else:
-                # A pointer to another place is a link (WB-52).
+                # A pointer to another place is a link.
                 with ui.element("p"):
                     ui.label(f"{lead} in ").classes("inline")
                     ui.link("Outline", "/meso/outline").props("data-control=meso-outline-link")
