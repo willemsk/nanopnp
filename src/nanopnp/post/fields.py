@@ -28,6 +28,7 @@ __all__ = [
     "field_unit",
     "field_values",
     "joint_range",
+    "joint_size_range",
     "quantity_name",
     "subdivided",
 ]
@@ -423,3 +424,31 @@ def joint_range(
     _carried(first, second, quantity)
     values = np.concatenate([field_values(fields, quantity)[2] for fields in (first, second)])
     return float(np.nanmin(values)), float(np.nanmax(values))
+
+
+def joint_size_range(
+    first: SolutionFields, second: SolutionFields, quantity: str
+) -> tuple[float, float]:
+    """Return the lowest and highest nodal size of a component's vector over both runs.
+
+    A 3D view draws a component's vector whole and colours it by its size, so a pair's one range
+    is the size's, not the component's.
+
+    Raises
+    ------
+    KeyError
+        If a run holds no such vector, naming the vector and which run lacks it.
+    """
+    import numpy as np
+
+    key = FIELD_ALIASES.get(quantity, (quantity, None))[0]
+    sizes = []
+    for which, fields in (("first", first), ("second", second)):
+        held = next(
+            (values[key] for _, _, values in (fields.whole, fields.fluid) if key in values), None
+        )
+        if held is None:
+            raise KeyError(f"the {which} run holds no {key!r}, the vector {quantity!r} is part of")
+        sizes.append(np.linalg.norm(np.asarray(held, dtype=np.float64), axis=1))
+    found = np.concatenate(sizes)
+    return float(np.nanmin(found)), float(np.nanmax(found))

@@ -17,7 +17,7 @@ Static review: no `gate.sh` and no `--nightly` run. After the fixes, `ruff` and 
 
 | # | Severity | Where | Finding | Disposition |
 |---|---|---|---|---|
-| 1 | Important | `gui/web/analysis.py:AnalysisModel.choices` | The explorer's runs were ordered by reversed folder name, a hash or `upto-<stage>-<hash>`, not newest first. A study holding a run stopped at its charge opened on that run, which has no fields | Fixed: ordered by the record's time, newest first, as Study's records are |
+| 1 | Important | `gui/web/analysis.py:AnalysisModel.choices` | The explorer's runs were ordered by reversed folder name, a hash or `upto-<stage>-<hash>`, not newest first. A study holding a run stopped at its charge opened on that run, which has no fields | Fixed: ordered by the record file's time, newest first, as Study's records are |
 | 2 | Important | `analysis_tools.py:comparison` | A comparison whose run's fields failed to write never checked `_FAILED`: each tick it started a render child again, restoring the solve, and never said why | Fixed: a failed read is said and not started again |
 | 3 | Important | `analysis_tools.py:comparison` | A comparison of a run cleaned from the store, or one never solved, said "Reading the two runs' fields…" forever | Fixed: each run that cannot draw is named, with why; a cleaned run points to *Solve again* in the explorer |
 | 4 | Important | `analysis_tools.py:comparison_tiles` | The 3D pair of a component (u_r, u_z) got the component's signed joint range. The renderer colours the vector it draws by its norm (`funcdim==2 → eval=3`), so the scale clipped, and a range across zero reversed the colours of a magnitude | Fixed: `analysis.py:size_range`, the vector's size over both runs' nodes; the caption says so |
