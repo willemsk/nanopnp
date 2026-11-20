@@ -3900,3 +3900,29 @@ WP5.20's round ([the record](../design/reviews/2026-11-19-meso.md)) and its revi
   until the charge is built (CODE_REVIEW_063). Mol* is blank there too, as it reads that table.
 
 **Open**: WP5.23.
+
+### REV-267: What the Analysis suite's first review left open
+
+WP5.21's review of its round's render (Item 12: the GUI reviewer's findings and the critique) fixed the computed
+slope, the 3D bar's clipped minus, the typed probe, link 3's chip, the map's range and its 99th-percentile opening,
+the pair's scale centred on zero over the fluid, each run's recorded numbers, the controls that do nothing in 3D,
+Runs' clipped *Result*, the legends' dashes, the colour direction (WB-39) and the pane's scroll. The tiles' layout,
+the 3D view's range, wireframe, framing and background, and the map's outline go to the author at the round. These
+stay:
+
+- **Quantities.** The tile lists the record's rows in the library's order and words ("two pi included", "routes
+  checked"), the conductance not first (the review's 16).
+- **Words and type.** "Changed" names the count and the run's deviations (17); the map's axes and the quantities
+  are in the number face, minus signs are hyphens, a bias breaks from its unit, the Run select clips the bias (18).
+- **Charts.** uPlot's live legend shows "—" until hovered (20; the critique's 5); the I–V's shown run is a small
+  dot (21; the critique's 15); the convergence chart labels no rung 1 to 3, 5 or 8 and mixes 10⁵, 0.01 and 10⁻¹¹ on
+  its log axis (22; the critique's 14); a fresh model's flat factors are not drawn and its square-root ticks are not
+  round (23); the series share the info and warn hues (the critique's 16).
+- **The no-run states.** "Study's Runs starts one." is no link, the refused state does not say Continuum's problem
+  stops the study (26), and the empty state draws an empty box (27).
+- **Frames.** A tile's frames nest three deep, a map's key stands on the data (the critique's 11, 12), and *Axes*
+  does not say an axis was set (the critique's 13).
+- **Doubts to check.** The I–V joins every run of a study, which may differ in more than the bias; Electrolyte's
+  viscosity runs flat at 2.0, the plot's top, a clamp or a clip; the uncharged state shows a failed queue entry
+  beside "no run yet"; figure export (FR-28) has no later-phase banner.
+

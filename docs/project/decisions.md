@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,470. By source: history ruling 369; plan decision row 738; REV row 266; MOD row 18; OPN row 9; WB row 49; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
+Rows: 1,471. By source: history ruling 369; plan decision row 738; REV row 267; MOD row 18; OPN row 9; WB row 49; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
 
-By decider: author 610; open 5; session, own call 852; session, put to the author 3.
+By decider: author 610; open 5; session, own call 853; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1400,6 +1400,7 @@ By decider: author 610; open 5; session, own call 852; session, put to the autho
 | REV-264 | author | `docs/project/review-findings.md` |  | WP5.21 | A reproduction of a record stopped at its solve compares no number of the solve | ruled by the author, 18 November 2026: WP5.21 (WP5.19) | open |
 | REV-265 | author | `docs/project/review-findings.md` |  | WP5.20 | A free list of the structure's layers in Meso's Mol* view | ruled by the author, 19 November 2026: a package of its own, placed at the phase's next amendment (WP5.20) | open |
 | REV-266 | session, own call | `docs/project/review-findings.md` |  | WP5.23 | What the Meso suite's round left open | WP5.23 (WP5.20) | open |
+| REV-267 | session, own call | `docs/project/review-findings.md` |  | WP5.23 | What the Analysis suite's first review left open | WP5.23, with the round's verdicts (WP5.21) | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |

@@ -308,16 +308,21 @@ class Project:
         )
 
     def run_state(self, run: str | Path) -> RunState:
-        """Return whether a run's solve is in the store, cleaned from it, or never reached."""
+        """Return whether a run's solve is in the store, cleaned from it, or never reached.
+
+        The project's store is read first, then the store the record names: a project moved
+        or copied keeps its store and its records' old folder.
+        """
         record = _json_object(self._run_folder(run) / RUN_RECORD_FILENAME)
         artefacts = record.get("artefacts")
         solve = artefacts.get("solve") if isinstance(artefacts, dict) else None
         if not isinstance(solve, dict):
             return "unsolved"
         named = record.get("store")
-        store = Store(Path(str(named))) if named else self._store()
-        found = store.get(str(solve.get("schema")), str(solve.get("hash")), mark=False)
-        return "solved" if found is not None else "removed"
+        stores = [self._store(), *([Store(Path(str(named)))] if named else [])]
+        schema, digest = str(solve.get("schema")), str(solve.get("hash"))
+        found = any(store.get(schema, digest, mark=False) is not None for store in stores)
+        return "solved" if found else "removed"
 
     def rebuild(
         self,

@@ -1305,8 +1305,12 @@ class _StudyPane(_Pane[StudyModel]):
             if not records:
                 ui.label("No run is recorded yet. Run study records one.").classes("later")
                 return
-            head = ("Written", "Reached", "Quantities", "Threads", "Folder", "")
-            with ui.element("table").classes("view-table").props("data-control=runs-records"):
+            head = ("Written", "Reached", "Quantities", "Threads", "Convergence", "Result")
+            # The table scrolls inside its tile, so the last column is never cut off.
+            with (
+                ui.element("div").classes("table-scroll"),
+                ui.element("table").classes("view-table").props("data-control=runs-records"),
+            ):
                 with ui.element("thead"), ui.element("tr"):
                     for text in head:
                         TextElement(tag="th", text=text).props("scope=col")

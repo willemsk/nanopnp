@@ -100,7 +100,10 @@ _DOCUMENT = Template("""<!DOCTYPE html>
     <title>$title</title>
     <meta name="viewport" content="width=device-width, user-scalable=no"/>
     <style>
-      body { margin: 0; overflow: hidden; background: #ffffff; }
+      /* The renderer centres its colour bar's first label on the bar's end, 13 px in: the
+         margin keeps a minus sign whole, and the root clips the canvas's overhang. */
+      html { overflow: hidden; }
+      body { margin: 0 0 0 16px; position: relative; background: #ffffff; }
       canvas { cursor: grab; }
       canvas:active { cursor: grabbing; }
     </style>
@@ -172,7 +175,10 @@ _PAGE = Template("""<!DOCTYPE html>
     <title>$title</title>
     <meta name="viewport" content="width=device-width, user-scalable=no"/>
     <style>
-      body { margin: 0; overflow: hidden; background: #ffffff; }
+      /* The renderer centres its colour bar's first label on the bar's end, 13 px in: the
+         margin keeps a minus sign whole, and the root clips the canvas's overhang. */
+      html { overflow: hidden; }
+      body { margin: 0 0 0 16px; position: relative; background: #ffffff; }
       canvas { cursor: grab; }
       canvas:active { cursor: grabbing; }
     </style>
