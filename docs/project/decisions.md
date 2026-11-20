@@ -4,7 +4,7 @@ Every decision the records hold, one row each, written by `.claude/scripts/decis
 
 Rows: 1,477. By source: history ruling 369; plan decision row 738; REV row 270; MOD row 18; OPN row 9; WB row 52; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
 
-By decider: author 613; open 5; session, own call 856; session, put to the author 3.
+By decider: author 614; open 5; session, own call 855; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1403,7 +1403,7 @@ By decider: author 613; open 5; session, own call 856; session, put to the autho
 | REV-267 | session, own call | `docs/project/review-findings.md` |  | WP5.23 | What the Analysis suite's first review left open | WP5.23, with the round's verdicts (WP5.21) | open |
 | REV-268 | author | `docs/project/review-findings.md` |  | WP5.22 | Analysis as an editable tree of results, and the charts' library | ruled by the author, 20 November 2026: a design round, then a package of its own before WP5.22 (WP5.21) | open |
 | REV-269 | author | `docs/project/review-findings.md` |  | WP5.23 | The workbench's wording | WP5.23's sweep, the rule ruled by the author on 20 November 2026 (WP5.21) | open |
-| REV-270 | session, own call | `docs/project/review-findings.md` |  | WP5.23 | A map reads its field linearly on each cell split in four | REV-268's package or WP5.23 (WP5.21) | open |
+| REV-270 | author | `docs/project/review-findings.md` |  | WP5.21 | A map reads its field linearly on each cell split in four | ruled by the author, 20 November 2026: with REV-268's package, the tree of results (WP5.21) | accepted |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |
