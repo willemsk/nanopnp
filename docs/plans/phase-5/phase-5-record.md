@@ -806,7 +806,7 @@ Its row of *Verification* read:
 ## Amended 18 November 2026 (§8.2.43 AS1 to AS4)
 
 The fifth `/np-plan amend 5`, after WP5.19's merge, placed the two packages that §8.2.42 AR7 and AR8 had ruled: the
-meso suite between Molecular and Continuum is WP5.20, the next package (AS1), and the performance package is WP5.24,
+meso suite between Molecular and Continuum is WP5.20, the next package (AS1), and the performance package is WP5.22,
 after the Analysis suite (AS2). The suite's name waits for its round (AS3). The planned packages were renumbered, the
 Analysis suite from WP5.20 to WP5.21, the guided route from WP5.21 to WP5.23 and the close from WP5.22 to WP5.24, each
 tag with its number, and every reference in the tree was rewritten, this record included, but for the sentences that
@@ -917,7 +917,7 @@ but for the sentences that describe the 8 November and 18 November renumberings 
 names a provisional package (AV5), and the Copilot host's checks are its session plan's (AV6). The text below is quoted
 in the new numbering. The plan's status read:
 
-> **Status: in progress; WP5.01 to WP5.20 merged (`v0.6.0-alpha.19`, WP5.20's `v0.6.0-alpha.20` to be pushed); WP5.21, the Analysis suite, delivered (its pull request open); then a package for REV-268's tree of results, WP5.24, WP5.26 and the close.**
+> **Status: in progress; WP5.01 to WP5.20 merged (`v0.6.0-alpha.19`, WP5.20's `v0.6.0-alpha.20` to be pushed); WP5.21, the Analysis suite, delivered (its pull request open); then a package for REV-268's tree of results, WP5.24, WP5.27 and the close.**
 
 The In brief read:
 
@@ -996,3 +996,225 @@ For WP5.20:
 
 > Live constraints: a free list of the structure's layers is a package of its own, placed by the author (REV-265); the
 > round's polish, Outline's keyboard path and the map's default share are WP5.26's (REV-266).
+
+## 20 November 2026: the delivered entries WP5.12 to WP5.21 leave the plan (§8.2.36 AL18; CODE_REVIEW_066)
+
+The plan keeps each delivered entry's title, merged line and live constraints, as it did for WP5.01 to WP5.11 on
+9 November; the narratives follow verbatim, each package's scope as planned, then what it delivered.
+
+### WP5.12 — The knowledge base and the guide (§8.2.36 AL13, AL15 to AL21; §8.2.37 AM13 to AM18)
+
+**Merged 10 November 2026** ([the plan](wp5.12-the-knowledge-base-and-the-guide.md)); tag `v0.6.0-alpha.12`. 163 of CODE_REVIEW_039's findings fixed, filed under `knowledge/`, `docs/` and four `src/` modules: the
+knowledge base states what was measured and verified, each `[verified]` claim names its source (AL19), and each rule
+is stated once, in its clause (AL15 to AL18); `knowledge/01` backs §4, which governs (AL16); the guide states that
+protonation runs before stage 2 (AL13); the sodium cap's test is tightened (AM13); REV-226's citations follow §5.2.
+The author answered the six findings that rest on the ESI or the COMSOL report, and each edit landed (REV-227; AL20,
+AM16, AM18). 517 SHALLs kept.
+
+### WP5.13 — Case and model files (REV-217, REV-219; CODE_REVIEW_036 candidates 1 and 5; §8.2.36 AL22, AL23)
+
+One reader pair, `read_case` and `read_case_text` in `io/models.py`, resolves `variables:` and `models:`, and `io/case.py`
+keeps `validate_mapping` (D1.1; AL23, with §5.3.1 amended); `load_case` and `loads_case` stay the registry-checked seams
+(D1.2); `substitute` takes `base` and applies swaps, variables, edits and rebasing in one pass, so `Case.with_` calls it
+once (D1.3); input-file discovery, rebasing and rewriting live once in `io/case_paths.py` (D1.4); the `io` case modules
+import one way (D1.5). `ModelFile` carries its validated body through a public `read_model_file` (D5.1); the case's
+split into model layers moves into `io/models.py` and `mapping_changes` ignores metadata keys, so `api/project.py` parses
+no model file again (D5.2). The designs and corrections C0 to C1.5 and C5.1 bind, re-read against WP5.09's code. VER-62
+unmoved; no new layering edge (VER-61, VER-72). Tag `v0.6.0-alpha.13`.
+
+**Merged 10 November 2026** ([the plan](wp5.13-case-and-model-files.md)); tag `v0.6.0-alpha.13`.
+REV-217 and REV-219 fixed. One reader pair resolves `models:` and `variables:` (FR-39; AL23, §5.3.1 amended);
+`substitute` rebases relative input paths beside the case in every branch, a model swap's included, so `Case.with_`
+substitutes once (FR-25); `io/case_paths.py` holds the one input-path seam (FR-32); `ModelFile.body` carries the
+checked body, `split_case_layers` serves the project's import, and `mapping_changes` skips metadata (FR-34). The
+two substitution refusals say to write `models:` or `variables:` in the case file. Four tests added; the push gate
+passed with the VER-62 walks unmoved and no new layering edge (VER-61, VER-72).
+
+### WP5.14 — Sweep planning and the walk's keying (REV-221, REV-220; CODE_REVIEW_036 candidates 2 and 6; §8.2.36 AL22)
+
+`build_plan` takes the base case in memory, and `plan_sweep` writes its two files once, with no staging directory
+(D2.1); the resolved members are fields keyed on the directory they were resolved beside, so a moved plan never serves
+stale ones (D2.2; REV-221, REV-199's regression); a member is reused where the plan holds it, and a pooled worker
+resolves only its point and parent (D2.3); `Session._walk` and `Session._member` stay (D2.4). `_Walk` gains `keyed` and
+`stored`, which `stored_upstream` and the forecast's walk share with the run, never building a workspace to key (D6.1);
+`pipeline/forecast.py` moves into `pipeline/run.py` (D6.2). The designs and corrections C2.1 to C2.4 and C6.1 bind.
+VER-62 unmoved; VER-64's forecast agrees with the walk. Tag `v0.6.0-alpha.14`.
+
+**Merged 10 November 2026** ([the plan](wp5.14-sweep-planning-and-the-walks-keying.md)); tag `v0.6.0-alpha.14`. REV-220 and REV-221 fixed. `_Walk.keyed` and `_Walk.stored` key a stage and read the store for the run,
+`stored_upstream` and the forecast, which moved into `pipeline/run.py`; `stored_upstream` keys a session's own stages
+(FR-27, VER-64). A plan holds its members keyed on their directory and resolves them again where it moves;
+`plan_sweep` plans in memory and writes its files once; a point and its parent are taken where the plan holds them
+(FR-39, §5.3.4 amended). A three-point sweep resolves its members six times, where the plan counted thirteen. Three tests added and one extended;
+the push gate and example 03 passed with the VER-62 walks unmoved and no new layering edge (VER-61, VER-72).
+
+### WP5.15 — The frame on Quasar's components (FR-27, FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9; §8.2.38 AN2, AN3, AN5 to AN7)
+
+The frame rebuilt from the components NiceGUI ships through Quasar (AJ1): the application layout, the activity bar and
+the project rail as drawers, the bottom panel as the footer, the rail a tree with the project's name at its head and in
+the tab's title, the icon font, suites as sub-pages that keep the 3D view, and the tokens fed into Quasar's colour
+variables. Five suites in their *Build* and *Use* groups, their shortcuts following the bar (AN7), Physics empty until WP5.18. The
+palette opens as one input and lists matches by title and keyword, one row active and moved by the arrow keys, a command that cannot run disabled with
+its reason (REV-208, REV-211). The settings are one declared list with a user and a project scope, a page with a
+searchable section list beside the panel, a *Modified only* filter, and REV-204's guards (AJ9; REV-212). The list is
+AN3's, a registry that a later package or a plugin extends (AN2). The store gains its size cap and two clean-up
+actions, one for what no run uses and one for every result, each entry removed whole and none while a run in any program holds the store (AN5, AN6; §5.3.2's NOTE). The changed count opens the dense table grouped by model and study (AJ7; REV-214). The frame's
+landmarks, headings, live regions and splitter keys (REV-203's frame part), REV-207's efficiencies, and REV-210's icons,
+headings, dialogs and render states. A 2WCD render state, walked once and cached (AJ8). In `np-gui`, `impeccable`'s
+critique joins the review, its quality floor is read before a screen is built, and a design file derived from
+`tokens.css` is generated (AJ6). VER-78 over the new states. Tag `v0.6.0-alpha.15`.
+
+**Delivered 10 November 2026** ([the plan](wp5.15-the-frame-on-quasars-components.md)); merged 11 November 2026 as
+`v0.6.0-alpha.15`. REV-203's frame part, REV-204, REV-207, REV-208 and REV-210 to REV-214 fixed. The frame is Quasar's layout with
+sub-pages and one Mol* host (VER-78 (m)); five suites in two groups, Alt+Shift+1 to 5 following the bar (AN7); the rail
+a tree headed by the project's name; the palette Quasar's searchable select over each command and setting; the
+settings one registry with a user and a project scope and a page at `/settings` (VER-78 (j) to (l); §5.3.5's NOTE); the
+changed values one dense table with units (FR-34). The store marks reads, evicts the least recently read outside a
+kept set, caps itself and refuses a clean-up while a walk in any program holds its lock (FR-27, §5.3.2's NOTE; VER-62
+unmoved). The render set adds a cached 2WCD project and REV-210's states; `np-gui` runs `impeccable`'s critique and
+derives `DESIGN.md` (AJ6).
+
+### WP5.16 — The Molecular suite (FR-37, FR-38; REV-121; REV-41's `prepare`; REV-218; §8.2.39 AO1 to AO3)
+
+Library steps first: stage 1's axis found whatever the pore, from the ring of chains or of chain groups (`A+B,C+D,…`)
+under C2 and above and from the channel's empty space under C1, `axis: cavity` asking for the channel's axis on any
+pore and `axis: z` checked against whichever axis applies, with §5.2, §5.3.1 and VER-48 (REV-121; §8.2.24 Z5; AO1); a
+`prepare` command over `orient_pore`, which also takes a typed axis (REV-41); each atom's effective radius and residue
+index held by `ProtonationTable`, so the density reads scaled radii from one place (REV-218; CODE_REVIEW_036 candidate
+4, D4.1, D4.2, C4.1, C4.2; AL22), VER-62 unmoved; a model built alone, keyed as a study's walk keys it; and a molecular
+model's variant, linked to its parent by default or a full copy (AO3). Then the tools, opening with their prototype
+round on 2WCD (AJ8): Prepare structure, the axis and the membrane drawn from typed values (AO2), Ensemble, Protonation,
+Charge edit (FR-38's control over WP5.04's step) and View, the molecule drawn by Mol*, the molecular model's exposed
+values declared (AJ5). Q09, Q13 and Q27 move here. Tag `v0.6.0-alpha.16`.
+
+**Delivered 11 November 2026** ([the plan](wp5.16-the-molecular-suite.md)); merged 12 November 2026 as
+`v0.6.0-alpha.16`. REV-121, REV-218,
+REV-231, REV-234 and REV-239 fixed; REV-41's `prepare` landed, its `upto` still WP5.19's. Stage 1 finds a pore's axis
+from its ring of chains or chain groups, or from the channel's empty space, and checks `axis: z` against it (VER-48;
+§5.2, §5.3.1); `nanopnp prepare` and `orient_pore` take a typed axis and write a record; atom radii and residue
+indices are held in one place (VER-62 unmoved). A model is built alone with a study's keys, and a molecular model's
+variant is linked to its parent or a full copy (FR-38, FR-39; §5.3.1). The five tools stand at `/molecular/<tool>`
+beside the one 3D view, drawn from MolViewSpec scenes (VER-78 (a), (m), (n)). At the prototype round the author
+ruled, and the package built: a pane left of its view on every screen, positive charge blue with a setting, the
+settings as a window over the tool, the folded bar as icons with state, and the channel's straightness limit a warning
+(§8.2.39 AO4; WB-39).
+
+### WP5.17 — The Continuum suite (REV-170, REV-39; FR-33's geometry link; §8.2.40 AP1 to AP4)
+
+Library steps first: one stage-5 region interface with an adapter per kind, the cylinder's two classes merged and the
+wall sizing moved into `mesh/` (REV-170; AD4; CODE_REVIEW_036 candidate 3, D3.1 to D3.4, C3.1, C3.2; AL22), MOD-03's
+edge gone from `modularity-layering.yaml` (VER-61), VER-62's mesh hash unmoved or the move ruled and re-pinned (G10, I4);
+a supplied outline beside a structure run with the charge deposited from its protonation, stages 2 to 4 skipped (AP1);
+a continuum model built alone over a molecular model chosen in its pane and 0.15 M NaCl (AP2); and every part of a
+generated mesh typed, each size a base the size scale multiplies (AP3, AP4). Then, after the prototype round on 2WCD
+(AJ8), Protein geometry, Contour (on any profile, extracted or supplied, REV-39; its check off the interface's thread,
+asking before an edit is discarded, as T1 carries REV-56; its saved edit a continuum model holding the outline), Region,
+and Mesh with its quality selection, each drawn in an (r, z) view; a geometry and its parameters linked both ways
+(FR-33). Q10 to Q12 and Q14 to Q23 move here; VER-55 as restated. Tag `v0.6.0-alpha.17`.
+
+**Delivered 12 November 2026** ([the plan](wp5.17-the-continuum-suite.md)); merged 13 November 2026 as
+`v0.6.0-alpha.17`. REV-170 and REV-39 fixed, REV-56's
+workbench part done, REV-242's keying measured and cached. Stage 5's two kinds of region share `RegionOutlines` and the
+`Stage5Region` protocol, the cylinder is `CylinderPore` alone and the wall is sized in `mesh/`, MOD-03's edge gone and
+VER-62 unmoved (VER-61). A supplied outline runs beside its structure's charge (AP1; VER-55), a continuum model builds
+alone over a chosen molecular model at 0.15 M NaCl (AP2; FR-39), and the generated mesh's parts take typed sizes (AP3,
+AP4; VER-53). After the prototype round on 2WCD the author merged Contour into *Pore geometry*, had Region draw and pick
+each domain, and chose a tree of the mesh's parts (WB-41); the three tools stand at `/continuum/<tool>` beside one (r, z)
+canvas, a geometry and its parameters linked both ways (FR-33; VER-78).
+
+### WP5.18 — The Physics suite (FR-31; WB-34, WB-35; §8.2.34 AJ2 to AJ5; §8.2.41 AQ1, AQ2)
+
+After the prototype round on example 01's NaCl case, NaCl being the only electrolyte a shipped correction file covers (AJ8): Equations, the registered model with its switches, element orders and
+stabilisation, and the composer's place with its later-phase banner (AJ4; FR-40 stays its phase), a change of model
+setting the switches it honours and removing the values it refuses, with a note and *Undo* (AQ2); Electrolyte, the ions,
+the concentration, the parameter set and the corrections; Conditions, each boundary role's condition, the bias, the
+ground, the walls and the solid permittivities, a role picked in the (r, z) view or in the list; Exposed values, the
+physics model's declaration (AJ5). Each tool shows its model inside a study picked in the pane, the study's own physics
+values left out, or over the project's continuum model where it holds no study (AQ1). The guided route's salt step
+lands here. Tag `v0.6.0-alpha.18`.
+
+**Delivered 16 November 2026** ([the plan](wp5.18-the-physics-suite.md)). Each registered model states its terms in
+LaTeX, from the PHY or NUM clause each comes from, and `role_conditions` each boundary's conditions with either side
+grounded (VER-56; PHY-09). `Project.physics_case` shows a physics model inside a study (AQ1), `choose_physics` sets a
+model's switches with an undo (AQ2), and `set_exposed` names and ranges an entry (FR-39). After the prototype round on
+example 01 ([the record](../../design/reviews/2026-11-16-physics.md); AJ8) the four tools stand at `/physics/<tool>`:
+Equations drawn by KaTeX (vendored, its digests checked as Mol*'s; CON-09), Electrolyte's two graphs with the driver
+on a square-root axis, Conditions over stage 5's region with the mesh on request, and Exposed values (FR-31; VER-78).
+The library's refusals follow ASD-STE100 (FR-35's NOTE), and the status colours gain blue for information (WB-42).
+
+### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215, REV-247; AG7; AP5; §8.2.42 AR3 to AR5)
+
+The prototype round on 2WCD settles the charge screen's design with its function (AJ8; REV-215). Overview of the three
+models; Study setup with each model's exposed values first and *More values* (AJ5) over the overrides of WP5.05, as a
+form and as a graph, and *New study*, pairing three of the project's models (AR4); Sweep, with variables and the
+forecast's warning of WP5.07; Charge on the mesh, a residue and the charge map linked both ways, with its colour bar,
+axes and dark map (FR-33; REV-205, REV-209); Runs, a run's convergence unfolded in the queue, its record written into
+the project (REV-206), and the Compute settings, solves at once and threads per solve, each run's record stating its
+thread count, which keys no result (AN1, AN4; AR3). `upto` on reproduce (REV-41). A supplied outline's exclusion shell
+takes the outline's own spacing (AP5); the charge check's reach against a shifted outline is measured and stated
+(REV-247; AR5). The 200 ms redraw is timed headless by `redraw.cjs`; its GPU measurement and the front end's fix move to
+WP5.24, the performance package (AR7; criterion 6; REV-258). Q24 to Q26 and Q28
+to Q36 move here; VER-44 and VER-60 as restated. Tag `v0.6.0-alpha.19`.
+
+**Delivered 18 November 2026** ([the plan](wp5.19-the-study-suite.md)); merged 18 November 2026 as
+`v0.6.0-alpha.19`. `Project.new_study`, `set_study_value`,
+`set_variable` and `study_values` set a study, its exposed values first (FR-39 (a); AG12). A sweep pairs a bias set
+through a variable by its resolved value (VER-36). A run states its thread count, which keys nothing (FR-25; AR3).
+`reproduce --upto` stops at a stage (QR-08; VER-35). A supplied outline shells at its own spacing, held between
+0.025 and 0.05 nm (VER-59; AP5, AR6, D12). The charge check's reach against a shifted outline is measured (AP1; AR5).
+After the round on 2WCD ([the record](../../design/reviews/2026-11-18-study.md); WB-43 to WB-48), the five Study tools
+stand at `/study/<tool>`: Overview, Study setup with its graph and *New study*, Sweep in two modes, Charge on the mesh
+linking a residue and the map both ways (FR-33; VER-60), and Runs drawing a run's convergence (VER-44). Every Build
+suite has Exposed values (VER-78).
+
+### WP5.20 — The meso suite (FR-31, FR-33; WB-43, WB-44; REV-259; REV-244's suite; REV-240's overlay; §8.2.42 AR8; §8.2.43 AS1, AS3; §8.2.44 AT1 to AT4)
+
+A suite that builds, between Molecular and Continuum: the molecule reduced to the axisymmetric model, named at its round
+(AS3). Library steps first, as the shell computes nothing (VER-60): a point on the charge map names each residue once,
+its chains' copies on a C<sub>n</sub> structure together (REV-259's physics point); the atoms an edit moves across
+the outline, each way, read in stage 1's frame and reduced to (r, z) (AT1); and the deposit's charge on a 3D grid with
+its mean about the axis, smoothed to 0.4 nm for the picture, for REV-240's overlay (AT2, AT4). Then, after the prototype round on 2WCD (AJ8), which takes
+REV-259's questions, the suite's name and REV-244's radius against z and vertex list: *Density*, stages 2 and 3, the
+grid, the kernel and the reduced map; *Outline*, stage 4's outline, created and edited, its saved edit a continuum
+model holding the outline (AP1), the two from Continuum › Pore geometry; *Charge map*, stage 7's charge on the mesh and
+its conservation checks, from Study › Charge on the mesh, with REV-240's overlay drafted for the round and built if
+kept: the charge in 3D and its mean about the axis, each as isosurfaces over the structure (AT2). Each pairs Mol*, side on and cut at the axis with *One
+subunit* (WB-44), with the (r, z) view, linked both ways: a residue finds its patch, a point its residue, an edited
+outline the atoms it moves (FR-33; AT1). Its values stay the continuum model's `geometry` section over a molecular model picked
+in the pane; it adds no kind of model (AR8). Continuum keeps Region, Mesh and Exposed values; Study keeps Overview, Study
+setup, Sweep and Runs. FR-31's suites, §2's v0.6 row, §8.1's Phase 5 deliverable, WB-34 and WB-41 are amended
+(AR8). What names the tools' old places follows them: VER-78's suites in (a) and `/study/charge` in (m), the
+capability list's rows for Q14 to Q20 and Q24 to Q30, and `redraw.cjs`'s address. Q14 to Q20 and Q28 to Q30 move
+here; VER-60 as restated. Tag `v0.6.0-alpha.20`.
+
+**Delivered 19 November 2026** ([the plan](wp5.20-the-meso-suite.md)); merged 19 November 2026. Meso, the second Build suite, holds Density,
+Outline and Charge map at `/meso/<tool>`, each Mol* side on and cut at the axis beside the (r, z) view (FR-31; WB-43,
+WB-44; VER-78). A point of the charge map names a residue once, its copies together, and a point of the density the
+residues whose atoms reach it first (`ResidueCharges`, `DensityAtoms`; VER-60; AT1). An edited outline lists and marks
+the residues it moves into the water and into the protein (`ResidueAtoms.moved`; AT1). The charge map is the continuum
+model's own walk to stage 7 (`Project.charge_case`; FR-27). The charge in 3D and its mean about the axis are drawn over
+the molecule, smoothed to 0.4 nm (`charge_volumes`; AT2, AT4). After the round on 2WCD ([the
+record](../../design/reviews/2026-11-19-meso.md); WB-49) the map's scale opens on the 99th percentile of the charge's
+size, through a dark middle on the dark theme, and each tool sets how Mol* draws the structure.
+
+### WP5.21 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30, REV-253, REV-260; AG6; AN5; §8.2.45 AU1 to AU3)
+
+Library steps first: the difference of two runs' fields over the overlap of their fluid domains, in `post/`, masked where
+either lacks the point (AG6); a comparison as a project item; a run whose solution the store's clean-up removed,
+rebuilt on request and checked against its record (AN5); each rung's reporting and tolerance kept with its Newton
+history, so a recorded run's convergence is drawn in Runs (REV-260). Every plot moves to uPlot, vendored, its axes set
+by the user (AU1; REV-253), and any Matplotlib colour map is offered per map (AU2). Then, after the prototype round on
+2WCD (AJ8), the results explorer and its tiles: a field drawn as a map with its axial cut and probes, or on its mesh by
+`webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities. Probes and cuts are
+linked to their field, and a run to its result (FR-33). Comparison shows two runs side by side on one scale, as maps or
+switched to the mesh, or as their difference (AU3). Q37 to Q41 move here. Tag `v0.6.0-alpha.21`.
+
+**Delivered 20 November 2026** ([the plan](wp5.21-the-analysis-suite.md)); merged 20 November 2026. Analysis, the sixth suite, holds the results
+explorer and Comparison at `/analysis/<tool>` (FR-31; VER-78 (a), (o)). The explorer draws a run's field as a map on the
+pore's close-up, its scale on the 99th percentile, with a cut and probes linked to it, an outline, or in 3D on its mesh
+on the map's range, framed on the pore; its I–V and recorded quantities (Q37 to Q41; FR-33; VER-44). Comparisons are
+project items, drawn as their difference, side by side, mirrored or in 3D (FR-32; AG6; AU3). Every plot is a uPlot
+chart whose axes the user sets, any Matplotlib map per map (AU1, AU2; REV-253). A cleaned run is solved again and
+checked (AN5); a solve records its fields' norms, which a reproduction compares (QR-08; REV-264). After the round on
+2WCD ([the record](../../design/reviews/2026-11-20-analysis.md); WB-50 to WB-52) a tree of results, with the chart
+library chosen again, is WP5.22 (REV-268), and the wording rule the author took is applied to sixteen strings, WP5.26
+sweeping the rest (REV-269).

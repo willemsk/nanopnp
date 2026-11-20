@@ -1,7 +1,7 @@
 ---
 type: Ruling Record
 title: "8.2.43 Phase 5 amended: the meso suite and the performance package placed, agreed 18 November 2026"
-description: "Records the author's rulings at the fifth /np-plan amend 5, after WP5.19's merge: the bridge suite that AR8 ruled is the next package, WP5.20, before the Analysis suite; the performance package that AR7 ruled is WP5.24, after the Analysis suite and before the guided route; the suite's name is chosen at its own design round; and the planned packages are renumbered WP5.21 to WP5.24, every mention edited, records included."
+description: "Records the author's rulings at the fifth /np-plan amend 5, after WP5.19's merge: the bridge suite that AR8 ruled is the next package, WP5.20, before the Analysis suite; the performance package that AR7 ruled is WP5.22, after the Analysis suite and before the guided route; the suite's name is chosen at its own design round; and the planned packages are renumbered WP5.21 to WP5.24, every mention edited, records included."
 ---
 
 #### 8.2.43 Phase 5 amended: the meso suite and the performance package placed, agreed 18 November 2026
