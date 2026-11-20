@@ -1364,9 +1364,15 @@ class _StudyPane(_Pane[StudyModel]):
                         f"flat dense no-caps data-control=runs-result-{index} "
                         f'aria-label="Open the result of run {directory.name}"'
                     )
+                else:
+                    # A run that stopped short has no result, nor a convergence below.
+                    ui.label("\u2014")
             for text in cells[2:]:
                 TextElement(tag="td", text=str(text))
             with ui.element("td"):
+                if "solve" not in stages:
+                    ui.label("\u2014")
+                    return
                 # A recorded run is picked as a queued one is: its convergence across the view.
                 ui.button(
                     directory.name, on_click=lambda _, d=directory: self.pick_recorded(d)

@@ -36,7 +36,6 @@ from nanopnp.gui.web.analysis import (
     pore_window,
     quantities_of,
     scene_field,
-    size_range,
 )
 from nanopnp.gui.web.chart_view import ChartView
 from nanopnp.gui.web.frame import Views, heading
@@ -50,6 +49,7 @@ from nanopnp.post.fields import (
     FIELD_ALIASES,
     field_at,
     field_unit,
+    joint_size_range,
     quantity_name,
 )
 
@@ -700,7 +700,7 @@ class _AnalysisPage:
             scene = scene_field(self.quantity)
             ranged = shown.scale if _whole_field(self.quantity) else None
             reverse = _reversed(ranged, charge_colours(self.shell))
-            self.scene_caption(ranged is not None, reverse)
+            self.scene_caption("the map's colour range" if ranged is not None else None, reverse)
             self.scene_frame(choice.directory, scene, ranged, "analysis-scene", window, reverse)
             return
         query = urlencode(
@@ -730,16 +730,15 @@ class _AnalysisPage:
             f"nano.map('analysis-map', {json.dumps(drawing.json())})", timeout=60
         )
 
-    def scene_caption(self, ranged: bool, reverse: bool, sized: bool = False) -> None:
-        """Say what the 3D view's colours are: the renderer's map, on the map's range and signs.
+    def scene_caption(self, ranged: str | None, reverse: bool) -> None:
+        """Say what the 3D view's colours are: the renderer's map, on which range, which signs.
 
-        ``sized`` says the range is the size of the vector the view draws, over both runs.
+        ``ranged`` names the range the colours run on, as "the map's colour range"; None for the
+        renderer's own.
         """
         parts = ["The 3D view draws in the renderer's own colour map"]
-        if ranged and sized:
-            parts.append(" on one range of the velocity's size over both runs")
-        elif ranged:
-            parts.append(" on the map's colour range")
+        if ranged:
+            parts.append(f" on {ranged}")
         if reverse:
             parts.append(", positive blue as on the map")
         ui.label("".join(parts) + ".").classes("field-hint")
@@ -837,22 +836,28 @@ class _AnalysisPage:
         # A run without fields is read, or says why it cannot be: a render that failed is not
         # started again, and a run cleaned from the store or never solved has none to read.
         lacking: list[str] = []
+        removed: list[str] = []
         for lead, path, fields in zip(("first", "second"), runs, held, strict=True):
             if fields is not None:
                 continue
             state, key = self.model.state(path), (path, "fields")
             if state == "removed":
-                lacking.append(
-                    f"The store no longer holds the {lead} run's fields: open it in the results "
-                    "explorer and solve it again."
-                )
+                removed.append(lead)
             elif state == "unsolved":
-                lacking.append(f"The {lead} run did not reach its solve: it has no fields.")
+                lacking.append(f"The {lead} run stopped before the solve. It has no fields.")
             elif key in _FAILED:
-                lacking.append(f"The {lead} run's fields did not read: {_FAILED[key]}")
+                lacking.append(f"Cannot read the fields of the {lead} run: {_FAILED[key]}")
             else:
                 self.wait(key, FieldsRequest(run=str(path)))
-        if lacking:
+        if removed:
+            which, again = (
+                ("the two runs", "them") if len(removed) == 2 else (f"the {removed[0]} run", "it")
+            )
+            lacking.append(
+                f"The store no longer holds the fields of {which}. Solve {again} again in "
+            )
+            self.say(" ".join(lacking), ("Analysis \u203a Results explorer", "/analysis/explorer"))
+        elif lacking:
             self.say(" ".join(lacking))
         elif any(fields is None for fields in held):
             self.say("Reading the two runs' fields…")
@@ -964,14 +969,24 @@ class _AnalysisPage:
             # component, whose vector is drawn whole and coloured by its size, that size's.
             sized = not _whole_field(compared.quantity)
             ranged = (
-                (size_range(held[0], held[1], compared.quantity) if sized else maps["first"].scale)
+                (
+                    joint_size_range(held[0], held[1], compared.quantity)
+                    if sized
+                    else maps["first"].scale
+                )
                 if maps is not None
                 else None
             )
         except (KeyError, ValueError) as error:
             # A file edited by hand can name a quantity one run lacks, or runs whose fluids
             # do not overlap.
-            self.say(f"Comparison {name} does not draw: {error}")
+            remedy = (
+                "Choose a quantity both runs hold."
+                if isinstance(error, KeyError)
+                else "Choose two runs whose fluids overlap."
+            )
+            message = error.args[0] if error.args else str(error)
+            self.say(f"Comparison {name} does not draw: {message}. {remedy}")
             return
         if compared.view == "mesh":
             scene = scene_field(compared.quantity)
@@ -979,8 +994,15 @@ class _AnalysisPage:
             for index, path in enumerate(runs):
                 with self.tile(self.run_name(path), f"analysis-pair-{index}"):
                     self.recorded_line(path)
-                    if index == 0:
-                        self.scene_caption(ranged is not None, reverse, sized)
+                    # Each tile says its range: no map is on screen to name it.
+                    self.scene_caption(
+                        None
+                        if ranged is None
+                        else "one range of the velocity's size over both runs"
+                        if sized
+                        else "the side-by-side maps' range, one for both runs",
+                        reverse,
+                    )
                     if ready:
                         self.scene_frame(
                             path, scene, ranged, f"analysis-scene-{index}", window, reverse

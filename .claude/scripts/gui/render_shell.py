@@ -68,7 +68,7 @@ from nanopnp.gui.render import (
     render_fields,
 )
 from nanopnp.gui.web import server, theme
-from nanopnp.gui.web.analysis import AnalysisModel, quantities_of, scene_field, size_range
+from nanopnp.gui.web.analysis import AnalysisModel, quantities_of, scene_field
 from nanopnp.gui.web.analysis_tools import comparison_maps, map_of
 from nanopnp.gui.web.runs import write_sweep
 from nanopnp.gui.web.screens import SCREENS
@@ -77,7 +77,7 @@ from nanopnp.gui.web.states import STATES
 from nanopnp.io.project import STORE_FOLDER
 from nanopnp.io.store import Store
 from nanopnp.pipeline.run import RunResult
-from nanopnp.post.fields import FIELD_ALIASES
+from nanopnp.post.fields import FIELD_ALIASES, joint_size_range
 from nanopnp.sweep.collect import collect
 from nanopnp.sweep.document import Axis, load_sweep
 from nanopnp.sweep.plan import build_plan, write_plan
@@ -856,7 +856,7 @@ def draw_analysis(project: Project, first: Path, second: Path, runs: list[Path])
     pair = (
         maps["first"].scale
         if _scalar(compared.quantity)
-        else size_range(held[0], held[1], compared.quantity)
+        else joint_size_range(held[0], held[1], compared.quantity)
     )
     for run in (first, second):
         request = RenderRequest(

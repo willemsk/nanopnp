@@ -54,7 +54,6 @@ __all__ = [
     "pore_window",
     "quantities_of",
     "scene_field",
-    "size_range",
 ]
 
 MAP_PERCENTILE = 99.0
@@ -296,32 +295,6 @@ def quantities_of(fields: SolutionFields) -> tuple[str, ...]:
 def scene_field(quantity: str) -> str:
     """Return the attribute a 3D scene draws for a quantity: a component's vector whole."""
     return FIELD_ALIASES.get(quantity, (quantity, None))[0]
-
-
-def size_range(first: SolutionFields, second: SolutionFields, quantity: str) -> tuple[float, float]:
-    """Return the lowest and highest size of a component's vector over both runs' nodes.
-
-    The 3D view draws a component's vector whole and colours it by its size, so a pair's one
-    range is the size's, not the component's.
-
-    Raises
-    ------
-    KeyError
-        If either run holds no vector of that name.
-    """
-    import numpy as np
-
-    key = scene_field(quantity)
-    sizes = []
-    for fields in (first, second):
-        held = next(
-            (values[key] for _, _, values in (fields.whole, fields.fluid) if key in values), None
-        )
-        if held is None:
-            raise KeyError(f"no vector {key!r} for {quantity!r} in both runs")
-        sizes.append(np.linalg.norm(np.asarray(held, dtype=np.float64), axis=1))
-    found = np.concatenate(sizes)
-    return float(np.nanmin(found)), float(np.nanmax(found))
 
 
 def pore_window(*fields: SolutionFields) -> Window:

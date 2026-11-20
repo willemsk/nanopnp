@@ -3943,6 +3943,18 @@ place, the quantities shown and their order, and the charts' library (the review
   empty; Runs' rung table shows four of its seven columns in the pane, scrolling for the rest, and its notes repeat
   the columns; a current under 1 nA reads "0.04799 nA", not 47.99 pA (WB-21); "The map and the cut span" stays in
   3D; *Switch* in the glossary is a setting away from its default.
+- **The ship's review (round 2's render, `ship-74fca57`).**
+  - Runs' table of recorded runs clips its *Convergence* column at the tile's edge, as the rung table does.
+  - The Quantities tile drops trailing zeros at four figures: "0.048 nA" stands beside "0.04799 nA", so two values
+    of one precision look unequal.
+  - A study with one bias draws its I–V point on an x axis that uPlot widens to 50–51 mV and ticks between. The
+    note says to sweep the bias; the first review's 15 asked for no invented ticks.
+  - The 3D bar's numerals on the dark grey are about 3:1 if black, unmeasured inside the renderer's frame.
+  - *Difference* loses the pore at zero, its commonest value. The scale's middle colour stands 1.36:1 against the
+    canvas where no fluid is (1.20:1 dark), under 1.4.11's 3:1. Hatch the region without fluid, or open
+    *Difference* with *Outline* on; WB-50 did not rule the outline's default.
+  - Overview's case listing colours its keys with a highlighter's green, not a token's, which reads as `--ok`. Rung
+    notes write "3.13e-13" and "1e-06", not 3.13 × 10⁻¹³ (WB-21).
 - **Doubts to check.** The I–V joins every run of a study, which may differ in more than the bias; Electrolyte's
   viscosity runs flat at 2.0, the plot's top, a clamp or a clip; the uncharged state shows a failed queue entry
   beside "no run yet"; figure export (FR-28) has no later-phase banner.
@@ -3966,6 +3978,14 @@ Plotly (MIT) and ECharts (Apache-2.0), so either adds no dependency, and Plotly 
 The review's 3 (the tiles' layout), 16 (the quantities' order and words), 20 and 21 (the legend's "—", the shown run's
 dot) and the critique's 5 and 15 are its.
 
+The critique of round 2's render, at WP5.21's ship, adds five points for the round:
+- frame a map on its data, r from 0 to the pore's reach, at equal aspect: the explorer's and *Side by side*'s r runs
+  from −17 to 26 nm for data from 0 to 9 nm, and *Difference*'s from −25 to 35 nm;
+- put the key and the note in the column that frees;
+- draw *Side by side* as two columns of one tile: today the second run starts below the fold;
+- take *Mirrored* as the model for every two-run view;
+- name a run by sight, such as "+50 mV, ASP21N", not by eight hex digits.
+
 **Open**, ruled by the author on 20 November 2026: `/np-gui grill` on the tree with the author, then `/np-plan amend 5`
 places its package after WP5.21 and before WP5.22. WP5.21 ships its tiles and uPlot as they are.
 
@@ -3983,6 +4003,13 @@ select named by its visible *Structure* (WB-49; WCAG 2.5.3), *Azimuthal mean*, a
 
 **Open**, ruled by the author on 20 November 2026: WP5.23 sweeps every other screen's text by the rule, with a check
 that flags the patterns.
+
+The ship's review of round 2's render found one of the sixteen false as it stands, for the sweep to put to the
+author. Runs' "Nothing is queued. Click Run study to start a run." counts this study's entries alone, while the
+status bar counts the whole queue. With another study's run queued, the two disagree; "No run of this study is
+queued" would hold. Convergence's empty line repeats the sentence above a list of recorded runs, where "Pick a
+recorded run to see its convergence" would say what to do. Units are written three ways: "Colours from (V)", "Bias,
+V", and a bare "M" after a field in Setup.
 
 ### REV-270: A map reads its field linearly on each cell split in four
 
