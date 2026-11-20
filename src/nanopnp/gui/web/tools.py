@@ -1054,7 +1054,7 @@ class _Pane(Generic[ModelT]):
             if self.model is None:
                 ui.label(self.subject()).classes("later")
                 return
-            heading("As a study lists it", 2)
+            heading("Preview in a study", 2)
             listed = self.exposed_entries()
             if not listed:
                 ui.label(self.none_exposed()).classes("later")

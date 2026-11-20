@@ -60,7 +60,7 @@ NEAR_LISTED = 5
 """The residues a point of the density names, the nearest first."""
 MOVED_LISTED = 12
 """The residues each side of an edit lists, the most atoms first."""
-OVERLAY_TITLES = {"full": "Charge in 3D", "revolved": "Its mean about the axis"}
+OVERLAY_TITLES = {"full": "Charge in 3D", "revolved": "Azimuthal mean"}
 """The overlay's two volumes, as its pane names them."""
 
 # The deployed charge's render, one per run record, kept for the server's life: a window that
@@ -154,8 +154,8 @@ class _MesoPane(_ContinuumPane):
             said = SUPPLIED.get(self.supplied or "", "reads no structure")
             where = "here" if self.tool.id == "outline" else "in Outline"
             ui.label(
-                f"This model {said}: stages 2 to 4 do not run, so their values are not read. "
-                f"Its outline is drawn and edited {where}."
+                f"This model {said}, so stages 2 to 4 do not run. "
+                f"Draw and edit the outline {where}."
             )
         elif molecular is not None:
             ui.label(f"Built over molecular model {molecular}, outside any study.")
@@ -209,7 +209,7 @@ class _MesoPane(_ContinuumPane):
                 on_change=lambda e: self.represent(str(e.value)),
             ).props(
                 "dense outlined options-dense data-control=view-representation "
-                'aria-label="How the structure is drawn"'
+                'aria-label="Representation"'
             ).set_enabled(bool(self.scene_key()))
 
     async def represent(self, representation: str) -> None:
@@ -600,7 +600,7 @@ class _MesoPane(_ContinuumPane):
                     {"lattice": "Lattice map", "deployed": "Deployed on the mesh"},
                     value=self.layer,
                     on_change=lambda e: self.choose_layer(str(e.value)),
-                ).props('dense no-caps data-control=charge-layer aria-label="What the map draws"')
+                ).props('dense no-caps data-control=charge-layer aria-label="Charge layer"')
                 toggle.set_enabled(model.artefacts().get("charge") is not None)
             charges = model.charges()
             if charges is not None:

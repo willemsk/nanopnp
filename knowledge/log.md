@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-20
+* **Record**: `webgui.js` 0.2.39 takes its opening camera from a scene's `gui_settings.camera` and its background from its container's text colour, so a host page frames a region and follows a dark theme without modifying the renderer (WP5.21; WB-50). ([GUI and packaging](07-software-stack/05-gui-and-packaging.md))
+
 ## 2026-11-17
 * **Record**: 2WCD's outline supplied beside its structure passes the charge check shifted up to 4 nm toward trans (solid share 0.979 to 0.541) and is refused by the deposit from 5 nm (0.479); toward cis stage 5's junction refuses any shift over 0.39 nm (WP5.19; REV-247; §8.2.42 AR5). ([The charge check's reach against a shifted outline of 2WCD](04-clya-geometry-and-charge/16-the-charge-checks-reach-against-a-shifted-outline.md))
 

@@ -141,7 +141,7 @@ def queue_rebuild(queue: Queue, project: Project, run: Path, *, threads: int = 1
         threads=threads,
         rebuild=str(run),
     )
-    entry = _queued(queue, f"{study} rebuild {run.name[:12]}", request, study=study)
+    entry = _queued(queue, f"{study}: solve {run.name[:12]} again", request, study=study)
     queue.pump()
     return entry
 

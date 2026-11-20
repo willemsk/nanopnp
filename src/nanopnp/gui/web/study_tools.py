@@ -453,7 +453,7 @@ class _StudyPane(_Pane[StudyModel]):
                         f"flat dense no-caps data-control=overview-open-{kind} "
                         f'aria-label="Open {kind} model {name}"'
                     )
-        heading("The physics it runs", 2)
+        heading("Physics model", 2)
         case = model.case()
         if case is None:
             ui.label("The study forms no case, so its physics is not shown.").classes("later")
@@ -527,7 +527,7 @@ class _StudyPane(_Pane[StudyModel]):
             roles = role_conditions(case_model(resolved), resolved.ground)
         except (KeyError, ValueError):
             return
-        heading("Each boundary's conditions", 3)
+        heading("Boundary conditions", 3)
         # As Physics, Conditions writes them: each field's condition as mathematics.
         with ui.column().classes("gap-1").props("data-control=overview-roles"):
             for role, texts in roles.items():
@@ -694,7 +694,7 @@ class _StudyPane(_Pane[StudyModel]):
             typed = (
                 ui.input(placeholder="its value")
                 .classes("col")
-                .props('dense outlined data-control=study-more-value aria-label="Its value"')
+                .props('dense outlined data-control=study-more-value aria-label="Value"')
             )
             ui.button(
                 icon="sym_o_add",
@@ -735,8 +735,7 @@ class _StudyPane(_Pane[StudyModel]):
                 ui.input(placeholder="value or expression")
                 .classes("col")
                 .props(
-                    "dense outlined data-control=variable-value "
-                    'aria-label="Its value or expression"'
+                    'dense outlined data-control=variable-value aria-label="Value or expression"'
                 )
             )
             ui.button(
@@ -919,9 +918,9 @@ class _StudyPane(_Pane[StudyModel]):
                 dict(SWEEP_MODES),
                 value=self.sweep_mode,
                 on_change=lambda e: self.set_mode(cast("SweepMode", e.value)),
-            ).props(
-                'dense no-caps data-control=sweep-mode aria-label="How the rows make points"'
-            ).classes("sweep-mode")
+            ).props('dense no-caps data-control=sweep-mode aria-label="Combine rows as"').classes(
+                "sweep-mode"
+            )
         hint = (
             "Each combination of the rows' values is a point."
             if self.sweep_mode == "every"
@@ -958,16 +957,16 @@ class _StudyPane(_Pane[StudyModel]):
     def axis_adder(self, offered: dict[str, str]) -> None:
         with ui.column().classes("study-adder w-full gap-1"):
             ui.label("Add axis").classes("field-label")
-            adding = ui.select(offered, value=None, label="What to vary").classes("w-full")
+            adding = ui.select(offered, value=None, label="Variable").classes("w-full")
             adding.props(
-                'dense outlined options-dense data-control=sweep-add aria-label="What to vary"'
+                'dense outlined options-dense data-control=sweep-add aria-label="Variable"'
             )
             row = ui.row().classes("items-center no-wrap w-full")
         with row:
             values = (
-                ui.input(label="Its values, by commas")
+                ui.input(label="Values (comma-separated)")
                 .classes("col")
-                .props('dense outlined data-control=sweep-add-values aria-label="Its values"')
+                .props('dense outlined data-control=sweep-add-values aria-label="Values"')
             )
             ui.button(
                 icon="sym_o_add",
@@ -1167,8 +1166,8 @@ class _StudyPane(_Pane[StudyModel]):
                         )
             if not entries:
                 ui.label(
-                    "No run of the study is queued. Run study starts one, and its convergence "
-                    "is drawn in the view."
+                    "Nothing is queued. Click Run study to start a run; its convergence is "
+                    "drawn in the view."
                 ).classes("later")
         recorded = self.recorded()
         if recorded is not None:
@@ -1189,23 +1188,30 @@ class _StudyPane(_Pane[StudyModel]):
         self.rungs_box.clear()
         if convergence is None:
             return
-        # A rung to a block: its number and name, then each column's value, all in the pane's width.
-        facts = [
-            column for column in RUNG_COLUMNS if column["field"] not in ("number", "rung", "note")
-        ]
+        # A rung to a row, its note on a row of its own under it; the table scrolls in the pane.
+        columns = [column for column in RUNG_COLUMNS if column["field"] != "note"]
         with self.rungs_box:
-            heading("Its rungs", 2)
-            with ui.element("div").classes("run-rungs").props("data-control=run-rungs role=list"):
-                for row in rung_rows(convergence):
-                    with ui.element("div").classes("rung").props("role=listitem"):
-                        ui.label(f"{row['number']}. {row['rung']}").classes("rung-name")
-                        ui.label(
-                            " \u00b7 ".join(
-                                f"{column['label']} {row[column['field']]}" for column in facts
-                            )
-                        ).classes("rung-facts")
+            heading("Rungs", 2)
+            with (
+                ui.element("div").classes("table-scroll rungs-scroll"),
+                ui.element("table").classes("run-rungs").props("data-control=run-rungs"),
+            ):
+                with ui.element("thead"), ui.element("tr"):
+                    for column in columns:
+                        with ui.element("th").props(f"scope=col align={column['align']}"):
+                            ui.label(column["label"])
+                with ui.element("tbody"):
+                    for row in rung_rows(convergence):
+                        with ui.element("tr"):
+                            for column in columns:
+                                with ui.element("td").classes(f"align-{column['align']}"):
+                                    ui.label(str(row[column["field"]]))
                         if row["note"]:
-                            ui.label(row["note"]).classes("field-hint")
+                            with (
+                                ui.element("tr").classes("rung-note"),
+                                ui.element("td").props(f"colspan={len(columns)}"),
+                            ):
+                                ui.label(row["note"]).classes("field-hint")
 
     def pick_run(self, entry: Entry) -> None:
         self.shell.run_shown = entry.number
@@ -1288,7 +1294,7 @@ class _StudyPane(_Pane[StudyModel]):
         self.run_summary = ui.label("").classes("run-summary").props("data-control=runs-summary")
         self.runs_chart = ChartView("runs-plot", "runs-plot", classes="run-plot runs-plot")
         if self.picked_run() is None:
-            self.run_summary.text = "No run of the study is in the queue. Run study starts one."
+            self.run_summary.text = "Nothing is queued. Click Run study to start a run."
             # No frame stands empty: the plot's host shows once a run is picked.
             self.runs_chart.element.classes("runs-plot-none")
         self.run_seen = None

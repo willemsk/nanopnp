@@ -80,9 +80,14 @@ the Qt shell (§8.2.17 S13, S17).
   form offers" replaces "every option the editor offers". "The server's self-test imports NGSolve,
   Netgen and the shipped renderer in one process, failing naming the payload that does not load"
   replaces the packaging probe's clause, and the row cites IF-09, QR-11, FR-27, CON-09 and RSK-13.
-- **VER-44**, *Live convergence monitoring and field visualisation*: as the row above, the scene
-  served to the browser as a file rather than a data URL, and with "the server's self-test fails when
-  the shipped renderer does not reach its document" in place of the packaging probe's selftest.
+- **VER-44**, *Live convergence monitoring and field visualisation*: as the row above, with four changes. The
+  scene is served to the browser as a file, which its host page fetches from the server's origin, rather than a
+  data URL; the page opens the camera on the region it is given and takes the workbench's theme. A recorded
+  run's convergence is replayed from its stored history, each rung carrying its reporting and its tolerance, and
+  gives the live run's rung rows and bands; a rung recorded without its reporting claims neither silence. A sample
+  a logarithmic axis cannot place is omitted and counted under the chart on whichever axis the user sets
+  logarithmic. "The server's self-test fails when the shipped renderer does not reach its document" replaces the
+  packaging probe's selftest.
 - **VER-55**, *Geometry pipeline surfaced in the workbench*: as the row above, for the Continuum
   suite's tools, with four changes. The geometry view-models import no front-end framework, NGSolve,
   Netgen, MDAnalysis, scikit-image, Shapely or Gmsh in a fresh process. The contour editor's

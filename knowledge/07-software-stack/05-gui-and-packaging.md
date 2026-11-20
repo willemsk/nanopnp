@@ -417,6 +417,20 @@ behaves the other way: an unlayered rule beats every layered one, so the frame's
 
 ---
 
+### webgui 0.2.39 opens its camera and draws its background from what its page gives it **[verified][^wp521-plan]** {#webgui-0239-opens-its-camera-and-draws-its-background-from-what-its-page-gives-it}
+
+Read in the shipped `webgui.js` 0.2.39 and seen in WP5.21's render. A scene's `gui_settings` is applied when the scene
+initialises, and its `camera` entry goes to the orbit controls' `loadSettings`: `mat` (a matrix's 16 `elements`,
+column-major, as three.js stores it) and `center` (`x`, `y`, `z`) replace the opening view, which is otherwise
+`scale(1/mesh_radius) · translate(−mesh_center)`. Mesh coordinates are the mesh's own, nm for the pipeline's
+meshes, so a host page that writes `mat` as `scale(k) · translate(−c)`, with `c` a region's centre and `k` twice the
+inverse of its diagonal, opens on that region without modifying the renderer. The clear colour follows the CSS
+`color` of the scene's container: where the text colour's red channel is over half, the renderer draws on a grey of
+0.1 in linear light (about `#595959` on screen) and sets its parent's background to match, else on white; the
+colour bar's labels are text nodes that inherit the same colour. A page on a dark theme therefore sets a light
+`color` on its body before the scene initialises.
+
+[^wp521-plan]: `docs/plans/phase-5/wp5.21-the-analysis-suite.md` (`webgui.js` 0.2.39's `setGuiSettings`, `loadSettings` and `getBackgroundColor`; `gui/render.py`'s host page).
 [^wp14-plan]: `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md` (PySide6 GL system-library requirement and Playwright Chromium GL shim).
 [^wp15-plan]: `docs/plans/phase-1/wp15-live-convergence-and-viewer.md` (`ngsolve_webgui_js` 0.2.39 npm metadata, `src/scene.ts`, and PyInstaller OCCT/OpenBLAS bundling).
 [^cr002]: `docs/code_reviews/CODE_REVIEW_002.md` (28 September 2026), F-1's refutation: SIGTERM timed on a child busy in `GenerateMesh`.

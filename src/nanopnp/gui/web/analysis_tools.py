@@ -29,6 +29,7 @@ from nanopnp.gui.web.analysis import (
     field_map,
     iv_chart,
     map_drawing,
+    mirrored_map,
     pair_maps,
     pore_window,
     quantities_of,
@@ -41,6 +42,7 @@ from nanopnp.gui.web.screens import SUITES, Tool
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import charge_colours
 from nanopnp.io.project import COMPARISON_VIEWS, ComparisonFile
+from nanopnp.plot.data import fluid_outline_nm
 from nanopnp.post.fields import field_at, field_unit, joint_range, quantity_name
 
 __all__ = ["analysis_page", "comparison_maps", "map_of"]
@@ -54,8 +56,16 @@ _FAILED: dict[tuple[Path, str], str] = {}
 _MAPS: dict[tuple[object, ...], FieldMap] = {}
 _KEPT_MAPS = 8
 
-VIEW_NAMES = {"difference": "Difference", "maps": "Side by side", "mesh": "On the mesh"}
+VIEW_NAMES = {
+    "difference": "Difference",
+    "maps": "Side by side",
+    "mirrored": "Mirrored",
+    "mesh": "3D",
+}
 """Each view a comparison opens on, as its control names it."""
+
+_OUTLINES: dict[tuple[Path, str | None], Any] = {}
+"""Each run's fluid outline, by run and solve: an edge sort over its cells, done once."""
 
 FRAMES = {"pore": "The pore", "whole": "Whole domain"}
 """What a map and its axial cut span, as the control names it: the pore's close-up opens."""
@@ -120,7 +130,9 @@ def map_of(
 def comparison_maps(
     model: AnalysisModel, name: str, *, whole: bool = False, positive: Positive = "blue"
 ) -> dict[str, FieldMap] | None:
-    """Return a comparison's maps, ``first``, ``second`` and ``difference``; None without fields.
+    """Return a comparison's maps, ``first``, ``second``, ``difference`` and ``mirrored``.
+
+    None until both runs' fields are read.
 
     They span the close-up that holds both pores, or with ``whole`` the fluids' overlap.
 
@@ -163,7 +175,8 @@ def comparison_maps(
             positive=positive,
         ),
     )
-    return {"first": left, "second": right, "difference": difference}
+    mirrored = _kept(("mirrored", *pair), lambda: mirrored_map(left, right))
+    return {"first": left, "second": right, "difference": difference, "mirrored": mirrored}
 
 
 def _relative(model: AnalysisModel, run: Path) -> str:
@@ -171,6 +184,20 @@ def _relative(model: AnalysisModel, run: Path) -> str:
         return run.resolve().relative_to(model.project.root.resolve()).as_posix()
     except ValueError:
         return str(run)
+
+
+def _outline(model: AnalysisModel, run_dir: Path) -> Any:  # noqa: ANN401 - an array
+    fields = model.fields(run_dir)
+    if fields is None:
+        return None
+    key = (run_dir, model.solve_hash(run_dir))
+    if key not in _OUTLINES:
+        _OUTLINES[key] = fluid_outline_nm(fields)
+    return _OUTLINES[key]
+
+
+def _window_query(window: tuple[float, float, float, float] | None) -> dict[str, str]:
+    return {} if window is None else {"frame": ",".join(f"{value:.6g}" for value in window)}
 
 
 def _render(key: tuple[Path, str], request: FieldsRequest | RenderRequest) -> None:
@@ -235,6 +262,7 @@ class _AnalysisPage:
         self.probes: list[tuple[float, float]] = []
         self.on_mesh = False
         self.whole = False
+        self.outline = False
         self.colour_range: tuple[float, float] | None = None
         # Link 3: a click on the map places the cut or a probe, until unlinked (WB-06).
         self.linked = True
@@ -243,6 +271,7 @@ class _AnalysisPage:
         self.pane: ui.column
         self.status: ui.element
         self.view_box: ui.element
+        self.head: ui.element
         self.ready = False
         # The renders this page waits on: it redraws when one ends, whichever page drained it.
         self.waiting: set[tuple[Path, str]] = set()
@@ -284,10 +313,17 @@ class _AnalysisPage:
         self.ready = True
         await ui.run_javascript("document.body.dataset.screenReady = '1'", timeout=10)
 
-    def say(self, text: str) -> None:
+    def say(self, text: str, link: tuple[str, str] | None = None) -> None:
         self.status.clear()
         with self.status:
-            ui.label(text)
+            if link is None:
+                ui.label(text)
+                return
+            # A pointer to another place is a link, and the sentence says what to do there.
+            with ui.element("p").classes("status-line"):
+                ui.label(text).classes("inline")
+                ui.link(link[0], link[1]).props("data-control=analysis-status-link")
+                ui.label(".").classes("inline")
 
     async def tick(self) -> None:
         _drain()
@@ -340,7 +376,7 @@ class _AnalysisPage:
         assert self.model is not None
         studies = self.model.studies()
         if not studies:
-            self.say("The project holds no study. Study's Study setup makes one.")
+            self.say("No study yet. Create one in ", ("Study \u203a Study setup", "/study/setup"))
             self.empty_tiles("Run a study to see its result here.")
             return
         with self.pane:
@@ -349,7 +385,10 @@ class _AnalysisPage:
             ).props("dense data-control=analysis-study").classes("w-full")
             choices = self.model.choices(self.study) if self.study else ()
             if not choices:
-                self.say(f"Study {self.study} has no run yet. Study's Runs starts one.")
+                self.say(
+                    f"{self.study} has no run yet. Start one in ",
+                    ("Study \u203a Runs", "/study/runs"),
+                )
                 self.empty_tiles("Run the study to see its result here.")
                 return
             ui.select(
@@ -370,7 +409,7 @@ class _AnalysisPage:
                 "flat dense no-caps data-control=analysis-open-runs"
             )
             if state == "removed":
-                ui.button("Rebuild", on_click=lambda: self.rebuild(choice)).props(
+                ui.button("Solve again", on_click=lambda: self.rebuild(choice)).props(
                     "outline dense no-caps data-control=analysis-rebuild"
                 )
             quantities = quantities_of(fields) if fields is not None else ()
@@ -404,9 +443,8 @@ class _AnalysisPage:
         assert self.model is not None
         if state == "removed":
             self.say(
-                "This run's solve was cleaned from the store. Rebuild it to see its fields: the "
-                "rebuild solves the run again, as long as its first solve took, and is checked "
-                "against its record."
+                "The fields of this run were cleaned from the store; its numbers are kept. Solve "
+                "it again to show its fields: it takes as long as its first solve."
             )
         elif state == "unsolved":
             self.say("This run did not reach its solve: it has no fields.")
@@ -424,7 +462,7 @@ class _AnalysisPage:
         assert self.model is not None
         state = self.model.state(choice.directory)
         if state == "removed":
-            return f"Rebuild the run to draw its {what}."
+            return f"Solve the run again to draw its {what}."
         if state == "unsolved":
             return f"The run has no fields to draw a {what} of."
         return f"The {what} draws once the run's fields are read."
@@ -473,8 +511,23 @@ class _AnalysisPage:
             .classes("analysis-tile")
             .props(f'data-control={control} aria-label="{title}"') as tile
         ):
-            heading(title, 2)
+            with ui.element("div").classes("tile-head") as head:
+                heading(title, 2)
+        self.head = head
         return tile
+
+    def view_switch(
+        self,
+        options: dict[str, str],
+        value: str,
+        changed: Callable[[Any], Any],
+        control: str,
+        label: str,
+    ) -> None:
+        """Draw a small switch among two or a few views, in a tile's head or in the pane."""
+        ui.toggle(options, value=value, on_change=changed).props(
+            f'dense no-caps unelevated size=sm data-control={control} aria-label="{label}"'
+        ).classes("view-switch")
 
     def empty_tiles(self, text: str) -> None:
         with self.view_box:
@@ -484,17 +537,19 @@ class _AnalysisPage:
         ui.select(
             _named(quantities), value=self.quantity, label="Quantity", on_change=self.on_quantity
         ).props("dense data-control=analysis-quantity").classes("w-full")
-        if self.on_mesh:
-            # The 3D view draws in the renderer's own colour map and span (AU2).
-            return
-        ui.select(
-            _palettes(),
-            value=self.palette or "",
-            label="Colour map",
-            on_change=self.on_palette,
-        ).props("dense data-control=analysis-colour-map").classes("w-full")
+        if not self.on_mesh:
+            # The 3D view draws in the renderer's own colour map (AU2), on the map's range.
+            ui.select(
+                _palettes(),
+                value=self.palette or "",
+                label="Colour map",
+                on_change=self.on_palette,
+            ).props("dense data-control=analysis-colour-map").classes("w-full")
         self.range_fields(self.colour_range, self.on_range)
         self.frame_control()
+        if self.on_mesh:
+            return
+        self.outline_control()
         ui.label("A click on the map places").classes("field-hint")
         ui.toggle(
             {"cut": "Cut", "probe": "Probe"}, value=self.placing, on_change=self.on_placing
@@ -536,6 +591,11 @@ class _AnalysisPage:
 
         low.on_value_change(typed_range)
         high.on_value_change(typed_range)
+
+    def outline_control(self) -> None:
+        ui.checkbox("Outline", value=self.outline, on_change=self.on_outline).props(
+            "dense data-control=analysis-outline"
+        )
 
     def frame_control(self) -> None:
         ui.label("The map and the cut span").classes("field-hint")
@@ -583,17 +643,15 @@ class _AnalysisPage:
         if fields is None:
             ui.label(self.unread(choice)).classes("later")
             return
-        pressed = "true" if self.on_mesh else "false"
-        ui.button("On the mesh", on_click=self.toggle_mesh).props(
-            f"flat dense no-caps data-control=analysis-on-mesh aria-pressed={pressed}"
-        ).classes("mesh-toggle self-start")
-        if self.on_mesh:
-            ui.label(
-                "The 3D view draws in the renderer's own colour map; the cut and the probes are "
-                "the map's."
-            ).classes("field-hint")
-            self.scene_frame(choice.directory, scene_field(self.quantity), None, "analysis-scene")
-            return
+        with self.head:
+            self.view_switch(
+                {"map": "Map", "mesh": "3D"},
+                "mesh" if self.on_mesh else "map",
+                self.on_view,
+                "analysis-on-mesh",
+                "The field shows",
+            )
+        window = None if self.whole else pore_window(fields)
         shown = await run.io_bound(
             lambda: (
                 map_of(
@@ -611,6 +669,16 @@ class _AnalysisPage:
         )
         if shown is None:
             return
+        if self.on_mesh:
+            scene = scene_field(self.quantity)
+            # A component's vector is drawn whole, on the renderer's own range.
+            ranged = shown.scale if scene == self.quantity else None
+            ui.label(
+                "The 3D view draws in the renderer's own colour map"
+                + (", on the map's colour range." if ranged else ".")
+            ).classes("field-hint")
+            self.scene_frame(choice.directory, scene, ranged, "analysis-scene", window)
+            return
         query = urlencode(
             {
                 "run": _relative(self.model, choice.directory),
@@ -624,11 +692,13 @@ class _AnalysisPage:
                 ),
             }
         )
+        outline = _outline(self.model, choice.directory) if self.outline else None
         drawing = map_drawing(
             shown,
             f"/api/analysis/image?{query}",
             cut_r_nm=self.cut_r_nm,
             probes=tuple(self.probes),
+            outline_nm=() if outline is None else (outline,),
         )
         ui.element("div").props("id=analysis-map data-control=analysis-map").classes("tile-map")
         self.link_chip()
@@ -637,7 +707,12 @@ class _AnalysisPage:
         )
 
     def scene_frame(
-        self, run_dir: Path, scene: str, colour_range: tuple[float, float] | None, control: str
+        self,
+        run_dir: Path,
+        scene: str,
+        colour_range: tuple[float, float] | None,
+        control: str,
+        window: tuple[float, float, float, float] | None = None,
     ) -> None:
         assert self.model is not None
         stem = scene_stem(scene, colour_range)
@@ -646,6 +721,7 @@ class _AnalysisPage:
             query = {"run": _relative(self.model, run_dir), "field": scene}
             if colour_range is not None:
                 query["range"] = f"{colour_range[0]!r},{colour_range[1]!r}"
+            query.update(_window_query(window))
             ui.element("iframe").props(
                 f'src="/api/analysis/view?{urlencode(query)}" data-control={control} '
                 f'title="{scene} on the mesh"'
@@ -780,21 +856,24 @@ class _AnalysisPage:
             label="Quantity",
             on_change=lambda e: self.set_compared(quantity=e.value),
         ).props("dense data-control=analysis-quantity").classes("w-full")
-        ui.toggle(
+        self.view_switch(
             {view: VIEW_NAMES[view] for view in COMPARISON_VIEWS},
-            value=compared.view,
-            on_change=lambda e: self.set_compared(view=e.value),
-        ).props('dense no-caps data-control=analysis-view aria-label="The comparison shows"')
+            compared.view,
+            lambda e: self.set_compared(view=e.value),
+            "analysis-view",
+            "The comparison shows",
+        )
         ui.select(
             _palettes(),
             value=compared.colour_map or "",
             label="Colour map",
             on_change=lambda e: self.set_compared(colour_map=e.value or None),
         ).props("dense data-control=analysis-colour-map").classes("w-full")
-        if compared.view == "maps":
+        if compared.view in ("maps", "mirrored", "mesh"):
             self.range_fields(compared.range, self.on_compared_range)
+        self.frame_control()
         if compared.view != "mesh":
-            self.frame_control()
+            self.outline_control()
         ui.number("Cut at r (nm)", value=self.cut_r_nm, on_change=self.on_cut).props(
             "dense debounce=600 data-control=analysis-cut-r"
         )
@@ -805,43 +884,50 @@ class _AnalysisPage:
         assert self.model is not None and self.compared is not None
         ready = all(fields is not None for fields in held)
         name = self.compared
-        if compared.view == "mesh":
-            if ready:
-                joint = joint_range(held[0], held[1], compared.quantity)
-                for index, path in enumerate(runs):
-                    with self.tile(self.run_name(path), f"analysis-pair-{index}"):
-                        self.recorded_line(path)
-                        self.scene_frame(
-                            path, scene_field(compared.quantity), joint, f"analysis-scene-{index}"
-                        )
-        else:
-            maps = (
-                await run.io_bound(
-                    lambda: (
-                        comparison_maps(
-                            self.model,
-                            name,
-                            whole=self.whole,
-                            positive=charge_colours(self.shell),
-                        )
-                        if self.model is not None
-                        else None
+        window = None if self.whole or not ready else pore_window(*held)
+        maps = (
+            await run.io_bound(
+                lambda: (
+                    comparison_maps(
+                        self.model, name, whole=self.whole, positive=charge_colours(self.shell)
                     )
+                    if self.model is not None
+                    else None
                 )
-                if ready
+            )
+            if ready
+            else None
+        )
+        if compared.view == "mesh":
+            scene = scene_field(compared.quantity)
+            # The pair's 3D views take one range (AU3): the side-by-side maps' scale, or for a
+            # component, whose vector is drawn whole, the two runs' joint range.
+            ranged = (
+                (maps["first"].scale if scene == compared.quantity else joint)
+                if maps is not None and (joint := joint_range(held[0], held[1], compared.quantity))
                 else None
             )
-            shown = ("difference",) if compared.view == "difference" else ("first", "second")
+            for index, path in enumerate(runs):
+                with self.tile(self.run_name(path), f"analysis-pair-{index}"):
+                    self.recorded_line(path)
+                    if ready:
+                        self.scene_frame(path, scene, ranged, f"analysis-scene-{index}", window)
+        else:
+            shown = {
+                "difference": ("difference",),
+                "mirrored": ("mirrored",),
+            }.get(compared.view, ("first", "second"))
             for which in shown:
-                title = (
-                    "Second less first"
-                    if which == "difference"
-                    else self.run_name(runs[0 if which == "first" else 1])
-                )
+                title = {
+                    "difference": "Second less first",
+                    "mirrored": "First on the left, second on the right",
+                }.get(which) or self.run_name(runs[0 if which == "first" else 1])
+                both = which in ("difference", "mirrored")
                 with self.tile(title, f"analysis-compare-{which}"):
-                    if which == "difference":
-                        for path, lead in zip(runs, ("First", "Second"), strict=True):
-                            self.recorded_line(path, lead)
+                    if both:
+                        leads = ("First", "Second") if which == "difference" else ("Left", "Right")
+                        for path, lead in zip(runs, leads, strict=True):
+                            self.recorded_line(path, f"{lead}, {self.run_name(path)}")
                     else:
                         self.recorded_line(runs[0 if which == "first" else 1])
                     if maps is None:
@@ -855,6 +941,8 @@ class _AnalysisPage:
                         f"/api/analysis/compare/{name}/image?{query}",
                         cut_r_nm=self.cut_r_nm,
                         probes=tuple(self.probes),
+                        outline_nm=self.compared_outline(which, runs),
+                        mirrored=which == "mirrored",
                     )
                     host = f"analysis-map-{which}"
                     ui.element("div").props(f"id={host} data-control={host}").classes("tile-map")
@@ -879,6 +967,22 @@ class _AnalysisPage:
                         None if self.whole else pore_window(*held),
                     )
                 )
+
+    def compared_outline(self, which: str, runs: tuple[Path, ...]) -> tuple[Any, ...]:
+        """Return the outlines a comparison's map draws: its run's, or both, the first mirrored."""
+        assert self.model is not None
+        if not self.outline:
+            return ()
+        first, second = (_outline(self.model, path) for path in runs)
+        if which == "first":
+            found: tuple[Any, ...] = (first,)
+        elif which == "second":
+            found = (second,)
+        elif which == "mirrored" and first is not None:
+            found = (first * [-1.0, 1.0, -1.0, 1.0], second)
+        else:
+            found = (first, second)
+        return tuple(outline for outline in found if outline is not None)
 
     async def set_compared(self, **values: Any) -> None:  # noqa: ANN401 - the file's values
         assert self.model is not None and self.compared is not None
@@ -944,7 +1048,9 @@ class _AnalysisPage:
             return
         if not self.linked:
             return
-        r_nm, z_nm = float(args.get("r", 0.0)), float(args.get("z", 0.0))
+        # A click is placed to a hundredth of a nm; a mirrored map's left half is the first run's.
+        r_nm = round(abs(float(args.get("r", 0.0))), 2)
+        z_nm = round(float(args.get("z", 0.0)), 2)
         if self.placing == "probe":
             self.probes.append((r_nm, z_nm))
         else:
@@ -970,8 +1076,12 @@ class _AnalysisPage:
             del self.probes[index]
             await self.redraw()
 
-    async def toggle_mesh(self) -> None:
-        self.on_mesh = not self.on_mesh
+    async def on_view(self, event: events.ValueChangeEventArguments[Any]) -> None:
+        self.on_mesh = event.value == "mesh"
+        await self.redraw()
+
+    async def on_outline(self, event: events.ValueChangeEventArguments[Any]) -> None:
+        self.outline = bool(event.value)
         await self.redraw()
 
     def open_runs(self, choice: RunChoice) -> None:
@@ -983,7 +1093,7 @@ class _AnalysisPage:
         assert self.model is not None
         threads = int(str(self.shell.settings.value("threads_per_solve")))
         queue_rebuild(self.shell.queue, self.model.project, choice.directory, threads=threads)
-        ui.notify("The rebuild is queued; the queue names each number it moves.")
+        ui.notify("The run is queued to solve again; its fields show when it is done.")
 
 
 def analysis_page(shell: Shell, tool: Tool) -> Callable[..., None]:

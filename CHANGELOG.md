@@ -22,6 +22,42 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.6.0-alpha.21]
+
+WP5.21: the Analysis suite, Phase 5's twenty-first package; tag `v0.6.0-alpha.21` once merged (§8.2.45 AU1 to AU3;
+AG6; AN5; WB-50 to WB-52; REV-28, REV-30, REV-253, REV-260, REV-264, REV-240's colour maps). The sixth suite opens a
+finished run and compares two. No golden moves; a new run's manifest and record carry its fields' norms. The
+[plan](docs/plans/phase-5/wp5.21-the-analysis-suite.md) records the work.
+
+- **Added**:
+  - Analysis, the sixth suite, each tool a page at `/analysis/<tool>` (FR-31; FR-33):
+    - *Results explorer*: a study's run or sweep point; its field as a map on the pore's close-up or the whole
+      domain, with an axial cut and probes placed by a click or typed, an *Outline* option, or in 3D on its mesh
+      on the map's range (*Map · 3D*); the current against the bias of the study's runs; its recorded
+      quantities, changed settings and folder (Q37 to Q41; VER-44);
+    - *Comparison*: two runs as their difference over the fluids' overlap, side by side or mirrored about the
+      axis on one scale, or both in 3D on one range, each with its recorded current and conductance, and the cut
+      with a series per run (FR-32; AG6; AU3).
+  - Comparisons in a project, `comparisons/<name>.yaml` (`nanopnp/comparison/v0.6`): `Project.new_comparison`,
+    `comparison`, `set_comparison` (FR-32).
+  - *Solve again*: a run whose solve was cleaned from the store is solved again on request and checked against its
+    record, `Project.rebuild` and `run_state` (AN5; QR-08).
+  - `post/fields.py`: a field at points, two runs' difference on one grid, readable quantity names (AG6).
+  - Every plot of x against y is a uPlot 1.6.32 chart whose axes the user sets: linear, logarithmic or square root,
+    each range typed, drag-zoom and hover (AU1; REV-253). Any Matplotlib colour map per map, `matplotlib` joining the
+    `gui` extra (AU2).
+  - A solve records each converged field's norms and integrals (`field_norms`); a reproduction that re-enters the
+    solve compares them, so a record stopped at its solve compares the numbers its solve made (QR-08; REV-264).
+- **Changed**:
+  - Study › Runs: a recorded run draws its convergence replayed from its stored history, its rungs a table (VER-44;
+    REV-260; WB-50).
+  - A field's scene is written only when a tile opens it, once, and its host page fetches it from the server's
+    origin, opening on the region and the theme it is given (REV-28; REV-30).
+  - Sixteen labels, headings and pointers reworded by the workbench's five rules of wording, the pointers in
+    Analysis links to Study (WB-52; REV-269).
+- **Fixed**:
+  - The render script's copied projects keep each run's manifest and case as the run wrote them.
+
 ## [0.6.0-alpha.20]
 
 WP5.20: the meso suite, Phase 5's twentieth package; tag `v0.6.0-alpha.20` once merged (§8.2.44 AT1 to AT4; WB-43,

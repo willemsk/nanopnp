@@ -49,6 +49,7 @@ __all__ = [
     "field_map",
     "iv_chart",
     "map_drawing",
+    "mirrored_map",
     "pair_maps",
     "pore_window",
     "quantities_of",
@@ -426,6 +427,25 @@ def pair_maps(
     )
 
 
+def mirrored_map(first: FieldMap, second: FieldMap) -> FieldMap:
+    """Return a pair's two maps as one: the first reflected to negative r, the second beside it.
+
+    Both are on one grid and one scale, as ``pair_maps`` gives them.
+    """
+    import numpy as np
+
+    return FieldMap(
+        first.quantity,
+        first.unit,
+        np.concatenate([-first.r_nm[::-1], second.r_nm]),
+        first.z_nm,
+        np.concatenate([first.values[:, ::-1], second.values], axis=1),
+        first.scale,
+        first.palette,
+        first.note,
+    )
+
+
 def map_drawing(
     shown: FieldMap,
     image_url: str,
@@ -433,10 +453,14 @@ def map_drawing(
     cut_r_nm: float | None = None,
     probes: tuple[tuple[float, float], ...] = (),
     note: str = "",
+    outline_nm: tuple[np.ndarray, ...] = (),
+    mirrored: bool = False,
 ) -> Plane:
     """Return a map as the (r, z) view draws it: the picture, the cut's line and the probes.
 
-    A click on it asks about the point, which places the cut or a probe.
+    A click on it asks about the point, which places the cut or a probe. Each of ``outline_nm``,
+    rows ``(r0, z0, r1, z1)``, is drawn over it; a ``mirrored`` map draws the cut and the probes
+    on both sides of the axis.
     """
     import numpy as np
 
@@ -467,23 +491,42 @@ def map_drawing(
     if dark != shown.palette:
         # A dark canvas takes the diverging map through a dark middle, the picture and its bar.
         layers[0]["dark"] = {"url": f"{image_url}&dark=1", "bar": palette_stops(dark)}
+    for index, segments in enumerate(outline_nm):
+        if len(segments):
+            layers.append(
+                {
+                    "id": f"outline-{index}",
+                    "kind": "line",
+                    "segments": True,
+                    "points_nm": [round(float(value), 4) for value in segments.ravel()],
+                    "title": "Outline",
+                }
+            )
+    sides = (1.0, -1.0) if mirrored else (1.0,)
     if cut_r_nm is not None:
+        cut = [
+            v for side in sides for v in (side * cut_r_nm, extent[2], side * cut_r_nm, extent[3])
+        ]
         layers.append(
             {
                 "id": "cut",
                 "kind": "line",
                 "role": "probe",
-                "points_nm": [cut_r_nm, extent[2], cut_r_nm, extent[3]],
+                "segments": mirrored,
+                "points_nm": cut,
                 "title": f"Axial cut, r = {cut_r_nm:.3g} nm",
             }
         )
     if probes:
+        shown_probes = [(side * r, z) for side in sides for r, z in probes]
         layers.append(
             {
                 "id": "probes",
                 "kind": "points",
-                "points_nm": [value for point in probes for value in point],
-                "colours": [SERIES[(k + 2) % len(SERIES)] for k in range(len(probes))],
+                "points_nm": [value for point in shown_probes for value in point],
+                "colours": [
+                    SERIES[(k + 2) % len(SERIES)] for _ in sides for k in range(len(probes))
+                ],
                 "title": "Probes",
             }
         )

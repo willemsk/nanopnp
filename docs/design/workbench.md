@@ -224,6 +224,14 @@ accessibility target (WB-30, WB-31). In short, the default:
 - the Molecular 3D view near-black by default, a user setting (WB-26, WB-30); (r, z) views and plots on the
   theme, exported on white; every colour bar outlined at 3:1 (WB-26).
 
+**The words** follow five rules (WB-52):
+
+1. A title, heading or field label is a plain noun phrase: *Rungs*, *Values*, *Boundary conditions*.
+2. No "its" or "their" where the noun alone reads.
+3. No clause or question as a heading ("What…", "How…", "As a … lists it").
+4. A pointer to another place is a link, and the sentence says what to do there: "Start one in Study › Runs."
+5. Sentences stay short and active; messages and refusals follow ASD-STE100 (WB-42).
+
 **The accessibility target** is WCAG 2.2 AA with full keyboard operation (WB-24): text at 4.5:1, controls,
 focus rings and colour bars at 3:1, targets of at least 24 × 24 px, a keyboard path for every canvas action
 (a residue picked from a list as on the canvas), reduced motion honoured. The render check measures text
@@ -251,9 +259,9 @@ list has a place in the workbench before Qt leaves (S13):
 | Q28, Q29 | Charge | Charge map: the lattice and the deployed density in (r, z) beside the molecule, linked (S6), a residue named once with its copies |
 | Q31 to Q34 | Run | *Run study*; *Cancel* in the queue; the queue's "rung x of N" (WB-23); the log |
 | Q35, Q36 | Convergence | A run picked in Study › Runs or opened from its queue line: the convergence plot across the view, the rung table in the pane (WB-45) |
-| Q37, Q38 | Result | The results explorer: the run's item in the project, its quantities tile |
-| Q39 | Result | The changed count and its list; the run's manifest |
-| Q40, Q41 | Fields | The results explorer's field tile, with its quantity, its colour map and the renderer's diagnostic in place of a view that does not draw |
+| Q37, Q38 | Result | The results explorer: the run's folder and its quantities, in the quantities tile; *Open in Runs* (WP5.21) |
+| Q39 | Result | The quantities tile's *Changed from the validated default*, from the run's manifest (WP5.21) |
+| Q40, Q41 | Fields | The results explorer's field tile: its quantity, its colour map and range, as a map or in 3D, the renderer's message in place of a view that does not draw (WP5.21) |
 
 ## Tools
 
@@ -281,8 +289,8 @@ Each tool has its settings and its live view (S6). The mockup screen named is in
 | Study | Study setup | The models, their exposed values first and *More values* (WB-35), the overrides, the outputs; *Run study* | A form, or the same study as a graph (RE1) | `st-form`, `st-graph` |
 | Study | Sweep | The axes, each over a value, a variable or a model, with what it rebuilds; *Every combination* or *Stepped list* (WB-46) | The points as a table: each point's values, its warm start's order and its state (WB-46) | `st-sweep` |
 | Study | Runs | *Run study*; the recorded runs; the picked run's rung table; Cancel, the log | The picked run's convergence across the view, a running one updating; a run's queue line opens it here (RE2; WB-45) | `st-runs` |
-| Analysis | Results explorer | The run, the bias, the tiles; each tile's quantity and map | Tiles: a field, the I–V, the quantities, an axial cut | `a-explorer` |
-| Analysis | Comparison | The two runs, the bias, the quantity | Side by side on one scale, or their difference | `a-compare-side`, `a-compare-diff` |
+| Analysis | Results explorer | The study and its run or sweep point; the quantity, its colour map and range, the pore or the whole domain, the outline; the cut and the probes, typed or clicked | Tiles: the field as a map or in 3D (*Map · 3D*), the I–V of the study's runs, the quantities with the changed settings and the folder, the axial cut (WP5.21; REV-268's tree replaces the tiles) | `a-explorer` |
+| Analysis | Comparison | The comparison, or a new one over two runs; its quantity, view, colour map and range | Their difference over the fluids' overlap, the two maps side by side or mirrored about the axis on one scale, or both in 3D on one range; each with its run's recorded current and conductance, and the cut with a series per run (WP5.21) | `a-compare-side`, `a-compare-diff` |
 
 Every Physics tool shows its model inside a study picked in the pane, *Shown in*: that study with this physics model in place of its own and the study's own values of the physics model's keys left out, each marked beside its field with an outlined diamond (WB-28). It opens on the first study that names the model, else the project's first; a project with no study shows the model over its continuum model as that model is built alone. A value the shown study cannot run with is shown at its field, naming the study (§8.2.41 AQ1).
 
@@ -296,10 +304,11 @@ link the user pins (WB-06). A linked view carries a chip naming the link, with *
    its copies together.
 2. **A geometry and its parameters**: the region's thickness and radius, typed on the drawing or in the pane,
    are one value; the contour's vertices in the table and on the editor are one selection.
-3. **A field and its probes and cuts**: an axial cut or a probe drawn on the field updates its tile, and
-   moving the cut's line on the field moves it.
-4. **A run and its result**: a done run in the queue or the study's runs opens its result in Analysis, and a
-   result names and opens the run that made it.
+3. **A field and its probes and cuts**: a click on the map places the axial cut or a probe, to 0.01 nm, and typed
+   values move them; the cut's chart and the probes' rows follow, on both runs' maps in a comparison. Dragging the
+   cut's line is WP5.23's (REV-238).
+4. **A run and its result**: a done run's *Result* in the queue, and a recorded run in Study › Runs, opens it in
+   the results explorer, as does a point of its I–V; the explorer names the run and opens it in Runs (WP5.21).
 
 ## The project folder
 
@@ -407,8 +416,9 @@ third party's.
 | Picture | Renderer | Where it is | Licence |
 |---|---|---|---|
 | The molecule in 3D | Mol*, as its standalone bundle (`molstar.js`, `molstar.css`) | `src/nanopnp/gui/web/assets/molstar/` | MIT (CON-09) |
-| Fields on the mesh | npm `webgui` 0.2.39 | `src/nanopnp/gui/assets/webgui/` | LGPL-2.1-or-later, with three.js (MIT) and dat.gui (Apache-2.0) (CON-09) |
-| Maps, plots and the mesh in (r, z) | A canvas the page draws from the data of `plot/data.py`, the Continuum suite's mesh among them (WP5.17) | `src/nanopnp/gui/web/` | BSD-3-Clause |
+| Fields on the mesh | npm `webgui` 0.2.39, served at `/vendor/webgui`; a host page fetches its scene from `/api/analysis/scene` (WP5.21) | `src/nanopnp/gui/assets/webgui/` | LGPL-2.1-or-later, with three.js (MIT) and dat.gui (Apache-2.0) (CON-09) |
+| Maps and the mesh in (r, z) | A canvas the page draws from the data of `plot/data.py`, the Continuum suite's mesh among them (WP5.17); a map's colours from the workbench's five maps or any of Matplotlib's (`gui/geometry.py:lookup_table`, AU2) | `src/nanopnp/gui/web/` | BSD-3-Clause |
+| Plots | uPlot 1.6.32 (`uPlot.iife.min.js`, `uPlot.min.css`), served at `/vendor/uplot`; `gui/web/chart.py`'s chart drawn by `assets/chart.js`: Electrolyte's two plots, Runs' convergence, the I–V and the cuts (AU1; the library is chosen again with REV-268's tree) | `src/nanopnp/gui/web/assets/uplot/` | MIT (CON-09) |
 | The study as a graph | Mermaid, as NiceGUI ships it for `ui.mermaid` (WP5.19) | NiceGUI's `nicegui/elements/mermaid/dist`, served from the server's origin | MIT |
 | Equations and conditions | KaTeX 0.19.1 (`katex.min.js`, `katex.min.css`, its fonts), from the LaTeX of `physics/terms.py` (WP5.18) | `src/nanopnp/gui/web/assets/katex/` | MIT (CON-09) |
 
@@ -421,7 +431,7 @@ on or off, and a framed opening view (the author's verdicts on today's shell). R
 | Zoom | Yes | The mouse wheel and drag of the scene's orbit controls |
 | The mesh on or off | Yes | The *Objects* folder has one check box each for *Surface*, *Wireframe* and *Edges* |
 | A colour scale for each quantity | In part | One colour map per scene: *Colormap* sets its minimum, maximum and autoscale. A scene holds one quantity, so a scale for each quantity is one scene each; `gui/render.py` writes the range into the scene |
-| A framed opening view | No | The renderer sets the opening camera when the scene loads; no control re-frames it, and *reset settings* in the *Misc* folder restores the folder values only |
+| A framed opening view | Through its settings | No control re-frames the scene, but the scene's `gui_settings.camera` sets the opening camera: the host page writes it from the map's close-up before the scene loads (WP5.21) |
 
 The 200 ms line (WB-23) is not measured for the whole picture. On a container with no GPU, Mol* alone
 needs about 800 ms to repaint a selection, and the front end's own share is 14 to 26 ms
@@ -531,6 +541,9 @@ author's verdicts on WP5.16's Molecular drafts, collected on 11 November 2026.
 | WB-47 | A field's message, its text and a field of several boxes | Of REV-256's mockups: "Keep the "Today" variant for the Error, the Proposed for the box." | A field's message stays under its box (WB-12). The box's text is drawn at its label's size. A field of several boxes is one box with shaded rows, each row keeping its own changed mark, reset and default, the box a 3:1 edge (REV-256) |
 | WB-48 | Where a molecular or continuum model's exposed values are chosen | Asked at the Study round (REV-252), "A list tool per suite" | Molecular and Continuum each have an Exposed values tool, as Physics has, with *Expose* at its head; no field carries an *Expose* checkbox |
 | WB-49 | The Meso round: the charge map's range and dark middle, the structure's look, the overlay | The author, marking the Meso drafts (`reviews/2026-11-19-meso.md`): of Charge map, "Charges are barely visible on the map. Maybe needs adjustable ranges? On the structure: having some display options like molecular surface, sticks, spheres, etc. would be good. In cartoon mode, selecting a residue could change the style of the side-chain to sticks or spheres for example. Think about this yourself, and then give me options."; asked, "Clip, and let me change it" and "On all three Meso screens"; of a picked residue, "Solve this in a holistic way, offering the ability to change/configure the representations in a flexible way", then "A free list of layers"; of the dark theme, "middle on dark"; the other picks kept | Meso's charge map, the lattice and the deployed charge, opens its colour scale on the 99th percentile of the charge's size; a *Map range* field sets it, and the bar's ends read ≤ and ≥ where values pass them. On the dark theme the map's diverging scale runs through a dark middle. Each Meso tool sets how Mol* draws the structure (*Structure*: Cartoon, Ball and stick, Spheres, Surface), kept per tool for the window; a free list of the structure's layers, each with what it draws, its style, its colour and its opacity, comes in a package of its own (REV-265). The suite keeps its name, *Meso*, and the pair its width; the charge in 3D and its mean about the axis are kept (AT2); the residues stay a strip of buttons; the mesh's edges stay on; Outline gains no radius against z and no vertex list |
+| WB-50 | The Analysis round: the 3D view, the map's outline, *Side by side*, the rebuild and the rungs | The author, marking the Analysis drafts (`reviews/2026-11-20-analysis.md`): of the 3D view, "1) map's scale 2) on 3) not sure I understand what you mean 4) background follows theme 5) Switch is fine, but it is a very large button now. I think for these kind of switches we need a more subtle, space-efficient solution.", and asked, "Open on the pore"; of the map, "No global percentile for now", asked, "Keep as built", and "Showing the outline can be an toggled option"; of *Side by side*, "Maybe this could also be made in a \"mirrored\" configuration, with one solution on the left (mirrored), and the other one on the right, all in the same plot."; of the rebuild, "Not sure what the value of this is", and asked, "Keep, as 'Solve again'"; of Runs' rungs, "The rung descriptions look like pieces of text, while it seems it may be better shown as a table?" | The explorer's field tile switches *Map* and *3D* with a small switch in its title bar, as Comparison's views do in its pane: the frame's switch at the heading's height. The 3D view opens on the map's colour range (a component's vector on the renderer's own; a comparison's pair on the side-by-side scale), with its wireframe, on the pore's close-up, *Whole domain* on request, its background the theme's. A map's scale keeps the 99th percentile of what the close-up draws (WB-49). An *Outline* option draws the fluid's boundary off the axis over a map. Comparison gains *Mirrored*: the two runs as one map, the first reflected about the axis, on one scale, the cut and the probes on both sides. A cleaned run offers *Solve again*, which says it takes as long as the first solve; its check speaks only when a number moved (QR-08). Runs' rungs are a table, *Rungs* (WB-52); a click places the cut or a probe to 0.01 nm |
+| WB-51 | Analysis as an editable tree of results, and the charts' library | Of the explorer: "a lot of screen real-estate is being given to the \"Results\" explorer tool settings. This should be more efficiently organized. Perhaps a good way would be to organize the different views into an customizable editable tree, like it is done in COMSOL. Plots and graphs would be generated using different plotting tools (surface, scatters, etc) based on existing/newly defined variables/constants. This will likely need a new grilling and a dedicated WP."; of the probes, "Pane of their own, like in COMSOL."; of the quantities, "Make the QoIs which are shown customizable."; of uPlot, "Let's revisit the uplot choice, it seem to be rather limiting in capabilities. Given the scope of the kind of plots that we need create here, we should explore alternatives."; asked where, "New package, before speed", and which library, "Decide with the tree" | A design round puts the tree to the author, then a package of its own builds it after WP5.21 and before the performance package (WP5.22), which times the tree: groups of plots over a run's existing and newly defined variables and constants, probes in a pane of their own, the quantities shown chosen. The round chooses the chart library from the plot types the tree needs (AU1 restated there; NiceGUI ships Plotly and ECharts); WP5.21 ships its tiles and uPlot as they are (REV-268) |
+| WB-52 | The workbench's wording | Of Runs: "\"Its rungs\" --> \"The rungs\": I would like to remove these kind of \"way-of-wording\" throughout the package (other example: \"What the model shows.\", \"Study's Runs starts one\"). Let's discuss how."; asked how, "Examples first"; marking the examples and the draft rule, "take" on each | The words follow five rules (*Look and feel*): plain noun phrases for titles, headings and labels; no "its" where the noun reads; no clause as a heading; a pointer is a link saying what to do there; short active sentences, ASD-STE100 for messages. The sixteen strings taken are applied in WP5.21 (*Rungs*, *Physics model*, *Boundary conditions*, …); the guided-route package (WP5.23) sweeps every other screen's text by the rules, with a check (REV-269) |
 
 ## Glossary
 
