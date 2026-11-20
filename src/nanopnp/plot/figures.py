@@ -341,6 +341,8 @@ def _silence(history: list[data.NewtonRung] | None) -> str:
         return "not reported by this model"
     if None in reporting:
         return "no step recorded; this record does not say which silence"
+    if reporting == {True}:
+        return "no step taken: each rung converged on entry"
     return "no step taken: each rung converged on entry or takes no Newton callback"
 
 

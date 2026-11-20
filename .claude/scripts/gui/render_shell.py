@@ -68,7 +68,8 @@ from nanopnp.gui.render import (
     render_fields,
 )
 from nanopnp.gui.web import server, theme
-from nanopnp.gui.web.analysis import AnalysisModel, quantities_of, scene_field
+from nanopnp.gui.web.analysis import AnalysisModel, quantities_of, scene_field, size_range
+from nanopnp.gui.web.analysis_tools import comparison_maps, map_of
 from nanopnp.gui.web.runs import write_sweep
 from nanopnp.gui.web.screens import SCREENS
 from nanopnp.gui.web.settings import SETTINGS_FILENAME
@@ -76,7 +77,7 @@ from nanopnp.gui.web.states import STATES
 from nanopnp.io.project import STORE_FOLDER
 from nanopnp.io.store import Store
 from nanopnp.pipeline.run import RunResult
-from nanopnp.post.fields import joint_range
+from nanopnp.post.fields import FIELD_ALIASES
 from nanopnp.sweep.collect import collect
 from nanopnp.sweep.document import Axis, load_sweep
 from nanopnp.sweep.plan import build_plan, write_plan
@@ -817,6 +818,11 @@ def solve_analysis(project: Project) -> tuple[Path, Path, list[Path]]:
     return first.directory, second.directory, swept
 
 
+def _scalar(quantity: str) -> bool:
+    # A component's vector is drawn whole, an alias such as potential is a scalar's name.
+    return FIELD_ALIASES.get(quantity, (quantity, None))[1] is None
+
+
 def draw_analysis(project: Project, first: Path, second: Path, runs: list[Path]) -> None:
     """Write every run's fields, and the scenes the explorer and the comparison draw on the mesh.
 
@@ -833,11 +839,28 @@ def draw_analysis(project: Project, first: Path, second: Path, runs: list[Path])
     compared = project.comparison(COMPARED)
     if scene_field(quantity) != scene_field(compared.quantity):
         compared = project.set_comparison(COMPARED, quantity=quantity)
-    render(RenderRequest(run=str(first), field=scene_field(quantity), document=False))
-    joint = joint_range(held[0], held[1], compared.quantity)
+    # The ranges the pages ask for: the explorer's opening map's, and the comparison's pair's, the
+    # side-by-side scale or a component's vector size; a run keeps both scenes of one field.
+    shown = map_of(model, first, quantity)
+    assert shown is not None
+    render(
+        RenderRequest(
+            run=str(first),
+            field=scene_field(quantity),
+            document=False,
+            colour_range=shown.scale if _scalar(quantity) else None,
+        )
+    )
+    maps = comparison_maps(model, COMPARED)
+    assert maps is not None
+    pair = (
+        maps["first"].scale
+        if _scalar(compared.quantity)
+        else size_range(held[0], held[1], compared.quantity)
+    )
     for run in (first, second):
         request = RenderRequest(
-            run=str(run), field=scene_field(compared.quantity), document=False, colour_range=joint
+            run=str(run), field=scene_field(compared.quantity), document=False, colour_range=pair
         )
         render(request)
 

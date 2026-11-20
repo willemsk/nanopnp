@@ -128,12 +128,20 @@ def queue_run(
     return entry
 
 
-def queue_rebuild(queue: Queue, project: Project, run: Path, *, threads: int = 1) -> Entry:
-    """Queue the rebuild of a run whose solve was cleaned from the store (QR-08).
+def queue_rebuild(
+    queue: Queue, project: Project, run: Path, *, threads: int = 1, study: str | None = None
+) -> Entry:
+    """Queue the rebuild of a run whose solve was cleaned from the store.
 
     The entry fails naming each recorded scalar the rebuilt run moved.
+
+    Parameters
+    ----------
+    study
+        The study the run belongs to; None takes its folder's parent, as a study's own run is
+        filed. A sweep's member is filed in the store, and names its study here.
     """
-    study = run.parent.name
+    study = study or run.parent.name
     request = RunRequest(
         case=str(run / "case.yaml"),
         store=str(project.root / STORE_FOLDER),
@@ -248,19 +256,30 @@ SERVED_NOTE = (
 """The note a replayed record adds when its run took its solve from the store."""
 
 
-def recorded_convergence(directory: Path) -> ConvergenceModel | None:
+def recorded_convergence(directory: Path, store: Store | None = None) -> ConvergenceModel | None:
     """Return a recorded run's convergence, replayed from its solve's stored Newton history.
 
     None where the run reached no solve, the store no longer holds it, or the solve predates the
     history. A rung recorded without its tolerance takes the run's resolved Newton tolerance.
+
+    Parameters
+    ----------
+    store
+        The project's store, read before the one the record names: a project moved or copied
+        keeps its store and its records' old folder.
     """
     record = json.loads((directory / RUN_RECORD_FILENAME).read_text(encoding="utf-8"))
     artefacts = record.get("artefacts")
     solve = artefacts.get("solve") if isinstance(artefacts, dict) else None
     root = record.get("store")
-    if not isinstance(solve, dict) or not root:
+    if not isinstance(solve, dict):
         return None
-    artefact = Store(Path(str(root))).get(str(solve["schema"]), str(solve["hash"]), mark=False)
+    stores = [*([store] if store is not None else []), *([Store(Path(str(root)))] if root else [])]
+    schema, digest = str(solve["schema"]), str(solve["hash"])
+    artefact = next(
+        (found for each in stores if (found := each.get(schema, digest, mark=False)) is not None),
+        None,
+    )
     rungs = None if artefact is None else newton_history(artefact)
     if artefact is None or rungs is None:
         return None
@@ -326,7 +345,9 @@ def _made_by(rungs: Sequence[NewtonRung], directory: Path) -> bool:
     if len(recorded) != len(rungs):
         return False
     for entry, rung in zip(recorded, rungs, strict=True):
-        newton = entry.get("newton") if isinstance(entry, dict) else None
+        if not isinstance(entry, dict):
+            return False
+        newton = entry.get("newton")
         steps = newton.get("iterations", 0) if isinstance(newton, dict) else 0
         if entry.get("rung") != rung.name or steps != len(rung.iteration):
             return False

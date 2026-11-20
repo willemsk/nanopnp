@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import math
+import threading
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -34,6 +36,7 @@ from nanopnp.gui.web.analysis import (
     pore_window,
     quantities_of,
     scene_field,
+    size_range,
 )
 from nanopnp.gui.web.chart_view import ChartView
 from nanopnp.gui.web.frame import Views, heading
@@ -47,7 +50,6 @@ from nanopnp.post.fields import (
     FIELD_ALIASES,
     field_at,
     field_unit,
-    joint_range,
     quantity_name,
 )
 
@@ -61,6 +63,8 @@ _FAILED: dict[tuple[Path, str], str] = {}
 
 _MAPS: dict[tuple[object, ...], FieldMap] = {}
 _KEPT_MAPS = 8
+# A page's maps are made in worker threads and its pictures served in others.
+_MAPS_LOCK = threading.Lock()
 
 VIEW_NAMES = {
     "difference": "Difference",
@@ -92,12 +96,14 @@ def _named(quantities: list[str] | tuple[str, ...]) -> dict[str, str]:
 
 
 def _kept(key: tuple[object, ...], make: Callable[[], FieldMap]) -> FieldMap:
-    found = _MAPS.get(key)
+    with _MAPS_LOCK:
+        found = _MAPS.get(key)
     if found is None:
         found = make()
-        _MAPS[key] = found
-        while len(_MAPS) > _KEPT_MAPS:
-            _MAPS.pop(next(iter(_MAPS)))
+        with _MAPS_LOCK:
+            _MAPS[key] = found
+            while len(_MAPS) > _KEPT_MAPS:
+                _MAPS.pop(next(iter(_MAPS)))
     return found
 
 
@@ -209,7 +215,7 @@ def _whole_field(quantity: str) -> bool:
 
 
 def _reversed(colour_range: tuple[float, float] | None, positive: Positive) -> bool:
-    # The renderer's map runs blue to red from low to high: where positive is blue (WB-39), a range
+    # The renderer's map runs blue to red from low to high: where positive is blue, a range
     # across zero is handed to it reversed, so the 3D view's signs read as the map's.
     return (
         colour_range is not None and colour_range[0] < 0.0 < colour_range[1] and positive == "blue"
@@ -284,7 +290,7 @@ class _AnalysisPage:
         self.whole = False
         self.outline = False
         self.colour_range: tuple[float, float] | None = None
-        # Link 3: a click on the map places the cut or a probe, until unlinked (WB-06).
+        # A click on the map places the cut or a probe, until unlinked.
         self.linked = True
         self.compared: str | None = None
         self.seen: object = None
@@ -558,7 +564,7 @@ class _AnalysisPage:
             _named(quantities), value=self.quantity, label="Quantity", on_change=self.on_quantity
         ).props("dense data-control=analysis-quantity").classes("w-full")
         if not self.on_mesh:
-            # The 3D view draws in the renderer's own colour map (AU2), on the map's range.
+            # The 3D view draws in the renderer's own colour map, on the map's range.
             ui.select(
                 _palettes(),
                 value=self.palette or "",
@@ -724,10 +730,15 @@ class _AnalysisPage:
             f"nano.map('analysis-map', {json.dumps(drawing.json())})", timeout=60
         )
 
-    def scene_caption(self, ranged: bool, reverse: bool) -> None:
-        """Say what the 3D view's colours are: the renderer's map, on the map's range and signs."""
+    def scene_caption(self, ranged: bool, reverse: bool, sized: bool = False) -> None:
+        """Say what the 3D view's colours are: the renderer's map, on the map's range and signs.
+
+        ``sized`` says the range is the size of the vector the view draws, over both runs.
+        """
         parts = ["The 3D view draws in the renderer's own colour map"]
-        if ranged:
+        if ranged and sized:
+            parts.append(" on one range of the velocity's size over both runs")
+        elif ranged:
             parts.append(" on the map's colour range")
         if reverse:
             parts.append(", positive blue as on the map")
@@ -823,10 +834,27 @@ class _AnalysisPage:
             )
             return
         held = [self.model.fields(path) for path in runs]
-        for path, fields in zip(runs, held, strict=True):
-            if fields is None and self.model.state(path) == "solved":
-                self.wait((path, "fields"), FieldsRequest(run=str(path)))
-        if any(fields is None for fields in held):
+        # A run without fields is read, or says why it cannot be: a render that failed is not
+        # started again, and a run cleaned from the store or never solved has none to read.
+        lacking: list[str] = []
+        for lead, path, fields in zip(("first", "second"), runs, held, strict=True):
+            if fields is not None:
+                continue
+            state, key = self.model.state(path), (path, "fields")
+            if state == "removed":
+                lacking.append(
+                    f"The store no longer holds the {lead} run's fields: open it in the results "
+                    "explorer and solve it again."
+                )
+            elif state == "unsolved":
+                lacking.append(f"The {lead} run did not reach its solve: it has no fields.")
+            elif key in _FAILED:
+                lacking.append(f"The {lead} run's fields did not read: {_FAILED[key]}")
+            else:
+                self.wait(key, FieldsRequest(run=str(path)))
+        if lacking:
+            self.say(" ".join(lacking))
+        elif any(fields is None for fields in held):
             self.say("Reading the two runs' fields…")
         else:
             first, second = (self.run_name(path) for path in runs)
@@ -884,7 +912,8 @@ class _AnalysisPage:
             _named(both),
             value=compared.quantity,
             label="Quantity",
-            on_change=lambda e: self.set_compared(quantity=e.value),
+            # A typed range is in the quantity's unit, so another quantity opens on its own.
+            on_change=lambda e: self.set_compared(quantity=e.value, range=None),
         ).props("dense data-control=analysis-quantity").classes("w-full")
         self.view_switch(
             {view: VIEW_NAMES[view] for view in COMPARISON_VIEWS},
@@ -894,7 +923,7 @@ class _AnalysisPage:
             "View",
         )
         if compared.view != "mesh":
-            # The 3D views draw in the renderer's own colour map (AU2).
+            # The 3D views draw in the renderer's own colour map.
             ui.select(
                 _palettes(),
                 value=compared.colour_map or "",
@@ -917,38 +946,41 @@ class _AnalysisPage:
         ready = all(fields is not None for fields in held)
         name = self.compared
         window = None if self.whole or not ready else pore_window(*held)
-        maps = (
-            await run.io_bound(
-                lambda: (
-                    comparison_maps(
-                        self.model, name, whole=self.whole, positive=charge_colours(self.shell)
+        try:
+            maps = (
+                await run.io_bound(
+                    lambda: (
+                        comparison_maps(
+                            self.model, name, whole=self.whole, positive=charge_colours(self.shell)
+                        )
+                        if self.model is not None
+                        else None
                     )
-                    if self.model is not None
-                    else None
                 )
+                if ready
+                else None
             )
-            if ready
-            else None
-        )
-        if compared.view == "mesh":
-            scene = scene_field(compared.quantity)
-            # The pair's 3D views take one range (AU3): the side-by-side maps' scale, or for a
-            # component, whose vector is drawn whole, the two runs' joint range.
+            # The pair's 3D views take one range: the side-by-side maps' scale, or for a
+            # component, whose vector is drawn whole and coloured by its size, that size's.
+            sized = not _whole_field(compared.quantity)
             ranged = (
-                (
-                    maps["first"].scale
-                    if _whole_field(compared.quantity)
-                    else joint_range(held[0], held[1], compared.quantity)
-                )
+                (size_range(held[0], held[1], compared.quantity) if sized else maps["first"].scale)
                 if maps is not None
                 else None
             )
+        except (KeyError, ValueError) as error:
+            # A file edited by hand can name a quantity one run lacks, or runs whose fluids
+            # do not overlap.
+            self.say(f"Comparison {name} does not draw: {error}")
+            return
+        if compared.view == "mesh":
+            scene = scene_field(compared.quantity)
             reverse = _reversed(ranged, charge_colours(self.shell))
             for index, path in enumerate(runs):
                 with self.tile(self.run_name(path), f"analysis-pair-{index}"):
                     self.recorded_line(path)
                     if index == 0:
-                        self.scene_caption(ranged is not None, reverse)
+                        self.scene_caption(ranged is not None, reverse, sized)
                     if ready:
                         self.scene_frame(
                             path, scene, ranged, f"analysis-scene-{index}", window, reverse
@@ -1103,11 +1135,22 @@ class _AnalysisPage:
         args = event.args if isinstance(event.args, dict) else {}
         if args.get("host") != "analysis-iv-chart" or self.model is None or self.choice is None:
             return
-        bias_mV = args.get("x")
+        bias_mV, current_nA = args.get("x"), args.get("y")
         if not isinstance(bias_mV, int | float):
             return
+        # The point is a run the chart draws: one that ended well, at its bias and its current,
+        # so a run of the study and a sweep's point at one bias are told apart.
         for choice in self.model.choices(self.choice.study):
-            if choice.bias_V is not None and abs(choice.bias_V * 1e3 - bias_mV) < 1e-9:
+            if (
+                choice.status == "ok"
+                and choice.bias_V is not None
+                and math.isclose(choice.bias_V * 1e3, bias_mV, rel_tol=1e-9, abs_tol=1e-9)
+                and (
+                    not isinstance(current_nA, int | float)
+                    or choice.current_A is None
+                    or math.isclose(choice.current_A * 1e9, current_nA, rel_tol=1e-9, abs_tol=0)
+                )
+            ):
                 self.choice = choice
                 await self.redraw()
                 return
@@ -1133,7 +1176,13 @@ class _AnalysisPage:
     def rebuild(self, choice: RunChoice) -> None:
         assert self.model is not None
         threads = int(str(self.shell.settings.value("threads_per_solve")))
-        queue_rebuild(self.shell.queue, self.model.project, choice.directory, threads=threads)
+        queue_rebuild(
+            self.shell.queue,
+            self.model.project,
+            choice.directory,
+            threads=threads,
+            study=choice.study,
+        )
         ui.notify("The run is queued to solve again; its fields show when it is done.")
 
 

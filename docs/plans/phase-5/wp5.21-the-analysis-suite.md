@@ -276,6 +276,18 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
 > manifest and case among them, which broke the manifest's hash; the earlier rounds drew 3D only from scenes already
 > written. It now leaves `manifest.json` and `case.yaml` as the run wrote them, as a project's export does.
 
+> **Outcome — the ship ([code review 065](../../code_reviews/CODE_REVIEW_065.md)).** The test-scope read dropped two tests
+> outside §8.2.13 N1: a refusal's wording and a comparison file's round trip. The physics review's points closed
+> QR-08's NOTE, which now names all three numbers and the floor; its doubt on the maps' linear reads stays open as
+> REV-270. Code review 065 found 8 important findings and 10 nits, all fixed:
+> - the explorer opens on the newest run;
+> - a comparison says why a run cannot draw, and does not retry a failed read;
+> - a component's 3D pair takes the range of the vector's size;
+> - a drag-zoom no longer picks an I–V point.
+>
+> Measured to here: 4 sessions, 7.7 agent hours and 11 touches; the ship ran in the implementing session. The estimate
+> was about eight sessions, 12 to 18 agent hours and 16 touches.
+
 ### Verification
 
 | Test | Tier | Identifiers | Oracle and tolerance | Command |

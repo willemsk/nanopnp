@@ -1168,7 +1168,7 @@ class _StudyPane(_Pane[StudyModel]):
                 ui.label("Nothing is queued. Click Run study to start a run.").classes("later")
         recorded = self.recorded()
         if recorded is not None:
-            self.show_rungs(recorded_convergence(Path(recorded)))
+            self.show_rungs(self.replayed(recorded))
         else:
             self.show_rungs(
                 None if picked is None or picked.run is None else picked.run.convergence
@@ -1180,6 +1180,11 @@ class _StudyPane(_Pane[StudyModel]):
         if shown is None or self.model is None:
             return None
         return shown if Path(shown) in self.model.records() else None
+
+    def replayed(self, recorded: str) -> ConvergenceModel | None:
+        """Return a recorded run's convergence, read from the project's store first."""
+        store = None if self.model is None else self.model.project.session().store
+        return recorded_convergence(Path(recorded), store)
 
     def show_rungs(self, convergence: ConvergenceModel | None) -> None:
         self.rungs_box.clear()
@@ -1253,12 +1258,12 @@ class _StudyPane(_Pane[StudyModel]):
         self.runs_chart.show(convergence_chart(run.convergence))
 
     def follow_recorded(self, recorded: str) -> None:
-        """Draw a recorded run's convergence, replayed from its stored history (VER-44)."""
+        """Draw a recorded run's convergence, replayed from its stored history."""
         if self.run_seen == ("recorded", recorded) or self.run_summary is None:
             return
         self.run_seen = ("recorded", recorded)
         self.show_runs()
-        convergence = recorded_convergence(Path(recorded))
+        convergence = self.replayed(recorded)
         name = Path(recorded).name[:12]
         if convergence is None:
             self.runs_chart.element.classes("runs-plot-none")

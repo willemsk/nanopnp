@@ -230,7 +230,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
 
     @app.get("/api/analysis/scene")
     def analysis_scene(run: str, field: str, range: str = "") -> FileResponse:
-        """Serve a run's scene of one field, written once by a render child (VER-44)."""
+        """Serve a run's scene of one field, written once by a render child."""
         _, path = analysed(run)
         scene = path / "viewer" / f"{scene_stem(field, ranged(range))}.json"
         if not scene.is_file():

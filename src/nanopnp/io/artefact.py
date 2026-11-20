@@ -48,7 +48,8 @@ FIELDS_SCHEMA = "nanopnp/fields/v0.5"
 SOLUTION_SCHEMA = "nanopnp/solution/v0.5"
 
 FIELD_NORMS = "field_norms"
-"""The solve summary's and the run record's entry: each converged field's weighted L2 norm."""
+"""The solve summary's and the run record's entry: each converged field's weighted L2 norm, its
+gradient's and each component's weighted integral."""
 
 QOI_SCHEMA = "nanopnp/qoi/v0.5"
 

@@ -496,7 +496,7 @@ def reproduce(
                 recorded, result.quantities, tolerance=tolerance
             )
         # The solve's key covers its inputs, not the state it reached: the fields' norms are the
-        # numbers a reproduction stopped at its solve compares (REV-264).
+        # numbers a reproduction stopped at its solve compares.
         norm_drifts: tuple[Drift, ...] = ()
         norm_worst: float | None = None
         unchecked: tuple[str, ...] = ()
