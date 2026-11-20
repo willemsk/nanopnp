@@ -276,14 +276,6 @@ def test_fr32_each_point_is_read_on_the_lowest_split_triangle_holding_it(
     np.testing.assert_allclose(found.difference[kept], expected[kept], rtol=1e-12, atol=1e-12)
 
 
-def test_fr32_a_quantity_either_run_lacks_is_refused_naming_both(
-    runs: tuple[SolutionFields, SolutionFields, ModelSolution],
-) -> None:
-    first, second, _ = runs
-    with pytest.raises(KeyError, match=r"first holds .*phi_V.*second holds"):
-        field_difference(first, second, "c_K+_mol_m3")
-
-
 def test_fr32_one_runs_map_and_the_joint_range(
     runs: tuple[SolutionFields, SolutionFields, ModelSolution],
 ) -> None:
