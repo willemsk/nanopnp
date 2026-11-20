@@ -254,7 +254,7 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
 - [x] 4651541 12. `/np-gui render shell`, `review`, `publish`: the round (D12); done when the digest is published.
   **Executor:** main
 - [x] 13. Compaction checkpoint; the author's verdicts collected. **Executor:** main
-- [ ] 14. The verdicts built; the round's WB row; the texts of *Amended when it lands*; a final render reviewed (D4 to
+- [x] fc2ec53 14. The verdicts built; the round's WB row; the texts of *Amended when it lands*; a final render reviewed (D4 to
   D7, D12); done when the review's blocking findings are fixed. **Executor:** main
 
 > **Outcome — the round's verdicts ([the record](../../design/reviews/2026-11-20-analysis.md)).** 8 keep, 6 change, 1
