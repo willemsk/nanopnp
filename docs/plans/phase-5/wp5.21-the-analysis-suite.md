@@ -251,9 +251,9 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
 - [x] 10. Compaction checkpoint. **Executor:** main
 - [x] 969e763 11. `render_shell.py` group `analysis` (D12); done when its check passes. **Executor:** general-purpose on
   Sonnet, high
-- [ ] 12. `/np-gui render shell`, `review`, `publish`: the round (D12); done when the digest is published.
+- [x] 4651541 12. `/np-gui render shell`, `review`, `publish`: the round (D12); done when the digest is published.
   **Executor:** main
-- [ ] 13. Compaction checkpoint; the author's verdicts collected. **Executor:** main
+- [x] 13. Compaction checkpoint; the author's verdicts collected. **Executor:** main
 - [ ] 14. The verdicts built; the round's WB row; the texts of *Amended when it lands*; a final render reviewed (D4 to
   D7, D12); done when the review's blocking findings are fixed. **Executor:** main
 
