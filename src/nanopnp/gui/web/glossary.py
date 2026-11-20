@@ -29,7 +29,7 @@ GLOSSARY: tuple[tuple[str, str], ...] = (
     (
         "Comparison",
         "A saved project item pairing two runs: their difference, the two maps side by side or "
-        "mirrored about the axis on one colour scale, or both in 3D on one range.",
+        "mirrored about the axis on one colour scale, or both on their meshes on one range.",
     ),
     (
         "Continuum model",

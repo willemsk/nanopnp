@@ -125,6 +125,14 @@ class FieldMap:
         picture = self.image()
         return png(picture.rgba(), picture.width, picture.height)
 
+    def extent_nm(self) -> tuple[float, float, float, float]:
+        """Return ``(r0, r1, z0, z1)`` the picture covers: its samples are the cells' centres."""
+        r_low, r_high = float(self.r_nm[0]), float(self.r_nm[-1])
+        z_low, z_high = float(self.z_nm[0]), float(self.z_nm[-1])
+        half_r = 0.5 * (r_high - r_low) / max(len(self.r_nm) - 1, 1)
+        half_z = 0.5 * (z_high - z_low) / max(len(self.z_nm) - 1, 1)
+        return (r_low - half_r, r_high + half_r, z_low - half_z, z_high + half_z)
+
 
 def _number(value: object) -> float | None:
     return float(value) if isinstance(value, int | float) and math.isfinite(value) else None
@@ -463,22 +471,33 @@ def map_drawing(
     note: str = "",
     outline_nm: tuple[np.ndarray, ...] = (),
     mirrored: bool = False,
+    backdrop: tuple[FieldMap, str] | None = None,
 ) -> Plane:
     """Return a map as the (r, z) view draws it: the picture, the cut's line and the probes.
 
     A click on it asks about the point, which places the cut or a probe. Each of ``outline_nm``,
     rows ``(r0, z0, r1, z1)``, is drawn over it; a ``mirrored`` map draws the cut and the probes
-    on both sides of the axis.
+    on both sides of the axis. ``backdrop``, a map of the whole domain on ``shown``'s scale and
+    its picture's URL, is drawn beneath, so the field fills the view past the close-up.
     """
     import numpy as np
 
-    r_low, r_high = float(shown.r_nm[0]), float(shown.r_nm[-1])
-    z_low, z_high = float(shown.z_nm[0]), float(shown.z_nm[-1])
-    half_r = 0.5 * (r_high - r_low) / max(len(shown.r_nm) - 1, 1)
-    half_z = 0.5 * (z_high - z_low) / max(len(shown.z_nm) - 1, 1)
-    extent = (r_low - half_r, r_high + half_r, z_low - half_z, z_high + half_z)
+    extent = shown.extent_nm()
     stops = palette_stops(shown.palette)
-    layers: list[dict[str, Any]] = [
+    layers: list[dict[str, Any]] = []
+    if backdrop is not None:
+        whole, whole_url = backdrop
+        under: dict[str, Any] = {
+            "id": "field-whole",
+            "kind": "image",
+            "url": whole_url,
+            "extent_nm": [round(value, 6) for value in whole.extent_nm()],
+            "scale": list(whole.scale),
+        }
+        if dark_palette(whole.palette) != whole.palette:
+            under["dark"] = {"url": f"{whole_url}&dark=1"}
+        layers.append(under)
+    layers.append(
         {
             "id": "field",
             "kind": "image",
@@ -494,17 +513,18 @@ def map_drawing(
                 "palette": stops,
             },
         }
-    ]
+    )
     dark = dark_palette(shown.palette)
     if dark != shown.palette:
         # A dark canvas takes the diverging map through a dark middle, the picture and its bar.
-        layers[0]["dark"] = {"url": f"{image_url}&dark=1", "bar": palette_stops(dark)}
+        layers[-1]["dark"] = {"url": f"{image_url}&dark=1", "bar": palette_stops(dark)}
     for index, segments in enumerate(outline_nm):
         if len(segments):
             layers.append(
                 {
                     "id": f"outline-{index}",
                     "kind": "line",
+                    "role": "outline",
                     "segments": True,
                     "points_nm": [round(float(value), 4) for value in segments.ravel()],
                     "title": "Outline",

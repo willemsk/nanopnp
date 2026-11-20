@@ -288,6 +288,13 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
 > Measured to here: 4 sessions, 7.7 agent hours and 11 touches; the ship ran in the implementing session. The estimate
 > was about eight sessions, 12 to 18 agent hours and 16 touches.
 
+> **Outcome — round 2 ([the record](../../design/reviews/2026-11-20-analysis-2.md)).** Collected after the merge: 11
+> keep and 6 change of 17 picks. Built at the collect (WB-53): a map draws the whole domain beneath the pore's
+> close-up, on its scale, a comparison's the whole overlap; the outline is 1 px, drawn whole; the axial cut stands
+> above the quantities. Three cards asked whether the 3D view was a mesh view. It is the field on the solve's flat
+> mesh, and the author chose "Mesh now, 3D in tree": the view is named *Mesh*, and a true 3D view, the field turned
+> about the axis, joins REV-268's round.
+
 ### Verification
 
 | Test | Tier | Identifiers | Oracle and tolerance | Command |

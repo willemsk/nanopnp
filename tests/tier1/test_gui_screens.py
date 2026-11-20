@@ -604,7 +604,7 @@ def test_ver78_o_on_the_mesh_fetches_the_scene_from_the_origin_and_draws_it(
     page, errors, requests = _opened(browser, solved, "/analysis/explorer")
     try:
         page.wait_for_selector('#analysis-map[data-map-ready="1"]', timeout=SOLVE_WAIT_MS)
-        page.locator("[data-control=analysis-on-mesh] button:has-text('3D')").click()
+        page.locator("[data-control=analysis-on-mesh] button:has-text('Mesh')").click()
         page.wait_for_selector("iframe[data-control=analysis-scene]", timeout=SOLVE_WAIT_MS)
         viewer = _viewer(page, "analysis-scene")
     finally:
@@ -637,7 +637,7 @@ def test_ver78_o_the_pairs_scenes_take_one_colour_range(solved: str, browser: Br
     origin = solved.split("/?")[0]
     page, errors, requests = _opened(browser, solved, "/analysis/compare")
     try:
-        page.locator("[data-control=analysis-view] button:has-text('3D')").click()
+        page.locator("[data-control=analysis-view] button:has-text('Mesh')").click()
         for index in (0, 1):
             page.wait_for_selector(
                 f"iframe[data-control=analysis-scene-{index}]", timeout=SOLVE_WAIT_MS
