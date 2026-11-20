@@ -53,7 +53,7 @@ from nanopnp.post.fields import (
     quantity_name,
 )
 
-__all__ = ["analysis_page", "comparison_maps", "map_of"]
+__all__ = ["Scales", "analysis_page", "comparison_maps", "map_of"]
 
 _RENDERS: dict[tuple[Path, str], RenderProcess] = {}
 """The render children of the runs' fields and scenes, by run and what they write."""
@@ -62,7 +62,8 @@ _FAILED: dict[tuple[Path, str], str] = {}
 """What a render child said where it drew nothing, by run and what it was asked for."""
 
 _MAPS: dict[tuple[object, ...], FieldMap] = {}
-_KEPT_MAPS = 8
+# A comparison's four maps and their four backdrops, with the explorer's two.
+_KEPT_MAPS = 16
 # A page's maps are made in worker threads and its pictures served in others.
 _MAPS_LOCK = threading.Lock()
 
@@ -70,7 +71,7 @@ VIEW_NAMES = {
     "difference": "Difference",
     "maps": "Side by side",
     "mirrored": "Mirrored",
-    "mesh": "3D",
+    "mesh": "Mesh",
 }
 """Each view a comparison opens on, as its control names it."""
 
@@ -139,14 +140,25 @@ def map_of(
     )
 
 
+Scales = tuple[tuple[float, float], tuple[float, float]]
+"""A comparison's two scales: the pair's, which its mirrored map shares, and the difference's."""
+
+
 def comparison_maps(
-    model: AnalysisModel, name: str, *, whole: bool = False, positive: Positive = "blue"
+    model: AnalysisModel,
+    name: str,
+    *,
+    whole: bool = False,
+    positive: Positive = "blue",
+    scales: Scales | None = None,
 ) -> dict[str, FieldMap] | None:
     """Return a comparison's maps, ``first``, ``second``, ``difference`` and ``mirrored``.
 
     None until both runs' fields are read.
 
     They span the close-up that holds both pores, or with ``whole`` the fluids' overlap.
+    ``scales`` replace the file's range and the difference's own: a backdrop of the whole
+    domain takes its close-up's.
 
     Raises
     ------
@@ -160,7 +172,8 @@ def comparison_maps(
         return None
     shown = (compared.quantity, compared.colour_map, compared.range)
     stamp = (model.solve_hash(first_run), model.solve_hash(second_run))
-    pair = (first_run, second_run, *stamp, *shown, whole, positive)
+    pair = (first_run, second_run, *stamp, *shown, whole, positive, scales)
+    pair_range = compared.range if scales is None else scales[0]
     window = None if whole else pore_window(first, second)
 
     def paired() -> tuple[FieldMap, FieldMap]:
@@ -169,7 +182,7 @@ def comparison_maps(
             second,
             compared.quantity,
             palette=compared.colour_map,
-            colour_range=compared.range,
+            colour_range=pair_range,
             window_nm=window,
             positive=positive,
         )
@@ -183,6 +196,7 @@ def comparison_maps(
             second,
             compared.quantity,
             palette=compared.colour_map,
+            colour_range=None if scales is None else scales[1],
             window_nm=window,
             positive=positive,
         ),
@@ -209,17 +223,22 @@ def _outline(model: AnalysisModel, run_dir: Path) -> Any:  # noqa: ANN401 - an a
 
 
 def _whole_field(quantity: str) -> bool:
-    # A component is drawn in 3D as its vector whole, on the renderer's own range; a scalar, an
-    # alias such as potential among them, on the map's.
+    # A component is drawn on the mesh as its vector whole, on the renderer's own range; a
+    # scalar, an alias such as potential among them, on the map's.
     return FIELD_ALIASES.get(quantity, (quantity, None))[1] is None
 
 
 def _reversed(colour_range: tuple[float, float] | None, positive: Positive) -> bool:
     # The renderer's map runs blue to red from low to high: where positive is blue, a range
-    # across zero is handed to it reversed, so the 3D view's signs read as the map's.
+    # across zero is handed to it reversed, so the mesh view's signs read as the map's.
     return (
         colour_range is not None and colour_range[0] < 0.0 < colour_range[1] and positive == "blue"
     )
+
+
+def _range_text(colour_range: tuple[float, float]) -> str:
+    # A range in a query: each number exact, so the picture's request finds the kept map.
+    return f"{float(colour_range[0])!r},{float(colour_range[1])!r}"
 
 
 def _window_query(window: tuple[float, float, float, float] | None) -> dict[str, str]:
@@ -451,8 +470,6 @@ class _AnalysisPage:
             with self.tile("Current against bias", "analysis-iv"):
                 chart = ChartView("analysis-iv-chart", "analysis-iv-chart", classes="tile-chart")
                 chart.show(iv_chart(self.model.choices(choice.study), choice.directory))
-            with self.tile("Quantities", "analysis-quantities"):
-                self.quantities_tile(choice)
             with self.tile(f"Axial cut, r = {self.cut_r_nm:.3g} nm", "analysis-cut"):
                 if fields is None:
                     ui.label(self.unread(choice, "cut")).classes("later")
@@ -464,6 +481,8 @@ class _AnalysisPage:
                     cut.show(
                         cut_chart(((choice.label, fields),), self.quantity, self.cut_r_nm, window)
                     )
+            with self.tile("Quantities", "analysis-quantities"):
+                self.quantities_tile(choice)
 
     def explain(self, choice: RunChoice, state: str, read: bool) -> None:
         assert self.model is not None
@@ -564,7 +583,7 @@ class _AnalysisPage:
             _named(quantities), value=self.quantity, label="Quantity", on_change=self.on_quantity
         ).props("dense data-control=analysis-quantity").classes("w-full")
         if not self.on_mesh:
-            # The 3D view draws in the renderer's own colour map, on the map's range.
+            # The mesh view draws in the renderer's own colour map, on the map's range.
             ui.select(
                 _palettes(),
                 value=self.palette or "",
@@ -672,13 +691,14 @@ class _AnalysisPage:
             return
         with self.head:
             self.view_switch(
-                {"map": "Map", "mesh": "3D"},
+                {"map": "Map", "mesh": "Mesh"},
                 "mesh" if self.on_mesh else "map",
                 self.on_view,
                 "analysis-on-mesh",
                 "View",
             )
         window = None if self.whole else pore_window(fields)
+        positive = charge_colours(self.shell)
         shown = await run.io_bound(
             lambda: (
                 map_of(
@@ -688,7 +708,7 @@ class _AnalysisPage:
                     self.palette,
                     self.colour_range,
                     whole=self.whole,
-                    positive=charge_colours(self.shell),
+                    positive=positive,
                 )
                 if self.model is not None
                 else None
@@ -703,19 +723,40 @@ class _AnalysisPage:
             self.scene_caption("the map's colour range" if ranged is not None else None, reverse)
             self.scene_frame(choice.directory, scene, ranged, "analysis-scene", window, reverse)
             return
+        asked = {
+            "run": _relative(self.model, choice.directory),
+            "quantity": self.quantity,
+            "palette": self.palette or "",
+        }
         query = urlencode(
             {
-                "run": _relative(self.model, choice.directory),
-                "quantity": self.quantity,
-                "palette": self.palette or "",
+                **asked,
                 **({"frame": "whole"} if self.whole else {}),
-                **(
-                    {"range": f"{self.colour_range[0]!r},{self.colour_range[1]!r}"}
-                    if self.colour_range is not None
-                    else {}
-                ),
+                **({} if self.colour_range is None else {"range": _range_text(self.colour_range)}),
             }
         )
+        backdrop = None
+        if not self.whole:
+            # The whole domain on the close-up's scale, beneath it: the field fills the view.
+            scale = shown.scale
+            whole = await run.io_bound(
+                lambda: (
+                    map_of(
+                        self.model,
+                        choice.directory,
+                        self.quantity,
+                        self.palette,
+                        scale,
+                        whole=True,
+                        positive=positive,
+                    )
+                    if self.model is not None
+                    else None
+                )
+            )
+            if whole is not None:
+                url = urlencode({**asked, "frame": "whole", "range": _range_text(scale)})
+                backdrop = (whole, f"/api/analysis/image?{url}")
         outline = _outline(self.model, choice.directory) if self.outline else None
         drawing = map_drawing(
             shown,
@@ -723,6 +764,7 @@ class _AnalysisPage:
             cut_r_nm=self.cut_r_nm,
             probes=tuple(self.probes),
             outline_nm=() if outline is None else (outline,),
+            backdrop=backdrop,
         )
         ui.element("div").props("id=analysis-map data-control=analysis-map").classes("tile-map")
         self.link_chip()
@@ -731,12 +773,12 @@ class _AnalysisPage:
         )
 
     def scene_caption(self, ranged: str | None, reverse: bool) -> None:
-        """Say what the 3D view's colours are: the renderer's map, on which range, which signs.
+        """Say what the mesh view draws: the field on the solve's mesh, in which colours.
 
         ``ranged`` names the range the colours run on, as "the map's colour range"; None for the
         renderer's own.
         """
-        parts = ["The 3D view draws in the renderer's own colour map"]
+        parts = ["The field on the solve's mesh, in the renderer's own colour map"]
         if ranged:
             parts.append(f" on {ranged}")
         if reverse:
@@ -758,7 +800,7 @@ class _AnalysisPage:
         if (run_dir / "viewer" / f"{stem}.json").is_file():
             query = {"run": _relative(self.model, run_dir), "field": scene}
             if colour_range is not None:
-                query["range"] = f"{colour_range[0]!r},{colour_range[1]!r}"
+                query["range"] = _range_text(colour_range)
             query.update(_window_query(window))
             if reverse:
                 query["reverse"] = "1"
@@ -928,7 +970,7 @@ class _AnalysisPage:
             "View",
         )
         if compared.view != "mesh":
-            # The 3D views draw in the renderer's own colour map.
+            # The mesh views draw in the renderer's own colour map.
             ui.select(
                 _palettes(),
                 value=compared.colour_map or "",
@@ -965,7 +1007,26 @@ class _AnalysisPage:
                 if ready
                 else None
             )
-            # The pair's 3D views take one range: the side-by-side maps' scale, or for a
+            scales: Scales | None = None
+            backdrops = None
+            if maps is not None and not self.whole and compared.view != "mesh":
+                # The whole overlap on the close-up's scales, beneath it: the field fills the view.
+                scales = (maps["first"].scale, maps["difference"].scale)
+                held_scales = scales
+                backdrops = await run.io_bound(
+                    lambda: (
+                        comparison_maps(
+                            self.model,
+                            name,
+                            whole=True,
+                            positive=charge_colours(self.shell),
+                            scales=held_scales,
+                        )
+                        if self.model is not None
+                        else None
+                    )
+                )
+            # The pair's mesh views take one range: the side-by-side maps' scale, or for a
             # component, whose vector is drawn whole and coloured by its size, that size's.
             sized = not _whole_field(compared.quantity)
             ranged = (
@@ -1031,6 +1092,20 @@ class _AnalysisPage:
                     query = urlencode(
                         {"which": which, **({"frame": "whole"} if self.whole else {})}
                     )
+                    backdrop = None
+                    if backdrops is not None and scales is not None:
+                        whole_query = urlencode(
+                            {
+                                "which": which,
+                                "frame": "whole",
+                                "pair": _range_text(scales[0]),
+                                "difference": _range_text(scales[1]),
+                            }
+                        )
+                        backdrop = (
+                            backdrops[which],
+                            f"/api/analysis/compare/{name}/image?{whole_query}",
+                        )
                     drawing = map_drawing(
                         maps[which],
                         f"/api/analysis/compare/{name}/image?{query}",
@@ -1038,6 +1113,7 @@ class _AnalysisPage:
                         probes=tuple(self.probes),
                         outline_nm=self.compared_outline(which, runs),
                         mirrored=which == "mirrored",
+                        backdrop=backdrop,
                     )
                     host = f"analysis-map-{which}"
                     ui.element("div").props(f"id={host} data-control={host}").classes("tile-map")

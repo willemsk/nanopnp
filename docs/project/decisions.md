@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,477. By source: history ruling 369; plan decision row 738; REV row 270; MOD row 18; OPN row 9; WB row 52; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
+Rows: 1,478. By source: history ruling 369; plan decision row 738; REV row 270; MOD row 18; OPN row 9; WB row 53; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
 
-By decider: author 614; open 5; session, own call 855; session, put to the author 3.
+By decider: author 615; open 5; session, own call 855; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1478,6 +1478,7 @@ By decider: author 614; open 5; session, own call 855; session, put to the autho
 | WB-50 | author | `docs/design/workbench.md` |  | WP5.01 | The Analysis round: the 3D view, the map's outline, *Side by side*, the rebuild and the rungs / The author, marking the Analysis drafts (`reviews/2026-11-20-analysis.md`): of the 3D view, "1) map's scale 2) on 3) not su… | docs/design/workbench.md | in the design document |
 | WB-51 | author | `docs/design/workbench.md` |  | WP5.01 | Analysis as an editable tree of results, and the charts' library / Of the explorer: "a lot of screen real-estate is being given to the \"Results\" explorer tool settings. This should be more efficiently organized. Perha… | docs/design/workbench.md | in the design document |
 | WB-52 | author | `docs/design/workbench.md` |  | WP5.01 | The workbench's wording / Of Runs: "\"Its rungs\" --&gt; \"The rungs\": I would like to remove these kind of \"way-of-wording\" throughout the package (other example: \"What the model shows.\", \"Study's Runs starts one\")… | docs/design/workbench.md | in the design document |
+| WB-53 | author | `docs/design/workbench.md` |  | WP5.01 | The Analysis round 2: the mesh view, the map drawn whole, the outline, charts above numbers / The author, marking the Analysis suite as it went to merge (`reviews/2026-11-20-analysis-2.md`): of the field tile, "The fiel… | docs/design/workbench.md | in the design document |
 | current.md bullet | author | `docs/plans/current.md` |  |  | Process rules** are §8.4. **Cost fixes follow measurement** (M2). **Phase 5 is a browser workbench, §8.2.17 S1 to | §8.4, §8.2.17 S1 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | The `MOD-nn` rulings stand** (§8.2.8). **A moved edge edits `modularity-layering.yaml` in its commit (VER-61)**; a | §8.2.8, VER-61 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | A `Case` is the case document; a `Session` runs it for every caller** (§8.2.23). **The front end is NiceGUI; Mol | §8.2.23 | in force (cache) |

@@ -41,8 +41,8 @@ results, which also picks the chart library (REV-268).
 - **Meso holds Density, Outline and Charge map; the 200 ms line is WP5.22's, after Analysis** (AR7, AR8; AS1 to
   AS3). **An edit marks the atoms it moves; the overlay is kept; a study's charge node opens the continuum model's**
   (AT1 to AT4). **The charge map opens on the 99th percentile; a free list of layers is its own package** (WB-49).
-  **Every plot is uPlot's, its axes the user's; any Matplotlib map; Comparison's pair switches between maps and 3D**
-  (AU1 to AU3). **Analysis becomes a tree of results before WP5.22, its chart library chosen again** (WB-51). **The words follow
+  **Every plot is uPlot's, its axes the user's; any Matplotlib map; Comparison's pair switches between maps and the mesh view; a true 3D view is the tree's**
+  (AU1 to AU3; WB-53). **Analysis becomes a tree of results before WP5.22, its chart library chosen again** (WB-51). **The words follow
   five rules** (WB-52).
 
 ## Somebody else's

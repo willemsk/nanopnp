@@ -16,7 +16,7 @@ from nicegui import ui
 
 from nanopnp.gui.render import RENDERER_DIRECTORY, host_page, scene_stem
 from nanopnp.gui.web.analysis import AnalysisModel, FieldMap, cut_chart, dark_palette
-from nanopnp.gui.web.analysis_tools import analysis_page, comparison_maps, map_of
+from nanopnp.gui.web.analysis_tools import Scales, analysis_page, comparison_maps, map_of
 from nanopnp.gui.web.assets import ASSETS, TOKENS
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
@@ -266,14 +266,16 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         )
 
     def compared_maps(
-        name: str, *, whole: bool = False
+        name: str, *, whole: bool = False, scales: Scales | None = None
     ) -> tuple[AnalysisModel, dict[str, FieldMap]]:
         project = shell.bench.project
         if project is None or name not in project.items("comparison"):
             raise HTTPException(404, f"no comparison {name!r}")
         model = AnalysisModel(project)
         try:
-            maps = comparison_maps(model, name, whole=whole, positive=charge_colours(shell))
+            maps = comparison_maps(
+                model, name, whole=whole, positive=charge_colours(shell), scales=scales
+            )
         except (KeyError, ValueError) as error:
             raise HTTPException(422, str(error)) from None
         if maps is None:
@@ -281,9 +283,28 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         return model, maps
 
     @app.get("/api/analysis/compare/{name}/image")
-    def compare_image(name: str, which: str, dark: str = "", frame: str = "") -> Response:
-        """Serve one map of a comparison: ``first``, ``second`` or their ``difference``."""
-        _, maps = compared_maps(name, whole=frame == "whole")
+    def compare_image(
+        name: str,
+        which: str,
+        dark: str = "",
+        frame: str = "",
+        pair: str = "",
+        difference: str = "",
+    ) -> Response:
+        """Serve one map of a comparison: ``first``, ``second``, ``mirrored`` or ``difference``.
+
+        ``pair`` and ``difference``, each ``low,high``, are the scales a backdrop takes from
+        its close-up; both or neither.
+        """
+        pair_range, difference_range = ranged(pair), ranged(difference)
+        if (pair_range is None) != (difference_range is None):
+            raise HTTPException(422, "pair and difference are given both or neither")
+        scales = (
+            None
+            if pair_range is None or difference_range is None
+            else (pair_range, difference_range)
+        )
+        _, maps = compared_maps(name, whole=frame == "whole", scales=scales)
         if which not in maps:
             raise HTTPException(422, f"which {which!r} is not one of {', '.join(maps)}")
         shown = maps[which]

@@ -10,8 +10,11 @@
     reservoir: ['--muted', 1, [6, 4]], probe: ['--warn', 1.5, [4, 3]], lumen: ['--ok', 1.5, []],
     original: ['--muted', 1.5, [3, 3]], picked: ['--accent', 3, []], domain: ['--canvas-plot-ink', 1, []],
     boundary: ['--canvas-plot-ink', 2.5, []], worst: ['--warn', 1.5, [6, 4]],
-    plane: ['--muted', 1.5, [6, 4]],
+    plane: ['--muted', 1.5, [6, 4]], outline: ['--canvas-plot-ink', 1, []],
   };
+  // A line's halo over a picture, in px past its width: a map's outline takes a thin one.
+  const HALO = { outline: 1 };
+  const halo = (layer) => HALO[layer.role] ?? 3;
   // A line of no role: its width.
   const CURVE_W = 2;
   const SUPERSCRIPT = { '-': '\u207b', 0: '\u2070', 1: '\u00b9', 2: '\u00b2', 3: '\u00b3', 4: '\u2074',
@@ -466,7 +469,7 @@
         // Over a picture or a mesh a line takes a halo in the canvas's colour, so it reads on any.
         if (pictured) {
           ctx.strokeStyle = token('--canvas-plot') || '#ffffff';
-          ctx.lineWidth = (width + 3) / this.scale;
+          ctx.lineWidth = (width + halo(layer)) / this.scale;
           ctx.setLineDash([]);
           ctx.stroke(drawn.path);
         }

@@ -3986,6 +3986,12 @@ The critique of round 2's render, at WP5.21's ship, adds five points for the rou
 - take *Mirrored* as the model for every two-run view;
 - name a run by sight, such as "+50 mV, ASP21N", not by eight hex digits.
 
+Round 2's collect, on 20 November 2026 (WB-53), adds two points for the round:
+- a true 3D view, the (r, z) field turned about the axis and cut open, as COMSOL's Revolution 2D draws it, is one of
+  the plot types to put to the author. Asked, the author chose "Mesh now, 3D in tree": the view WP5.21 drew in 3D
+  is the field on the solve's flat mesh, now named *Mesh*, and the library the round chooses draws the true one;
+- the charts stand above the numbers ("Put graph at the top, values below.").
+
 **Open**, ruled by the author on 20 November 2026: `/np-gui grill` on the tree with the author, then `/np-plan amend 5`
 places its package after WP5.21 and before WP5.22. WP5.21 ships its tiles and uPlot as they are.
 

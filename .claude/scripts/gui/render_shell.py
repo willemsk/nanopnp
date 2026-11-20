@@ -918,7 +918,7 @@ EXPLORER_EXTRAS: tuple[tuple[str, list[str], int], ...] = (
     ("cut", [MAP, "[data-control=analysis-cut] h2"], ANALYSIS_WAIT_MS),
     ("probe", [f"{PLACING} button:has-text('Probe')", MAP], ANALYSIS_WAIT_MS),
     ("outline", ["[data-control=analysis-outline]"], ANALYSIS_WAIT_MS),
-    ("on-mesh", ["[data-control=analysis-on-mesh] button:has-text('3D')"], MESH_WAIT_MS),
+    ("on-mesh", ["[data-control=analysis-on-mesh] button:has-text('Mesh')"], MESH_WAIT_MS),
     # The two last: the run picked is held by the server, so each shot after it opens on it.
     (
         "sweep-point",
@@ -937,7 +937,7 @@ COMPARE_VIEWS = (
     ("difference", "Difference", ANALYSIS_WAIT_MS),
     ("maps", "Side by side", ANALYSIS_WAIT_MS),
     ("mirrored", "Mirrored", ANALYSIS_WAIT_MS),
-    ("mesh", "3D", MESH_WAIT_MS),
+    ("mesh", "Mesh", MESH_WAIT_MS),
 )
 """The comparison's four views; each is written to its file, so the next shot of the server finds
 it, and each shot chooses its own."""
