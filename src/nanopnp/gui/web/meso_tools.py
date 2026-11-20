@@ -152,11 +152,15 @@ class _MesoPane(_ContinuumPane):
         molecular = model.molecular()
         if self.tool.id in PORE_TOOLS and "contour" not in self.walked:
             said = SUPPLIED.get(self.supplied or "", "reads no structure")
-            where = "here" if self.tool.id == "outline" else "in Outline"
-            ui.label(
-                f"This model {said}, so stages 2 to 4 do not run. "
-                f"Draw and edit the outline {where}."
-            )
+            lead = f"This model {said}, so stages 2 to 4 do not run. Draw and edit the outline"
+            if self.tool.id == "outline":
+                ui.label(f"{lead} here.")
+            else:
+                # A pointer to another place is a link (WB-52).
+                with ui.element("p"):
+                    ui.label(f"{lead} in ").classes("inline")
+                    ui.link("Outline", "/meso/outline").props("data-control=meso-outline-link")
+                    ui.label(".").classes("inline")
         elif molecular is not None:
             ui.label(f"Built over molecular model {molecular}, outside any study.")
         else:
@@ -209,7 +213,7 @@ class _MesoPane(_ContinuumPane):
                 on_change=lambda e: self.represent(str(e.value)),
             ).props(
                 "dense outlined options-dense data-control=view-representation "
-                'aria-label="Representation"'
+                'aria-label="Structure"'
             ).set_enabled(bool(self.scene_key()))
 
     async def represent(self, representation: str) -> None:

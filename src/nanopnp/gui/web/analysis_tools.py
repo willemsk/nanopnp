@@ -43,7 +43,13 @@ from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import charge_colours
 from nanopnp.io.project import COMPARISON_VIEWS, ComparisonFile
 from nanopnp.plot.data import fluid_outline_nm
-from nanopnp.post.fields import field_at, field_unit, joint_range, quantity_name
+from nanopnp.post.fields import (
+    FIELD_ALIASES,
+    field_at,
+    field_unit,
+    joint_range,
+    quantity_name,
+)
 
 __all__ = ["analysis_page", "comparison_maps", "map_of"]
 
@@ -194,6 +200,20 @@ def _outline(model: AnalysisModel, run_dir: Path) -> Any:  # noqa: ANN401 - an a
     if key not in _OUTLINES:
         _OUTLINES[key] = fluid_outline_nm(fields)
     return _OUTLINES[key]
+
+
+def _whole_field(quantity: str) -> bool:
+    # A component is drawn in 3D as its vector whole, on the renderer's own range; a scalar, an
+    # alias such as potential among them, on the map's.
+    return FIELD_ALIASES.get(quantity, (quantity, None))[1] is None
+
+
+def _reversed(colour_range: tuple[float, float] | None, positive: Positive) -> bool:
+    # The renderer's map runs blue to red from low to high: where positive is blue (WB-39), a range
+    # across zero is handed to it reversed, so the 3D view's signs read as the map's.
+    return (
+        colour_range is not None and colour_range[0] < 0.0 < colour_range[1] and positive == "blue"
+    )
 
 
 def _window_query(window: tuple[float, float, float, float] | None) -> dict[str, str]:
@@ -443,8 +463,8 @@ class _AnalysisPage:
         assert self.model is not None
         if state == "removed":
             self.say(
-                "The fields of this run were cleaned from the store; its numbers are kept. Solve "
-                "it again to show its fields: it takes as long as its first solve."
+                "The store no longer holds the fields of this run, and the run record keeps the "
+                "numbers. Solve again to draw the map: this takes as long as the first solve."
             )
         elif state == "unsolved":
             self.say("This run did not reach its solve: it has no fields.")
@@ -462,7 +482,7 @@ class _AnalysisPage:
         assert self.model is not None
         state = self.model.state(choice.directory)
         if state == "removed":
-            return f"Solve the run again to draw its {what}."
+            return f"Solve again to draw the {what}."
         if state == "unsolved":
             return f"The run has no fields to draw a {what} of."
         return f"The {what} draws once the run's fields are read."
@@ -526,7 +546,7 @@ class _AnalysisPage:
     ) -> None:
         """Draw a small switch among two or a few views, in a tile's head or in the pane."""
         ui.toggle(options, value=value, on_change=changed).props(
-            f'dense no-caps unelevated size=sm data-control={control} aria-label="{label}"'
+            f'dense no-caps unelevated data-control={control} aria-label="{label}"'
         ).classes("view-switch")
 
     def empty_tiles(self, text: str) -> None:
@@ -564,8 +584,9 @@ class _AnalysisPage:
         self,
         typed: tuple[float, float] | None,
         changed: Callable[[tuple[float, float] | None], Any],
+        quantity: str | None = None,
     ) -> None:
-        unit = field_unit(self.quantity)
+        unit = field_unit(quantity or self.quantity)
         with (
             ui.row()
             .classes("no-wrap items-start w-full")
@@ -649,7 +670,7 @@ class _AnalysisPage:
                 "mesh" if self.on_mesh else "map",
                 self.on_view,
                 "analysis-on-mesh",
-                "The field shows",
+                "View",
             )
         window = None if self.whole else pore_window(fields)
         shown = await run.io_bound(
@@ -671,13 +692,10 @@ class _AnalysisPage:
             return
         if self.on_mesh:
             scene = scene_field(self.quantity)
-            # A component's vector is drawn whole, on the renderer's own range.
-            ranged = shown.scale if scene == self.quantity else None
-            ui.label(
-                "The 3D view draws in the renderer's own colour map"
-                + (", on the map's colour range." if ranged else ".")
-            ).classes("field-hint")
-            self.scene_frame(choice.directory, scene, ranged, "analysis-scene", window)
+            ranged = shown.scale if _whole_field(self.quantity) else None
+            reverse = _reversed(ranged, charge_colours(self.shell))
+            self.scene_caption(ranged is not None, reverse)
+            self.scene_frame(choice.directory, scene, ranged, "analysis-scene", window, reverse)
             return
         query = urlencode(
             {
@@ -706,6 +724,15 @@ class _AnalysisPage:
             f"nano.map('analysis-map', {json.dumps(drawing.json())})", timeout=60
         )
 
+    def scene_caption(self, ranged: bool, reverse: bool) -> None:
+        """Say what the 3D view's colours are: the renderer's map, on the map's range and signs."""
+        parts = ["The 3D view draws in the renderer's own colour map"]
+        if ranged:
+            parts.append(" on the map's colour range")
+        if reverse:
+            parts.append(", positive blue as on the map")
+        ui.label("".join(parts) + ".").classes("field-hint")
+
     def scene_frame(
         self,
         run_dir: Path,
@@ -713,6 +740,7 @@ class _AnalysisPage:
         colour_range: tuple[float, float] | None,
         control: str,
         window: tuple[float, float, float, float] | None = None,
+        reverse: bool = False,
     ) -> None:
         assert self.model is not None
         stem = scene_stem(scene, colour_range)
@@ -722,6 +750,8 @@ class _AnalysisPage:
             if colour_range is not None:
                 query["range"] = f"{colour_range[0]!r},{colour_range[1]!r}"
             query.update(_window_query(window))
+            if reverse:
+                query["reverse"] = "1"
             ui.element("iframe").props(
                 f'src="/api/analysis/view?{urlencode(query)}" data-control={control} '
                 f'title="{scene} on the mesh"'
@@ -861,16 +891,18 @@ class _AnalysisPage:
             compared.view,
             lambda e: self.set_compared(view=e.value),
             "analysis-view",
-            "The comparison shows",
+            "View",
         )
-        ui.select(
-            _palettes(),
-            value=compared.colour_map or "",
-            label="Colour map",
-            on_change=lambda e: self.set_compared(colour_map=e.value or None),
-        ).props("dense data-control=analysis-colour-map").classes("w-full")
+        if compared.view != "mesh":
+            # The 3D views draw in the renderer's own colour map (AU2).
+            ui.select(
+                _palettes(),
+                value=compared.colour_map or "",
+                label="Colour map",
+                on_change=lambda e: self.set_compared(colour_map=e.value or None),
+            ).props("dense data-control=analysis-colour-map").classes("w-full")
         if compared.view in ("maps", "mirrored", "mesh"):
-            self.range_fields(compared.range, self.on_compared_range)
+            self.range_fields(compared.range, self.on_compared_range, compared.quantity)
         self.frame_control()
         if compared.view != "mesh":
             self.outline_control()
@@ -903,15 +935,24 @@ class _AnalysisPage:
             # The pair's 3D views take one range (AU3): the side-by-side maps' scale, or for a
             # component, whose vector is drawn whole, the two runs' joint range.
             ranged = (
-                (maps["first"].scale if scene == compared.quantity else joint)
-                if maps is not None and (joint := joint_range(held[0], held[1], compared.quantity))
+                (
+                    maps["first"].scale
+                    if _whole_field(compared.quantity)
+                    else joint_range(held[0], held[1], compared.quantity)
+                )
+                if maps is not None
                 else None
             )
+            reverse = _reversed(ranged, charge_colours(self.shell))
             for index, path in enumerate(runs):
                 with self.tile(self.run_name(path), f"analysis-pair-{index}"):
                     self.recorded_line(path)
+                    if index == 0:
+                        self.scene_caption(ranged is not None, reverse)
                     if ready:
-                        self.scene_frame(path, scene, ranged, f"analysis-scene-{index}", window)
+                        self.scene_frame(
+                            path, scene, ranged, f"analysis-scene-{index}", window, reverse
+                        )
         else:
             shown = {
                 "difference": ("difference",),
@@ -920,7 +961,7 @@ class _AnalysisPage:
             for which in shown:
                 title = {
                     "difference": "Second less first",
-                    "mirrored": "First on the left, second on the right",
+                    "mirrored": "Mirrored pair",
                 }.get(which) or self.run_name(runs[0 if which == "first" else 1])
                 both = which in ("difference", "mirrored")
                 with self.tile(title, f"analysis-compare-{which}"):

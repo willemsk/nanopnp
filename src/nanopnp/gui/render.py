@@ -203,6 +203,8 @@ _PAGE = Template("""<!DOCTYPE html>
       } catch (error) {}
       // [r0, r1, z0, z1] in the mesh's units: the camera opens on it, as the map's close-up.
       var frame = $frame_literal;
+      // The colour range handed over high to low: the renderer's map then runs red to blue.
+      var reverse = $reverse_literal;
       fetch($scene_literal)
         .then(function (answer) {
           if (!answer.ok) {
@@ -220,6 +222,12 @@ _PAGE = Template("""<!DOCTYPE html>
                 center: {x: x, y: y, z: 0}
               }
             });
+          }
+          var settings = render_data.gui_settings;
+          if (reverse && settings && settings.colormap_min !== undefined) {
+            var low = settings.colormap_min;
+            settings.colormap_min = settings.colormap_max;
+            settings.colormap_max = low;
           }
           var scene = new webgui.Scene();
           scene.init(document.body, render_data, {preserveDrawingBuffer: false});
@@ -240,12 +248,14 @@ def host_page(
     title: str,
     *,
     frame_nm: tuple[float, float, float, float] | None = None,
+    reverse: bool = False,
 ) -> str:
     """Return the HTML page that fetches one scene and draws it.
 
     The scene is not embedded, so a page is a few hundred bytes however large the scene. Its
     background follows the workbench's theme; ``frame_nm``, ``(r0, r1, z0, z1)`` in the mesh's
-    units, is the region its camera opens on, the whole mesh where None.
+    units, is the region its camera opens on, the whole mesh where None; ``reverse`` hands the
+    renderer its fixed colour range high to low, so its map runs the other way.
     """
     return _PAGE.substitute(
         title=html.escape(title),
@@ -253,6 +263,7 @@ def host_page(
         renderer_literal=json.dumps(renderer_url).replace("</", "<\\/"),
         scene_literal=json.dumps(scene_url).replace("</", "<\\/"),
         frame_literal=json.dumps(None if frame_nm is None else [float(v) for v in frame_nm]),
+        reverse_literal=json.dumps(reverse),
         flag=READY_FLAG,
     )
 

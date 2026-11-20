@@ -238,10 +238,13 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         return FileResponse(scene, media_type="application/json")
 
     @app.get("/api/analysis/view")
-    def analysis_view(run: str, field: str, range: str = "", frame: str = "") -> HTMLResponse:
+    def analysis_view(
+        run: str, field: str, range: str = "", frame: str = "", reverse: str = ""
+    ) -> HTMLResponse:
         """Serve the page that fetches a run's scene and draws it with the shipped renderer.
 
-        ``frame``, ``r0,r1,z0,z1`` in nm, is the region the camera opens on.
+        ``frame``, ``r0,r1,z0,z1`` in nm, is the region the camera opens on; ``reverse`` hands
+        the renderer its colour range high to low.
         """
         analysed(run)
         query = urlencode({"run": run, "field": field, **({"range": range} if range else {})})
@@ -258,6 +261,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
                 "/vendor/webgui/webgui.js",
                 f"{field} on the mesh",
                 frame_nm=opened,
+                reverse=bool(reverse),
             )
         )
 
