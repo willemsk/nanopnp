@@ -42,7 +42,7 @@ design document's renderer table, Analysis rows, rows Q37 to Q41, links 3 and 4,
 | D1 Fields at points, the difference | `post/fields.py`, NumPy only: `field_at` interpolates a `SolutionFields` quantity linearly on its P2 cells split in four, NaN outside its domain; `field_difference` samples both runs on one cell-centred (r, z) grid over their fluids' overlap, NaN where either lacks the cell, `second − first`. `plot/data.py:sampled` calls `field_at` | AG6; decided by the plan |
 | D2 A run's fields in the server | A render child writes `<run>/viewer/fields.npz` from `open_run(run).fields`, with the solve's hash; the server, importing no NGSolve, samples maps, cuts, probes and differences from it | VER-43's restated NOTE; decided by the plan |
 | D3 The field on the mesh | `/vendor/webgui` serves the shipped renderer; a workbench render writes `scene-<field>[-<range>].json` once, which an iframe's host page fetches when a tile opens it. Comparison's pair takes the joint range, in its own file | REV-28, REV-30, VER-44, CON-09; AU3, ruled by the author |
-| D4 The suite | Tools `explorer` and `compare` at `/analysis/<tool>`, `view="page"`. The explorer picks a study's run or sweep point; tiles: Field (a map, the cut's line and probes; *On the mesh*), I–V, Quantities (numbers, deviations, folder; Q37 to Q39), Axial cut. A click places the cut or a probe; typed values move them; a row's *Remove* unlinks one; dragging is WP5.23's | WB-06 links 3, 4; REV-238; decided by the plan |
+| D4 The suite | Tools `explorer` and `compare` at `/analysis/<tool>`, `view="page"`. The explorer picks a study's run or sweep point; tiles: Field (a map, the cut's line and probes; *On the mesh*), I–V, Quantities (numbers, deviations, folder; Q37 to Q39), Axial cut. A click places the cut or a probe; typed values move them; a row's *Remove* unlinks one; dragging is WP5.26's | WB-06 links 3, 4; REV-238; decided by the plan |
 | D5 Comparisons | `nanopnp/comparison/v0.6`: `name`, `runs` (two run folders relative to the project), `quantity`, `view` (`difference`, `maps`, `mesh`), `colour_map`, `range`; `Project.new_comparison`, `comparison`, `set_comparison`; a missing run is a problem. Any two runs, a quantity both carry. The pair's cut and probes stand on both maps; the cut's chart holds a series per run | FR-32, WB-04; AU2, AU3, ruled by the author |
 | D6 Plots | uPlot 1.6.32 at `assets/uplot/`, served at `/vendor/uplot`; `gui/web/chart.py:Chart`, `assets/chart.js`. Every XY plot moves: Electrolyte's two, Runs' convergence, the I–V, the cuts. Each axis linear, logarithmic or square root, its range typed; drag-zoom, hover | REV-253; AU1, ruled by the author |
 | D7 Colour maps | `matplotlib>=3.8` joins the `gui` extra; `gui/geometry.py:lookup_table` takes any registered name (`_r` reversed). Defaults: viridis; diverging where the range spans zero; a difference symmetric | WB-20; AU2, ruled by the author |
@@ -262,8 +262,8 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
 > map's range, framed on the pore through the scene's camera settings, its background the theme's; an *Outline*
 > option; Comparison's *Mirrored* view (`view: mirrored`); *Solve again* for a cleaned run (D9's rebuild, renamed);
 > the rungs as a table; a click placed to 0.01 nm. The tiles' layout, the probes' pane, the quantities shown and the
-> chart library go to a tree of results, a design round and a package before WP5.22 (WB-51, REV-268). The author took
-> a wording rule and sixteen examples, applied here; WP5.23 sweeps the rest (WB-52, REV-269).
+> chart library go to a tree of results, a design round and a package before WP5.24 (WB-51, REV-268). The author took
+> a wording rule and sixteen examples, applied here; WP5.26 sweeps the rest (WB-52, REV-269).
 
 > **Outcome — REV-264, ruled to this package at WP5.19's ship.** The solve records, per converged field, its r-weighted
 > L2 norm, its gradient's and each component's integral (`field_norms`, in its summary, the manifest's solver group and
@@ -308,8 +308,8 @@ comparison of the two studies' runs. Shoot each `/analysis/<tool>` light and dar
 
 ### Out of scope
 
-- Dragging on the canvas: WP5.23 (REV-238).
-- The 200 ms line on Analysis's views: WP5.22 (REV-258).
+- Dragging on the canvas: WP5.26 (REV-238).
+- The 200 ms line on Analysis's views: WP5.24 (REV-258).
 - Figure and field export: FR-28, v0.7. The 3D view keeps the renderer's colour map (AU2).
 
 ### Open questions

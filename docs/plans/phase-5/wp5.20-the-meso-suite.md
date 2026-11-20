@@ -366,8 +366,8 @@ python .claude/scripts/gui/render_shell.py --only meso <scratch dir>` exits 0 wi
 
 ### Out of scope
 
-- Handles dragged on the canvas or in Mol*: WP5.23 (REV-238).
-- The 200 ms line on the Charge map: WP5.22 (REV-258).
+- Handles dragged on the canvas: WP5.26; in Mol*, the structural mutator's phase (REV-238).
+- The 200 ms line on the Charge map: WP5.24 (REV-258).
 - A study's own charge with its overrides: shown nowhere (AT3); Study › Runs keeps each run's record.
 
 ### Open questions

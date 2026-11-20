@@ -160,7 +160,7 @@ measure. The commit re-runs `decisions.py` for the REV rows (the core's *Gate an
 `knowledge/` concept keeps its marker and adds a `knowledge/log.md` line, here and at item 4.
 
 **Item 4.** Draw each edge of Grounding D3 once. Stage 9 stands first with one line, "feeds every stage". Name
-each box `[n name]`. `gui/`: "The browser workbench (NiceGUI, `gui/web/`), and the PySide6 shell until WP5.23". The commit hook runs no
+each box `[n name]`. `gui/`: "The browser workbench (NiceGUI, `gui/web/`), and the PySide6 shell until WP5.27". The commit hook runs no
 pytest on a Markdown-only commit, so run VER-79 by hand: `uv run pytest tests/tier1/test_written_architecture.py`.
 
 **Item 5.** Example A is today's block less the `inputs:` key and its live lines (the `profile` and `pqr`
@@ -233,7 +233,7 @@ and 69 are fixed by their NOTE and REV row. Then `uv run .claude/scripts/audit/r
   > **Outcome — the 148 findings fixed, REV-216 and REV-222 fixed, 526 SHALLs to 517.** Every finding of the lists
   > and AUD-67 reads `fixed <sha>` in [the register](../../code_reviews/CODE_REVIEW_039/findings.md). Decisions this
   > session took that the plan does not hold, for `/np-ship` to check:
-  > - AUD-110: ADR-004's pending packaging text stays beside the decision, relabelled to land with WP5.23, by D4's
+  > - AUD-110: ADR-004's pending packaging text stays beside the decision, relabelled to land with WP5.27, by D4's
   >   restated-clauses rule, rather than moving to history. AUD-143: VER-43's pending NOTE states its changes in place.
   > - AUD-113 (6): the NOTE on a group that claims itself keeps its rule sentences and its SHALL; only the argument
   >   goes. AUD-136: Appendix B marks the COMSOL report's inactive values; §5.2.2's size table is unchanged.

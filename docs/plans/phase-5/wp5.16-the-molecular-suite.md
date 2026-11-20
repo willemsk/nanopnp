@@ -392,7 +392,7 @@ the budget) and a build held mid-walk.
 ### Out of scope
 
 - Dragging the axis and the membrane: REV-238 (AO2). A trajectory's upload and alignment beyond stage 1's.
-- The Continuum, Physics, Study and Analysis tools: WP5.17 to WP5.21; the keyboard pass over the canvases: WP5.23.
+- The Continuum, Physics, Study and Analysis tools: WP5.17 to WP5.21; the keyboard pass over the canvases: WP5.26.
 - Preparing or aligning a model from `inputs.pqr`, which has no structure: its Prepare and Ensemble screens name
   the PQR (item 7).
 

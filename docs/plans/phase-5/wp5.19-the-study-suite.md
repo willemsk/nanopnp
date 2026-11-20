@@ -348,7 +348,7 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 > - Switches have edges, and the group box shows its shading.
 > - Pore geometry's edit no longer raises after its refresh.
 >
-> The rest are open: a recorded run picked in Runs is WP5.21's (REV-260); the polish is WP5.23's (REV-261); an
+> The rest are open: a recorded run picked in Runs is WP5.21's (REV-260); the polish is WP5.26's (REV-261); an
 > exposed value's first name is a question for the author (REV-262); the charge screen's points join REV-259's round.
 > AG7's line is REV-258's. VER-78's text names the Study pages and each Build suite's Exposed values; FR-33's and
 > FR-39's matrix rows name their tests and review.
@@ -363,7 +363,7 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 > `e0332dd` raised 20 findings and fixed 14, among them `reproduce --upto` short of stage 7 refused on every charged
 > run, a sweep never collected when its last members were dropped unstarted, two axes of one name writing a sweep file
 > its loader refuses, and three export limits. Finding 16 stands as D7 rules it; findings 11 to 15 are REV-263, ruled
-> to WP5.23, finding 12 among them reversing item 4's move of the offset check to resolve. QR-08's NOTE states what a
+> to WP5.26, finding 12 among them reversing item 4's move of the offset check to resolve. QR-08's NOTE states what a
 > short reproduction compares and refuses. Measured: the implementing windows 6.4 agent hours and 15 touches in six
 > sessions, `/np-ship` to its review 0.8 agent hours and 3 touches in the sixth: 7.2 agent hours and 18 touches,
 > against the estimate of about six sessions, 9 to 14 agent hours and 14 touches.
@@ -425,7 +425,7 @@ median and p95 of each, the browser's GPU string and `--json`. Check: it runs he
 
 ### Out of scope
 
-- New models from scratch (REV-242), the canvas's handles and keyboard pass, REV-255's Conditions view: WP5.23.
+- New models from scratch (REV-242): WP5.27; the canvas's handles and keyboard pass, REV-255's Conditions view: WP5.26.
 - A run opening its result, the field in 3D, REV-240's variation view: WP5.21.
 - REV-41's `prepare` (FR-37) and region export (FR-28, v0.7).
 

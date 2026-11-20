@@ -360,7 +360,7 @@ guide says what v0.6 does. No case schema, public API or result changes. The
 - **Added**:
   - **REV-227**, the source checklist: the author's verdicts on the six findings that rest on the ESI or the
     COMSOL model report, each edit landed (AM16, AM18).
-  - **REV-228** (the site's links from the registers to the plans, accepted for WP5.23), **REV-229** (three
+  - **REV-228** (the site's links from the registers to the plans, accepted for WP5.27), **REV-229** (three
     proposed checks, after v1.0), **REV-230** (the correction file's comments), **REV-231** (a comment in
     `structure/axis.py`) and **REV-232** (three statements the physics reviewer doubted), the last three open.
 - **Changed**:
@@ -533,7 +533,7 @@ project, not a case**: it opens a folder, creates one in a missing or empty fold
 - **Amended**: NOTEs on FR-32 (§5.3.1), the older entries of a store (§5.3.2) and the optional members of a stage (§5.5); VER-64
   and VER-78; the Appendix A rows of FR-31, FR-32, FR-34, FR-35 and QR-16; the design document's folder.
 - **Open items**: REV-202 to REV-205, from the screen review: the problems list leads to a suite and not yet to a field (WP5.16 to WP5.19),
-  the frame's accessibility and layout limits (WP5.23), the settings' guards and the changed list's units (WP5.16), and the Study
+  the frame's accessibility and layout limits (WP5.26), the settings' guards and the changed list's units (WP5.16), and the Study
   page's fixture names and the charge screen's colour bar (WP5.19).
 
 ## [0.6.0-alpha.7] - 2026-11-04

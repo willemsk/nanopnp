@@ -672,7 +672,7 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 - `docs/plans/phase-5/phase-5-workbench.md:6` — **exists**: REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
 - `docs/plans/phase-5/phase-5-workbench.md:7` — **exists**: …needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (…
 - `docs/plans/phase-5/phase-5-workbench.md:7` — **exists**: …'s colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1); after the verdicts on WP5.08's frame, the frame's components, the…
-- `docs/plans/phase-5/phase-5-workbench.md:7` — **exists**: …loop and the packages WP5.09 and WP5.15 to WP5.24 ruled the same day (§8.2.34 AJ1 to AJ10); WP5.09's open points ruled at its plan on 6 November 2026…
+- `docs/plans/phase-5/phase-5-workbench.md:7` — **exists**: …loop and the packages WP5.09 and WP5.15 to WP5.28 ruled the same day (§8.2.34 AJ1 to AJ10); WP5.09's open points ruled at its plan on 6 November 2026…
 - `docs/plans/phase-5/phase-5-workbench.md:7` — **exists**: …WP5.09's open points ruled at its plan on 6 November 2026 (§8.2.35 AK1 to AK3). Release: **v0.6** (`v0.6.0`).…
 - `docs/plans/phase-5/phase-5-workbench.md:114` — **exists**: ### WP5.02 — The spike and the visual-feedback workflow (S8 to S10; §8.2.30 AF1 to AF4)
 - `docs/plans/phase-5/phase-5-workbench.md:145` — **exists**: ### WP5.04 — The charge mutator's library step (FR-38; §8.2.17 S4; §8.2.19 U6; §8.2.31 AG9 to AG11)
@@ -742,12 +742,12 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 - `docs/project/review-items.md:1330` — **exists**: **Placed** (§8.2.31 AG1, 3 November 2026): WP5.16, the Molecular suite, library step first, with §5.3.1 and VER-48.
 - `docs/project/review-items.md:1332` — **exists**: **Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.16, the Molecular suite.
 - `docs/project/review-items.md:1349` — **exists**: **Ruled** (§8.2.22 X6): accepted as recommended. §5.3.1's NOTE on a correction file outside the package states it. WP57.
-- `docs/project/review-items.md:1463` — **exists**: **Placed** (§8.2.31 AG1, 3 November 2026): WP5.23, which removes Qt.
-- `docs/project/review-items.md:1465` — **exists**: **Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.23, which removes Qt.
+- `docs/project/review-items.md:1463` — **exists**: **Placed** (§8.2.31 AG1, 3 November 2026): WP5.27, which removes Qt.
+- `docs/project/review-items.md:1465` — **exists**: **Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.27, which removes Qt.
 - `docs/project/review-items.md:1480` — **exists**: …, set by the reference-reproduction cases. WP5.03 lands it (§8.2.28 AD3), before the charge mutator, with a Tier 1 test that a changed proto…
 - `docs/project/review-items.md:1505` — **exists**: **Progress** (§8.2.20 V1): structure preparation's library half lands in WP54 as `nanopnp.structure.orient_pore`
 - `docs/project/review-items.md:1510` — **exists**: …**Cut line ruled** (§8.2.31 AG1, AG6, 3 November 2026): v0.6 holds every capability FR-31 to FR-39 name, placed in WP5.05 to WP5.08 and WP5.16 to WP5.21, and the…
-- `docs/project/review-items.md:1512` — **exists**: …**Re-placed** (§8.2.34 AJ10, 5 November 2026): the shell's packages are WP5.08 and WP5.15 to WP5.24, the difference field in WP5.21, the Ana…
+- `docs/project/review-items.md:1512` — **exists**: …**Re-placed** (§8.2.34 AJ10, 5 November 2026): the shell's packages are WP5.08 and WP5.15 to WP5.28, the difference field in WP5.21, the Ana…
 - `docs/project/review-items.md:1571` — **exists**: …**Design round held** (§8.2.31 AG2 to AG5, 3 November 2026), over mockup A's round-2 `st-sweep`: a variable is a value with its unit or an e…
 - `docs/project/review-items.md:1635` — **exists**: from a structure. §8.2.20 V3 keeps the schema unchanged, so `Case.cylinder` takes a field file (`charge=`) instead,
 - `docs/project/review-items.md:1638` — **exists**: **Ruled** (§8.2.20 V3): deferred to the package that next changes the case schema, which decides whether a uniform
@@ -893,8 +893,8 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 - `specification/a-traceability-matrix.md:56` — **exists**: …nd its probes and cuts; a run and its result) (§8.2.31 AG1; §8.2.34 AJ10) \|…
 - `specification/a-traceability-matrix.md:57` — **exists**: …nt on every state); each suite's package for its own marks (§8.2.31 AG1) \|…
 - `specification/a-traceability-matrix.md:58` — **exists**: …inuum`); each suite's package for the refusal at its field (§8.2.31 AG1) \|…
-- `specification/a-traceability-matrix.md:59` — **exists**: \| FR-36 \| None yet; WP5.23 (§8.2.31 AG1; §8.2.34 AJ10); QR-10's observation at the close \|
-- `specification/a-traceability-matrix.md:59` — **exists**: \| FR-36 \| None yet; WP5.23 (§8.2.31 AG1; §8.2.34 AJ10); QR-10's observation at the close \|
+- `specification/a-traceability-matrix.md:59` — **exists**: \| FR-36 \| None yet; WP5.27 (§8.2.31 AG1; §8.2.34 AJ10); QR-10's observation at the close \|
+- `specification/a-traceability-matrix.md:59` — **exists**: \| FR-36 \| None yet; WP5.27 (§8.2.31 AG1; §8.2.34 AJ10); QR-10's observation at the close \|
 - `specification/a-traceability-matrix.md:60` — **exists**: …rary, WP54); the workbench's surfacing and REV-121, WP5.16 (§8.2.31 AG1; §8.2.34 AJ10) \|…
 - `specification/a-traceability-matrix.md:60` — **exists**: …the workbench's surfacing and REV-121, WP5.16 (§8.2.31 AG1; §8.2.34 AJ10) \|…
 - `specification/a-traceability-matrix.md:61` — **exists**: …` (the library step, WP5.04); the Charge edit tool, WP5.16 (§8.2.31 AG1; §8.2.34 AJ10) \|…
@@ -1038,7 +1038,7 @@ none
 - `docs/plans/phase-5/phase-5-workbench.md:263` — **not a tag**: `v0.6.0-alpha.18`.
 - `docs/plans/phase-5/phase-5-workbench.md:273` — **not a tag**: `v0.6.0-alpha.19`.
 - `docs/plans/phase-5/phase-5-workbench.md:281` — **not a tag**: one scale or as their difference. Q37 to Q41 move here. Tag `v0.6.0-alpha.21`.
-- `docs/plans/phase-5/phase-5-workbench.md:289` — **not a tag**: rewritten against the browser workflow with the rendered screens (§8.1's increment 5). Tag `v0.6.0-alpha.23`.
+- `docs/plans/phase-5/phase-5-workbench.md:289` — **not a tag**: rewritten against the browser workflow with the rendered screens (§8.1's increment 5). Tag `v0.6.0-alpha.27`.
 - `docs/plans/phase-5/phase-5-workbench.md:295` — **not a tag (a prefix of tags)**: and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
 - `docs/project/modularity.md:282` — **not a tag**: **Fixed** (WP5.06, `v0.6.0-alpha.6`): `post/outputs.py` and `physics/steric.py` hold the two registries, and
 - `docs/project/review-findings.md:151` — **not a tag (a prefix of tags)**: …17 \| [WP57 may restate the Qt shell's gating clauses before v0.5.0](review-items.md#rev-127-wp57-may-restate-the-qt-shells-gating-clauses-be…
@@ -1489,7 +1489,7 @@ none
 - `specification/history/29-wp59-review-items.md:19` — **not a tag (a prefix of tags)**: …ce`, `session.check(case)` and `Session.read(directory)` \| `v0.5.0` fixes them as the interface the workbench's server calls \| None \|…
 - `specification/history/30-wp502s-plan-the-spike-and-the-desktop-wrapper.md:9` — **not a tag (a prefix of tags)**: Rulings by the author on 2 November 2026, at `/np-plan wp 5.02`, after `v0.5.0`. The author gave a note with the
 - `specification/history/31-phase-5-amended-the-shell-packages-and-the-sweep.md:9` — **not a tag**: Rulings by the author on 3 November 2026, at `/np-plan amend 5`, after WP5.02 merged and took `v0.6.0-alpha.2`. §8.2.28
-- `specification/history/31-phase-5-amended-the-shell-packages-and-the-sweep.md:20` — **not a tag (a prefix of tags)**: …d documentation increment 5; WP5.24, the close. Each takes `v0.6.0-alpha.N` (S19); the close takes `v0.6.0` alone. The rows the earlier ruli…
+- `specification/history/31-phase-5-amended-the-shell-packages-and-the-sweep.md:20` — **not a tag (a prefix of tags)**: …d documentation increment 5; WP5.28, the close. Each takes `v0.6.0-alpha.N` (S19); the close takes `v0.6.0` alone. The rows the earlier ruli…
 - `specification/history/31-phase-5-amended-the-shell-packages-and-the-sweep.md:20` — **not a tag (a prefix of tags)**: …close. Each takes `v0.6.0-alpha.N` (S19); the close takes `v0.6.0` alone. The rows the earlier rulings left to the shell are placed: REV-32…
 - `specification/history/34-phase-5-amended-the-frame-the-physics-model-and-the-design-loop.md:30` — **not a tag (a prefix of tags)**: …more for the phase; the alpha tags follow the numbers, and `v0.6.0` stays the release \| §8.1's Phase 5 row, in this commit; the Phase 5 plan…
 - `specification/history/index.md:20` — **not a tag**: …sions, agreed 5 October 2026, taken after Phase 3 closed as v0.4.0.…
@@ -2666,7 +2666,7 @@ none
 
 ## code review named (does the report exist?) — live (134)
 
-- `docs/plans/current.md:21` — **exists**: WP5.21 the suites, WP5.23 the route and Qt's removal, WP5.24 the close; reviewed, CODE_REVIEW_034. **WP5.09**
+- `docs/plans/current.md:21` — **exists**: WP5.21 the suites, WP5.27 the route and Qt's removal, WP5.28 the close; reviewed, CODE_REVIEW_034. **WP5.09**
 - `docs/plans/current.md:23` — **exists**: (CODE_REVIEW_035), delivered 8 November 2026 on `claude/keen-turing-g32u0j`. Next `/np-ship wp 5.09`.
 - `docs/plans/current.md:25` — **exists**: - **CODE_REVIEW_036**'s six refactors (REV-217 to REV-221; REV-170) land **after WP5.09**, through
 - `docs/project/review-findings.md:143` — **exists**: …\| REV-119 \| verification \| low \| declined \| [CODE_REVIEW_010](../code_reviews/CODE_REVIEW_010.md) \| [The analyte benchmark meshes skip the q…
@@ -2931,7 +2931,7 @@ none
 - `docs/plans/phase-5/phase-5-workbench.md:275` — **row: performance | low | deferred | §8.2.18 T2**: ### WP5.21 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
 - `docs/plans/phase-5/phase-5-workbench.md:279` — **row: performance | low | deferred | §8.2.18 T2**: drawn by `webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut.
 - `docs/plans/phase-5/phase-5-workbench.md:279` — **row: performance | low | deferred | §8.2.18 T2**: drawn by `webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut.
-- `docs/plans/phase-5/phase-5-workbench.md:283` — **row: interface | medium | deferred | §8.2.19 U1**: ### WP5.23 — The guided route, Qt's removal and documentation increment 5 (FR-36; REV-134; S13, S17)
+- `docs/plans/phase-5/phase-5-workbench.md:283` — **row: interface | medium | deferred | §8.2.19 U1**: ### WP5.27 — The guided route, Qt's removal and documentation increment 5 (FR-36; REV-134; S13, S17)
 - `docs/plans/phase-5/phase-5-workbench.md:285` — **row: interface | low | deferred | WP5.08 review**: The guided route over the five suites (FR-36), with the keyboard pass over every canvas action (REV-203's remainder;
 - `docs/plans/phase-5/phase-5-workbench.md:288` — **row: interface | medium | deferred | §8.2.19 U1**: CON-11, ADR-004's packaging NOTE and RSK-13 become their clauses (S17; T5). REV-134 closes (U1). The application guide is
 - `docs/plans/phase-5/phase-5-workbench.md:303` — **row: process | low | wontfix | §8.2.18 T1**: …\| 3 \| The inherited rows: REV-20, -28, -30, -31, -32, -39, -41, -45, -52, -56, -62, -65, -67, -114; `MOD-09`, `MOD-13`'s command-line part,…
@@ -3698,11 +3698,11 @@ none
 - `docs/plans/phase-5/phase-5-workbench.md:351` — **defined**: \| WP5.19, Study \| 1 \| VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) \|
 - `docs/plans/phase-5/phase-5-workbench.md:351` — **defined**: \| WP5.19, Study \| 1 \| VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) \|
 - `docs/plans/phase-5/phase-5-workbench.md:352` — **defined**: \| WP5.21, Analysis \| 1 \| AG6's difference: exact for a linear field, zero for identical runs; VER-78 \|
-- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.23, route and Qt's removal; WP5.24, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
-- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.23, route and Qt's removal; WP5.24, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
-- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.23, route and Qt's removal; WP5.24, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
-- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.23, route and Qt's removal; WP5.24, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
-- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.23, route and Qt's removal; WP5.24, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.27, route and Qt's removal; WP5.28, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.27, route and Qt's removal; WP5.28, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.27, route and Qt's removal; WP5.28, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.27, route and Qt's removal; WP5.28, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.27, route and Qt's removal; WP5.28, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
 - `docs/plans/phase-5/phase-5-workbench.md:358` — **defined**: 2. **The restated gating clauses and VER-78 pass** on every fixture state. A miss is fixed; a
 - `docs/plans/phase-5/phase-5-workbench.md:375` — **defined**: against the browser shell; VER-78's screen and state counts; the time from a click to a redrawn
 - `docs/project/contributing.md:19` — **defined**: property tests; analytic benchmarks, with VAL-05's leg on the vendored 2WCD; the COMSOL comparison
