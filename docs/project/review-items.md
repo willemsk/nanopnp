@@ -4024,4 +4024,6 @@ The remedy: find the point's parent cell as now, then evaluate the cell's six P2
 cells, as the mesh is, make its barycentric coordinates the parent's), of the solver's variable: of `ln c` for a
 logarithmic branch, exponentiated after. A map then reads the solved field itself at every point.
 
-**Open**: with REV-268's package, which takes the explorer's sampling, or WP5.23.
+**Accepted**, ruled by the author on 20 November 2026 at WP5.21's ship: with REV-268's package, the tree of results,
+which reworks the explorer's sampling, so the fix lands once. It would move earlier if runs on different meshes were
+to be compared near the pore wall before that package ships.
