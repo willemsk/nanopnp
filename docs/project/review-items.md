@@ -3623,7 +3623,7 @@ The Study page's, WP5.19's.
 tool's card leads with the refusal's plain words, less its file and path, with *Go to* its field, and says *blocked*.
 The pane's status line says which value to correct. The rest stays with WP5.26.
 
-**Placed** (§8.2.46 AV1, 20 November 2026): the stages' diagnostics and the command line's messages are WP5.25, a package of its own, each refusal carrying its case path and file as fields; the suites' own words go to WP5.26's sweep.
+**Placed** (§8.2.46 AV1, 20 November 2026): the stages' diagnostics and the command line's messages are WP5.25, a package of its own, each refusal carrying its case path and file as fields; the suites' own words go to WP5.26's sweep. The nine modules above hold about 440 raise sites; `physics/`, `materials/`, `symmetry/`, `core/` and the rest of `api/` hold about 110 more refusals, among them a correction's, and WP5.25 takes them too (CODE_REVIEW_066).
 
 ### REV-255: What the Physics suite's final review left open
 
@@ -4135,3 +4135,16 @@ which reworks the explorer's sampling, so the fix lands once. It would move earl
 to be compared near the pore wall before that package ships.
 
 **Placed** (§8.2.46 AV4, 20 November 2026): WP5.22, the tree of results.
+
+### REV-271: The Phase 5 plan exceeds its word target a third time
+
+The Phase 5 plan held 8,206 words by `wc -w` after the sixth amendment (§8.2.46), against `np-plan`'s 1,500-word target
+for a phase plan, 1,650 with its allowance (§8.2.11 L7; §8.2.33 AI15), checked at review. Found by CODE_REVIEW_066,
+finding 7. The review moved the narratives of the delivered entries WP5.12 to WP5.21 verbatim to `phase-5-record.md`,
+as WP5.11 did for WP5.01 to WP5.11 under REV-216 (§8.2.36 AL18), each entry keeping its title, merged line and live
+constraints: the plan holds 5,133 words. The rest is live: the verification table and criteria (about 1,160 words),
+the design decisions (about 490), the seven planned packages (about 950) and the delivered entries' stubs (about 930).
+
+**Open** for the author, as REV-216 left it: cut the live sections to the target (the delivered packages' verification
+rows and the settled design decisions to the record, the stubs to one line each), or restate the target for a phase
+amended in flight. Whichever is ruled lands at the next `/np-plan amend 5`, or in WP5.28, the close, at the latest.

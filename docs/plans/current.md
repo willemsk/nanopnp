@@ -10,7 +10,7 @@ display layers in every molecule view; speed on a graphics card; plain messages 
 polish pass over every suite; the guided route, with new models and the old shell removed; the
 close. Later points name a later phase's package.
 
-**Your call.** Approve the amended plan after its review, then the tree of results at its design round.
+**Your call.** Approve the amended plan, reviewed, then the tree of results at its design round.
 *Recommendation:* settle it on drawn screens.
 
 ## Position
@@ -20,7 +20,7 @@ close. Later points name a later phase's package.
   (`v0.6.0-alpha.19`; alpha.20 and .21 to be pushed). The sixth amendment (§8.2.46) placed
   every open item: WP5.22 the tree of results, WP5.23 the layers, WP5.24 performance,
   WP5.25 the refusals, WP5.26 the polish pass, WP5.27 the route, WP5.28 the close.
-  **Next:** `/np-plan amend 5 review`; then `/np-gui grill` on the tree of results (REV-268) and `/np-plan wp 5.22`. host: claude-code.
+  **Next:** `/np-gui grill` on the tree of results (REV-268), then `/np-plan wp 5.22`; REV-271, the plan's length, is the author's. host: claude-code.
 
 ## Not to be re-decided
 
