@@ -464,6 +464,8 @@ stopped early to its last stage, each reached stage's key compared exactly
 (`tests/tier2/test_reproducibility.py::test_ver35_a_run_stopped_at_its_charge_reproduces_to_that_stage`). The region
 export stays with FR-28, v0.7.
 
+**Placed** (§8.2.46 AV5, 20 November 2026): the region export, the part left, goes to Phase 6's provisional package *the exports*, with FR-28.
+
 ### REV-42 — pnp carries inert flow keys
 
 *Area:* interface. *Severity:* low. *Found:* PR #53 (WP26).
@@ -499,6 +501,8 @@ they do nothing.
 
 **Ruled** (§8.2.18 T3): with FR-28, v0.7.
 
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the exports*, with FR-28.
+
 ### REV-46 — Example 07 is not run at default sizes or on the ensemble
 
 *Area:* verification. *Severity:* low. *Found:* PR #65 (WP32).
@@ -507,6 +511,8 @@ they do nothing.
 50-frame ensemble.
 
 **Deferred.** Phase 6, with the ensemble legs (§8.2.5 E1; §8.2.9 I3).
+
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the validation runs*, with the ensemble legs.
 
 ### REV-47 — The test-duration targets are missed
 
@@ -649,6 +655,8 @@ saving from reusing it is unmeasured.
 
 **Deferred.** Phase 6, measured with the envelope's throughput (§8.2.9 I3).
 
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the speed-up*, after the assembly (REV-156).
+
 ### REV-61 — No B-spline fit or HOLE cross-check of the contour
 
 *Area:* interface. *Severity:* low. *Found:* PR #41 (WP20); verified open at `5559c7e`.
@@ -657,6 +665,8 @@ saving from reusing it is unmeasured.
 left out of WP20, and nothing in `src/` or the specification owns them.
 
 **Deferred.** Phase 6, the HOLE cross-check (§8.2.2 B5) with VAL-05; the B-spline fit with it (§8.2.9 I3).
+
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the validation runs*, with VAL-05.
 
 ### REV-62 — A mesh named by store key is refused
 
@@ -695,6 +705,8 @@ declares, and `validation.modularity.undeclared_reads` finds a read the declarat
 6, so a NUM-34 violation on one surfaces at the member's solve rather than in seconds at plan time.
 
 **Deferred.** Phase 6, with the envelope sweeps (§8.2.9 I3). The violation is loud, at the member's solve.
+
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the validation runs*, with the envelope sweeps.
 
 ### REV-65 — The Windows bundle exposes no mesh command
 
@@ -735,6 +747,8 @@ The document is refused either way; only the first diagnostic misleads (QR-12).
 **Deferred.** Phase 5, evaluated with `MOD-11` and the extension point public surface ruling (§8.2.8 H2).
 
 **Ruled** (§8.2.18 T3): with the composer phase and MOD-11.
+
+**Placed** (§8.2.46 AV5, 20 November 2026): the composer's phase, with MOD-11.
 
 ### REV-68 — The spec still promises a refusal that D8 removed
 
@@ -1009,6 +1023,8 @@ VER-72 (d) and the planned-xfail handling in `tests/tier1/test_plan_records.py` 
 The strip removed test docstrings. Where a test's requirement identifier lived only there, a one-line comment above the test keeps it; the test name still does not carry it (CLAUDE.md asks tests named for their requirement).
 
 **Deferred** (§8.2.11 L10): renamed in a later package.
+
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *V&V in CI*, which renames each test in scope for its requirement.
 
 ### REV-92 — src prose share is 10.6 %, above the 10 % prediction
 
@@ -1483,9 +1499,11 @@ The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at 
 
 **Ruled** `deferred` (§8.2.19 U1): carried until Qt leaves. `v0.5.0` ships the wrapper on the Result tab, and the user-testing sessions read the numbers from the command line or the run record; the package that removes Qt closes the row, the browser shell reading the numbers through `plot/data.py`.
 
-**Placed** (§8.2.31 AG1, 3 November 2026): WP5.23, which removes Qt.
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.27, which removes Qt.
 
-**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.23, which removes Qt.
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.27, which removes Qt.
+
+**Re-placed** (§8.2.46 AV2, AV4, 20 November 2026): WP5.27, the route, which removes Qt.
 
 ### REV-135: The density does not see the protonation chosen at the charge stage
 
@@ -1532,7 +1550,9 @@ capabilities.
 
 **Cut line ruled** (§8.2.31 AG1, AG6, 3 November 2026): v0.6 holds every capability FR-31 to FR-39 name, placed in WP5.05 to WP5.08 and WP5.16 to WP5.21, and the comparison's difference of two runs' fields over the overlap of their fluid domains, library step first in WP5.21. Hand-drawn refinement regions, the Python console, the ribbon, FR-43 and FR-28 stay later. The item stays accepted until WP5.21 lands.
 
-**Re-placed** (§8.2.34 AJ10, 5 November 2026): the shell's packages are WP5.08 and WP5.15 to WP5.24, the difference field in WP5.21, the Analysis suite.
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): the shell's packages are WP5.08 and WP5.15 to WP5.28, the difference field in WP5.21, the Analysis suite.
+
+**Fixed** at WP5.21 (20 November 2026, §8.2.46): the difference of two runs' fields, the last capability the cut line placed in v0.6, landed with the Analysis suite. Hand-drawn refinement regions, the Python console, the ribbon, FR-43 and FR-28 stay with their phases.
 
 ### REV-137: No renderer is chosen for the molecule in 3D or for the explorer's controls
 
@@ -1726,6 +1746,8 @@ Notebook 01's preparation form chooses the chains, the cis end, the residue rang
 height, and hands them to `orient_pore`. It cannot change a residue (a point mutation, a removed loop),
 which the author would like a later stage to offer. Deferred by §8.2.20 V13, at WP54's third checkpoint.
 
+**Placed** (§8.2.46 AV5, 20 November 2026): the structural mutator's phase, which changes a residue in 3D (§8.2.17 S4).
+
 ### REV-150: `wall_h_nm="debye"` is not capped at NUM-30's 0.05 nm ceiling
 
 `Case.cylinder(wall_h_nm="debye")` (§8.2.20 V9) sizes the wall at `λ_D/5` of the case's salt at `ε_r,f0`, with
@@ -1751,6 +1773,8 @@ Found by the `/np-ship wp 54` review and the `physics-reviewer` pass.
 
 **Ruled** (§8.2.20 V15): deferred to its own package. Meanwhile `orient_pore` logs a warning where the
 registration centroid is more than 0.1 nm off the estimated axis, and its docstring states the assumption.
+
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the structure pipeline's loose ends*, which re-pins the prepared 2WCD and the goldens of examples 06 and 07 by ruling at its plan.
 
 ### REV-152: WP54 review items: cache key, restores, duplicated helpers, edge cases
 
@@ -1890,6 +1914,7 @@ share and is this project's own weak forms and quadrature, so a threaded assembl
 coefficients per step can be measured and cut against §8.2.12 M2's thresholds without touching the linear solver.
 REV-60's factorisation reuse follows it. `/np-plan phase 6` reads this row.
 
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the speed-up*, the assembly first (Z6).
 
 ### REV-157: WP56 review items left open: the last rung's time, two readers of a run directory, the manifest read twice
 
@@ -2200,6 +2225,8 @@ matcher; the full 1800 s timeout; `session-start.sh`'s JSON.
 **Procedure:** a disposable clone opened as its own WSL repository, probes installed before startup;
 record only tool names, argument types and sentinels.
 
+**Placed** (§8.2.46 AV6, 20 November 2026): owned by [the Copilot host's session plan](../plans/sessions/copilot-host.md), run by the author on a WSL host before the close; the close carries it to Phase 6 if not run.
+
 ### REV-167: Six Copilot app behaviours the substitutes assume are unchecked
 
 Raised with REV-166 (§8.2.25 AA6). `.claude/workflow/hosts/copilot.md` gives a substitute for each Claude
@@ -2216,6 +2243,8 @@ Code construct the workflow names; six of them rest on app behaviour no session 
 Recommendation: check each in the same session as REV-166 and write the answer into `hosts/copilot.md`.
 Only the first can let an ungated tree through; the rest change how a substitute is worded.
 
+**Placed** (§8.2.46 AV6, 20 November 2026): with REV-166, in [the Copilot host's session plan](../plans/sessions/copilot-host.md).
+
 ### REV-168: The Copilot host has not been verified live
 
 Raised with REV-166 (§8.2.25 AA6). The plan's *Verification* has a live part in the Copilot app (a
@@ -2228,6 +2257,8 @@ session-start text and `format.sh`), the sub-agents called through `task`, and a
 
 Recommendation: run it after REV-166, on a WSL host, and ship the Copilot host's pull request from
 Claude Code with `/np-ship`, as the plan says, which also covers the Claude Code regression.
+
+**Placed** (§8.2.46 AV6, 20 November 2026): with REV-166, in [the Copilot host's session plan](../plans/sessions/copilot-host.md).
 
 ### REV-169: The Phase-1 reference sweep's base case writes its mesh path against the working directory
 
@@ -2310,6 +2341,8 @@ MOD-09's outputs registry. The cost items, the coefficient expressions among the
 **Done** (WP5.06): the seam part. `numerics/measures.py` holds `has_boundary` and `require_boundary`, which the wall
 distance, the indicator, the reaction flux and the force extension call; stage 11 builds one `Extraction` and calls each
 selected output. The cost items remain deferred to Phase 6.
+
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the speed-up*.
 
 ### REV-172: A non-finite trial residual at minimum damping is reported before the state gates name its location
 
@@ -2456,6 +2489,8 @@ naming both keys, and the case sets `as_loaded` or `CHARMM`.
 **Deferred**, owner unassigned: a protonated density under these force fields needs a radius set, or atom aliases,
 that holds their names, chosen as an author ruling as the CHARMM set was. Found at WP5.03's plan, 3 November 2026.
 
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the structure pipeline's loose ends*; the radius set or the aliases are put to the author at its plan.
+
 ### REV-181: Stage 2's header counts frame 0's atoms and reads an element from the first letter of a name
 
 Under `geometry.density.atoms: protonated` the frames of the protonation table differ in atoms where a tautomer or an
@@ -2465,6 +2500,8 @@ table has no element column. The density is unaffected; the record understates t
 
 **Open**, found at WP5.03's review: the author rules whether the table carries an element column (a change to the
 artefact's schema) or the header lists every frame's counts.
+
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the structure pipeline's loose ends*; the element column or every frame's counts is put to the author at its plan.
 
 ### REV-182: A polar hydrogen's kernel is narrower than the density grid's spacing
 
@@ -2477,6 +2514,8 @@ on a density without these hydrogens.
 **Open**, found at WP5.03's review: the author rules whether the polar hydrogens are measured against a finer grid
 before the protonated default is used outside the reference cases.
 
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the tolerances argued*, which measures the polar hydrogens against a finer grid before the protonated default is used outside the reference cases.
+
 ### REV-183: Fractional protonation through a customised PDB2PQR
 
 WP5.04's charge edit changes a residue's net charge by an integer, on its titratable group (§8.2.31 AG9). A partially
@@ -2487,6 +2526,7 @@ using a custom version of PDB2PQR. This is something we can look into later, so 
 **Deferred** to FR-43's library package: it starts from the author's customised PDB2PQR, which the author supplies
 then, and writes the physics into §4 first (T6). Found at WP5.04's plan, 3 November 2026.
 
+**Placed** (§8.2.46 AV5, 20 November 2026): FR-43's library package, in a later phase.
 
 ### REV-184: Stage 4's probe-radius gate ignores a `charge.edits` radius scale
 
@@ -2530,6 +2570,8 @@ by hash.
 
 Open: the author rules whether a stored mesh's frame is recorded and checked against the structure's, so that the
 pair is refused only on a mismatch, or whether the refusal stays.
+
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the structure pipeline's loose ends*; whether a stored mesh records its frame is put to the author at its plan.
 
 ### REV-187: A study that drops a mixed block writes a study form it cannot read
 
@@ -2709,13 +2751,15 @@ A row of the problems list opens the suite that owns the item, and the suite lis
 
 **Deferred** to WP5.16 to WP5.21 (§8.2.34 AJ10): each suite's package makes its tools real, and the problem row then opens the tool at the field. The tool lists become disabled list items or controls as the tools land.
 
+**Fixed** by WP5.16 to WP5.21 (20 November 2026, §8.2.46): every suite's tools are built, and a problem's row opens its tool at the field (`gui/web/frame.py:open_field`, `?field=`).
+
 ### REV-203: The frame's accessibility and layout limits
 
 The WP5.08 `/np-gui review` found, in the frame as built: the bottom panel opens about 180 px high and clips the changed list and the problems list with no row count (F3); the frame has no landmarks, no heading and no `aria-live` region for the changed count, the problem count and the queue line (F15); the splitter has no keyboard resize beside the fold buttons (doubt 5); the activity bar has names and no icons (F14); the shortcuts `Alt+Shift+digit`, `Ctrl+K` and `Ctrl+,` may be claimed by a browser or an operating system (doubt 6); and the 3D view's background is read once when the viewer starts, so a change in the settings reaches an open viewer after a reload (doubt 4).
 
-**Deferred** to WP5.15, which rebuilds the frame on Quasar's components (§8.2.34 AJ1): the panel's height and row counts, the landmarks, heading and live regions, the splitter's keys, the icons and the reserved chords. The keyboard pass over every canvas action stays with the guided route, WP5.23 (QR-16).
+**Deferred** to WP5.15, which rebuilds the frame on Quasar's components (§8.2.34 AJ1): the panel's height and row counts, the landmarks, heading and live regions, the splitter's keys, the icons and the reserved chords. The keyboard pass over every canvas action stays with the polish pass, WP5.26 (QR-16).
 
-**Fixed** by WP5.15 (5d0f934, 7b052a8 and item 14): the bottom panel opens 220 px high, scrolls, and is resized by its separator; the changed count stands in the title bar and the problem count in the status line, each a live region; the frame has named `nav` regions, a skip link and real headings; each separator moves by the arrow keys, Home and End; the activity bar shows an icon over each suite's name; no default chord is one a browser keeps (`commands.BROWSER_KEPT`), F1 opens the palette beside Ctrl+K, and every chord can be rebound. The 3D view's background follows a change in the settings at once (`nano.background`), and a keyboard focus ring in the accent marks Quasar's items, buttons and tree rows. The keyboard pass over the canvases stays with WP5.23 (QR-16).
+**Fixed** by WP5.15 (5d0f934, 7b052a8 and item 14): the bottom panel opens 220 px high, scrolls, and is resized by its separator; the changed count stands in the title bar and the problem count in the status line, each a live region; the frame has named `nav` regions, a skip link and real headings; each separator moves by the arrow keys, Home and End; the activity bar shows an icon over each suite's name; no default chord is one a browser keeps (`commands.BROWSER_KEPT`), F1 opens the palette beside Ctrl+K, and every chord can be rebound. The 3D view's background follows a change in the settings at once (`nano.background`), and a keyboard focus ring in the accent marks Quasar's items, buttons and tree rows. The keyboard pass over the canvases stays with WP5.26 (QR-16).
 
 ### REV-204: The settings and the changed list lack some guards and units
 
@@ -2912,6 +2956,8 @@ the program assembles, with a NOTE naming this item.
 quantities VAL-16 and VAL-17 compare, on the reference case at the envelope's corners, and add it if
 it moves one of them.
 
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the model's open terms*.
+
 ### REV-224: NUM-28's fluid consistency term omits the pore charge's force
 
 NUM-28's consistency terms take `∇·T_M = ρ_ion E − ½|E|²∇ε` in the fluid. PHY-16 deposits `ρ_pore` on
@@ -2923,6 +2969,8 @@ CODE_REVIEW_039 (AUD-69). NUM-28 carries a NOTE naming this item.
 `F^em` on an analyte case with a deposited charge, and either add the term or state that the support
 of `w` excludes the deposit.
 
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the model's open terms*.
+
 ### REV-225: Three numerics tolerances have no written derivation
 
 Three §6 tolerances give no derivation and no pointer: the absolute residual floor 10⁻¹² of NUM-16,
@@ -2933,6 +2981,8 @@ CODE_REVIEW_039 (AUD-52). §6 carries a NOTE naming this item.
 **Accepted** (§8.2.37 AM2, 9 November 2026): owned by Phase 6. Measure the residual of a converged solve
 in NUM-09's scaling, the largest accepted `‖δφ‖_∞` across the gated walks, and the error NUM-08's test
 sees, and write each number's derivation beside its clause.
+
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the tolerances argued*.
 
 ### REV-226: Refusal messages in src/ cite the §5.3.1 NOTEs whose stage rules moved to §5.2
 
@@ -2979,8 +3029,10 @@ links of `docs/project/` (the review and modularity registers, the modularity pa
 built site, while they resolve in the repository. `docs/scripts/generate.py` repoints such links to
 GitHub only in the pages it copies. Found by CODE_REVIEW_039 (AUD-14); WP5.12 makes no edit for it.
 
-**Accepted** (the author, 9 November 2026, §8.2.37 AM15): owned by WP5.23, which rewrites the guide and
+**Accepted** (the author, 9 November 2026, §8.2.37 AM15): owned by WP5.27, which rewrites the guide and
 changes the site. The link check keeps checking the relative links meanwhile.
+
+**Re-placed** (§8.2.46 AV2, AV4, 20 November 2026): WP5.27, the route, which rewrites the guide and changes the site.
 
 ### REV-229: Three checks the knowledge base proposed without a requirement
 
@@ -3007,6 +3059,8 @@ the notation is at most the COMSOL report's.
 comment edit changes every cached result's key. The fix lands with the next package that changes that
 file for another reason; none is named yet.
 
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the model's open terms*, whose re-pin of VER-62 takes the comment edit with it.
+
 ### REV-231: axis.py's comment sends the stage-1 margins to an index
 
 `src/nanopnp/structure/axis.py`:15-16 reads "Thresholds: SPECIFICATION.md §5.2 NOTE on stage 1; margins:
@@ -3032,6 +3086,7 @@ WP5.12 did not change:
 **Open**: each wants a reading against its source, by the next package that touches §6, VER-03 or
 `knowledge/06`.
 
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the tolerances argued*, which touches §6, VER-03 and `knowledge/06`.
 
 ### REV-233: Importing a case leaves a model without a value the study writes as an expression
 
@@ -3106,6 +3161,8 @@ At WP5.18's collect (`docs/design/reviews/2026-11-16-physics.md`) the dark Elect
 kept it as built, so those points are closed. The project dialogs, the settings' rows, the menus, the Glossary and the
 log wait for the Study suite's round (WP5.19).
 
+**Placed** (§8.2.46 AV2, 20 November 2026): the project dialogs, the settings' rows, the menus, the Glossary and the log are put at WP5.26's round, the polish pass.
+
 ### REV-236: Chords the operating system may claim, a command that cannot be unbound, and the glossary written twice
 
 The WP5.15 review's doubts: on macOS, Option+Shift+digit types a character into a focused field, and a browser may
@@ -3113,8 +3170,10 @@ open its own help on F1 (the suite chords are the author's, §8.2.38 AN7); the p
 chord to its default, and no control unbinds a command, though `commands.bindings` accepts an empty chord; the
 glossary's 26 terms are written in `gui/web/glossary.py` and in the design document, and nothing checks that they agree.
 
-**Open.** The keyboard pass over the workbench, WP5.23 (QR-16), takes the chords and the unbinding; the glossary's
+**Open.** The keyboard pass over the workbench, WP5.26 (QR-16), takes the chords and the unbinding; the glossary's
 single source is put to the author with it.
+
+**Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass, with its keyboard pass.
 
 ### REV-237: The author's notes on the frame's digest for the suites' prototype rounds
 
@@ -3145,11 +3204,13 @@ At WP5.16's second collect (`docs/design/reviews/2026-11-12-molecular.md`) the a
 "Looking better. This will still need polishing to improve layout and spacing tightness. I would suggest having a
 look at the settings pane of Claude Code as an example." WP5.16 sets each setting's control on the right of its title
 and description, as asked; the pass over the window's spacing, with Claude Code's pane as the model, waits for
-WP5.23's pass over the frame.
+WP5.26's pass over the frame.
 
 At WP5.17's collect (`docs/design/reviews/2026-11-12-continuum.md`): a changed Continuum value opens its tool at its
 field (`?field=`), built in WP5.17's item 12 with the list of one line per changed value beside the table, which
 its final render shows; the palette's look and the help page stay open.
+
+**Placed** (§8.2.46 AV2, 20 November 2026): the settings window's spacing, the palette's look and the help page, at WP5.26's round.
 
 ### REV-238: The Prepare tool's axis and membrane are not dragged by handles
 
@@ -3158,7 +3219,9 @@ The design document's Prepare row drew the pore's axis and the membrane slab in 
 typed in the tool's pane and stepped by the arrow keys.
 
 **Deferred** (§8.2.39 AO2, 11 November 2026): dragging by handles, with its keyboard equivalent already in place, goes
-to WP5.23's pass over the canvases or a later tool package. Found at WP5.16's plan.
+to WP5.26's pass over the canvases or a later tool package. Found at WP5.16's plan.
+
+**Placed** (§8.2.46 AV5, 20 November 2026): dragging the axis and the membrane in Mol* goes to the structural mutator's phase, which edits the structure in the 3D view; Mol* ships unmodified until then (CON-09). Handles on the (r, z) canvas are WP5.26's.
 
 ### REV-239: The channel axis's two limits rest on 2WCD alone, and a ragged pore may be refused
 
@@ -3216,6 +3279,8 @@ screen's overlay is built. The variation view, the maps and the safeguards stay 
 
 *The colour maps settled in WP5.21* (AU2): each field map and each comparison offers every Matplotlib colour map by name, and its reverse; a comparison records its map. The variation view and the safeguards stay as carried above.
 
+**Placed** (§8.2.46 AV2, AV3, 20 November 2026): the variation view is WP5.23's, a colour a layer takes, computed in the library; the safeguards are WP5.27's, a second step before an action that deletes.
+
 ### REV-241: What the final review of the Molecular tools left open
 
 The GUI review and `impeccable`'s critique of the finished tools (WP5.16 item 12, render `shell-r2` at `def8265`; no
@@ -3238,8 +3303,10 @@ view that follows the typed values is REV-243, ruled for before Phase 5 closes; 
 rows and the empty 3D view; and a suite's icon opens its last tool, so the Molecular suite's page of five links is
 gone.
 
-**Open.** The PQR point goes with REV-242's new-model action: at WP5.17's plan the author ruled that an edited outline runs with its structure's charge, over the option that added a PQR opened in Prepare (§8.2.40 AP1). The charge screen's is WP5.19's; the rest wait for WP5.23's pass
+**Open.** The PQR point goes with REV-242's new-model action: at WP5.17's plan the author ruled that an edited outline runs with its structure's charge, over the option that added a PQR opened in Prepare (§8.2.40 AP1). The charge screen's is WP5.19's; the rest wait for WP5.26's pass
 over the frame.
+
+**Placed** (§8.2.46 AV2, 20 November 2026): the PQR point is WP5.27's, with the new-model action; the frame's points are WP5.26's.
 
 ### REV-242: What the code review of the Molecular suite left open
 
@@ -3272,6 +3339,8 @@ all, above the 0.25 s the plan set, so a pane's build, its refresh and each draw
 (`BuiltModel.keyed_once`), 0.07 s to 0.13 s; a build's word read meanwhile drops what was read. The third is settled;
 the other three stay open as ruled above.
 
+**Placed** (§8.2.46 AV1, AV2, 20 November 2026): the first two points are WP5.27's new-model action, each put to the author at its plan; the fourth, a refusal that carries its case path, is WP5.25's.
+
 ### REV-243: Prepare's view does not follow the typed orientation
 
 The axis and the membrane drawn in Prepare's view are those of the built, aligned structure: a typed tilt, azimuth,
@@ -3280,7 +3349,9 @@ them as typed needs the source file's frame in the view, with the typed axis thr
 across it. The author, at WP5.16's second collect (`docs/design/reviews/2026-11-12-molecular.md`): "Instant feedback
 would indeed be a nice feature, let's mark it as a QoL to be included before the end of the phase."
 
-**Open**: built before Phase 5 closes, at the latest with WP5.23's pass over the frame.
+**Open**: built before Phase 5 closes, at the latest with WP5.26's pass over the frame.
+
+**Placed** (§8.2.46 AV3, 20 November 2026): WP5.23, with the layers in every Mol* view.
 
 ### REV-244: The author's notes on the Continuum digest that ask for a discussion
 
@@ -3312,6 +3383,8 @@ radius against z and the vertex list (REV-259).
 Outline without the radius against z and the vertex list; the editor's keyboard path, which a vertex list would have
 given, is REV-266's. The CAD tooling and the subdivisions stay as carried above.
 
+**Placed** (§8.2.46 AV5, 20 November 2026): the CAD tooling and the subdivisions for meshing go to the sketcher's phase, with the refinement regions.
+
 ### REV-245: What the Continuum suite's final review left open
 
 WP5.17's final render (244 shots, no page error and no contrast, non-text or target finding) was reviewed by the
@@ -3326,7 +3399,7 @@ name, and the design document's renderer and glossary rows. These stay:
   measure (the thickness across the membrane, the centre at its z, the reservoir's arc off view), and nothing shows
   that a label takes a typed value; a key lists lines out of view (the reservoir's boundary, the lumen radius) and
   covers the drawing's top; the equal scale centres the drawing, so up to 2 nm left of the axis is shown. With the
-  handles dragged in the view and its keyboard pass, WP5.23 (QR-16).
+  handles dragged in the view and its keyboard pass, WP5.26 (QR-16).
 - **The pane's layout.** In edit mode the stage 2 to 4 fields stay above the editor, its *Save* and *Discard* below;
   *Expose* is a row under each field and *Modified only* sits under *Build*; each tool carries a "Later:" banner.
   The critique asks for the inputs folded under the result, *Expose* as a toggle beside the field's reset, and the
@@ -3344,13 +3417,14 @@ name, and the design document's renderer and glossary rows. These stay:
   not read from the region artefact's faces; they agree with the meshed materials on 2WCD and the charged tube.
 
 **Open**, a question for the author: the layout, the colours and the words at the next suite's round (WP5.18), with
-the screens in front of the author; the canvas's labels and keys with WP5.23; the domains read from the artefact
+the screens in front of the author; the canvas's labels and keys with WP5.26; the domains read from the artefact
 when the region artefact records its faces' outlines.
 At WP5.18's collect (`docs/design/reviews/2026-11-16-physics.md`) the author kept the colours ("Colors are fine") and
 ruled the status colours (WB-42), which give a building stage's ● the info colour; the "Later" banners stay; *Expose*
 leaves the Physics tools, its place elsewhere being REV-252; the words come under ASD-STE100, the Physics suite's in
-WP5.18 and the rest under REV-254; the scroll cue and the glossary links wait for WP5.23.
+WP5.18 and the rest under REV-254; the scroll cue and the glossary links wait for WP5.26.
 
+**Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass: the canvas's labels and keys, the pane's layout, the words, the progress, and Region's domains read from the region artefact's faces, library step first.
 
 ### REV-246: A saved outline's exclusion shell takes the default grid
 
@@ -3441,6 +3515,8 @@ which writes its corrections; a model `Project.new_model` makes writes none.
 
 **Open**, a question for the author with the new-model action (REV-242): a new physics model written with the
 validated corrections, or the mark read from the case the model resolves to.
+
+**Placed** (§8.2.46 AV2, 20 November 2026): WP5.27, with the new-model action; the choice is put to the author at its plan.
 
 ### REV-250: PHY-23's terms under a solid fraction and without the flow
 
@@ -3540,12 +3616,14 @@ problems list takes the first dotted name that is a field (`api/project.py:_erro
 the message for a field's path (`gui/web/physics_tools.py:problem_path`). A refusal that carried its case path and
 its file as fields would end all three, with the pass over the diagnostics.
 
-**Open**: WP5.23's pass over the workbench's words and keyboard, or a package of its own if the diagnostics need one.
+**Open**: WP5.26's pass over the workbench's words and keyboard, or a package of its own if the diagnostics need one.
 The Study page's, WP5.19's.
 
 *The Study page's part, fixed at WP5.19's item 14.* The Study suite's page gave way to its five tools at item 9. Each
 tool's card leads with the refusal's plain words, less its file and path, with *Go to* its field, and says *blocked*.
-The pane's status line says which value to correct. The rest stays with WP5.23.
+The pane's status line says which value to correct. The rest stays with WP5.26.
+
+**Placed** (§8.2.46 AV1, 20 November 2026): the stages' diagnostics and the command line's messages are WP5.25, a package of its own, each refusal carrying its case path and file as fields; the suites' own words go to WP5.26's sweep.
 
 ### REV-255: What the Physics suite's final review left open
 
@@ -3581,11 +3659,11 @@ These stay:
 
 - **The (r, z) view in Conditions.** Its key covers the drawing's top right. It opens on the pore, where the
   reservoir's, cis and trans boundaries the key lists are out of view. An empty view's note sits at its foot, beside
-  a *Fit* that acts on nothing. With REV-245's canvas labels and keys, WP5.23.
+  a *Fit* that acts on nothing. With REV-245's canvas labels and keys, WP5.26.
 - **A study its physics model refuses draws no region.** The Conditions view resolves the shown case. A study that
   cannot run with its physics model, such as `pnp` with the flow on, forms no case, so neither its region nor its
   roles show, though the store holds the region. The region could come from the continuum model built alone, whose
-  stage 5 keys as the study's. WP5.23, with the view.
+  stage 5 keys as the study's. WP5.26, with the view.
 - **The equations written for the corrections chosen.** Equations writes a model's terms with its switches. A
   property whose correction is none is written as X(⟨c⟩, d) under the note that it keeps X = X⁰, not
   as X⁰. With all five none, `epnp-ns` is not written as `pnp-ns`'s PHY-21 block. With the variable density on and
@@ -3614,10 +3692,10 @@ These stay:
   though they hold concentrations in M, distances and factors. The (r, z) frame's keys name nm; a plot's should name
   its axes' units, or none.
 
-**Open**, a question for the author: the layout and the words at WP5.19's round; the view and the region with WP5.23.
+**Open**, a question for the author: the layout and the words at WP5.19's round; the view and the region with WP5.26.
 
 *Ruled* by the author on 18 November 2026, at WP5.19's item 13 ([the record](../design/reviews/2026-11-18-study.md)): "Fix them in item 14". WP5.19's item 14
-fixes *The pane's layout* and *Words* above. The view and the region stay with WP5.23, and CODE_REVIEW_058's two with
+fixes *The pane's layout* and *Words* above. The view and the region stay with WP5.26, and CODE_REVIEW_058's two with
 the view's package.
 
 *The layout and the words, fixed at WP5.19's item 15.*
@@ -3631,6 +3709,8 @@ the view's package.
 - The pane writes C m⁻², as the table does.
 - The plots name the average concentration in words, and their marks write c.
 - The momentum and continuity notes are one plain sentence each.
+
+**Placed** (§8.2.46 AV2, AV5, 20 November 2026): the view, the region and CODE_REVIEW_058's two are WP5.26's; the equations written for the corrections chosen go to Phase 6's provisional package *the model's open terms*, which changes `physics/terms.py` with a physics review.
 
 ### REV-256: A field's message, its text size and a field of several boxes, in every suite
 
@@ -3669,6 +3749,8 @@ which has not been measured on ClyA or 2WCD.
 **Open**: measure the jump's force on a smoothed 2WCD case with the switch on, then assemble it as an edge term or
 blend `ε_p` smoothly. With the next package that changes PHY-23's terms.
 
+**Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the model's open terms*, which changes PHY-23's terms.
+
 ### REV-258: The 200 ms redraw, measured on a GPU, and the front end's share fixed
 
 AG7 had WP5.19 measure the 200 ms redraw line (WB-23) on the author's machine with a GPU, and fix a miss by the front
@@ -3690,9 +3772,11 @@ times, at about 45 ms each:
 The author did not run the GPU measurement, and proposed moving this kind of optimisation to a dedicated performance
 package (§8.2.42 AR7).
 
-**Deferred** to WP5.22, the performance package, placed after the Analysis suite (§8.2.42 AR7; §8.2.43 AS2). It
+**Deferred** to WP5.24, the performance package, placed after the Analysis suite (§8.2.42 AR7; §8.2.43 AS2). It
 measures the line with `redraw.cjs --headed` on a GPU, holds one keyed walk per pick, the route reusing the pane's
 read, and profiles any miss with `--trace`. The Phase 5 plan's criterion 6 goes with it.
+
+**Re-placed** (§8.2.46 AV4, 20 November 2026): WP5.24, after the tree of results and the layers, whose views it times.
 
 ### REV-259: A bridge suite between Molecular and Continuum
 
@@ -3783,7 +3867,7 @@ draft's 23/40). Item 17 fixed:
 - each part of a switch with the controls' edge; the group box on the panel, so its even rows' shading shows; a solid
   with no value saying *not set*; *One subunit* filled when pressed.
 
-The charge screen's points go to REV-259's round. These stay, for WP5.23's pass over every suite:
+The charge screen's points go to REV-259's round. These stay, for WP5.26's pass over every suite:
 
 - **The convergence plot.** One label meets the first marker, the x ticks step by 11 and the top decades crowd. Round
   2's collect moved its legend, which took a third of the view, below the plot, and with that width each band
@@ -3803,12 +3887,14 @@ The charge screen's points go to REV-259's round. These stay, for WP5.23's pass 
 - **Status colour.** A picked queue line draws its ✓ in the accent, not the state's colour; a field hint that names a
   blocking switch in Equations is grey (WB-42).
 
-**Open**: WP5.23.
+**Open**: WP5.26.
 
 *The charge screen's points settled in WP5.20* ([the record](../design/reviews/2026-11-19-meso.md)): the key stands above a drawing it would cover,
 its bar's ends apart; each charge unit as the panes write it, with no field identifier; a worst plane within its
 tolerance dashed in the muted grey; the chip naming what it links; the pick keyed as its rings; Mol*'s mark kept;
-*One subunit* framed on its chain. The points above stay for WP5.23.
+*One subunit* framed on its chain. The points above stay for WP5.26.
+
+**Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass.
 
 ### REV-262: An exposed value's first name, and Exposed values' list as Study setup draws it
 
@@ -3822,7 +3908,9 @@ The critique asks for the field's label, *Size scale*, which the rule refuses. T
   suite shows it" may mean; with that, whether a value's name, *From* and *To* boxes become one box as WB-47's
   materials did.
 
-**Open**: a question for the author, at WP5.23's round.
+**Open**: a question for the author, at WP5.26's round.
+
+**Placed** (§8.2.46 AV2, 20 November 2026): put to the author at WP5.26's round.
 
 ### REV-263: What code review 060 of the Study suite left open
 
@@ -3843,8 +3931,10 @@ The critique asks for the field's label, *Size scale*, which the rule refuses. T
 - **The residue lookup's loop.** `ResidueCharges.at` calls `volume_density` once per near atom; the kernel is
   elementwise, but its signature takes floats (finding 15).
 
-**Open**, ruled by the author on 18 November 2026 at `/np-ship wp 5.19`: all five go to WP5.23, the unit box as a
+**Open**, ruled by the author on 18 November 2026 at `/np-ship wp 5.19`: all five go to WP5.26, the unit box as a
 choice for its design round. None gives a wrong number; the offset is still refused before any build.
+
+**Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass; the unit box at its round.
 
 ### REV-264: A reproduction of a record stopped at its solve compares no number of the solve
 
@@ -3881,12 +3971,14 @@ layer: each Meso tool's *Structure* switch.
 **Open**, ruled by the author on 19 November 2026: a package of its own, placed at the phase's next amendment; whether
 Molecular's View takes the same list is decided there.
 
+**Placed** (§8.2.46 AV3, 20 November 2026): WP5.23, after the tree of results and before the performance package. Molecular's View and Prepare take the same list.
+
 ### REV-266: What the Meso suite's round left open
 
 WP5.20's round ([the record](../design/reviews/2026-11-19-meso.md)) and its review left these, beside REV-265:
 
 - **Outline's keyboard path.** The author kept Outline without a vertex list, so a vertex is picked only by a click on
-  the picture, and live link 2's vertex table is not drawn (QR-16; FR-33; the review's F6 and F7). With WP5.23's
+  the picture, and live link 2's vertex table is not drawn (QR-16; FR-33; the review's F6 and F7). With WP5.26's
   keyboard pass over the canvas (REV-245).
 - **The overlay's key and fields.** The scene has no key for the overlay's positive and negative surfaces, and its two
   level fields stand at different places, one label wrapping (Q5).
@@ -3896,7 +3988,7 @@ WP5.20's round ([the record](../design/reviews/2026-11-19-meso.md)) and its revi
 - **The map's default share.** At the 99th percentile the 2WCD lattice still reads mostly as its middle colour with
   specks of charge: 90 % of its charged cells are under 31 C m⁻², a tenth of the clip (the final review's D1; the
   critique's first P1). A lower default share, or a floor on a charged cell's drawn size, is the author's call at
-  WP5.23's round; *Map range* reaches either now.
+  WP5.26's round; *Map range* reaches either now.
 - **The pane's scroll.** The picked residue, the strip and the link scroll out of the pane while the overlay is set
   (the critique's second P1): a pinned line naming the pick, and the lists scrolling on their own, with REV-245's
   pane layout.
@@ -3911,12 +4003,14 @@ WP5.20's round ([the record](../design/reviews/2026-11-19-meso.md)) and its revi
   alike in `ResidueCharges`, `ResidueAtoms` and `DensityAtoms`, whose keys the pane links.
 - **The overlay with One subunit.** A scene of one subunit has no cut, so the overlay draws the whole ring's charge
   about the one chain shown (CODE_REVIEW_063). Whether One subunit shows the ring's charge, said in the pane, or no
-  overlay, is a design question for WP5.23's round.
+  overlay, is a design question for WP5.26's round.
 - **Density's list before the charge is built, under `as_loaded`.** Where stage 2 smears stage 1's atoms, a walk to
   stage 3 builds no protonation table, so the nearest residues are listed without names and a pick marks nothing
   until the charge is built (CODE_REVIEW_063). Mol* is blank there too, as it reads that table.
 
-**Open**: WP5.23.
+**Open**: WP5.26.
+
+**Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass; the map's default share and *One subunit*'s overlay at its round. A residue named by its first present copy is a library step of that package.
 
 ### REV-267: What the Analysis suite's first review left open
 
@@ -3927,7 +4021,7 @@ Runs' clipped *Result*, the legends' dashes, the colour direction (WB-39) and th
 (20 November 2026, WB-50) item 14 built the 3D view's range, framing and background, the map's outline, the
 mirrored pair, *Solve again* and the rungs' table (the review's 10, 25 and 28). The tiles' layout, the probes'
 place, the quantities shown and their order, and the charts' library (the review's 3, 16, 20 and 21; the critique's
-5 and 15) went to REV-268's tree of results; the words to REV-269. These stay, WP5.23's:
+5 and 15) went to REV-268's tree of results; the words to REV-269. These stay, WP5.26's:
 - **Words and type.** "Changed" names the count and the run's deviations (17); the map's axes and the quantities
   are in the number face, minus signs are hyphens, a bias breaks from its unit, the Run select clips the bias (18).
 - **Charts**, unless REV-268's library settles them: the convergence chart labels no rung 1 to 3, 5 or 8 and mixes
@@ -3958,6 +4052,8 @@ place, the quantities shown and their order, and the charts' library (the review
 - **Doubts to check.** The I–V joins every run of a study, which may differ in more than the bias; Electrolyte's
   viscosity runs flat at 2.0, the plot's top, a clamp or a clip; the uncharged state shows a failed queue entry
   beside "no run yet"; figure export (FR-28) has no later-phase banner.
+
+**Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass; a chart's point that the library WP5.22 chooses settles falls to WP5.22.
 
 ### REV-268: Analysis as an editable tree of results, and the charts' library
 
@@ -3993,7 +4089,9 @@ Round 2's collect, on 20 November 2026 (WB-53), adds two points for the round:
 - the charts stand above the numbers ("Put graph at the top, values below.").
 
 **Open**, ruled by the author on 20 November 2026: `/np-gui grill` on the tree with the author, then `/np-plan amend 5`
-places its package after WP5.21 and before WP5.22. WP5.21 ships its tiles and uPlot as they are.
+places its package after WP5.21 and before WP5.24. WP5.21 ships its tiles and uPlot as they are.
+
+**Placed** (§8.2.46 AV4, 20 November 2026): WP5.22, the tree of results, opened by its design round (`/np-gui grill`), before the layers and the performance package (WB-51).
 
 ### REV-269: The workbench's wording
 
@@ -4007,7 +4105,7 @@ sixteen: the rule stands in the design document's *Look and feel* (WB-52), and W
 (*Rungs*, *Physics model*, *Boundary conditions*, *Value*, *Variable*, *Combine rows as*, Meso's
 select named by its visible *Structure* (WB-49; WCAG 2.5.3), *Azimuthal mean*, and the pointers in Analysis as links to Study).
 
-**Open**, ruled by the author on 20 November 2026: WP5.23 sweeps every other screen's text by the rule, with a check
+**Open**, ruled by the author on 20 November 2026: WP5.26 sweeps every other screen's text by the rule, with a check
 that flags the patterns.
 
 The ship's review of round 2's render found one of the sixteen false as it stands, for the sweep to put to the
@@ -4016,6 +4114,8 @@ status bar counts the whole queue. With another study's run queued, the two disa
 queued" would hold. Convergence's empty line repeats the sentence above a list of recorded runs, where "Pick a
 recorded run to see its convergence" would say what to do. Units are written three ways: "Colours from (V)", "Bias,
 V", and a bare "M" after a field in Setup.
+
+**Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass, sweeps every other screen's text by the rule, with its check.
 
 ### REV-270: A map reads its field linearly on each cell split in four
 
@@ -4033,3 +4133,5 @@ logarithmic branch, exponentiated after. A map then reads the solved field itsel
 **Accepted**, ruled by the author on 20 November 2026 at WP5.21's ship: with REV-268's package, the tree of results,
 which reworks the explorer's sampling, so the fix lands once. It would move earlier if runs on different meshes were
 to be compared near the pore wall before that package ships.
+
+**Placed** (§8.2.46 AV4, 20 November 2026): WP5.22, the tree of results.

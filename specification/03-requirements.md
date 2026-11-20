@@ -22,7 +22,7 @@ The subject of each requirement is the product unless stated otherwise.
 | **IF-08** | SHALL accompany every result artefact with a machine-readable provenance manifest (FR-25). |
 | **IF-09** | SHALL provide a desktop graphical interface covering case editing, run control, convergence monitoring and field visualisation, as a thin shell over the IF-01 interface. |
 
-NOTE (IF-09; lands with WP5.23, Qt's removal). When it lands, IF-09 reads:
+NOTE (IF-09; lands with WP5.27, Qt's removal). When it lands, IF-09 reads:
 "SHALL provide a graphical workbench, served by a local server and opened in the browser by
 `nanopnp gui`, covering the six suites of the workbench design (Molecular, Meso, Continuum, Physics,
 Study and Analysis), the run queue and the project folder, as a thin shell over the IF-01 interface
@@ -274,7 +274,7 @@ tenses, *must* for an obligation and *can* for an ability, and no noun cluster o
 words. The rule, the value, the case path and the remedy that FR-35 and QR-12 ask for stay in the text,
 each case path and value as the case writes it. REV-254 lists the texts that do not yet follow it.
 
-NOTE (QR-10; lands with WP5.23, Qt's removal). When it lands, QR-10 reads: "A
+NOTE (QR-10; lands with WP5.27, Qt's removal). When it lands, QR-10 reads: "A
 nanopore experimentalist without Python knowledge SHALL be able to install the workbench, load a
 structure, accept defaults and obtain a conductance prediction and a field visualisation in it
 unaided." Until then the text above gates the Qt shell.
@@ -310,21 +310,21 @@ comparison would, which is why the Tier-2 benchmarks, which localise to a single
 | **CON-13** | SHALL support Windows, macOS and Linux on desktop hardware, and Linux for headless and HPC execution. |
 | **CON-14** | The repository SHALL carry a `CITATION.cff` pointing at the Nanoscale paper and the software DOI. |
 
-NOTE (CON-09; lands with WP5.23, Qt's removal). When it lands, CON-09 drops "PySide6 LGPL-3" from its
+NOTE (CON-09; lands with WP5.27, Qt's removal). When it lands, CON-09 drops "PySide6 LGPL-3" from its
 LGPL list and adds before its PyQt sentence: "A dependency of the workbench's front end SHALL be under a
 permissive licence, or under the LGPL or the MPL-2.0 used unmodified as a separate file as the renderer
 is." The renderer clause binds the browser shell. Until then CON-09 gates the Qt shell.
 
-NOTE (CON-08; lands with WP5.23, Qt's removal). When it lands, CON-08's last clause reads: "the
+NOTE (CON-08; lands with WP5.27, Qt's removal). When it lands, CON-08's last clause reads: "the
 installed workbench SHALL use UMFPACK, as NGSolve's wheel provides it, or scipy SuperLU." The browser
 shell ships no desktop path or bundle (§8.2.17 S12); the library's default is
 `numerics/linear.py:DEFAULT_SOLVER`, `"umfpack"`. Until then CON-08 gates the Qt shell (REV-141).
 
-NOTE (CON-11; lands with WP5.23, Qt's removal). When it lands, CON-11 speaks of an installation where it
+NOTE (CON-11; lands with WP5.27, Qt's removal). When it lands, CON-11 speaks of an installation where it
 says a bundle, adds after "depend on UMFPACK" the words "which it reaches only through NGSolve's wheel",
 and its third clause reads: "an installed workbench SHALL default to NGSolve's UMFPACK, scipy SuperLU
 remaining selectable at runtime, and `nanopnp --env` SHALL state the resulting GPL-2+ obligation."
-`nanopnp --env` does not yet state it. Until WP5.23 the text above gates the bundle and its licence
+`nanopnp --env` does not yet state it. Until WP5.27 the text above gates the bundle and its licence
 notice (VER-43; REV-141).
 
 ### 3.5 Exclusions

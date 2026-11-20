@@ -13,7 +13,7 @@ form.
 
 !!! note "The Qt shell of v0.5"
     This page describes the Qt shell of v0.5 (`nanopnp-gui`). v0.6 replaces it with the browser
-    workbench, `nanopnp gui`; the package WP5.23 removes Qt and rewrites this page. The workbench's
+    workbench, `nanopnp gui`; the package WP5.27 removes Qt and rewrites this page. The workbench's
     design is on [Workbench design](../design/workbench.md).
 
 ## The seven panels

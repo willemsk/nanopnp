@@ -49,7 +49,7 @@ one Tier 1 test is tightened (AM13); every other item is done when the code and 
 | D4. Markers | A thesis transcription takes `[verified][^thesis]`, its `.tex` locator kept inline, only where the thesis clone supports it; otherwise it says "(unverified)". A `[tested:]` marker stays on the sentence its test asserts; a measured number the test does not assert takes `[verified]` with its record's footnote. `markers.py` skips code spans; each of AL19's fifteen gets its footnote, "by arithmetic" with its source, or plain text | Ruled by the author (AL19). Decided by the plan: `knowledge/00-orientation/03` and `04` |
 | D5. The source checklist | Six rows, the findings that rest on the ESI or the COMSOL report (AUD-136, 225, 286, 327, 343, 346): REV-227, whose section is the checklist. Item 13 (AM18's item 11, renumbered when the checkpoints were added) asks the author all six in one round; a confirmed row's edit lands there; a row not yet checked stays in REV-227 to the phase close. AUD-226 and AUD-326 rest on git history: the session fetches it and records whether each hash resolves | Ruled by the author (AL20; AM16, six rows; AM18, one round at item 11, now 13) |
 | D6. Code and tests | REV-226: a citation changes where its rule moved to §5.2's NOTEs on stages 1 and 2. AUD-216 and AUD-351 repoint two comments. AM13's target. Nothing else under `src/` or `tests/` | Ruled by the author (REV-226's acceptance; AM13) |
-| D7. Open items | REV-226 `fixed`. New, each section at item 9's `###`: REV-227 (D5), `fixed` once each row has a verdict, else `open`; REV-228, the site links, `accepted`, WP5.23 (AM15); REV-229, the three ideas, `post-1.0` (AM14); REV-230, the correction file's comment, `open` until a package that changes that file is named | Ruled by the author (AM14, AM15). Decided by the plan: REV-230 |
+| D7. Open items | REV-226 `fixed`. New, each section at item 9's `###`: REV-227 (D5), `fixed` once each row has a verdict, else `open`; REV-228, the site links, `accepted`, WP5.27 (AM15); REV-229, the three ideas, `post-1.0` (AM14); REV-230, the correction file's comment, `open` until a package that changes that file is named | Ruled by the author (AM14, AM15). Decided by the plan: REV-230 |
 | D8. The records | One commit per item, its AUD ids in the body. Item 15 adds one `wp512-<category>` disposition per finding and one commit row per category, re-runs `register.py` and `maps.py`, sets `holds-now.yaml`, re-runs `decisions.py`. Changelog `[0.6.0-alpha.12]` | Decided by the plan: as WP5.11's D6 |
 | D9. The counts | 517 SHALLs before item 2 and after item 9. `markers.py`: no missing test, no unfootnoted claim, no `verified:` difference. `links.py --anchors`, `duplicates.py`, `decisions.py --check`, the strict build; `same_tree.py` at item 11 | Decided by the plan: a silent failure gets a count |
 
@@ -259,7 +259,7 @@ with D9's SHALL count and item 11's `same_tree.py`.
 
 ### Out of scope
 
-- REV-227's verdicts, the author's; REV-228, WP5.23; REV-229, after v1.0; REV-230, the next change to the correction
+- REV-227's verdicts, the author's; REV-228, WP5.27; REV-229, after v1.0; REV-230, the next change to the correction
   file.
 - WP5.13: §5.3.1's `models:` and `variables:` NOTEs (AL23). Any change under `data/`, and under `src/` or `tests/`
   beyond D6.

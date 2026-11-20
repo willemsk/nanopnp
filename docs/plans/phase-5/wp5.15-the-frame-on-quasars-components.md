@@ -318,7 +318,7 @@ before its wait.
 
 - The compute settings: WP5.19 (AN1, AN4). Rebuilding a cleaned run's solution on viewing: WP5.21 (AN5).
 - The suites' tools, their *Modified only* filters and the field a changed row opens: WP5.16 to WP5.19.
-- The keyboard pass over the canvases: WP5.23. A command-line clean of current results.
+- The keyboard pass over the canvases: WP5.26. A command-line clean of current results.
 
 ### Open questions
 

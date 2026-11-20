@@ -32,7 +32,7 @@
 ## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5/phase-5-workbench.md:263` — **not a tag**: `v0.6.0-alpha.18`.
 ## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5/phase-5-workbench.md:273` — **not a tag**: `v0.6.0-alpha.19`.
 ## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5/phase-5-workbench.md:281` — **not a tag**: one scale or as their difference. Q37 to Q41 move here. Tag `v0.6.0-alpha.21`.
-## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5/phase-5-workbench.md:289` — **not a tag**: rewritten against the browser workflow with the rendered screens (§8.1's increment 5). Tag `v0.6.0-alpha.23`.
+## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5/phase-5-workbench.md:289` — **not a tag**: rewritten against the browser workflow with the rendered screens (§8.1's increment 5). Tag `v0.6.0-alpha.27`.
 ## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5/phase-5-workbench.md:295` — **not a tag (a prefix of tags)**: and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
 ## version named (is it a tag?) — live (70) :: - `docs/project/modularity.md:282` — **not a tag**: **Fixed** (WP5.06, `v0.6.0-alpha.6`): `post/outputs.py` and `physics/steric.py` hold the two registries, and
 ## version named (is it a tag?) — live (70) :: - `docs/project/review-findings.md:151` — **not a tag (a prefix of tags)**: …17 \| [WP57 may restate the Qt shell's gating clauses before v0.5.0](review-items.md#rev-127-wp57-may-restate-the-qt-shells-gating-clauses-be…

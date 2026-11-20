@@ -239,7 +239,7 @@ In `tests/tier1/`: rows 1 to 3 `test_project.py`, 4 `test_stage_conformance.py`,
 ### Out of scope
 
 - The suites' tools, WP5.16 to WP5.21; a queued build or study and its convergence, WP5.19.
-- The comparison's schema and difference field, WP5.21; the guided route and Qt's removal, WP5.23.
+- The comparison's schema and difference field, WP5.21; the guided route and Qt's removal, WP5.27.
 - Removing current results that no run uses, and a project's own look: not planned (AI14, AI13).
 
 ### Open questions
