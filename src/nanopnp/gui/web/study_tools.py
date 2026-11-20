@@ -913,7 +913,7 @@ class _StudyPane(_Pane[StudyModel]):
             self.axis_adder(offered)
 
     def mode_row(self) -> None:
-        with self.named("Points"):
+        with self.named("Combine rows as"):
             ui.toggle(
                 dict(SWEEP_MODES),
                 value=self.sweep_mode,
@@ -1165,10 +1165,7 @@ class _StudyPane(_Pane[StudyModel]):
                             "outline dense no-caps data-control=runs-cancel"
                         )
             if not entries:
-                ui.label(
-                    "Nothing is queued. Click Run study to start a run; its convergence is "
-                    "drawn in the view."
-                ).classes("later")
+                ui.label("Nothing is queued. Click Run study to start a run.").classes("later")
         recorded = self.recorded()
         if recorded is not None:
             self.show_rungs(recorded_convergence(Path(recorded)))
@@ -1311,8 +1308,8 @@ class _StudyPane(_Pane[StudyModel]):
             if not records:
                 ui.label("No run is recorded yet. Run study records one.").classes("later")
                 return
-            head = ("Written", "Reached", "Quantities", "Threads", "Convergence", "Result")
-            # The table scrolls inside its tile, so the last column is never cut off.
+            head = ("Written", "Reached", "Result", "Quantities", "Threads", "Convergence")
+            # The table scrolls inside its tile; the result stands third, so link 4 stays in view.
             with (
                 ui.element("div").classes("table-scroll"),
                 ui.element("table").classes("view-table").props("data-control=runs-records"),
@@ -1354,7 +1351,15 @@ class _StudyPane(_Pane[StudyModel]):
         )
         pressed = self.shell.recorded_shown == str(directory)
         with ui.element("tr"):
-            for text in cells:
+            for text in cells[:2]:
+                TextElement(tag="td", text=str(text))
+            with ui.element("td"):
+                if done:
+                    ui.button("Result", on_click=lambda _, d=directory: self.open_result(d)).props(
+                        f"flat dense no-caps data-control=runs-result-{index} "
+                        f'aria-label="Open the result of run {directory.name}"'
+                    )
+            for text in cells[2:]:
                 TextElement(tag="td", text=str(text))
             with ui.element("td"):
                 # A recorded run is picked as a queued one is: its convergence across the view.
@@ -1365,12 +1370,6 @@ class _StudyPane(_Pane[StudyModel]):
                     f"aria-pressed={'true' if pressed else 'false'} "
                     f'aria-label="Show the convergence of run {directory.name}"'
                 ).classes("runs-pick" + (" runs-picked" if pressed else ""))
-            with ui.element("td"):
-                if done:
-                    ui.button("Result", on_click=lambda _, d=directory: self.open_result(d)).props(
-                        f"flat dense no-caps data-control=runs-result-{index} "
-                        f'aria-label="Open the result of run {directory.name}"'
-                    )
 
 
 def study_page(shell: Shell, tool: Tool) -> Callable[..., None]:

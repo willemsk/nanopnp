@@ -3937,6 +3937,12 @@ place, the quantities shown and their order, and the charts' library (the review
   Continuum's problem stops the study (26), and the empty state draws an empty box (27).
 - **Frames.** A tile's frames nest three deep, a map's key stands on the data (the critique's 11, 12), and *Axes*
   does not say an axis was set (the critique's 13).
+- **The final review's (item 14).** The renderer's *Open Controls* strip covers the positive half of the 3D view's
+  colour bar, which has no 3:1 outline and serif numbers; the dark theme's 3D background is the renderer's grey
+  (about `#595959`), not the canvas token; the 3D frame fits the close-up's diagonal, so the half at r < 0 is
+  empty; Runs' rung table shows four of its seven columns in the pane, scrolling for the rest, and its notes repeat
+  the columns; a current under 1 nA reads "0.04799 nA", not 47.99 pA (WB-21); "The map and the cut span" stays in
+  3D; *Switch* in the glossary is a setting away from its default.
 - **Doubts to check.** The I–V joins every run of a study, which may differ in more than the bias; Electrolyte's
   viscosity runs flat at 2.0, the plot's top, a clamp or a clip; the uncharged state shows a failed queue entry
   beside "no run yet"; figure export (FR-28) has no later-phase banner.
