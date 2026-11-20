@@ -219,11 +219,19 @@ def test_fr32_the_grid_is_the_rule_over_both_boxes_overlap(
         assert found.difference.shape == (n_z, n_r)
 
 
-def test_fr32_a_point_off_the_mesh_is_nan_without_a_table_to_reach_it(
+def test_fr32_a_point_on_the_axis_is_read_and_one_off_the_mesh_is_nan(
     runs: tuple[SolutionFields, SolutionFields, ModelSolution],
 ) -> None:
-    # A probe typed 10 um away, or not a number, sized the bucket table to the gap: gigabytes.
-    first, _, _ = runs
+    # The axial cut reads r = 0, which lies on the cells' boundary edges: a point lost there
+    # empties the cut. A probe typed 10 um away, or not a number, sized the bucket table to the
+    # gap, gigabytes, and a point past the box must read nothing rather than a nearby cell.
+    first, _, solution = runs
+    half = FIRST.half_thickness_nm + FIRST.reservoir_radius_nm
+    axis_z = np.array([-half, -FIRST.half_thickness_nm, 0.0, 1.7, FIRST.half_thickness_nm, half])
+    for quantity, field in (("potential", "potential"), ("c_Na+_mol_m3", "c_Na+")):
+        found = field_at(first, quantity, np.zeros_like(axis_z), axis_z)
+        expected = _scale(field, solution) * FIRST_FIELDS[field](0.0, axis_z)
+        np.testing.assert_allclose(found, expected, rtol=0.0, atol=EXACT * np.abs(expected).max())
     found = field_at(
         first,
         "potential",
@@ -258,6 +266,18 @@ def test_fr32_each_point_is_read_on_the_lowest_split_triangle_holding_it(
     at = np.column_stack([grid_r.ravel(), grid_z.ravel()])
     triangles = subdivided(cells)
     corners = np.column_stack([r_nm, z_nm])[triangles]
+    # The oracle shares the split, so the split is held to the geometry itself: a cell's three
+    # corner triangles and its middle one, on its vertices and its edges' midpoints. A midside
+    # node paired with the wrong edge passes a linear field and fails this.
+    a, b, c = (np.column_stack([r_nm, z_nm])[cells[:, k]] for k in range(3))
+    ab, bc, ca = 0.5 * (a + b), 0.5 * (b + c), 0.5 * (c + a)
+    tiling = np.concatenate(
+        [
+            np.stack(corner, axis=1)
+            for corner in ((a, ab, ca), (ab, b, bc), (ca, bc, c), (ab, bc, ca))
+        ]
+    )
+    np.testing.assert_allclose(corners, tiling, rtol=0.0, atol=1e-12)
     v0, e1, e2 = corners[:, 0], corners[:, 1] - corners[:, 0], corners[:, 2] - corners[:, 0]
     inverse = np.linalg.inv(np.stack([e1, e2], axis=2))
     local = np.einsum("tij,ptj->pti", inverse, at[:, None, :] - v0[None])

@@ -3978,8 +3978,23 @@ make points"), and a pointer names a place in the possessive. Asked how, the aut
 sixteen strings across the suites, before and after, and a draft rule of five points were published for verdicts at
 `https://claude.ai/artifact/Aa7jSmQKSrY6enQPZnMACy` on 20 November 2026. The author took the rule and each of the
 sixteen: the rule stands in the design document's *Look and feel* (WB-52), and WP5.21's item 14 applied the sixteen
-(*Rungs*, *Physics model*, *Boundary conditions*, *Value*, *Variable*, *Combine rows as*, *Representation*,
-*Azimuthal mean*, and the pointers in Analysis as links to Study).
+(*Rungs*, *Physics model*, *Boundary conditions*, *Value*, *Variable*, *Combine rows as*, Meso's
+select named by its visible *Structure* (WB-49; WCAG 2.5.3), *Azimuthal mean*, and the pointers in Analysis as links to Study).
 
 **Open**, ruled by the author on 20 November 2026: WP5.23 sweeps every other screen's text by the rule, with a check
 that flags the patterns.
+
+### REV-270: A map reads its field linearly on each cell split in four
+
+The physics review at WP5.21's ship (doubt 4): `post/fields.py:field_at` reads a field at a point linearly on the four
+triangles of its P2 cell's split (D1), from the nodal values. A P2 field is quadratic in its cell, and a logarithmic
+branch's concentration is the exponential of one, so a map, a cut and a probe read the solved field within the
+split's interpolation error, `O(h²)` of its second derivative, exactly only at the nodes. On one run this is drawing.
+On a difference of two runs on two meshes the errors do not cancel, and within a double layer, where the
+concentration's curvature is largest, they can exceed the physical difference near the wall.
+
+The remedy: find the point's parent cell as now, then evaluate the cell's six P2 basis functions there (straight-sided
+cells, as the mesh is, make its barycentric coordinates the parent's), of the solver's variable: of `ln c` for a
+logarithmic branch, exponentiated after. A map then reads the solved field itself at every point.
+
+**Open**: with REV-268's package, which takes the explorer's sampling, or WP5.23.
