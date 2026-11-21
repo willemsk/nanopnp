@@ -162,10 +162,10 @@ A contour may need a correction the pipeline cannot make: a loop around a flexib
 density does not resolve, or one stage 4 refuses. There are two routes, and both produce a profile
 document that enters a run through `inputs.profile`.
 
-**The Geometry tab of the desktop shell.** Drag, add and delete vertices on the contour, check the
-edit against the §5.2.1 criteria, and save it. The shell writes the edited profile and a derived
+**The Meso suite of the workbench.** In Outline, edit the contour: move a vertex by typing its r and
+z, add and delete vertices, check the edit against the §5.2.1 criteria, and save it. The workbench writes the edited profile and a derived
 case that uses it in place of the structure. It re-derives the profile's measurements and marks
-it `provenance.source: hand-edit`. See [Desktop shell](desktop.md).
+it `provenance.source: hand-edit`. See [The workbench](workbench.md).
 
 **A profile document edited as text.** Export stage 4's profile, edit its `vertices`, and supply
 it through `inputs.profile`. The document's `provenance` block records measurements of its own

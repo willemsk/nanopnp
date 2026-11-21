@@ -22,6 +22,45 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.6.0-alpha.27]
+
+WP5.27: Qt's removal and the short guide, Phase 5's twenty-seventh package; tag `v0.6.0-alpha.27` once merged
+(§8.2.47 AW1, AW3, AW7, AW9 to AW11; S12, S13, S17; T5; U1; AM15; REV-134, REV-228). The browser workbench is the one
+graphical interface: the Qt desktop shell, its bundle and its packaging probe are removed, after each of their 41
+capabilities was checked in the workbench. No golden moves and no stored key moves. The
+[plan](docs/plans/phase-5/wp5.27-qts-removal-and-the-short-guide.md) records the work.
+
+- **Added**:
+  - `nanopnp gui --selftest`: each compiled payload exercised once in its own process, and a server child asked for
+    the shipped renderer, compared by its bytes; one line a payload, exit 0, or exit 3 naming the payload that failed.
+    CI runs it on each Tier 1 leg, on the three platforms (VER-43, VER-44, VER-55, VER-60; RSK-13).
+  - A running run names its stage and rung in the queue, "stage 7 of 9: solve, rung 9 of 17", and its log lines reach
+    the bottom panel's log (rows Q33, Q34; AW9).
+  - `src/nanopnp/THIRD-PARTY-LICENSES.md`, the installation's licence notice, installed with the package;
+    `nanopnp --env` states the GPL-2+ obligation of UMFPACK and the notice's path (CON-11).
+  - [The workbench](docs/guide/workbench.md), a short guide: install, start, the window and the six suites, each with
+    its picture (AW3).
+  - The capability record, [Q01 to Q41 in the workbench](docs/design/reviews/2026-11-21-qt-capabilities.md): 31 present,
+    one as ruled, nine carried to Phase 6 with REV-274, none missing (AW7, AW11).
+- **Changed**:
+  - Study setup's *More values* offers every case path the study's lists do not show, the linear solver among them
+    (rows Q05, Q07; AW10).
+  - The results explorer's changed settings list the deviations a stage contributed, and say "None" only where the
+    manifest counts none (FR-25).
+  - The manifest's environment records `nicegui` and `fastapi`, and no longer `PySide6` (§5.3.3).
+  - The specification's clauses that gated the Qt shell are the workbench's: P3, §2.5, §2.6, IF-09, QR-10, CON-08,
+    CON-09, CON-11, ADR-004's packaging NOTE, VER-43, VER-44, VER-55, VER-60 and RSK-13 (S17; T5).
+  - A hand-edited outline's description says "workbench"; an edit saved again takes a new digest.
+  - The site copies the review and modularity registers, so their links to plans and reviews reach the repository
+    (REV-228).
+- **Removed**:
+  - The PySide6 desktop shell (`nanopnp-gui`), the PyInstaller bundle and the packaging probe (`nanopnp-probe`), the
+    `packaging/` directory and the `packaging` dependency group, and the Qt-only view-models. *Migration:* start the
+    workbench with `nanopnp gui [<project>]`, and turn a case file into a project with `nanopnp project import`.
+  - The guide's desktop page and its three pictures.
+- **Fixed**:
+  - The Qt Result tab's float wrapper leaves with the tab; the results explorer shows each number (REV-134).
+
 ## [0.6.0-alpha.21]
 
 WP5.21: the Analysis suite, Phase 5's twenty-first package; tag `v0.6.0-alpha.21` once merged (§8.2.45 AU1 to AU3;
