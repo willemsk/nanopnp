@@ -1,26 +1,25 @@
 # Current work
 
-Updated 21 November 2026 (verdicts collected; Phase 5 to close early). Navigation only;
+Updated 21 November 2026 (Phase 5 amended to close early). Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-The verdicts keep the results tree, its plot types and its chart library, and ask for every run reachable, views
-that split and tab like a code editor, settings in their own pane, and the boards' finer style everywhere. Two code
-surveys found a sound solving core, but a results side and a workbench spine that would make those features one-off
-code. You ruled that the restructure opens the next phase, after a scope round and a cleanup of the records and
-instructions, and that this phase closes soon.
+This phase has two packages left: the old desktop shell's removal, with a short guide, and the close. The results
+tree, the display layers, the speed measurement, the plain-language messages, the polish pass and the guided route wait
+for the next phase, which opens with a scope round, a cleanup, then the restructured foundations. The trial with a new
+colleague waits for version 1's release candidate. Your five proposals for the scope round are recorded.
 
-**Your call.** Approve the amendment moving the remaining packages. *Recommendation:* keep the desktop shell's
-removal, a short guide and the close; move the rest, so nothing is built twice.
+**Your call.** Approve the amendment after its review. *Recommendation:* approve: it is what you ruled, and it moves
+the guided route and the results tree to the next release.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.21 merged
-  (`v0.6.0-alpha.19`; alpha.20 and .21 to be pushed). WP5.22's round ruled WB-54 to WB-63
-  ([record](../design/reviews/2026-11-21-tree.md)); its verdicts reopen three (REV-273). The author ruled that the
-  restructure ([survey](../project/architecture-survey.md)) opens Phase 6 and Phase 5 closes early (REV-272). **Next:** `/np-plan amend 5` (REV-272's moves; REV-271). host: claude-code.
+- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **closing early**: WP5.01 to WP5.21 merged
+  (`v0.6.0-alpha.21`). Its seventh amendment (§8.2.47; REV-272) keeps WP5.27, Qt's removal with a short guide, and
+  WP5.28, the close; the other planned packages are Phase 6's, named by scope. **Next:** `/np-plan amend 5 review`, then `/np-plan wp 5.27`.
+  host: claude-code.
 
 ## Not to be re-decided
 
@@ -41,7 +40,7 @@ removal, a short guide and the close; move the rest, so nothing is built twice.
 - **Meso holds Density, Outline and Charge map** (AR8; AS1 to AS3). **An edit marks the atoms it moves; the overlay is kept; a study's charge node opens the continuum model's**
   (AT1 to AT4). **The charge map opens on the 99th percentile** (WB-49).
   **A plot's axes are the user's; any Matplotlib map; a true 3D view is the tree's**
-  (AU1 to AU3; WB-53). **Analysis is COMSOL's tree; Plotly draws every chart and map** (WB-54 to WB-63). **Phase 6 opens with its scope, a cleanup, then the foundations** (REV-272). **The words follow
+  (AU1 to AU3; WB-53). **Analysis is COMSOL's tree; Plotly draws every chart and map** (WB-54 to WB-63). **Phase 6 opens with its scope, a cleanup, then the foundations** (REV-272). **QR-10's trial waits for a v1.0 release candidate; WP5.22 to WP5.26 are retired numbers** (§8.2.47). **The words follow
   five rules** (WB-52). **Every open item names a package** (§8.2.46).
 
 ## Somebody else's
@@ -51,7 +50,7 @@ removal, a short guide and the close; move the rest, so nothing is built twice.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
 - **The 200 ms redraw**'s GPU run (REV-258); **verdicts at each design round** (AJ8); **the Copilot host's checks**, before the close (REV-166 to REV-168; AV6).
 - **Rulings on a cycle (H6) or drift (I4)**; **Tier 3's PQRs**.
-- **Phase 6's provisional packages** (AV5), REV-156's speed-up first (Z6).
+- **Phase 6's provisional packages** (AV5; AW1), Z6's speed-up first revisited (REV-272); **QR-10's observer** (AW2).
 
 ## On demand
 

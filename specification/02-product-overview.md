@@ -89,7 +89,7 @@ CLI; HPC job arrays; the browser workbench"; the PySide6 row goes, and NiceGUI a
 the workbench's server and front end) join.
 
 NOTE (§2.6, the workbench, v0.6). The `gui` extra takes Matplotlib (its own permissive licence), whose
-registered colour maps the workbench offers by name (§8.2.45 AU2). From WP5.22 the front end draws every
+registered colour maps the workbench offers by name (§8.2.45 AU2). From the tree of results' package (WP5.22, moved to Phase 6 by §8.2.47 AW1) the front end draws every
 chart and every (r, z) view with Plotly (plotly.js, MIT) as NiceGUI ships it, unmodified, which adds no
 dependency, and uPlot and NGSolve's `webgui` leave it (WB-57, restating §8.2.45 AU1; CON-09). Until then it
 vendors uPlot 1.6.32 (MIT) unmodified as separate files for its charts.
@@ -107,9 +107,9 @@ reference-solution generation; MD trajectories are supplied as input.
 | v0.3 | 2 | Geometry pipeline: structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh. |
 | v0.4 | 3 | Charge pipeline: PDB2PQR to smeared ρ_fixed and dielectric field; the physics-model interface (FR-20). Runs the paper's pipeline end to end, from structure to current; the reproduction of the published results is measured at v0.7 (VAL-16, VAL-17; §8.2.4 D6). |
 | v0.5 | 4 | Polish and user testing (§8.2.6 F3): an exploration of the modularity of the implementation architecture, then a user-testing pass over the physics, the numerics, the Python API and the command line. No GUI increment. |
-| v0.6 | 5 | Graphical interface (§8.2.6 F5): a design and requirements document with mockups, a visual-feedback workflow, then the browser workbench its plan sets (FR-31 to FR-39): six suites over a project folder, a run queue, and the guided route of QR-10. |
-| v0.7 | 6 | Validated release: V&V suite in CI, the published current–voltage relationships and in-pore averages reproduced (VAL-16, VAL-17), documentation, tutorials, JOSS submission, DOI-archived. Released before v1.0. |
-| v1.0 | — | Stable release: the API stability promise of IF-01. Its content and gate are the author's to define (OPN-08). |
+| v0.6 | 5 | Graphical interface (§8.2.6 F5): a design and requirements document with mockups, a visual-feedback workflow, then the browser workbench its plan sets (FR-31 to FR-35, FR-37 to FR-39): six suites over a project folder and a run queue, replacing the Qt shell. |
+| v0.7 | 6 | Validated release: V&V suite in CI, the published current–voltage relationships and in-pore averages reproduced (VAL-16, VAL-17), documentation, tutorials, JOSS submission, DOI-archived. It also takes the workbench packages Phase 5's early close moved, the tree of results (FR-32) and the guided route (FR-36) among them, after the restructure of the shell and of the results side (§8.2.47 AW1; REV-272). Released before v1.0. |
+| v1.0 | — | Stable release: the API stability promise of IF-01. Its content and gate are the author's to define (OPN-08); QR-10 is observed on its release candidate (§8.2.47 AW2). |
 | post-1.0 | — | Backlog: installers for all three platforms and in-application tutorials; 3D; transient; ion-specific rather than mean-concentration-driven property models; MD-fitting toolkit for corrections; solid-state pores; charge regulation; multi-species electrolytes beyond binary; non-axisymmetric analytes. |
 
 A requirement's release in §3 is a release of the table above, or one of the tool phases of §8.1

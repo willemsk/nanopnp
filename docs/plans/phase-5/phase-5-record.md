@@ -1218,3 +1218,190 @@ checked (AN5); a solve records its fields' norms, which a reproduction compares 
 2WCD ([the record](../../design/reviews/2026-11-20-analysis.md); WB-50 to WB-52) a tree of results, with the chart
 library chosen again, is WP5.22 (REV-268), and the wording rule the author took is applied to sixteen strings, WP5.26
 sweeping the rest (REV-269).
+
+## Amended 21 November 2026 (§8.2.47 AW1 to AW6)
+
+The seventh `/np-plan amend 5`, after WP5.22's design round and its verdicts, placed the early close the author ruled
+that day (REV-272). Phase 5 keeps WP5.27, cut to Qt's removal with a short guide (AW3), and WP5.28, the close, under
+their numbers (AW4). The tree of results (WP5.22), the layers (WP5.23), the performance package (WP5.24), the library's
+refusals (WP5.25), the polish pass (WP5.26) and WP5.27's guided route with new models moved to Phase 6, named there by
+scope (AW1); those numbers are retired, and the text below keeps them. QR-10's trial was postponed to a v1.0 release
+candidate (AW2), so criterion 5, open decision 8 and the colleague's supply row left the plan; criterion 6 and the
+GPU's supply row moved with the performance package. The plan kept its length, its word target restated at Phase 6's
+cleanup (AW5; REV-271), and open decision 14 closed with neither tool adopted (AW6). The plan's status read:
+
+> **Status: in progress; WP5.01 to WP5.21 merged (`v0.6.0-alpha.19`; WP5.20's and WP5.21's tags, `v0.6.0-alpha.20` and `v0.6.0-alpha.21`, to be pushed); next WP5.22, the tree of results, its design round held on 21 November (WB-54 to WB-63); then WP5.23 the layers, WP5.24 performance, WP5.25 the refusals, WP5.26 the polish pass, WP5.27 the route and WP5.28 the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+
+The In brief read:
+
+> ## In brief
+>
+> **What changes.** The program gains a browser workbench of molecular and continuum suites. Library steps came first,
+> then the frame and six suites, four that build models and two that use them. Every point the reviews left open now has
+> a package. Seven remain: results arranged as an editable tree, as COMSOL arranges them; a free list of display layers in every molecule view; the screens' speed, timed on a
+> graphics card; every library message written plainly, leading to its field; a polish pass over every
+> suite's open points, its words and its keyboard use; the guided route, with models created in the workbench, the old
+> desktop shell's removal and the guide; and the close.
+>
+> **Cost.** Seven packages: about 36 sessions, 44 to 73 hours of agent work and 70 times you act, from the suites
+> measured, and one session of yours on a computer with a graphics card.
+>
+> **What could go wrong.** A rewritten message could lose the value or the remedy it names; each keeps the rule, the
+> value, the case path and the remedy, and no stored result moves. The molecule viewer may redraw slower than 200 ms; it
+> is timed on a graphics card, and if the viewer itself is the cost, the line applies to the workbench's own share.
+>
+> **Your call.** How are results arranged, and which chart library draws them? *Recommendation:* settle both at the
+> tree's design round, on drawn screens, as each suite was. Who tries the workbench unaided? *Recommendation:* name the
+> colleague before the close, which records the trial. When do the Copilot app's checks run? *Recommendation:* before
+> the close; otherwise it carries them on.
+
+*Context*'s question and gate read:
+
+> Phase 5 answers one question: **can a nanopore experimentalist with no Python run a case unaided in a
+> workbench that a method developer also wants to use?** Its gate is §8.1's, as S13 states it.
+
+The *Design decisions* rows read:
+
+> | The join between the scales | A meso suite between Molecular and Continuum holding Density, Outline and Charge map, built next; the 200 ms line in a performance package after Analysis | Each suite follows one scale; one pass measures the finished views (AR7, AR8; §8.2.43 AS1, AS2) |
+> | The last packages | The tree of results, then the layers in every Mol* view, before the performance package; then the library's refusals, a polish pass over every suite, and the route with new models, Qt's removal and the guide | The performance package times the finished views; each pull request reviews one kind of change; every open item names a package (WB-51; §8.2.46 AV1 to AV5) |
+
+The entries of the planned packages read:
+
+> ### WP5.22 — The tree of results (FR-32, FR-33; WB-51, WB-53; REV-268, REV-270; §8.2.46 AV4)
+>
+> Its design round comes first: `/np-gui grill` puts the tree to the author on 2WCD (§8.4.4), with REV-268's questions: the
+> tree's nodes (a run or a comparison as data, groups of plots, probes in a pane of their own, the quantities shown, the
+> cut), the plot types a group takes (a surface, contours, arrows, a line along a cut, a scatter, the I–V, WB-53's true
+> 3D view), how a variable or a constant is defined and where the library computes it (QR-13), how the tree is saved
+> in the project (FR-32), how it meets the link rulings (WB-06), and the chart library every plot uses, chosen again
+> (AU1; NiceGUI ships Plotly and ECharts). Library steps first: a field read at a point by its cell's own P2 basis, of
+> `ln c` on a logarithmic branch, so a map, a cut and a probe read the solved field (REV-270); then what the round
+> rules. Then the tree replaces the explorer's tiles, with REV-268's review points: the tiles' layout, the quantities'
+> order and words, a run named by sight, a map framed on its data at equal aspect, *Mirrored* the model of a two-run
+> view. Tag `v0.6.0-alpha.22`.
+>
+> The round ran on 21 November 2026 ([the record](../../design/reviews/2026-11-21-tree.md); WB-54 to WB-63): COMSOL's
+> branches, a comparison a Data node of one `results.yaml` per project; one plot group or two side by side; every plot
+> type of the round's board P1; Plotly for every chart and every (r, z) view, in this package, so Meso's, Continuum's
+> and Physics' views move here with a round of verdicts, and uPlot, the canvas and `webgui` leave (CON-09's `webgui`
+> sentence with it); definitions from a library list or typed, evaluated by the library; the tables in the bottom panel;
+> *Shown run* following the newest; default plot groups; *Mirrored* first; a run labelled or named by what differs.
+>
+> ### WP5.23 — The structure's layers in every Mol* view (FR-31, FR-33; WB-49; REV-265, REV-243, REV-240; §8.2.46 AV3)
+>
+> A free list of layers draws the structure in Molecular's View and Prepare and in Meso's Density, Outline and Charge
+> map. Each layer chooses what it draws (everything, a chain, the charged residues, the residues the tool is about, a
+> residue by name), its style (MolViewSpec's cartoon, backbone, putty, ball and stick, spheres or surface), its colour
+> and its opacity; the residues a tool is about are Charge map's pick with its copies, Density's named residues and
+> Outline's moved ones (WB-49). Library step first: each residue's variation over an ensemble's aligned frames, a colour
+> a layer can take (REV-240; QR-13). Prepare's view draws a typed tilt, azimuth, flip and centre before *Save prepared
+> structure* (REV-243; AO2). A round of verdicts on 2WCD (§8.4.4); Mol* ships unmodified (CON-09). Tag
+> `v0.6.0-alpha.23`.
+>
+> ### WP5.24 — The performance package (WB-23; REV-258; §8.2.31 AG7; §8.2.42 AR7; §8.2.43 AS2)
+>
+> First, `redraw.cjs` gains the timing of the tree of results' field and plot views beside its charge-map picks. Then, in a local
+> session of the author's, on a machine with a GPU, `redraw.cjs --headed` times on 2WCD a residue picked on the meso
+> suite's charge map redrawing the whole picture (WB-23; criterion 6), with WP5.23's layers, and the tree's views. The front end's share is then
+> fixed, one keyed walk per pick first, the route reusing the pane's read (REV-258), and timed again; each miss left is
+> profiled with `--trace`. Where the renderer's own repaint is the cost, the line binds the front end's share and the
+> renderer's time is recorded (AG7). No stored key moves (VER-62). Tag `v0.6.0-alpha.24`.
+>
+> ### WP5.25 — The library's refusals (FR-35's NOTE; QR-12; REV-254, REV-242; §8.2.46 AV1)
+>
+> Every refusal and diagnostic left in `mesh/`, `geometry/`, `charge/`, `density/`, `structure/`, `numerics/`, `solve/`,
+> `post/`, `sweep/`, `physics/`, `materials/`, `symmetry/`, `core/` and `api/` beyond `project.py`, and the command line's
+> messages, follow FR-35's NOTE: the rule, the value, the case path and the
+> remedy, in ASD-STE100. A refusal carries its case path and its file as fields, so `gui/web/tools.py:_plain`,
+> `api/project.py:_error_path` and `gui/web/physics_tools.py:problem_path` read the fields, and a refusal opens its field
+> by its path, never by its words (REV-242's fourth point). The suites' own words go to WP5.26's sweep. No number and no
+> stored key moves (VER-62). Tag `v0.6.0-alpha.25`.
+>
+> ### WP5.26 — The polish pass: every suite's open points, the words and the keyboard (QR-16; WB-52; REV-203's remainder; REV-235 to REV-237, REV-241, REV-245, REV-255, REV-261 to REV-263, REV-266, REV-267, REV-269; §8.2.46 AV2)
+>
+> A round on 2WCD opens it (§8.4.4), with the choices the rows leave to the author: an exposed value's first name and its
+> list (REV-262), a variable's unit box (REV-263), the charge map's default share and *One subunit*'s overlay (REV-266),
+> the project dialogs, the settings' rows and spacing, the menus, the palette's look, and the Glossary as a help page
+> from one source (REV-235 to REV-237). Then every suite's open review points: the panes' layout, the canvases' labels
+> and keys, colours, numbers and units (REV-241, REV-245, REV-255's view and its region, REV-261, REV-266, REV-267), the
+> Study suite's efficiencies (REV-263), and Region's domains read from the region artefact's faces, not cut in the shell
+> (REV-245; VER-60), library step first. The keyboard pass over every canvas action, with handles dragged on the (r, z)
+> canvas and Outline's vertex path (REV-203's remainder, REV-236, REV-266; QR-16). The wording rule swept over every
+> screen, with a check that flags its patterns (REV-269; WB-52), and the suites' own words under FR-35's NOTE (REV-254).
+> Tag `v0.6.0-alpha.26`.
+>
+> ### WP5.27 — The guided route, new models, Qt's removal and documentation increment 5 (FR-36; REV-134, REV-228, REV-240, REV-241, REV-242, REV-249; S13, S17; §8.2.46 AV2)
+>
+> Library step first: a new model of each kind from the project tree, a molecular model's first structure written as one
+> block, a new physics model's corrections, and what an import makes of a full copy's parent (REV-242's first two points,
+> REV-249, each put to the author at the plan); a PQR model opened as a structure (REV-241). An action that deletes asks a
+> second step (REV-240's safeguards; WB-32). Then the guided route over the six suites from an empty project (FR-36).
+> Every row Q01 to Q41 is checked present (criterion 3); then PySide6, the Qt widgets, the bundle and the packaging probe
+> leave, and the restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44, VER-55, VER-60, CON-08, CON-09, CON-11, ADR-004's
+> packaging NOTE and RSK-13 become their clauses (S17; T5). REV-134 closes (U1). The application guide is rewritten
+> against the browser workflow with the rendered screens (§8.1's increment 5), and the site's register pages link the
+> plans and reviews it leaves out (REV-228; AM15). Tag `v0.6.0-alpha.27`.
+>
+> ### WP5.28 — The close
+>
+> It resolves or carries each open decision, records QR-10 with the colleague named by then (S24), confirms Qt and the
+> bundle are gone with the capability list covered, orders the tool phases (S7), carries any Copilot check not yet run
+> (REV-166 to REV-168; AV6), hands the open items' provisional Phase 6 packages to `/np-plan phase 6` (AV5), and writes
+> the report, the changelog and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
+
+*Open decisions* read:
+
+> ## Open decisions
+>
+> | # | Decision | Owner and status |
+> |---|---|---|
+> | 5 | The order of the tool phases against Phase 6 | **Author**, at the close (S7) |
+> | 8 | Who observes QR-10 | **Author**, by the close (S24) |
+> | 14 | Whether xenon or import-linter is adopted | **Author**, on WP5.10's report (AL7, AL27), [delivered](../../../knowledge/07-software-stack/25-complexity-and-import-contract-tools.md): it recommends neither |
+> | 16 | The tree of results: its nodes, its plot types and its chart library | **Settled** at WP5.22's design round, 21 November 2026 (WB-54 to WB-63) |
+> | 17 | An exposed value's first name, a variable's unit box, the charge map's default share | **Author**, at WP5.26's round (REV-262, REV-263, REV-266) |
+> | 18 | A new physics model's corrections, and what an import makes of a full copy's parent | **Author**, at WP5.27's plan (REV-242, REV-249) |
+>
+> Settled rows: see §8.2.17 to §8.2.46 and [the record](phase-5-record.md); decision 15, the meso suite's name, kept as
+> *Meso* at WP5.20's round ([the record](../../design/reviews/2026-11-19-meso.md); AS3).
+
+*What the author supplies* read:
+
+> ## What the author supplies
+>
+> | Item | Needed by | If it does not arrive |
+> |---|---|---|
+> | Verdicts at each design round: each suite's prototype on 2WCD or, for Physics, example 01; the tree of results; the layers; the polish pass | WP5.16 to WP5.23, WP5.26 | The package is built on the drafts as they stand, and the verdicts move to its screen review |
+> | A machine with a GPU, in a local session | WP5.24 (§8.2.42 AR7; §8.2.43 AS2) | The 200 ms line stays unmeasured; REV-258 carries it to the close |
+> | A local Claude Code session | WP5.02 onward | Work continues headless, on renders |
+> | Verdicts on the six findings against the ESI and the COMSOL report, asked in one round at WP5.12's item 11 (AL20; AM18; REV-227) | WP5.12 | A finding not yet checked stays `unchecked` in REV-227, carried to the close |
+> | The verdict on xenon and import-linter (AL27) | After WP5.10 | Neither is added; the layering test stays the guard |
+> | An experimentalist new to nanopnp | The close | QR-10 is waived and carried (S13) |
+> | A session in the Copilot app on a WSL host (REV-166 to REV-168) | Before the close (§8.2.46 AV6) | The close carries the three checks to Phase 6; the gate is run by hand on Copilot meanwhile |
+> | Merges; tags a session cannot push | Each package | The session prints the commands |
+
+The *Verification* rows of the planned packages read:
+
+> | WP5.22, the tree of results | 1 | A field read at a point by its cell's P2 basis: exact on a quadratic field, a logarithmic branch read as `exp` of the solved `ln c` (REV-270); the tree saved with the project and read back (FR-32); VER-78 |
+> | WP5.23, the layers | 1 | A residue's variation over aligned frames against a hand-computed set; Mol* unmodified (CON-09); VER-78 over each Mol* view's layers |
+> | WP5.24, performance | 1 | VER-62 and VER-78 unmoved by the pick path's fix; criterion 6, timed by `redraw.cjs --headed` on a GPU |
+> | WP5.25, the refusals | 1 | VER-62 unmoved; a mesh gate's refusal, raised in a Tier 1 test, carries its case path and file as fields (a numerical gate, N1); VER-78's `refused` state holds a refusal WP5.25 rewrites and opens its field by that path; `_plain`, `_error_path` and `problem_path` read the fields, not the words, checked at review (N3) |
+> | WP5.26, the polish pass | 1 | VER-60 as restated, Region's domains read from the artefact; QR-16's keyboard path over each canvas; the wording check (REV-269); VER-78 |
+> | WP5.27, route and Qt's removal; WP5.28, the close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; a new model of each kind resolves and keys as an imported one (FR-32); VER-78 |
+
+Criteria 5 and 6 read:
+
+> 5. **QR-10 is observed**: the colleague installs, loads a structure, accepts defaults and obtains a
+>    conductance and a field picture unaided. Predicted: met, with findings. A miss is waived and
+>    carried (S13).
+> 6. **The redraw is measured** on the author's machine with a GPU, in WP5.24, the performance package (§8.2.42 AR7;
+>    §8.2.43 AS2; REV-258): a residue selected on the meso suite's charge map redraws the whole picture within 200 ms (WB-23). Predicted: the front end's share met (26 ms p95 in the spike), the
+>    whole picture unknown. On a miss the redraw is profiled; where the renderer's own repaint is the cost, the line
+>    binds the front end's share and the renderer's time is recorded; a miss by the front end is fixed (§8.2.31 AG7).
+
+The *End-of-phase report* read:
+
+> The close reports: the QR-10 observation, its findings and their rulings; the Qt capability list
+> against the browser shell; VER-78's screen and state counts; the time from a click to a redrawn
+> view on the reference charged case and the install's time on a clean machine, each re-run by the
+> command WP5.02 names; and the tool phases' order.

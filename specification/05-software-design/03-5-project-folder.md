@@ -11,7 +11,7 @@ to AI14; §8.2.38 AN5; §8.2.45 AU3; WP5.19, WP5.21): a workbench
 **project** is a folder: `nanopnp-project.yaml` (`nanopnp/project/v0.6`, which holds the item index, the
 open items, the current item, each suite's layout, the project's settings and the molecular model each continuum model
 is built alone over where one was chosen (`built_with`; §5.3.1's NOTE on model files), and no physics), `models/molecular/`,
-`models/continuum/`, `models/physics/`, `studies/`, `comparisons/` (until WP5.22; then `results.yaml`, below),
+`models/continuum/`, `models/physics/`, `studies/`, `comparisons/` (until Phase 6's tree of results, WP5.22 before §8.2.47 AW1; then `results.yaml`, below),
 `inputs/`, `runs/<study>/<run>/`, `sweeps/` and `store/`. An item's name is its file's stem and its `name:`, and matches `[A-Za-z0-9][A-Za-z0-9._-]{0,63}`.
 The folder is the truth: a file the index lacks is appended on opening, and an indexed name without its
 file is a problem, never a refusal to open. A run is `runs/<study>/<short key>`, and
@@ -47,7 +47,7 @@ copied run record names the copy's directory and files, and the copy's store, wh
 `store=True`. An input the project cannot find, and two inputs that take one path in the copy, are
 refused, naming both, before anything is written. The copy is written beside the destination and moved
 into place whole, so a refused or failed export leaves nothing.
-Until WP5.22, a **comparison** (`comparisons/<name>.yaml`, `nanopnp/comparison/v0.6`) holds `name`, `runs` (two run
+Until that package, a **comparison** (`comparisons/<name>.yaml`, `nanopnp/comparison/v0.6`) holds `name`, `runs` (two run
 folders of the project, first then second, relative to it), `quantity` (`potential` by default), `view`
 (`difference`, the default, `maps`, `mirrored`, the two maps as one with the first reflected about the axis, or
 `mesh`), `colour_map` and `range` (None by default), and no physics.
@@ -56,7 +56,7 @@ folders of the project, first then second, relative to it), `quantity` (`potenti
 no `run.json` is a problem at `runs`, never a refusal to open; an export copies the file unchanged, its
 runs with it. Its difference (`post.fields.field_difference`) samples both runs onto one cell-centred
 (r, z) grid of about 10⁶ cells over the overlap of their fluids' boxes, each run on the set its quantity
-is solved on, and is NaN where either fluid lacks a cell's centre. From WP5.22, the project's **results**
+is solved on, and is NaN where either fluid lacks a cell's centre. From that package, the project's **results**
 are one file, `results.yaml` (`nanopnp/results/v0.6`) beside the project file, holding no physics: the tree
 of results' data (a run, which may follow its study's newest, a sweep's runs, two runs compared, a
 revolution about the axis), definitions (constants with their units, and variables from the library's
