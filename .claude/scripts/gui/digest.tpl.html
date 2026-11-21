@@ -107,6 +107,8 @@ function pickCard(p, n) {
   body.append(el("div", { className: "head" }, [el("span", { className: "num", textContent: String(n).padStart(2, "0") }), el("h3", { textContent: p.title })]));
   body.append(el("div", { className: "id", textContent: p.id }));
   body.append(block("Why this one", p.why), block("Look for", p.look));
+  // A board published live beside its picture: zoom, hover and turn it there.
+  if (p.live) body.append(el("p", {}, [el("a", { href: p.live, target: "_blank", rel: "noopener", textContent: "Open the live board" })]));
   body.append(el("div", { className: "chips" }, p.decisions.map(d => el("span", { className: "chip", textContent: `${d} ${DATA.decisions?.[d] ?? ""}`.trim() }))));
   const others = p.members.filter(m => m !== p.id);
   if (others.length) {

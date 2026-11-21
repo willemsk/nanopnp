@@ -33,7 +33,9 @@ one, and most of them repeat each other (WP5.15's collect, 11 November 2026).
    - `why`: one or two sentences on why this shot and not its group's others;
    - `look`: what to judge in it, naming each fixed finding and each open item it shows, and which
      part to ignore (a suite still drawn as text);
-   - `stands_for`: shell patterns (`*`, `{a,b}`) for the shots its verdict covers.
+   - `stands_for`: shell patterns (`*`, `{a,b}`) for the shots its verdict covers;
+   - `live`, optional: the path of an interactive board published beside the page, which the card
+     links, for a board whose plots are judged by zooming and turning them.
 5. **Build.** `uv run python .claude/scripts/gui/digest.py build <picks.json> <r>/index.json...
    <s>/gallery/<topic>/` writes `index.html` with the picks' PNGs. It refuses a shot left to no pick,
    a pick not in the render and more than 20 picks.

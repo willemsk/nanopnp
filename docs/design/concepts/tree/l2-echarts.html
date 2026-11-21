@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L2 ECharts</title>
+<link rel="stylesheet" href="board.css">
+<script src="data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
+<script src="draw.js"></script>
+<style>
+  .grid { grid-template-columns: 1fr 1.2fr; grid-template-rows: 1fr 1fr; }
+  .cell .plot { flex: 1; }
+  .left { grid-row: span 2; }
+</style>
+</head>
+<body>
+<div class="board" data-screen>
+  <div class="caption">
+    <h1>L2 · ECharts</h1>
+    <p>The same four plots as L1, on the same data, as far as the library draws them. Zoom the line with the wheel, hover for values; the 3D view turns by dragging.</p>
+    <span class="tag">ECharts 6.1.0 and ECharts GL 2.0.9, as NiceGUI 3.18 ships them</span>
+  </div>
+  <div class="facts">
+    <div><b>Licence</b>Apache-2.0 (ECharts GL BSD-3-Clause); shipped inside NiceGUI (<code>ui.echart</code>), no new dependency</div>
+    <div><b>Size</b>1.1 MB, and 0.6 MB more for 3D</div>
+    <div><b>Draws</b>heatmaps on a grid of categories, lines and markers, log axes, 3D points and surfaces of z</div>
+    <div><b>Lacks</b>contour lines, arrows and a locked equal aspect on a map; a 3D surface coloured by another field than its height is not documented. Each is written by hand or left out</div>
+  </div>
+  <div class="grid">
+    <div class="cell left"><h3>Map <small>φ; no contours, arrows or equal aspect</small></h3><div class="plot" id="map"></div></div>
+    <div class="cell"><h3>Line along the axis <small>c, two runs, log axis</small></h3><div class="plot" id="cut"></div></div>
+    <div class="grid" style="grid-template-columns: 1fr 1.3fr; padding: 0; gap: 8px">
+      <div class="cell"><h3>Current against bias</h3><div class="plot" id="iv"></div></div>
+      <div class="cell"><h3>Revolution <small>φ, as points</small></h3><div class="plot" id="rev"></div></div>
+    </div>
+  </div>
+</div>
+<script>
+  draw.echartsMap(document.getElementById("map"), { quantity: "potential" });
+  draw.echartsCut(document.getElementById("cut"), { quantity: TREE.species[0], log: true });
+  draw.echartsGlobal(document.getElementById("iv"));
+  draw.echartsRevolution(document.getElementById("rev"), { quantity: "potential" });
+</script>
+</body>
+</html>
