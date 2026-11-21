@@ -16,6 +16,7 @@ from nanopnp.core.paths import (
     CORRECTIONS_DIR,
     DATA_DIR,
     GEOMETRY_DIR,
+    LICENCE_NOTICE,
     REFERENCE_DATA_VARIABLE,
     STORE_ROOT_VARIABLE,
     config_root,
@@ -47,6 +48,9 @@ def _environment() -> dict[str, Canonicalisable]:
         CONFIG_VARIABLE: os.environ.get(CONFIG_VARIABLE),
         "reference_data": str(reference) if reference is not None else None,
         REFERENCE_DATA_VARIABLE: os.environ.get(REFERENCE_DATA_VARIABLE),
+        # CON-11: the default solver, UMFPACK, is GPL-2+ and ships inside the NGSolve wheel.
+        "licence": "GPL-2+",
+        "licence_notice": str(LICENCE_NOTICE),
     }
 
 
@@ -61,6 +65,9 @@ def _env(args: argparse.Namespace) -> int:
         f"config    {found['config']} ({CONFIG_VARIABLE}={found[CONFIG_VARIABLE] or 'unset'})",
         f"reference {found['reference_data'] or 'none'} "
         f"({REFERENCE_DATA_VARIABLE}={found[REFERENCE_DATA_VARIABLE] or 'unset'})",
+        f"licence   this installation is used under {found['licence']}: its default linear "
+        "solver, UMFPACK, is GPL-2+ (the library is BSD-3-Clause); "
+        f"see {found['licence_notice']}",
     ]
     _emit(found, lines, as_json=bool(getattr(args, "json", False)))
     return EXIT_OK

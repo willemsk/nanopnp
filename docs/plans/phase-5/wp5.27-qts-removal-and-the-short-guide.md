@@ -233,7 +233,7 @@ under `OUTPUT / "project"`; their sources join `exclude_docs`; the navigation an
 - [x] 5. Compaction checkpoint. **Executor:** main
 - [x] d293aa7 6. `gui/web/selftest.py`, `cli/workbench.py`, `core/errors.py`, `tests/tier1/test_gui_selftest.py`, CI and
   the gate (D6); done when its tests pass and the command exits 0 here. **Executor:** main
-- [ ] 7. The removal, the notice (D5, D7); done when Tier 1 and the two Tier 2 files pass and `uv lock --check`
+- [x] a8b05fd 7. The removal, the notice (D5, D7); done when Tier 1 and the two Tier 2 files pass and `uv lock --check`
   is clean. **Executor:** main
 - [ ] 8. `nanopnp --env`, `io/manifest.py` (D7, D8); done when `--env`'s test passes. **Executor:** main
 - [ ] 9. The clauses (D9): `specification/`, `SPECIFICATION.md`, `gui/geometry.py`'s description,
