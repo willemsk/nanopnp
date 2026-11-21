@@ -31,7 +31,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP5.19 — The Study suite](phase-5/wp5.19-the-study-suite.md): delivered, 18 November 2026.
 - [WP5.20 — The meso suite](phase-5/wp5.20-the-meso-suite.md): delivered, 19 November 2026.
 - [WP5.21 — The Analysis suite](phase-5/wp5.21-the-analysis-suite.md): delivered, 20 November 2026.
-- [WP5.27 — Qt's removal and the short guide](phase-5/wp5.27-qts-removal-and-the-short-guide.md): planned, not started.
+- [WP5.27 — Qt's removal and the short guide](phase-5/wp5.27-qts-removal-and-the-short-guide.md): in progress.
 
 ## Phase 4
 
