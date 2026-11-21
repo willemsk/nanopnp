@@ -101,12 +101,21 @@ def _queued(
     # Called by the queue as the entry ends, so a member dropped unstarted counts as one ended.
     entry.then = then
 
+    copied = 0
+    shown = ""
+
     def poll() -> None:
+        nonlocal copied, shown
         model = control.poll()
+        for line in model.log[copied:]:
+            queue.say(f"{label}: {line}")
+        copied = len(model.log)
+        progress = model.progress_line()
+        if progress != shown:
+            shown = progress
+            queue.moved += 1
         if not model.settled or entry.ended:
             return
-        if model.diagnosis:
-            queue.say(f"{label}: {model.diagnosis}")
         queue.set(entry, "done" if model.state == "finished" else "failed")
 
     entry.poll = poll
