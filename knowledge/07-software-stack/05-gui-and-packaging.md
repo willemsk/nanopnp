@@ -37,7 +37,11 @@ sources:
   resource: docs/plans/phase-5/wp5.01-workbench-design-study.md
   title: WP5.01 workbench design study plan (offscreen Qt and headless Playwright
     render checks)
+- id: wp522-round
+  resource: docs/design/reviews/2026-11-21-tree.md
+  title: WP5.22 tree of results design round (Plotly and ECharts drawn on 2WCD's fields)
 tested_with:
+  nicegui: 3.18.0
   pyside6: 6.11.2
   pyinstaller: 6.22.3
   netgen-mesher: 6.2.2606
@@ -430,6 +434,25 @@ inverse of its diagonal, opens on that region without modifying the renderer. Th
 colour bar's labels are text nodes that inherit the same colour. A page on a dark theme therefore sets a light
 `color` on its body before the scene initialises.
 
+### NiceGUI 3.18 ships Plotly and ECharts, and only Plotly draws every layer of an (r, z) field **[verified][^wp522-round]** {#nicegui-318-ships-plotly-and-echarts-and-only-plotly-draws-every-layer-of-an-r-z-field}
+
+NiceGUI 3.18.0 bundles plotly.js 3.1.1 (MIT) in `nicegui/elements/plotly/dist/index.js`, 4,581,324 B, and ECharts
+6.1.0 (Apache-2.0) in `nicegui/elements/echart/dist/`, loading ECharts GL 2.1.0 (MIT, its `package-lock.json`) when
+an option names a 3D series or `enable_3d` is set; neither adds a dependency to the `gui` extra. Drawn on 2WCD's
+solved fields for WP5.22's round:
+
+- Plotly draws a heatmap with labelled contour lines (`contours.coloring: "lines"`), equal aspect by
+  `yaxis.scaleanchor`, arrows as line segments ending in `marker.symbol: "arrow"` with `angleref: "previous"`, and a
+  3D `surface` coloured by a second array (`surfacecolor`): a field turned about the axis is two cut faces whose
+  solid cells are null coordinates. It has no square-root axis, no quiver or streamline type, and no 2D map on
+  triangles. A contour trace interpolates over null cells, so its lines cross a solid unless a mask is drawn over
+  them.
+- ECharts has no contour series and no arrow series; its heatmap's cartesian axes are categories with no aspect
+  lock, and a log axis spans whole decades unless `min` and `max` are set. It draws on a canvas, so the render
+  check measures none of its text.
+- Plotly's own mode bar measures 24 × 22 px a button, and its focus ring 1.29:1 on the workbench's dark theme,
+  under WCAG 2.2's 24 px and 3:1; `config.displayModeBar: false` hides it.
+
 [^wp521-plan]: `docs/plans/phase-5/wp5.21-the-analysis-suite.md` (`webgui.js` 0.2.39's `setGuiSettings`, `loadSettings` and `getBackgroundColor`; `gui/render.py`'s host page).
 [^wp14-plan]: `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md` (PySide6 GL system-library requirement and Playwright Chromium GL shim).
 [^wp15-plan]: `docs/plans/phase-1/wp15-live-convergence-and-viewer.md` (`ngsolve_webgui_js` 0.2.39 npm metadata, `src/scene.ts`, and PyInstaller OCCT/OpenBLAS bundling).
@@ -441,3 +464,4 @@ colour bar's labels are text nodes that inherit the same colour. A page on a dar
 [^wp502-report]: `docs/design/spike/report.md` (the framework spike's six measures and what the build taught, WP5.02 items 1 to 5).
 [^wp508-plan]: `docs/plans/phase-5/wp5.08-the-frame-and-the-project-folder.md`, items 8 to 10 (the frame, its render findings and Outcome notes).
 [^wp515-plan]: `docs/plans/phase-5/wp5.15-the-frame-on-quasars-components.md`, items 4 and 14 (Quasar's colour variables, the render findings, and NiceGUI 3.18's `templates/index.html`).
+[^wp522-round]: `docs/design/reviews/2026-11-21-tree.md` and the boards `docs/design/concepts/tree/draw.js` (21 November 2026); NiceGUI 3.18.0's `elements/plotly/dist/index.js` and `elements/echart/package-lock.json`; the render check of `tree-6186208` and `tree-r2`.
