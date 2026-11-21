@@ -246,7 +246,7 @@ AG3: FR-39; §5.3.1's NOTE on `variables:`
 AG4: FR-39; §5.3.1's NOTE on `variables:`; §5.3.3's inputs group
 AG5: FR-39; §5.3.4; §5.5's NOTE on the rebuild forecast
 AG6: 'FR-32; REV-136; open: WP5.21 (AJ10)'
-AG7: 'the Phase 5 plan''s criterion 6; amended by AR7'
+AG7: 'amended by AR7; open: Phase 6''s performance package (moved by AW1)'
 AG8: VER-62; the NOTE beside PHY-16 step 3
 AG9: FR-38; REV-183
 AG10: FR-38
@@ -381,3 +381,5 @@ AW3: '§8.1''s documentation increments 5 and 6; open: WP5.27'
 AW4: the Phase 5 plan; spent
 AW5: 'open: Phase 6''s cleanup (REV-271; §8.4.4)'
 AW6: 'pyproject.toml''s ruff selection; VER-61; spent'
+AW7: 'the design document''s row Q16 to Q20; open: WP5.27'
+AW8: 'QR-16''s NOTE; Appendix A''s QR-16 row; open: Phase 6''s polish pass'

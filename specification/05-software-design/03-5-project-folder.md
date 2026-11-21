@@ -57,7 +57,7 @@ no `run.json` is a problem at `runs`, never a refusal to open; an export copies 
 runs with it. Its difference (`post.fields.field_difference`) samples both runs onto one cell-centred
 (r, z) grid of about 10⁶ cells over the overlap of their fluids' boxes, each run on the set its quantity
 is solved on, and is NaN where either fluid lacks a cell's centre. From that package, the project's **results**
-are one file, `results.yaml` (`nanopnp/results/v0.6`) beside the project file, holding no physics: the tree
+are one file, `results.yaml` (`nanopnp/results/v0.7`, the release that ships it: §8.2.7 G6; §8.2.47 AW1) beside the project file, holding no physics: the tree
 of results' data (a run, which may follow its study's newest, a sweep's runs, two runs compared, a
 revolution about the axis), definitions (constants with their units, and variables from the library's
 list or as expressions parsed as a study's variables are), probes and cuts, the quantities shown in their

@@ -3,6 +3,8 @@
 The text that amendments replaced in [the Phase 5 plan](phase-5-workbench.md), copied verbatim, one
 dated section per amendment (§8.2.16 R4). Read it on demand; the plan states what holds now.
 
+**Status: a record of replaced text, last added to on 21 November 2026 (§8.2.47); it states nothing that holds now.**
+
 ---
 
 ## 24 October 2026: WP5.01 gains the design round and the GUI development tools (§8.2.17 S21 to S23)
