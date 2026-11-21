@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="board.css">
 <script src="data.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.1.1/plotly.min.js"></script>
+<script>window.SHOW_MODEBAR = true;</script>
 <script src="draw.js"></script>
 <style>
   .grid { grid-template-columns: 1fr 1.2fr; grid-template-rows: 1fr 1fr; }
@@ -25,7 +26,7 @@
     <div><b>Licence</b>MIT; shipped inside NiceGUI (<code>ui.plotly</code>), no new dependency</div>
     <div><b>Size</b>4.8 MB, loaded only by a page that draws a plot</div>
     <div><b>Draws</b>heatmaps and contour lines, arrows (as marked lines), lines and markers, log and category axes, 3D surfaces and meshes</div>
-    <div><b>Lacks</b>streamlines and quiver as types (the library computes them); maps on a triangle mesh (the library samples a grid)</div>
+    <div><b>Lacks</b>streamlines and quiver as types (nanopnp's library would compute them); maps on a triangle mesh (nanopnp's library samples a grid). Its own toolbar, on hover here, has 24 × 22 px buttons and a 1.29:1 focus ring on dark: the workbench would hide it and use its own</div>
   </div>
   <div class="grid">
     <div class="cell left"><h3>Map <small>φ in the fluid, contours every 5 mV, u as arrows, the outline</small></h3><div class="plot" id="map"></div></div>

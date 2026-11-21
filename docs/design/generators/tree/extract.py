@@ -19,7 +19,7 @@ import numpy as np
 from nanopnp.api.project import Project
 from nanopnp.gui.web.analysis import AnalysisModel, RunChoice, pore_window
 from nanopnp.plot.data import fluid_outline_nm
-from nanopnp.post.fields import field_at, field_grid, field_unit, quantity_name
+from nanopnp.post.fields import field_at, field_difference, field_grid, field_unit, quantity_name
 
 GRID_CELLS = 16_000
 """The cells of each map's grid over the pore's close-up: small enough for a committed page."""
@@ -89,6 +89,16 @@ def main(folder: Path, out: Path) -> None:
         "p_Pa": _grid(fields, "p_Pa", window, GRID_CELLS),
     }
     mirrored = _grid(other, "potential", window, GRID_CELLS)
+    # The comparison's difference as the library takes it: both runs on one grid over their
+    # fluids' overlap, the second less the first.
+    compared = field_difference(fields, other, "potential", window_nm=window, cells=GRID_CELLS)
+    difference = {
+        "name": f"Δ {quantity_name('potential')}",
+        "unit": compared.unit,
+        "r": _list(compared.r_nm),
+        "z": _list(compared.z_nm),
+        "v": _rows(compared.difference),
+    }
     r_a = np.linspace(window[0] + 0.25, window[1] - 0.25, ARROWS[0])
     z_a = np.linspace(window[2] + 0.5, window[3] - 0.5, ARROWS[1])
     grid_r, grid_z = np.meshgrid(r_a, z_a)
@@ -180,6 +190,7 @@ def main(folder: Path, out: Path) -> None:
         "species": species,
         "maps": maps,
         "mirrored": mirrored,
+        "difference": difference,
         "arrows": arrows,
         "outline": outline,
         "cut": cut,
