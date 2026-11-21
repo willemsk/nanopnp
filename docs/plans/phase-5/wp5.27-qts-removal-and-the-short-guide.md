@@ -1,6 +1,6 @@
 # WP5.27 — Qt's removal and the short guide
 
-**Status: in progress.** Planned 21 November 2026 on `main` (`0a7c24f`). It inherits S12, S13, S17, T5, U1,
+**Status: delivered, 21 November 2026.** Planned 21 November 2026 on `main` (`0a7c24f`). It inherits S12, S13, S17, T5, U1,
 AM15, AW1, AW3, AW7 and this plan's AW9 to AW11 (§8.2.17 to §8.2.47).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
@@ -240,9 +240,16 @@ under `OUTPUT / "project"`; their sources join `exclude_docs`; the navigation an
   `knowledge/07-software-stack/05-gui-and-packaging.md` and `06-licence-summary.md`, `README.md`, `CONTRIBUTING.md`,
   `CLAUDE.md`; done when `clause.py` prints each clause without its NOTE and the strict build passes.
   **Executor:** main
-- [ ] 10. The guide and the site (D10); REV-134 and REV-228 set `fixed`; done when the strict build and `links.py`
+- [x] a704923 10. The guide and the site (D10); REV-134 and REV-228 set `fixed`; done when the strict build and `links.py`
   pass. **Executor:** `general-purpose` on Sonnet, high effort, for the page's text from *Implementation details*;
   main for `generate.py` and the registers
+
+> **Outcome — the self-test and the removal, measured.** `nanopnp gui --selftest` exits 0 in 2.7 s here, eight
+> lines (Gmsh installed); the push gate gains it in place of the widget file. The lock loses PySide6, its add-ons,
+> shiboken6 and PyInstaller. Tier 1 is 1756 tests and the two Tier 2 files 7, all passing after the removal
+> (items 7 and 8). A guard joins `test_gui_viewmodels.py`: importing the server loads no NGSolve or structure payload.
+> The design document keeps *Today's shell*, *Restated clauses* and *Inherited rows* as records, marked so, rather
+> than moving them out (item 9). The guide's pictures are the light shots of the item-4 render, 1280 × 800 (item 10).
 
 ### Verification
 

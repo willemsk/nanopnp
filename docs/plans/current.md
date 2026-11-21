@@ -5,12 +5,12 @@ Updated 21 November 2026. Navigation;
 
 ## In brief
 
-The old desktop program's removal is planned and reviewed. Checking its 41 capabilities against the browser workbench found a few
-missing; you ruled: a running solve will name its stage and step and write its log, Study setup will reach every
-setting, and five smaller details wait for the next phase. The package then removes the desktop program, adds a
-self-test of an installation and writes a short guide. About seven sessions; the close follows.
+The old desktop program is removed. Before it went, the browser workbench gained what you ruled: a running solve
+names its stage and step and writes its log, Study setup reaches every setting, and the results list every changed
+setting. All 41 of the desktop program's capabilities were checked on drawn screens: none is missing, nine details
+wait for Phase 6. A self-test checks an installation, and the guide has a short page on the workbench.
 
-**Your call.** Approve the plan? *Recommendation:* approve: it holds your three rulings.
+**Your call.** None until the review. *Next:* `/np-ship wp 5.27`.
 
 ## Position
 
@@ -18,13 +18,13 @@ self-test of an installation and writes a short guide. About seven sessions; the
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **closing early**: WP5.01 to WP5.21 merged
   (`v0.6.0-alpha.21`). Its seventh amendment (§8.2.47; REV-272) keeps WP5.27, Qt's removal with a short guide, and
   WP5.28, the close; the other planned packages are Phase 6's, named by scope.
-  [WP5.27](phase-5/wp5.27-qts-removal-and-the-short-guide.md) is **planned** and reviewed (AW9 to AW11;
-  [review 068](../code_reviews/CODE_REVIEW_068.md)). **Next:** `/np-implement wp 5.27`. host: claude-code.
+  [WP5.27](phase-5/wp5.27-qts-removal-and-the-short-guide.md) is **delivered** on branch `ccr-867a032b-mcjt88`,
+  awaiting its review. **Next:** `/np-ship wp 5.27`, then WP5.28, the close. host: claude-code.
 
 ## Not to be re-decided
 
 - **Process rules** are §8.4. **Cost fixes follow measurement** (M2). **Phase 5 is a browser workbench, §8.2.17 S1 to
-  S14; Qt stays gated until it** (M3). **Two lanes at most** (S15).
+  S14; Qt is removed** (M3; S17). **Two lanes at most** (S15).
 - **The `MOD-nn` rulings stand** (§8.2.8). **A moved edge edits `modularity-layering.yaml` in its commit (VER-61)**; a
   VER-62 miss is reverted or re-pinned by ruling (G10, I4). **An open item is a `REV-nn` row** until resolved (H12).
 - **A `Case` is the case document; a `Session` runs it for every caller** (§8.2.23). **The front end is NiceGUI; Mol*

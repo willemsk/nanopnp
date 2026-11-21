@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.21 merged (`v0.6.0-alpha.21`); closing early (REV-272; §8.2.47): WP5.27, Qt's removal with a short guide, is planned; then WP5.28, the close. The tree of results, the layers, the performance package, the refusals, the polish pass and the guided route are Phase 6's.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.21 merged (`v0.6.0-alpha.21`); closing early (REV-272; §8.2.47): WP5.27, Qt's removal with a short guide, is delivered; then WP5.28, the close. The tree of results, the layers, the performance package, the refusals, the polish pass and the guided route are Phase 6's.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -246,24 +246,19 @@ Phase 6's provisional packages, named by scope (AV5); its scope round numbers an
 
 ### WP5.27 — Qt's removal and the short guide (REV-134, REV-228; S13, S17; §8.2.47 AW1, AW3, AW9 to AW11)
 
-**Planned 21 November 2026** ([the plan](wp5.27-qts-removal-and-the-short-guide.md)).
+**Delivered 21 November 2026** ([the plan](wp5.27-qts-removal-and-the-short-guide.md)); tag `v0.6.0-alpha.27` once
+merged.
 
-First the browser workbench gains what the capability check found missing: a running run's queue line names its stage
-and rung and the log takes the run's lines (rows Q33, Q34; AW9), Study setup's *More values* reaches every setting
-without a field (rows Q05, Q07; AW10), and the results explorer lists the deviations a stage contributed (row Q39;
-FR-25). Then every row Q01 to Q41 is checked on rendered screens (criterion 3; the design document's *Tabs or areas*,
-whose rows Q37 to Q41 name WP5.21's explorer until the tree, and Q16 a vertex moved by typed values, AW7), five details
-carried by REV-274 (AW11); any other miss keeps Qt and goes to the author. Then PySide6, the Qt widgets, the bundle and
-the packaging probe leave, with `gui/app.py`, `case_model.py`, `scene.py`, the `nanopnp-gui` script and the Qt-only
-halves of `gui/geometry.py`, `gui/charge.py`, `gui/run_model.py` and `gui/render.py`; a view-model stays where the
-browser shell imports it or a kept test of a restated clause reads it (the plan's D5). `io/manifest.py`'s `PySide6` row
-goes and `nicegui` and `fastapi` join (§5.3.3). The server gains its self-test, `nanopnp gui --selftest`, run by CI on
-the three platforms (VER-43, VER-44, VER-55; ADR-004's packaging NOTE; RSK-13); the licence notice travels in the wheel
-and `nanopnp --env` states the GPL-2+ obligation (CON-11). The restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44,
-VER-55, VER-60, CON-08, CON-09, CON-11, ADR-004's packaging NOTE and RSK-13 become their clauses (S17; T5). REV-134
-closes (U1). The guide's desktop page leaves, and a short application guide says how to start the workbench and what
-each of the six suites does, with one rendered screen a suite (AW3; §8.1's increment 5); the site's register pages
-link the plans and reviews (REV-228; AM15). No number and no stored key moves (VER-62). Tag `v0.6.0-alpha.27`.
+The capability check found every row Q01 to Q41 in the workbench: 31 present, Q16 as ruled, nine carried by REV-274,
+none missing ([the record](../../design/reviews/2026-11-21-qt-capabilities.md); AW7, AW11). Before it, a running run
+names its stage and rung and writes its log (AW9), *More values* reaches every unfielded setting (AW10), and the
+explorer lists contributed deviations (FR-25). PySide6, the Qt widgets, the bundle and the probe are removed; the
+server's self-test, `nanopnp gui --selftest`, runs on each Tier 1 leg (VER-43, VER-44, VER-55, VER-60; RSK-13);
+`THIRD-PARTY-LICENSES.md` travels in the wheel and `nanopnp --env` states UMFPACK's GPL-2+ (CON-11). The restated
+NOTEs are their clauses (S17; T5). The guide's workbench page and the registers' copied links close REV-134 and
+REV-228. No golden or stored key moves.
+
+Live constraints: REV-274's five details and QR-16's gaps are Phase 6's.
 
 ### WP5.28 — The close
 
