@@ -1,6 +1,6 @@
 # WP5.27 — Qt's removal and the short guide
 
-**Status: planned, not started.** Planned 21 November 2026 on `main` (`0a7c24f`). It inherits S12, S13, S17, T5, U1,
+**Status: in progress.** Planned 21 November 2026 on `main` (`0a7c24f`). It inherits S12, S13, S17, T5, U1,
 AM15, AW1, AW3, AW7 and this plan's AW9 to AW11 (§8.2.17 to §8.2.47).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a
@@ -222,11 +222,11 @@ under `OUTPUT / "project"`; their sources join `exclude_docs`; the navigation an
 
 ### Work items
 
-- [ ] 1. `gui/run_model.py`, `gui/web/queue.py`, `gui/web/runs.py`, `render_shell.py`: run progress and the log
+- [x] e5ddd51 1. `gui/run_model.py`, `gui/web/queue.py`, `gui/web/runs.py`, `render_shell.py`: run progress and the log
   (D2); done when the code and review say so, on the running shot. **Executor:** main
-- [ ] 2. `gui/web/study_tools.py`: *More values* (D3); the design document's Q05 to Q08 row; done when the code and
+- [x] 157a2b4 2. `gui/web/study_tools.py`: *More values* (D3); the design document's Q05 to Q08 row; done when the code and
   review say so, `numerics.linear.solver` set to `superlu` on a rendered study. **Executor:** main
-- [ ] 3. `gui/web/analysis.py`, `analysis_tools.py`: contributed deviations (D4); done when its test passes.
+- [x] a7a7f6e 3. `gui/web/analysis.py`, `analysis_tools.py`: contributed deviations (D4); done when its test passes.
   **Executor:** main
 - [ ] 4. The capability record (D1); done when every row has a verdict and none is `missing`. **Executor:** main,
   with the `gui-reviewer` sub-agent on the shots
