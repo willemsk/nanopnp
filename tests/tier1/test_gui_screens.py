@@ -623,6 +623,11 @@ def test_ver78_o_the_comparison_draws_its_difference_and_its_cuts_two_series(
         page.wait_for_selector(
             '#analysis-map-difference[data-map-ready="1"]', timeout=SOLVE_WAIT_MS
         )
+        # The cut is drawn after the maps, and a map marks itself ready when its image loads.
+        page.wait_for_function(
+            "() => window.nano?.charts?.get('analysis-cut-chart')?.spec !== undefined",
+            timeout=SOLVE_WAIT_MS,
+        )
         series = page.evaluate(
             "nano.charts.get('analysis-cut-chart').spec.series"
             ".map((s) => s.y.filter((v) => v !== null).length)"
