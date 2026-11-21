@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,485. By source: history ruling 375; plan decision row 738; REV row 271; MOD row 18; OPN row 9; WB row 53; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
+Rows: 1,495. By source: history ruling 375; plan decision row 738; REV row 271; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
 
-By decider: author 643; open 5; session, own call 834; session, put to the author 3.
+By decider: author 653; open 5; session, own call 834; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1407,7 +1407,7 @@ By decider: author 643; open 5; session, own call 834; session, put to the autho
 | REV-265 | author | `docs/project/review-findings.md` |  | WP5.23 | A free list of the structure's layers in Meso's Mol* view | §8.2.46 AV3: WP5.23 | accepted |
 | REV-266 | author | `docs/project/review-findings.md` |  | WP5.26 | What the Meso suite's round left open | §8.2.46 AV2: WP5.26 | accepted |
 | REV-267 | author | `docs/project/review-findings.md` |  | WP5.26 | What the Analysis suite's first review left open | §8.2.46 AV2: WP5.26 | accepted |
-| REV-268 | author | `docs/project/review-findings.md` |  | WP5.22 | Analysis as an editable tree of results, and the charts' library | WB-51; §8.2.46 AV4: WP5.22 | accepted |
+| REV-268 | author | `docs/project/review-findings.md` |  | WP5.22 | Analysis as an editable tree of results, and the charts' library | WB-51; WB-54 to WB-63; §8.2.46 AV4: WP5.22 | accepted |
 | REV-269 | author | `docs/project/review-findings.md` |  | WP5.26 | The workbench's wording | §8.2.46 AV2: WP5.26 | accepted |
 | REV-270 | author | `docs/project/review-findings.md` |  | WP5.22 | A map reads its field linearly on each cell split in four | ruled by the author, 20 November 2026: WP5.22 | accepted |
 | REV-271 | session, own call | `docs/project/review-findings.md` |  | WP5.28 | The Phase 5 plan exceeds its word target a third time | for the author; WP5.28 at the latest | open |
@@ -1486,6 +1486,16 @@ By decider: author 643; open 5; session, own call 834; session, put to the autho
 | WB-51 | author | `docs/design/workbench.md` |  | WP5.01 | Analysis as an editable tree of results, and the charts' library / Of the explorer: "a lot of screen real-estate is being given to the \"Results\" explorer tool settings. This should be more efficiently organized. Perha… | docs/design/workbench.md | in the design document |
 | WB-52 | author | `docs/design/workbench.md` |  | WP5.01 | The workbench's wording / Of Runs: "\"Its rungs\" --&gt; \"The rungs\": I would like to remove these kind of \"way-of-wording\" throughout the package (other example: \"What the model shows.\", \"Study's Runs starts one\")… | docs/design/workbench.md | in the design document |
 | WB-53 | author | `docs/design/workbench.md` |  | WP5.01 | The Analysis round 2: the mesh view, the map drawn whole, the outline, charts above numbers / The author, marking the Analysis suite as it went to merge (`reviews/2026-11-20-analysis-2.md`): of the field tile, "The fiel… | docs/design/workbench.md | in the design document |
+| WB-54 | author | `docs/design/workbench.md` |  | WP5.01 | The tree's branches / Asked how the Analysis suite's tree of results is organised, over boards T1 to T3 (`concepts/tree/`; `reviews/2026-11-21-tree.md`): "COMSOL's branches (T1)" | docs/design/workbench.md | in the design document |
+| WB-55 | author | `docs/design/workbench.md` |  | WP5.01 | Where the tree and its settings stand, and how many plot groups show / "One, or two side by side"; "Under the tree" | docs/design/workbench.md | in the design document |
+| WB-56 | author | `docs/design/workbench.md` |  | WP5.01 | The plot types / Over board P1: "Every type on P1" | docs/design/workbench.md | in the design document |
+| WB-57 | author | `docs/design/workbench.md` |  | WP5.01 | The chart library, its reach and the mesh view / Over boards L1 and L2: "Plotly"; of its reach, "Every plot and every map" (*against the recommendation*, every plot with the canvas kept for the editors), then asked whic… | docs/design/workbench.md | in the design document |
+| WB-58 | author | `docs/design/workbench.md` |  | WP5.01 | Variables and constants / "A library list and expressions" | docs/design/workbench.md | in the design document |
+| WB-59 | author | `docs/design/workbench.md` |  | WP5.01 | The tables and the quantities shown / "Bottom panel tabs"; "Checked and ordered in the node" | docs/design/workbench.md | in the design document |
+| WB-60 | author | `docs/design/workbench.md` |  | WP5.01 | How the tree is saved / Asked of one file per plot group, "I option 2 more scalable?"; shown that the tree holds settings only, so either form loads at once, and that a file per group merges and copies better at the cos… | docs/design/workbench.md | in the design document |
+| WB-61 | author | `docs/design/workbench.md` |  | WP5.01 | The run a link opens, and the run shown / "Shown run becomes it"; "Newest, until a run is picked" | docs/design/workbench.md | in the design document |
+| WB-62 | author | `docs/design/workbench.md` |  | WP5.01 | The tree before the user builds one / "Defaults from what the run provides" | docs/design/workbench.md | in the design document |
+| WB-63 | author | `docs/design/workbench.md` |  | WP5.01 | Two runs in one view, and a run's name / "Mirrored first, all three kept"; "A label, else by what differs" (*against the recommendation*, by what differs alone) | docs/design/workbench.md | in the design document |
 | current.md bullet | author | `docs/plans/current.md` |  |  | Process rules** are §8.4. **Cost fixes follow measurement** (M2). **Phase 5 is a browser workbench, §8.2.17 S1 to | §8.4, §8.2.17 S1 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | The `MOD-nn` rulings stand** (§8.2.8). **A moved edge edits `modularity-layering.yaml` in its commit (VER-61)**; a | §8.2.8, VER-61 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | A `Case` is the case document; a `Session` runs it for every caller** (§8.2.23). **The front end is NiceGUI; Mol | §8.2.23 | in force (cache) |

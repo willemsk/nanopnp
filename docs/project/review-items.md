@@ -4055,6 +4055,10 @@ place, the quantities shown and their order, and the charts' library (the review
 
 **Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass; a chart's point that the library WP5.22 chooses settles falls to WP5.22.
 
+WB-57 (21 November 2026) chose Plotly for every chart and every (r, z) view, `webgui` leaving: the **Charts** points
+(the convergence chart's rungs and mixed powers, the square-root ticks, the series' hues), the 3D view's points of
+item 14 and the one-bias I–V axis fall to WP5.22, which redraws each of those views.
+
 ### REV-268: Analysis as an editable tree of results, and the charts' library
 
 At WP5.21's round the author asked for Analysis to be reorganised: "a lot of screen real-estate is being given to the
@@ -4092,6 +4096,15 @@ Round 2's collect, on 20 November 2026 (WB-53), adds two points for the round:
 places its package after WP5.21 and before WP5.24. WP5.21 ships its tiles and uPlot as they are.
 
 **Placed** (§8.2.46 AV4, 20 November 2026): WP5.22, the tree of results, opened by its design round (`/np-gui grill`), before the layers and the performance package (WB-51).
+
+**Ruled** at the design round, 21 November 2026 (WB-54 to WB-63; `docs/design/reviews/2026-11-21-tree.md`): COMSOL's
+branches, a comparison a Data node; one plot group or two side by side, the settings under the tree; every plot type on
+the round's board P1, streamlines later; Plotly for every chart and every (r, z) view, uPlot, the canvas and `webgui`
+leaving, all in WP5.22; a library list of variables and typed expressions, evaluated by the library; the tables as
+bottom-panel tabs, the quantities checked and ordered; one `results.yaml` per project; *Shown run* taking an opened run
+and following the newest; default plot groups from what the run provides; *Mirrored* first, and a run labelled by the
+user or else named by what differs. The critique's five points are answered: the map framed at equal aspect with its
+key beside it, *Side by side* kept as a view, *Mirrored* first, a run named by sight. Open until WP5.22 builds them.
 
 ### REV-269: The workbench's wording
 

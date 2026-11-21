@@ -134,7 +134,7 @@ later-phase banner and no working control (S7).
 | Mesh builder | Continuum | Mesh | Stage 6 and its quality report; the size scale and the per-part sizes | Refinement regions drawn by hand; boundary layers |
 | Physics assigner | Physics | Equations, Electrolyte, Conditions, Exposed values | A **physics model**: a registered model and its switches, the electrolyte and its corrections, the boundary conditions and walls, the solid permittivities, the element orders and the stabilisation (WB-34) | The composer (S3), in this suite |
 | (added by the round) | Study | Overview, Study setup, Sweep, Runs | A study pairing one molecular, one continuum and one physics model, its overrides and sweep, and its runs; its graph's charge opens Meso's Charge map on its pair (AT3) | |
-| Results analyser | Analysis | Results explorer, Comparison | The run record, the quantities of interest, the fields, the sweeps | Figure, field and case export (FR-28, v0.7) |
+| Results analyser | Analysis | Results, the tree of results (WB-54) | The run record, the quantities of interest, the fields, the sweeps, two runs compared | Figure, field and case export (FR-28, v0.7) |
 
 ## Organisation
 
@@ -161,7 +161,8 @@ units, ranges and defaults, which the Study suite lists first (WB-35).
   (WB-05, WB-07). Every tool docks its settings the same way: in the author's words, marking the mockups,
   "Consistency is key here!";
 - the *bottom panel*: the run queue and the log, folded to one line; a run's line opens its convergence in
-  Study › Runs' view (WB-02; RE2; WB-45); the Python console a later phase (WB-10).
+  Study › Runs' view (WB-02; RE2; WB-45); in Analysis, the tables *Probes*, *Quantities* and *Cut values* beside
+  them (WB-59); the Python console a later phase (WB-10).
 
 **Always on screen** (WB-03): the project rail, at least folded; the changed count, opening a list of one line
 per value changed from its default and per study override, or at a toggle one dense table of them grouped by
@@ -192,7 +193,7 @@ remote connection (a WSL instance, a compute server) or a plugin (custom physics
 
 **Several items are open at once** (WB-04); a variant is derived from its parent and shown as its
 difference: a molecular model's variant is linked to its parent by default, holding only its residue edits, or a
-full copy on request (§8.2.39 AO3); a comparison is a saved project item. **A refusal** shows at its field and in
+full copy on request (§8.2.39 AO3); two runs are compared as a Data node of the tree of results (WB-54). **A refusal** shows at its field and in
 the problems list, naming the rule, the value, the case path and a remedy (WB-12, WB-25). **The layout** is a designed
 default per suite, resized and folded by the user, saved in the project file, with *Reset layout* (WB-13).
 
@@ -259,9 +260,9 @@ list has a place in the workbench before Qt leaves (S13):
 | Q28, Q29 | Charge | Charge map: the lattice and the deployed density in (r, z) beside the molecule, linked (S6), a residue named once with its copies |
 | Q31 to Q34 | Run | *Run study*; *Cancel* in the queue; the queue's "rung x of N" (WB-23); the log |
 | Q35, Q36 | Convergence | A run picked in Study › Runs or opened from its queue line: the convergence plot across the view, the rung table in the pane (WB-45) |
-| Q37, Q38 | Result | The results explorer: the run's folder and its quantities, in the quantities tile; *Open in Runs* (WP5.21) |
-| Q39 | Result | The quantities tile's *Changed from the validated default*, from the run's manifest (WP5.21) |
-| Q40, Q41 | Fields | The results explorer's field tile: its quantity, its colour map and range, as a map or on the solve's mesh, the renderer's message in place of a view that does not draw (WP5.21, WB-53) |
+| Q37, Q38 | Result | The tree of results: *Data › Shown run* names the run, its folder in the tooltip, with *Open in Runs*; its quantities in the bottom panel's *Quantities* (WP5.21; WB-54, WB-59, WB-63) |
+| Q39 | Result | *Changed from the validated default*, from the run's manifest, beside the quantities (WP5.21; WB-59) |
+| Q40, Q41 | Fields | A plot group's surface: its expression, colour map and range, *Show mesh* for the solve's mesh, a message in place of a view that does not draw (WP5.21; WB-53, WB-56, WB-57) |
 
 ## Tools
 
@@ -289,8 +290,7 @@ Each tool has its settings and its live view (S6). The mockup screen named is in
 | Study | Study setup | The models, their exposed values first and *More values* (WB-35), the overrides, the outputs; *Run study* | A form, or the same study as a graph (RE1) | `st-form`, `st-graph` |
 | Study | Sweep | The axes, each over a value, a variable or a model, with what it rebuilds; *Every combination* or *Stepped list* (WB-46) | The points as a table: each point's values, its warm start's order and its state (WB-46) | `st-sweep` |
 | Study | Runs | *Run study*; the recorded runs; the picked run's rung table; Cancel, the log | The picked run's convergence across the view, a running one updating; a run's queue line opens it here (RE2; WB-45) | `st-runs` |
-| Analysis | Results explorer | The study and its run or sweep point; the quantity, its colour map and range, the pore or the whole domain, the outline; the cut and the probes, typed or clicked | Tiles: the field as a map, drawn over the whole domain and opened on the pore, or on the solve's mesh (*Map · Mesh*), the I–V of the study's runs, the axial cut, the quantities with the changed settings and the folder (WP5.21, WB-53; REV-268's tree replaces the tiles) | `a-explorer` |
-| Analysis | Comparison | The comparison, or a new one over two runs; its quantity, view, colour map and range | Their difference over the fluids' overlap, the two maps side by side or mirrored about the axis on one scale, each drawn over the whole overlap, or both on their meshes on one range; each with its run's recorded current and conductance, and the cut with a series per run (WP5.21) | `a-compare-side`, `a-compare-diff` |
+| Analysis | Results | The tree of results (WB-54): *Data* (a run, a sweep's runs, two runs compared, a revolution), *Definitions* (WB-58), *Probes and cuts*, *Quantities* (WB-59) and *Plot groups*; the selected node's settings under it, one column (WB-55); a new tree from what the run provides (WB-62) | The selected plot group, or two side by side (WB-55), drawn by Plotly (WB-57): a 2D group's surface, contours, arrows, outline and *Show mesh*, two runs mirrored first, side by side or as their difference (WB-63); a 1D group's line along a cut, point graph or global plot; a 3D group's revolution (WB-56). Until WP5.22: WP5.21's results explorer and Comparison | `a-explorer`, `a-compare-side`, `a-compare-diff`; the tree's boards in `concepts/tree/` |
 
 Every Physics tool shows its model inside a study picked in the pane, *Shown in*: that study with this physics model in place of its own and the study's own values of the physics model's keys left out, each marked beside its field with an outlined diamond (WB-28). It opens on the first study that names the model, else the project's first; a project with no study shows the model over its continuum model as that model is built alone. A value the shown study cannot run with is shown at its field, naming the study (§8.2.41 AQ1).
 
@@ -305,10 +305,12 @@ link the user pins (WB-06). A linked view carries a chip naming the link, with *
 2. **A geometry and its parameters**: the region's thickness and radius, typed on the drawing or in the pane,
    are one value; the contour's vertices in the table and on the editor are one selection.
 3. **A field and its probes and cuts**: a click on the map places the axial cut or a probe, to 0.01 nm, and typed
-   values move them; the cut's chart and the probes' rows follow, on both runs' maps in a comparison. Dragging the
-   cut's line is WP5.26's (REV-238).
+   values move them; the cut's chart and the probes' rows follow, on both runs' maps in a comparison. Probes and
+   cuts are nodes of the tree, shared by every plot group that draws their data (WB-54). Dragging the cut's line is
+   WP5.26's (REV-238).
 4. **A run and its result**: a done run's *Result* in the queue, and a recorded run in Study › Runs, opens it in
-   the results explorer, as does a point of its I–V; the explorer names the run and opens it in Runs (WP5.21).
+   Analysis as *Data › Shown run*, as does a point of its I–V; every plot group following it redraws, and the view
+   names the run and opens it in Runs (WP5.21; WB-61).
 
 ## The project folder
 
@@ -321,15 +323,15 @@ The workbench's document is a plain folder (S11), readable without the workbench
   models/continuum/<name>.yaml
   models/physics/<name>.yaml
   studies/<name>.yaml
-  comparisons/<name>.yaml
+  results.yaml                the tree of results (WB-60)
   inputs/                     the input files copied in; a linked one stays where it lies
   runs/<study>/<run>/         each run's resolved case file, manifest and results
   sweeps/                     each sweep's records
   store/                      the artefact store
 ```
 
-**The project file** holds the schema identifier, the project's name, the library's index (models, studies,
-comparisons by file), the open items, the layout of each suite (its panels' sizes and folds) and the project's own settings
+**The project file** holds the schema identifier, the project's name, the library's index (models and studies
+by file), the open items, the layout of each suite (its panels' sizes and folds) and the project's own settings
 (WB-37). The density and the theme are the user's, not the project's (WB-18, WB-19). A model or study file names its
 components and its values away from the defaults; a run resolves them to one complete case file, written
 with its manifest, which the command line runs as it is (FR-25; WB-11). The references are a case-schema
@@ -341,7 +343,7 @@ brings them along under their names. Each input file is copied into `inputs/` or
 it lies, and a linked one is copied in later (`project embed`); a project with links works only where they
 resolve, and the problems list says which do not (FR-32; AI9, AI10).
 
-**The export** writes a portable copy of the folder: the project file, the models, studies and comparisons,
+**The export** writes a portable copy of the folder: the project file, the models, studies and the results file,
 the inputs (a linked one copied in), and each run's case file, manifest and results, never an opaque archive
 (S11). The store's intermediate
 artefacts are left out unless asked for, each being rebuilt from its case. Exporting figures and fields
@@ -372,7 +374,7 @@ the range. The route of the mockups (`docs/design/mockups/a/00-guided-route.html
 5. Set the bias, the study's override: Study, Study setup.
 6. Pair the models in a study and run.
 7. Follow the run in the queue.
-8. Read the conductance in the results explorer.
+8. Read the conductance in Analysis, in the bottom panel's *Quantities* (WB-59).
 
 ## Later tools
 
@@ -416,13 +418,14 @@ third party's.
 | Picture | Renderer | Where it is | Licence |
 |---|---|---|---|
 | The molecule in 3D | Mol*, as its standalone bundle (`molstar.js`, `molstar.css`) | `src/nanopnp/gui/web/assets/molstar/` | MIT (CON-09) |
-| Fields on the mesh | npm `webgui` 0.2.39, served at `/vendor/webgui`; a host page fetches its scene from `/api/analysis/scene` (WP5.21) | `src/nanopnp/gui/assets/webgui/` | LGPL-2.1-or-later, with three.js (MIT) and dat.gui (Apache-2.0) (CON-09) |
-| Maps and the mesh in (r, z) | A canvas the page draws from the data of `plot/data.py`, the Continuum suite's mesh among them (WP5.17); a map's colours from the workbench's five maps or any of Matplotlib's (`gui/geometry.py:lookup_table`, AU2) | `src/nanopnp/gui/web/` | BSD-3-Clause |
-| Plots | uPlot 1.6.32 (`uPlot.iife.min.js`, `uPlot.min.css`), served at `/vendor/uplot`; `gui/web/chart.py`'s chart drawn by `assets/chart.js`: Electrolyte's two plots, Runs' convergence, the I–V and the cuts (AU1; the library is chosen again with REV-268's tree) | `src/nanopnp/gui/web/assets/uplot/` | MIT (CON-09) |
+| Plots and (r, z) views, from WP5.22 | Plotly (plotly.js 3.1.1), as NiceGUI 3.18 ships it for `ui.plotly`, unmodified, its own toolbar hidden: every chart, map, mesh and (r, z) drawing, the solve's mesh as a layer and the field turned about the axis (WB-57) | NiceGUI's `nicegui/elements/plotly/dist`, served from the server's origin | MIT (CON-09) |
+| Fields on the mesh, until WP5.22 | npm `webgui` 0.2.39, served at `/vendor/webgui`; a host page fetches its scene from `/api/analysis/scene` (WP5.21) | `src/nanopnp/gui/assets/webgui/` | LGPL-2.1-or-later, with three.js (MIT) and dat.gui (Apache-2.0) (CON-09) |
+| Maps and the mesh in (r, z), until WP5.22 | A canvas the page draws from the data of `plot/data.py`, the Continuum suite's mesh among them (WP5.17); a map's colours from the workbench's five maps or any of Matplotlib's (`gui/geometry.py:lookup_table`, AU2) | `src/nanopnp/gui/web/` | BSD-3-Clause |
+| Plots, until WP5.22 | uPlot 1.6.32 (`uPlot.iife.min.js`, `uPlot.min.css`), served at `/vendor/uplot`; `gui/web/chart.py`'s chart drawn by `assets/chart.js`: Electrolyte's two plots, Runs' convergence, the I–V and the cuts (AU1; the library is chosen again with REV-268's tree) | `src/nanopnp/gui/web/assets/uplot/` | MIT (CON-09) |
 | The study as a graph | Mermaid, as NiceGUI ships it for `ui.mermaid` (WP5.19) | NiceGUI's `nicegui/elements/mermaid/dist`, served from the server's origin | MIT |
 | Equations and conditions | KaTeX 0.19.1 (`katex.min.js`, `katex.min.css`, its fonts), from the LaTeX of `physics/terms.py` (WP5.18) | `src/nanopnp/gui/web/assets/katex/` | MIT (CON-09) |
 
-The results explorer asks four controls of its field view: zoom, a colour scale for each quantity, the mesh
+Until WP5.22 (WB-57), the results explorer asks four controls of its field view: zoom, a colour scale for each quantity, the mesh
 on or off, and a framed opening view (the author's verdicts on today's shell). Read from the shipped
 `webgui.js`, `webgui` serves two of them whole and the rest in part:
 
@@ -488,7 +491,8 @@ restated them (§8.2.18 T8): "I think many of these should fall under user setti
 approach. The mouse wheel not changing a field was not a literal constraint, just an annoyance that we
 should address in one way or another." WB-33 to WB-38 come from the third `/np-plan amend 5`, on 5 November 2026, after
 the author's verdicts on WP5.08's frame (`docs/design/reviews/2026-11-05-frame.md`; §8.2.34). WB-39 comes from the
-author's verdicts on WP5.16's Molecular drafts, collected on 11 November 2026.
+author's verdicts on WP5.16's Molecular drafts, collected on 11 November 2026. WB-54 to WB-63 come from WP5.22's design round on the tree of results, on 21 November 2026, over the
+boards in `docs/design/concepts/tree/`, drawn on 2WCD's solved fields; each was played back and confirmed.
 
 | # | Question | Ruling (author's words) | Consequence |
 |---|---|---|---|
@@ -545,6 +549,16 @@ author's verdicts on WP5.16's Molecular drafts, collected on 11 November 2026.
 | WB-51 | Analysis as an editable tree of results, and the charts' library | Of the explorer: "a lot of screen real-estate is being given to the \"Results\" explorer tool settings. This should be more efficiently organized. Perhaps a good way would be to organize the different views into an customizable editable tree, like it is done in COMSOL. Plots and graphs would be generated using different plotting tools (surface, scatters, etc) based on existing/newly defined variables/constants. This will likely need a new grilling and a dedicated WP."; of the probes, "Pane of their own, like in COMSOL."; of the quantities, "Make the QoIs which are shown customizable."; of uPlot, "Let's revisit the uplot choice, it seem to be rather limiting in capabilities. Given the scope of the kind of plots that we need create here, we should explore alternatives."; asked where, "New package, before speed", and which library, "Decide with the tree" | A design round puts the tree to the author, then a package of its own builds it after WP5.21 and before the performance package (WP5.24), which times the tree: groups of plots over a run's existing and newly defined variables and constants, probes in a pane of their own, the quantities shown chosen. The round chooses the chart library from the plot types the tree needs (AU1 restated there; NiceGUI ships Plotly and ECharts); WP5.21 ships its tiles and uPlot as they are (REV-268) |
 | WB-52 | The workbench's wording | Of Runs: "\"Its rungs\" --> \"The rungs\": I would like to remove these kind of \"way-of-wording\" throughout the package (other example: \"What the model shows.\", \"Study's Runs starts one\"). Let's discuss how."; asked how, "Examples first"; marking the examples and the draft rule, "take" on each | The words follow five rules (*Look and feel*): plain noun phrases for titles, headings and labels; no "its" where the noun reads; no clause as a heading; a pointer is a link saying what to do there; short active sentences, ASD-STE100 for messages. The sixteen strings taken are applied in WP5.21 (*Rungs*, *Physics model*, *Boundary conditions*, …); the polish package (WP5.26) sweeps every other screen's text by the rules, with a check (REV-269) |
 | WB-53 | The Analysis round 2: the mesh view, the map drawn whole, the outline, charts above numbers | The author, marking the Analysis suite as it went to merge (`reviews/2026-11-20-analysis-2.md`): of the field tile, "The field should not be cut off within a small rectangle, but shown fully."; of the outline, "Outline line width is too thick. It should show the full outline."; of the cut, "Put graph at the top, values below."; of the 3D view, "This seems to be mesh and mesh Quality colouring, not 3D?" and "This is mesh view, not 3D?"; asked what the view should be, "Mesh now, 3D in tree" | A map is drawn over the whole domain, or a comparison's over the fluids' overlap, on the close-up's scale beneath the close-up, so the field fills the view past the pore; the view still opens on the pore. The outline is drawn 1 px wide with a 1 px halo, whole, to the domain's edge. The explorer's charts stand above its numbers: the field, the I–V, the axial cut, then the quantities. The view of the field on the solve's (r, z) mesh, drawn face-on by the renderer, is named *Mesh*, not *3D* (*Map · Mesh*; Comparison's *Mesh*). A true 3D view, the (r, z) field turned about the axis and cut open, is one of the plot types REV-268's design round puts to the author |
+| WB-54 | The tree's branches | Asked how the Analysis suite's tree of results is organised, over boards T1 to T3 (`concepts/tree/`; `reviews/2026-11-21-tree.md`): "COMSOL's branches (T1)" | Analysis is one tool, the tree of results: *Data* (a run, a sweep's runs, a comparison of two runs, a revolution about the axis), *Definitions*, *Probes and cuts*, *Quantities* and *Plot groups*, each plot group naming its data. A comparison is a Data node, not a tool or a project item of its own (amends WB-04; FR-32), and the tree takes the tool list's place in Analysis (WB-07) |
+| WB-55 | Where the tree and its settings stand, and how many plot groups show | "One, or two side by side"; "Under the tree" | The selected plot group fills the view; *Split* pins a second beside it, such as a map and the line along its cut, so link 3 redraws in sight; the split is saved in the layout (WB-13). The tree and the selected node's settings stack in one 300 px column on the left of the view (WB-39) |
+| WB-56 | The plot types | Over board P1: "Every type on P1" | A 2D group layers a surface, contours, arrows and the outline, and draws two runs mirrored, side by side or as their difference; a 1D group draws a line along a cut, a probe's value against a swept value (a point graph), or a quantity against a swept value as lines or markers; a 3D group turns the (r, z) field about the axis, a quarter cut away (WB-53). Each reads what the library samples, with its Tier 1 test (RSK-15). Streamlines come later |
+| WB-57 | The chart library, its reach and the mesh view | Over boards L1 and L2: "Plotly"; of its reach, "Every plot and every map" (*against the recommendation*, every plot with the canvas kept for the editors), then asked which maps, "Every (r, z) view", and where, "All in WP5.22" (*against the recommendation*, each with the package that reworks it); of the mesh view, "A layer; webgui leaves" | Plotly (plotly.js 3.1.1, MIT, as NiceGUI ships it, unmodified; CON-09) draws every chart and every (r, z) view: Analysis's tree, Electrolyte's two plots, Runs' convergence, Meso's Density, Outline with its editor and Charge map, Continuum's Region and Mesh, and Physics' Conditions. uPlot (restating AU1), the shell's canvas and NGSolve's `webgui` leave, so each kind of picture has one renderer (REV-137). Plotly's own toolbar is hidden for the workbench's (WB-24); a square-root axis is drawn as its root with ticks in its own units. *Show mesh* draws the solve's mesh over a 2D group, as WB-42's does. WP5.22 moves every view, with a round of verdicts on Meso, Continuum and Physics; WP5.24 times the 200 ms line on Plotly (WB-23) |
+| WB-58 | Variables and constants | "A library list and expressions" | *Definitions* holds constants (a number with its unit) and variables, picked from a list the library registers (space charge, flow speed, each ion's current density) or typed as an expression of the fields, the constants, r, z and the run's quantities, parsed by the study variables' whitelist with units checked (AG2). The library evaluates a variable at each sampled point, each field read by its cell's P2 basis (REV-270); the shell computes nothing (QR-13; RSK-15) |
+| WB-59 | The tables and the quantities shown | "Bottom panel tabs"; "Checked and ordered in the node" | *Probes*, *Quantities* and *Cut values* are tabs of the bottom panel beside the queue and the log (amends WB-02's panel); a probe's r or z typed in its row moves it on the map. The Quantities node lists every quantity a run records, each checked and ordered by drag or by keyboard, saved with the tree; a new tree shows the current, the conductance, the transport number, each ion's current and the bias |
+| WB-60 | How the tree is saved | Asked of one file per plot group, "I option 2 more scalable?"; shown that the tree holds settings only, so either form loads at once, and that a file per group merges and copies better at the cost of a check across files, then asked again: "One results file per project" (*against the recommendation*, a results folder with a file per plot group) | One tree per project, in `results.yaml` (`nanopnp/results/v0.6`) beside the project file: its Data, Definitions, Probes and cuts, Quantities and Plot groups. A project's `comparisons/` files are read once into its Data, and the folder goes (FR-32; F4) |
+| WB-61 | The run a link opens, and the run shown | "Shown run becomes it"; "Newest, until a run is picked" | Link 4 opens a run as *Data › Shown run*: a done run's *Result*, a recorded run in Study › Runs and a point of the I–V each retarget it, and every plot group following it redraws. Shown run follows its study's newest run until a run is picked; *Follow newest* restores that |
+| WB-62 | The tree before the user builds one | "Defaults from what the run provides" | On first opening, `results.yaml` is written with *Shown run*, the study's sweep if any, and a plot group for each thing the run provides: the potential, each ion's concentration, the flow if solved, the line along the axis, and the I–V when the bias is swept; then the six quantities. The defaults follow what the model declares (AH1), never its name, so QR-10's route opens on a result |
+| WB-63 | Two runs in one view, and a run's name | "Mirrored first, all three kept"; "A label, else by what differs" (*against the recommendation*, by what differs alone) | A 2D group over a comparison opens *Mirrored*: the first run reflected to r < 0, one scale, the cut and the probes on both halves; *Side by side* and *Difference* stay its other views. A Data node may carry a label the user types; otherwise a run is named by its study and the values it sets away from the study's own ("2wcd-charged, −50 mV"), told apart by its time where two are alike, the folder's digits in its tooltip and in *Open in Runs* |
 
 ## Glossary
 
@@ -557,18 +571,20 @@ base's and the specification's; these are the workbench's own.
 | Blocked | A build a check stops, or a value the library declines at its field, shown with the rule, the value, the case path and a remedy (WB-12, WB-40) |
 | Case file | One complete description of a run, which the command line runs (`nanopnp/case`); the unit of reproducibility |
 | Changed mark | A filled diamond on a value set away from its default; an outlined one on a study's override (WB-28) |
-| Comparison | A saved project item pairing two runs on one colour scale, side by side or as their difference (WB-04) |
+| Comparison | Two runs as one Data node of the tree of results, drawn on one colour scale, mirrored, side by side or as their difference (WB-04, WB-54, WB-63) |
 | Continuum model | A library item built in the Meso and Continuum suites: the pore's outline and charge drawn from a molecular model, the region and the mesh (WB-11, WB-34, WB-41, WB-43) |
+| Data node | A node of the tree of results naming what a plot group draws: a run, a sweep's runs, two runs compared or a revolution about the axis (WB-54) |
 | Default mesh sizes | The element size each part of a generated mesh takes when none is typed: global 10 nm, protein 0.1 nm, electrolyte 2.8 nm, the reservoir's arc 5 nm, the pore's axis 0.075 nm, and the wall a fifth of the Debye length, at most 0.05 nm; the size scale multiplies each (WB-41) |
 | Exposed value | A value a model declares for the other suites, with its name, unit, range and default, such as a physics model's concentration and bias; the Study suite lists it first (WB-35) |
 | Gate | A check a stage passes before its artefact is used, such as the orientation gate or the mesh's quality gate |
 | Later phase | A tool drawn with its banner and no working control: designed, not built in v0.6 (S7) |
-| Library | The project's models, studies and comparisons, each reused without being rebuilt |
+| Library | The project's models and studies, each reused without being rebuilt |
 | Live link | Two views that select together until unlinked (S6; WB-06) |
 | Meso | The suite between Molecular and Continuum that draws a continuum model's pore and charge from the molecular model it is built over, beside the molecule; it adds no kind of model (WB-43) |
 | Molecular model | A library item built in the Molecular suite: the prepared structure, its ensemble and protonation (WB-11) |
 | Override | A value a study sets in place of a named model's, for a sweep or a ramp; any value of the models it names, their exposed values first (WB-35). It is recorded in the manifest beside the model's value, and a value equal to the model's is none (WB-16; FR-39; §8.2.31 AG12) |
 | Physics model | A library item built in the Physics suite: the equations chosen from the registry, the electrolyte, the boundary conditions and their discretisation, reused across pores (WB-34) |
+| Plot group | A node of the tree of results that draws one view of its data: a 2D map with its layers, a 1D plot or a 3D revolution (WB-54, WB-56) |
 | Project | The folder that holds the library, the runs, the store and the project file (S11) |
 | Queue | The builds and runs waiting, running and done, always on screen (WB-02, WB-03) |
 | Resolved case file | The one complete case file a study's run resolves to, written with its manifest (FR-25) |
@@ -580,5 +596,6 @@ base's and the specification's; these are the workbench's own.
 | Suite | One of the six parts of the workbench: Molecular, Meso, Continuum and Physics, which build models, and Study and Analysis, which use them (WB-02, WB-29, WB-34, WB-43) |
 | Switch | A setting away from its validated default, recorded in every result's manifest (FR-25) |
 | Tool | One task in a suite, with its settings docked beside its live view (WB-07) |
+| Tree of results | The Analysis suite's one tool: Data, Definitions, Probes and cuts, Quantities and Plot groups, saved in `results.yaml` (WB-54, WB-60) |
 | Variant | A model derived from a parent and shown as its difference from it, such as a residue's charge changed (WB-04) |
 

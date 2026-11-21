@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.21 merged (`v0.6.0-alpha.19`; WP5.20's and WP5.21's tags, `v0.6.0-alpha.20` and `v0.6.0-alpha.21`, to be pushed); next WP5.22, the tree of results, after its design round; then WP5.23 the layers, WP5.24 performance, WP5.25 the refusals, WP5.26 the polish pass, WP5.27 the route and WP5.28 the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.21 merged (`v0.6.0-alpha.19`; WP5.20's and WP5.21's tags, `v0.6.0-alpha.20` and `v0.6.0-alpha.21`, to be pushed); next WP5.22, the tree of results, its design round held on 21 November (WB-54 to WB-63); then WP5.23 the layers, WP5.24 performance, WP5.25 the refusals, WP5.26 the polish pass, WP5.27 the route and WP5.28 the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -238,6 +238,13 @@ rules. Then the tree replaces the explorer's tiles, with REV-268's review points
 order and words, a run named by sight, a map framed on its data at equal aspect, *Mirrored* the model of a two-run
 view. Tag `v0.6.0-alpha.22`.
 
+The round ran on 21 November 2026 ([the record](../../design/reviews/2026-11-21-tree.md); WB-54 to WB-63): COMSOL's
+branches, a comparison a Data node of one `results.yaml` per project; one plot group or two side by side; every plot
+type of the round's board P1; Plotly for every chart and every (r, z) view, in this package, so Meso's, Continuum's
+and Physics' views move here with a round of verdicts, and uPlot, the canvas and `webgui` leave (CON-09's `webgui`
+sentence with it); definitions from a library list or typed, evaluated by the library; the tables in the bottom panel;
+*Shown run* following the newest; default plot groups; *Mirrored* first; a run labelled or named by what differs.
+
 ### WP5.23 — The structure's layers in every Mol* view (FR-31, FR-33; WB-49; REV-265, REV-243, REV-240; §8.2.46 AV3)
 
 A free list of layers draws the structure in Molecular's View and Prepare and in Meso's Density, Outline and Charge
@@ -307,7 +314,7 @@ the report, the changelog and `CITATION.cff`. Its last commit takes `v0.6.0` alo
 | 5 | The order of the tool phases against Phase 6 | **Author**, at the close (S7) |
 | 8 | Who observes QR-10 | **Author**, by the close (S24) |
 | 14 | Whether xenon or import-linter is adopted | **Author**, on WP5.10's report (AL7, AL27), [delivered](../../../knowledge/07-software-stack/25-complexity-and-import-contract-tools.md): it recommends neither |
-| 16 | The tree of results: its nodes, its plot types and its chart library | **Author**, at WP5.22's design round (WB-51; REV-268) |
+| 16 | The tree of results: its nodes, its plot types and its chart library | **Settled** at WP5.22's design round, 21 November 2026 (WB-54 to WB-63) |
 | 17 | An exposed value's first name, a variable's unit box, the charge map's default share | **Author**, at WP5.26's round (REV-262, REV-263, REV-266) |
 | 18 | A new physics model's corrections, and what an import makes of a full copy's parent | **Author**, at WP5.27's plan (REV-242, REV-249) |
 
