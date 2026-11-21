@@ -228,15 +228,29 @@ class AnalysisModel:
         return qoi_rows(quantities) if isinstance(quantities, dict) else []
 
     def deviations(self, run: Path) -> list[str]:
-        """Return each switch the run set away from its validated default."""
+        """Return each switch the run set away from its validated default, and each a stage made.
+
+        The list is empty only where the manifest counts no deviation.
+        """
         found = _json(run / MANIFEST_FILENAME).get("deviations")
-        switches = found.get("switches") if isinstance(found, dict) else None
-        return [
+        group = found if isinstance(found, dict) else {}
+        switches = group.get("switches")
+        contributed = group.get("contributed")
+        lines = [
             f"{switch.get('path')}: {switch.get('value')}, "
             f"validated {switch.get('validated_default')}"
-            for switch in switches or ()
+            for switch in (switches if isinstance(switches, list) else ())
             if isinstance(switch, dict)
         ]
+        lines += [
+            f"{entry.get('source')}: {entry.get('description')}"
+            for entry in (contributed if isinstance(contributed, list) else ())
+            if isinstance(entry, dict)
+        ]
+        count = group.get("count")
+        if isinstance(count, int) and count > len(lines):
+            lines.append(f"{count - len(lines)} more counted by the manifest and not described")
+        return lines
 
     def solve_hash(self, run: Path) -> str | None:
         """Return the hash of the solve a run's record names, or None."""

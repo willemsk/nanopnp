@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from pathlib import Path
 
 import numpy as np
 import pytest
 
+from nanopnp.api.project import Project
 from nanopnp.core.typing import Expression, Mesh, Numeric
 from nanopnp.geometry.pore import CylinderPore
+from nanopnp.gui.web.analysis import AnalysisModel
+from nanopnp.io.manifest import MANIFEST_FILENAME
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, mesh_cylinder_pore
 from nanopnp.physics import models
 from nanopnp.physics.models import ModelSolution
@@ -332,3 +336,28 @@ def test_fr27_a_fields_file_reads_back_array_equal_with_its_solve(
         for key, values in written[2].items():
             np.testing.assert_array_equal(held[2][key], values)
     assert not list(tmp_path.glob("viewer/*.partial.npz"))
+
+
+def test_fr25_a_contributed_deviation_is_listed_and_none_is_said_only_at_count_zero(
+    tmp_path: Path,
+) -> None:
+    model = AnalysisModel(Project.create(tmp_path / "project"))
+    run = tmp_path / "run"
+    run.mkdir()
+    contributed = {"source": "mesh", "description": "an imported mesh, not generated"}
+    for group, expected in (
+        (
+            {"count": 1, "switches": [], "contributed": [contributed]},
+            ["mesh: an imported mesh, not generated"],
+        ),
+        ({"count": 0, "switches": [], "contributed": []}, []),
+        (
+            {"count": 2, "switches": [], "contributed": [contributed]},
+            [
+                "mesh: an imported mesh, not generated",
+                "1 more counted by the manifest and not described",
+            ],
+        ),
+    ):
+        (run / MANIFEST_FILENAME).write_text(json.dumps({"deviations": group}), encoding="utf-8")
+        assert model.deviations(run) == expected
