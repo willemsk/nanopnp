@@ -101,6 +101,12 @@ def _gui(args: argparse.Namespace) -> int:
                 "extras with `uv sync --all-extras`",
                 name=package,
             )
+    if args.selftest:
+        if args.state is not None or args.dev or args.project is not None:
+            _refuse(args, "--selftest takes no project, --state or --dev")
+        # Named by string, as the server is.
+        code: int = importlib.import_module("nanopnp.gui.web.selftest").main()
+        return code
     # Named by string: gui sits above cli in the layer order, so an import would point upward.
     server = importlib.import_module("nanopnp.gui.web.server")
     # The solved state, the browser tests' alone, is admitted though not listed.
@@ -113,7 +119,7 @@ def _gui(args: argparse.Namespace) -> int:
         if args.state is not None
         else _project_to_open(args, open_last=server.open_last_project())
     )
-    code: int = server.serve(
+    served: int = server.serve(
         project=project,
         state=args.state,
         port=args.port,
@@ -121,7 +127,7 @@ def _gui(args: argparse.Namespace) -> int:
         dev=args.dev,
         as_json=bool(getattr(args, "json", False)),
     )
-    return code
+    return served
 
 
 def _open_or_create(folder: Path) -> Project:
@@ -307,6 +313,11 @@ def register(subparsers: Subparsers) -> None:
     gui.add_argument("--port", type=int, default=0, help="the port; 0 picks a free one")
     gui.add_argument("--no-browser", action="store_true", help="print the address, open nothing")
     gui.add_argument("--dev", action="store_true", help="reload on a change to the screens' source")
+    gui.add_argument(
+        "--selftest",
+        action="store_true",
+        help="exercise each compiled payload and the server's renderer once, then exit",
+    )
     gui.set_defaults(handler=_gui, parser=gui)
 
     _register_project(subparsers)

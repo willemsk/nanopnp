@@ -57,6 +57,8 @@ EXIT_CODES: Final[dict[str, int]] = {
     "nanopnp.pipeline.run:UnknownStageError": EXIT_CASE,
     # the installation is wrong, not the case; a retry fails until the extra is installed
     "nanopnp.core.stages:MissingExtraError": EXIT_CASE,
+    # likewise the installation: a compiled payload the self-test found broken or absent
+    "nanopnp.gui.web.selftest:PayloadError": EXIT_CASE,
     "nanopnp.io.case_paths:UnknownCasePathError": EXIT_CASE,
     "nanopnp.sweep.plan:SweepPlanError": EXIT_CASE,
     # the project folder or the file named is wrong; a retry fails identically

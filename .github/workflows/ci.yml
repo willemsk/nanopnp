@@ -258,6 +258,9 @@ jobs:
           echo "### tests ($SHARD): $((SECONDS - start)) s, pytest exit $status" \
             >> "$GITHUB_STEP_SUMMARY"
           exit $status
+      # The installation's self-test (RSK-13), on the Tier 1 leg.
+      - if: env.CODE == 'true' && matrix.shard == 'tier1'
+        run: uv run nanopnp gui --selftest
 
   # The one required check of a pull request. It fails unless every job it needs
   # succeeded: a skipped job fails it too, so a condition that skipped a leg can
