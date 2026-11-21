@@ -4329,3 +4329,43 @@ and the deviations it corrects (its D4), five details of the Qt panels have no p
 Every number is in the run's record and on the command line.
 
 **Accepted** (the author, 21 November 2026, §8.2.47 AW11): carried, and the Qt shell leaves without them.
+
+### REV-275: What WP5.27's screen review left open
+
+`/np-ship wp 5.27` rendered the workbench at the PR's head and reviewed the three screens the package changed: the
+queue's stage and rung with the run's log, Study setup's *More values*, and the results' deviations. The review
+and its critique ([code review 069](../code_reviews/CODE_REVIEW_069.md) records the code findings) found no blocking
+point. The ship fixed four: the deviations say "Unknown" where the manifest does not count them, the Log tab opens
+on its newest line and follows a reader at its end, the queue line joins its stage with a dash rather than a second
+colon, and a study's own value names its default. These stay open:
+
+1. **A study's own value, by its path** (*More values*). It is labelled by its path's last part, typed as text, and
+   the linear solver's registered words are not offered; *More values* lists every unfielded path in one picker.
+   AW10 puts labelled fields with Phase 6's forms.
+2. **The deviations' place** (the results explorer). The list stands at the foot of the quantities tile, below the
+   fold, in hint text; nothing near the run says a deviation exists. Phase 6's tree of results (REV-268) redraws the
+   tile.
+3. **The log's reading** (the bottom panel). No filter by run, no time, and rows about 36 px apart against WB-18's
+   30 px; the status line does not carry the running stage.
+4. **The field viewer's colour bar** (explorer on the mesh; comparison on the mesh). Its low end and label lie under
+   the renderer's controls strip, with no outline (WB-26). Older than this package; the fix is the host page's
+   settings, as CON-09 requires.
+5. **Wording and display, older than this package.** Two "done" queue entries read the same; the queued toast is not
+   a link (WB-52, rule 4); "The study's own" and the placeholder "its value" (WB-52); the Rungs and Recorded runs
+   columns clip without a sign; a current shown as 0.04799 nA, not 47.99 pA (WB-21); Runs says "Nothing is queued"
+   twice beside "Queue: 2 done".
+6. **The render's gaps.** No shot shows the deviations tile, with a deviation or with none; the light on-mesh shot
+   shows the map; three dark shots are not taken (`shell-study-tube-running`, `-tube-log`, `-more-solver`); the
+   mesh shots record no viewer readiness.
+
+*Recommendation:* Phase 6's polish pass for 3 to 6, its forms for 1 (AW10), its tree of results for 2.
+
+### REV-276: The radius set's notice names the removed bundle notice
+
+`data/radii/pdb2pqr_charmm.yaml` carries PDB2PQR's copyright notice and says the licence's full text "is in
+packaging/LICENSES-BUNDLE.md", which WP5.27 removed; the text is now in `src/nanopnp/THIRD-PARTY-LICENSES.md`, which
+the wheel carries. The file's sha256 is part of every density's provenance (`density/radii.py:radius_set_digest`), so
+editing the notice changes every stored density's key. Code review 069's finding 9.
+
+*Recommendation:* repoint the notice when the radius set next changes for a reason of its own.
+

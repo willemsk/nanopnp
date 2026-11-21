@@ -263,7 +263,8 @@ bundle then fails twice, independently:
   `KeyError: 'tkernel'`. That is the exact failure of the gated `bundle` job, before any Qt is
   touched.
 
-**The fix makes netgen's own loader work unchanged** (`packaging/nanopnp-probe.spec`):
+**The fix makes netgen's own loader work unchanged** (`packaging/nanopnp-probe.spec`, removed with
+the bundle at WP5.27 and kept in git history):
 
 - collect the existing `netgen-occt` files that match its filter (`*libTK*` or `*.dll`) into the
   bundle root;

@@ -251,6 +251,12 @@ under `OUTPUT / "project"`; their sources join `exclude_docs`; the navigation an
 > The design document keeps *Today's shell*, *Restated clauses* and *Inherited rows* as records, marked so, rather
 > than moving them out (item 9). The guide's pictures are the light shots of the item-4 render, 1280 × 800 (item 10).
 
+> **Outcome — the review, and the cost.** Code review 069 (`xhigh --fix`, at `e378143`) found 16: 14 fixed, 1 left
+> open (REV-276), 1 declined; the screen review and its critique of the same head fixed four more and left REV-275
+> open ([the report](../../code_reviews/CODE_REVIEW_069.md)). Measured over the package: 1 session, about 2.5 agent
+> hours and 5 touches (implementing 1.0 and 0.7 agent hours over two sittings, 3 touches; shipping 0.8 agent hours
+> and 2 touches so far), against the estimate of about seven sessions, 7 to 13 agent hours and 10 touches.
+
 ### Verification
 
 | Test file | Tier | Identifiers | Oracle | Tolerance source | Command |

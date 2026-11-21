@@ -12,7 +12,7 @@ import pytest
 from nanopnp.api.project import Project
 from nanopnp.core.typing import Expression, Mesh, Numeric
 from nanopnp.geometry.pore import CylinderPore
-from nanopnp.gui.web.analysis import AnalysisModel
+from nanopnp.gui.web.analysis import UNKNOWN_DEVIATIONS, AnalysisModel
 from nanopnp.io.manifest import MANIFEST_FILENAME
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, mesh_cylinder_pore
 from nanopnp.physics import models
@@ -351,6 +351,7 @@ def test_fr25_a_contributed_deviation_is_listed_and_none_is_said_only_at_count_z
             ["mesh: an imported mesh, not generated"],
         ),
         ({"count": 0, "switches": [], "contributed": []}, []),
+        ({"switches": [], "contributed": []}, [UNKNOWN_DEVIATIONS]),
         (
             {"count": 2, "switches": [], "contributed": [contributed]},
             [

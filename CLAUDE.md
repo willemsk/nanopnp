@@ -60,6 +60,8 @@ check and types, then the per-push selection:
 - example 01, while it solves in under 60 s;
 - example 02's charged ePNP-NS walk.
 
+Then it runs the installation's self-test, `nanopnp gui --selftest`.
+
 No coverage is measured. A commit-hook pass never stands in for `run`.
 
 1. Start `run` with Bash `run_in_background`: `.claude/hooks/gate.sh run > <log> 2>&1; echo "exit $?" >> <log>`,

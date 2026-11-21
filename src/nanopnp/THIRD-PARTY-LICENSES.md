@@ -45,8 +45,8 @@ NGSolve, Netgen, Open CASCADE, `webgui`, MDAnalysis, GridDataFormats, PROPKA and
 their LGPL options, which give you the right to replace them with your own versions. Each is an
 ordinary installed package or file and may be replaced in place: nothing in nanopnp is statically
 linked against an LGPL component. The renderer is the file `nanopnp/gui/assets/webgui/webgui.js`,
-and the workbench serves whatever build is at that path; `nanopnp gui --selftest` compares it with
-the shipped one and says so if it differs.
+and the workbench serves whatever build is at that path; `nanopnp gui --selftest` checks that the
+server serves that file, byte for byte.
 
 ## PDB2PQR, and its radius table
 
@@ -79,9 +79,9 @@ in nanopnp's repository as `third_party/webgui-0.2.39.tgz`.
 
 ## Checking an installation
 
-`nanopnp gui --selftest` exercises each compiled payload above once, in its own process: NGSolve and
+`nanopnp gui --selftest` exercises these compiled payloads once, in its own process: NGSolve and
 Netgen mesh a unit square, a workbench server serves the renderer, MDAnalysis and gemmi read a
 three-atom structure, scikit-image extracts a contour, Shapely checks a polygon through GEOS, Gmsh
 meshes a unit square where it is installed, and PDB2PQR with PROPKA protonate a nine-residue fragment
-of 2WCD at pH 2 and pH 8. It prints one line a payload and exits 0, or names the payload that failed
-(RSK-13).
+of 2WCD at pH 2 and pH 8. It then looks for this notice. It prints one line a payload and a line
+for the notice and exits 0, or names the payload, or the notice, that failed (RSK-13).

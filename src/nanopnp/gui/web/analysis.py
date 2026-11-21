@@ -158,6 +158,13 @@ def _bias_text(bias_V: float | None) -> str:
     return "no bias recorded" if bias_V is None else f"{bias_V * 1e3:+.4g} mV"
 
 
+UNKNOWN_DEVIATIONS = (
+    "Unknown: the run's manifest is missing or does not count its deviations, so whether a switch "
+    "left its validated default is not known."
+)
+"""The line shown for a run whose manifest does not count its deviations."""
+
+
 class AnalysisModel:
     """What the Analysis suite reads of a project: its runs, their records and their fields."""
 
@@ -233,9 +240,11 @@ class AnalysisModel:
         The list is empty only where the manifest counts no deviation.
         """
         found = _json(run / MANIFEST_FILENAME).get("deviations")
-        group = found if isinstance(found, dict) else {}
-        switches = group.get("switches")
-        contributed = group.get("contributed")
+        if not isinstance(found, dict) or not isinstance(found.get("count"), int):
+            # Unread is not none: "None" would credit the run's numbers to the validated model.
+            return [UNKNOWN_DEVIATIONS]
+        switches = found.get("switches")
+        contributed = found.get("contributed")
         lines = [
             f"{switch.get('path')}: {switch.get('value')}, "
             f"validated {switch.get('validated_default')}"
@@ -247,8 +256,8 @@ class AnalysisModel:
             for entry in (contributed if isinstance(contributed, list) else ())
             if isinstance(entry, dict)
         ]
-        count = group.get("count")
-        if isinstance(count, int) and count > len(lines):
+        count = found["count"]
+        if count > len(lines):
             lines.append(f"{count - len(lines)} more counted by the manifest and not described")
         return lines
 

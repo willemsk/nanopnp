@@ -65,7 +65,7 @@ class Entry:
         """Return the entry as a glyph, a word and its label, and a running run's stage."""
         progress = self.run.progress_line() if self.run is not None else ""
         shown = f"{self.state()}  {self.label}"
-        return f"{shown}: {progress}" if progress else shown
+        return f"{shown} — {progress}" if progress else shown
 
     @property
     def ended(self) -> bool:

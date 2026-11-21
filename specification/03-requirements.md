@@ -310,7 +310,8 @@ comparison would, which is why the Tier-2 benchmarks, which localise to a single
 
 NOTE (CON-08, CON-11): the library's default is `numerics/linear.py:DEFAULT_SOLVER`, `"umfpack"`; the
 workbench ships no bundle (§8.2.17 S12). `src/nanopnp/THIRD-PARTY-LICENSES.md` is the installation's licence
-notice, and `nanopnp --env` names its path (REV-141).
+notice, `nanopnp --env` names its path (REV-141), and `nanopnp gui --selftest` fails naming it where it is
+missing.
 
 ### 3.5 Exclusions
 

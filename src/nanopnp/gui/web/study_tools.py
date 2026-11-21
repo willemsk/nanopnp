@@ -656,6 +656,8 @@ class _StudyPane(_Pane[StudyModel]):
                 hint = f"The study's own. The {value.kind} model gives {_text(value.model)}."
             elif mark and value.kind != "study":
                 hint = f"Set in the {value.kind} model. The default is {_text(default)}."
+            elif value.kind == "study" and default is not None:
+                hint = f"The study's own. The default is {_text(default)}."
             else:
                 hint = ""
             if hint:

@@ -6,7 +6,8 @@ workbench shows them.
 
 ## Install
 
-Run `uv sync --all-extras`, or install the `gui` extra alone. Then run the self-test:
+Run `uv sync --all-extras`, or install the `gui` and `structure` extras: the workbench reads
+structures, and the self-test exercises the `structure` extra's parts. Then run the self-test:
 
 ```console
 $ nanopnp gui --selftest

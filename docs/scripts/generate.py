@@ -113,6 +113,26 @@ def _relative(target: Path, start: Path) -> str:
     return "/".join([*up, *parts_target[common:]]) or "."
 
 
+def _excluded() -> tuple[str, ...]:
+    """Return the entries of mkdocs.yml's ``exclude_docs``, a folder's with its trailing slash."""
+    text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+    block = re.search(r"^exclude_docs: \|\n((?:  .*\n)+)", text, re.MULTILINE)
+    assert block is not None, "mkdocs.yml names no exclude_docs"
+    return tuple(line.strip() for line in block.group(1).splitlines() if line.strip())
+
+
+def _served(path: Path) -> bool:
+    """Whether the site serves a file of ``docs/`` at its own path."""
+    docs = ROOT / "docs"
+    if not path.is_relative_to(docs) or path.is_relative_to(OUTPUT) or not path.is_file():
+        return False
+    relative = path.relative_to(docs).as_posix()
+    return not any(
+        relative.startswith(entry) if entry.endswith("/") else relative == entry
+        for entry in _excluded()
+    )
+
+
 def rewrite_links(text: str, source: Path, destination: Path, pages: dict[Path, Path]) -> str:
     """Point each relative link of a copied page at the copy or at GitHub."""
 
@@ -127,6 +147,8 @@ def rewrite_links(text: str, source: Path, destination: Path, pages: dict[Path, 
             return f"{label}({_relative(pages[resolved], destination.parent)}{suffix})"
         if not resolved.exists():
             raise SystemExit(f"{source.relative_to(ROOT)}: broken link {target!r}")
+        if _served(resolved):
+            return f"{label}({_relative(resolved, destination.parent)}{suffix})"
         return f"{label}({REPOSITORY}/{resolved.relative_to(ROOT).as_posix()}{suffix})"
 
     # Code is masked first: ``a[i](x)`` in a code span is not a link, and rewriting

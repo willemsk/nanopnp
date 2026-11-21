@@ -90,7 +90,7 @@ default install is the solver core and uses binary wheels only. The extras add:
 
 | Extra | Adds |
 |---|---|
-| `gui` | The browser workbench (`nanopnp gui`); `nanopnp gui --selftest` checks an installation |
+| `gui` | The browser workbench (`nanopnp gui`); with the `structure` extra, `nanopnp gui --selftest` checks an installation |
 | `plot` | Matplotlib, for the figures of a run (`nanopnp plot`) |
 | `notebook` | The `plot` extra and marimo, for the [notebooks](notebooks/) |
 | `examples` | The `plot` extra, for the worked examples' plots |
