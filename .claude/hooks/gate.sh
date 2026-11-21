@@ -578,6 +578,7 @@ else
     if [[ $mode == run ]]; then
         check "pytest (push selection)" uv run pytest -q -rsfE -n auto --dist loadfile \
             --ignore=tests/tier1/test_gui_widgets.py
+        check "self-test" uv run nanopnp gui --selftest
     else
         check "pytest (tier 1)" uv run pytest -q -rsfE -n auto --dist loadfile \
             --ignore=tests/tier1/test_gui_widgets.py -m "tier1 and not slow"

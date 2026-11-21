@@ -34,7 +34,9 @@ __all__ = [
     "READY_FLAG",
     "RENDERER_DIRECTORY",
     "RENDERER_INTEGRITY",
+    "RENDERER_ROUTE",
     "RENDERER_SOURCE",
+    "RENDERER_URL",
     "RENDERER_VERSION",
     "VIEWER_DIRNAME",
     "ChargeQuantity",
@@ -77,6 +79,12 @@ RENDERER_DIRECTORY = Path(__file__).resolve().parent / "assets" / "webgui"
 # Shipped, not fetched (CON-09): the LGPL-2.1+ webgui build bundles three.js (MIT) and dat.gui
 # (Apache-2.0), redistributed unmodified beside their licence texts and a NOTICE.
 RENDERER_SOURCE = (RENDERER_DIRECTORY / "webgui.js").as_uri()
+
+RENDERER_ROUTE = "/vendor/webgui"
+"""Where the workbench's server serves :data:`RENDERER_DIRECTORY`."""
+
+RENDERER_URL = f"{RENDERER_ROUTE}/webgui.js"
+"""The URL a field's page loads the renderer from."""
 
 # Never an artefact and never hashed: a picture of a converged state is a view of a result (§5.3.2).
 VIEWER_DIRNAME = "viewer"

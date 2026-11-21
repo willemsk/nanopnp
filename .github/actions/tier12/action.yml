@@ -51,6 +51,10 @@ runs:
       env:
         QT_QPA_PLATFORM: offscreen
         NIGHTLY: ${{ inputs.nightly }}
+    # The installation's self-test (RSK-13): each compiled payload, and the server's renderer.
+    - if: inputs.code == 'true'
+      shell: bash
+      run: uv run nanopnp gui --selftest
     # A nonzero exit here, 5 ("no tests ran") included, is a real failure: on
     # these two runners the module must import and run.
     - if: inputs.code == 'true' && runner.os != 'Linux'

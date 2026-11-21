@@ -14,7 +14,13 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from nicegui import app as nicegui_app
 from nicegui import ui
 
-from nanopnp.gui.render import RENDERER_DIRECTORY, host_page, scene_stem
+from nanopnp.gui.render import (
+    RENDERER_DIRECTORY,
+    RENDERER_ROUTE,
+    RENDERER_URL,
+    host_page,
+    scene_stem,
+)
 from nanopnp.gui.web.analysis import AnalysisModel, FieldMap, cut_chart, dark_palette
 from nanopnp.gui.web.analysis_tools import Scales, analysis_page, comparison_maps, map_of
 from nanopnp.gui.web.assets import ASSETS, TOKENS
@@ -258,7 +264,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         return HTMLResponse(
             host_page(
                 f"/api/analysis/scene?{query}",
-                "/vendor/webgui/webgui.js",
+                RENDERER_URL,
                 f"{field} on the mesh",
                 frame_nm=opened,
                 reverse=bool(reverse),
@@ -621,7 +627,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
     nicegui_app.add_static_files("/vendor/molstar", ASSETS / "molstar")
     nicegui_app.add_static_files("/vendor/katex", ASSETS / "katex")
     nicegui_app.add_static_files("/vendor/uplot", ASSETS / "uplot")
-    nicegui_app.add_static_files("/vendor/webgui", RENDERER_DIRECTORY)
+    nicegui_app.add_static_files(RENDERER_ROUTE, RENDERER_DIRECTORY)
     # Our own small files are not cached (max-age 0): NiceGUI's hour of caching would hide an edit
     # that `nanopnp gui --dev` restarted the server for.
     for local, url in (
