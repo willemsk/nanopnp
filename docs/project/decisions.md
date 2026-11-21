@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,495. By source: history ruling 375; plan decision row 738; REV row 271; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
+Rows: 1,497. By source: history ruling 375; plan decision row 738; REV row 273; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
 
-By decider: author 653; open 5; session, own call 834; session, put to the author 3.
+By decider: author 654; open 5; session, own call 835; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1411,6 +1411,8 @@ By decider: author 653; open 5; session, own call 834; session, put to the autho
 | REV-269 | author | `docs/project/review-findings.md` |  | WP5.26 | The workbench's wording | §8.2.46 AV2: WP5.26 | accepted |
 | REV-270 | author | `docs/project/review-findings.md` |  | WP5.22 | A map reads its field linearly on each cell split in four | ruled by the author, 20 November 2026: WP5.22 | accepted |
 | REV-271 | session, own call | `docs/project/review-findings.md` |  | WP5.28 | The Phase 5 plan exceeds its word target a third time | for the author; WP5.28 at the latest | open |
+| REV-272 | author | `docs/project/review-findings.md` |  |  | Phase 5 closes early; Phase 6 opens with its scope, a cleanup and the foundations | ruled by the author, 21 November 2026: Phase 6; placed by `/np-plan amend 5` | accepted |
+| REV-273 | session, own call | `docs/project/review-findings.md` |  |  | The tree round's verdicts reopen where the settings stand, the views shown and the runs in Data | for the author, at the tree's next round in Phase 6 | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |
@@ -1502,4 +1504,4 @@ By decider: author 653; open 5; session, own call 834; session, put to the autho
 | current.md bullet | author | `docs/plans/current.md` |  |  | One shell package per suite; variables keyed by resolved values** (§8.2.31). **A study overrides any model value | §8.2.31 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | Physics is a third model with its own suite; models declare exposed values; suites are prototyped on 2WCD first | unstated | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | An edited outline keeps its charge; a continuum model builds alone** (§8.2.40). **A physics model is shown | §8.2.40 | in force (cache) |
-| current.md bullet | author | `docs/plans/current.md` |  |  | Meso holds Density, Outline and Charge map; the 200 ms line is WP5.24's** (AR7, AR8; AS1 to | unstated | in force (cache) |
+| current.md bullet | author | `docs/plans/current.md` |  |  | Meso holds Density, Outline and Charge map** (AR8; AS1 to AS3). **An edit marks the atoms it moves; the overlay is kept; a study's charge node opens the continuum model's | unstated | in force (cache) |

@@ -385,6 +385,7 @@ nav:
       - Adding a physics model: project/physics-models.md
       - Modularity report: project/modularity.md
       - Modularity findings: project/modularity-findings.md
+      - Architecture survey: project/architecture-survey.md
       - Modularity measurements: _generated/project/modularity-measurements.md
       - Architecture: _generated/project/architecture.md
       - Review register: project/review-items.md
