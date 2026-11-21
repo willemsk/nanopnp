@@ -11,6 +11,33 @@
         ],
         "createdAt": "2026-11-21T07:16:15.844Z",
         "reason": "tokens.css (--sel): a selected row or tab always carries a marker, the --accent edge, so selection does not rest on colour alone (WB-24); the shell's own selection"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "docs/design/concepts/tree/p1-plot-types.html"
+        ],
+        "createdAt": "2026-11-21T10:02:01.711Z",
+        "reason": "WB-18 and WB-31: the workbench's dense tool chrome, headings near body size by the ruled density; a closed design round's boards, published as shots"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "docs/design/concepts/tree/l1-plotly.html"
+        ],
+        "createdAt": "2026-11-21T10:02:01.719Z",
+        "reason": "WB-18 and WB-31: the workbench's dense tool chrome, headings near body size by the ruled density; a closed design round's boards, published as shots"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "docs/design/concepts/tree/l2-echarts.html"
+        ],
+        "createdAt": "2026-11-21T10:02:01.725Z",
+        "reason": "WB-18 and WB-31: the workbench's dense tool chrome, headings near body size by the ruled density; a closed design round's boards, published as shots"
       }
     ]
   }
