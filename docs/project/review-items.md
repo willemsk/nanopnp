@@ -1505,6 +1505,8 @@ The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at 
 
 **Re-placed** (§8.2.46 AV2, AV4, 20 November 2026): WP5.27, the route, which removes Qt.
 
+**Re-placed** (§8.2.47 AW1, 21 November 2026): WP5.27, which removes Qt and no longer holds the route.
+
 ### REV-135: The density does not see the protonation chosen at the charge stage
 
 The density stage smears the atoms of the structure as loaded at stage 1 (`density/stage.py`, its record counting the
@@ -3034,6 +3036,8 @@ changes the site. The link check keeps checking the relative links meanwhile.
 
 **Re-placed** (§8.2.46 AV2, AV4, 20 November 2026): WP5.27, the route, which rewrites the guide and changes the site.
 
+**Re-placed** (§8.2.47 AW1, AW3, 21 November 2026): WP5.27, Qt's removal, which writes the short guide and changes the site.
+
 ### REV-229: Three checks the knowledge base proposed without a requirement
 
 Three ideas sat in the knowledge base as proposals, which `knowledge/00-orientation/04` keeps out of a
@@ -3163,6 +3167,8 @@ log wait for the Study suite's round (WP5.19).
 
 **Placed** (§8.2.46 AV2, 20 November 2026): the project dialogs, the settings' rows, the menus, the Glossary and the log are put at WP5.26's round, the polish pass.
 
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's polish pass, WP5.26 until then, and its round.
+
 ### REV-236: Chords the operating system may claim, a command that cannot be unbound, and the glossary written twice
 
 The WP5.15 review's doubts: on macOS, Option+Shift+digit types a character into a focused field, and a browser may
@@ -3174,6 +3180,8 @@ glossary's 26 terms are written in `gui/web/glossary.py` and in the design docum
 single source is put to the author with it.
 
 **Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass, with its keyboard pass.
+
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's polish pass, WP5.26 until then, with its keyboard pass.
 
 ### REV-237: The author's notes on the frame's digest for the suites' prototype rounds
 
@@ -3211,6 +3219,8 @@ field (`?field=`), built in WP5.17's item 12 with the list of one line per chang
 its final render shows; the palette's look and the help page stay open.
 
 **Placed** (§8.2.46 AV2, 20 November 2026): the settings window's spacing, the palette's look and the help page, at WP5.26's round.
+
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's polish pass, WP5.26 until then, and its round.
 
 ### REV-238: The Prepare tool's axis and membrane are not dragged by handles
 
@@ -3281,6 +3291,8 @@ screen's overlay is built. The variation view, the maps and the safeguards stay 
 
 **Placed** (§8.2.46 AV2, AV3, 20 November 2026): the variation view is WP5.23's, a colour a layer takes, computed in the library; the safeguards are WP5.27's, a second step before an action that deletes.
 
+**Moved** (§8.2.47 AW1, 21 November 2026): the variation view goes with Phase 6's layers, WP5.23 until then; the safeguards with its guided route and new models, the first part of WP5.27 until then.
+
 ### REV-241: What the final review of the Molecular tools left open
 
 The GUI review and `impeccable`'s critique of the finished tools (WP5.16 item 12, render `shell-r2` at `def8265`; no
@@ -3307,6 +3319,8 @@ gone.
 over the frame.
 
 **Placed** (§8.2.46 AV2, 20 November 2026): the PQR point is WP5.27's, with the new-model action; the frame's points are WP5.26's.
+
+**Moved** (§8.2.47 AW1, 21 November 2026): the PQR point goes with Phase 6's guided route and new models, the first part of WP5.27 until then; the frame's points with its polish pass, WP5.26 until then.
 
 ### REV-242: What the code review of the Molecular suite left open
 
@@ -3341,6 +3355,8 @@ the other three stay open as ruled above.
 
 **Placed** (§8.2.46 AV1, AV2, 20 November 2026): the first two points are WP5.27's new-model action, each put to the author at its plan; the fourth, a refusal that carries its case path, is WP5.25's.
 
+**Moved** (§8.2.47 AW1, 21 November 2026): the first two points go with Phase 6's guided route and new models, the first part of WP5.27 until then; the fourth with its refusals package, WP5.25 until then.
+
 ### REV-243: Prepare's view does not follow the typed orientation
 
 The axis and the membrane drawn in Prepare's view are those of the built, aligned structure: a typed tilt, azimuth,
@@ -3352,6 +3368,8 @@ would indeed be a nice feature, let's mark it as a QoL to be included before the
 **Open**: built before Phase 5 closes, at the latest with WP5.26's pass over the frame.
 
 **Placed** (§8.2.46 AV3, 20 November 2026): WP5.23, with the layers in every Mol* view.
+
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's layers, WP5.23 until then.
 
 ### REV-244: The author's notes on the Continuum digest that ask for a discussion
 
@@ -3425,6 +3443,8 @@ leaves the Physics tools, its place elsewhere being REV-252; the words come unde
 WP5.18 and the rest under REV-254; the scroll cue and the glossary links wait for WP5.26.
 
 **Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass: the canvas's labels and keys, the pane's layout, the words, the progress, and Region's domains read from the region artefact's faces, library step first.
+
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's polish pass, WP5.26 until then.
 
 ### REV-246: A saved outline's exclusion shell takes the default grid
 
@@ -3517,6 +3537,8 @@ which writes its corrections; a model `Project.new_model` makes writes none.
 validated corrections, or the mark read from the case the model resolves to.
 
 **Placed** (§8.2.46 AV2, 20 November 2026): WP5.27, with the new-model action; the choice is put to the author at its plan.
+
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's guided route and new models, the first part of WP5.27 until then; the choice is put to the author at its plan.
 
 ### REV-250: PHY-23's terms under a solid fraction and without the flow
 
@@ -3625,6 +3647,8 @@ The pane's status line says which value to correct. The rest stays with WP5.26.
 
 **Placed** (§8.2.46 AV1, 20 November 2026): the stages' diagnostics and the command line's messages are WP5.25, a package of its own, each refusal carrying its case path and file as fields; the suites' own words go to WP5.26's sweep. The nine modules above hold about 440 raise sites; `physics/`, `materials/`, `symmetry/`, `core/` and the rest of `api/` hold about 110 more refusals, among them a correction's, and WP5.25 takes them too (CODE_REVIEW_066).
 
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's refusals package, WP5.25 until then, after the library's errors share a base; the suites' own words go with its polish pass.
+
 ### REV-255: What the Physics suite's final review left open
 
 WP5.18's final render (306 shots; no contrast, non-text or target finding; two shots failed under load and drew clean
@@ -3712,6 +3736,8 @@ the view's package.
 
 **Placed** (§8.2.46 AV2, AV5, 20 November 2026): the view, the region and CODE_REVIEW_058's two are WP5.26's; the equations written for the corrections chosen go to Phase 6's provisional package *the model's open terms*, which changes `physics/terms.py` with a physics review.
 
+**Moved** (§8.2.47 AW1, 21 November 2026): the view, the region and CODE_REVIEW_058's two go with Phase 6's polish pass, WP5.26 until then.
+
 ### REV-256: A field's message, its text size and a field of several boxes, in every suite
 
 At WP5.18's round 2 ([the record](../design/reviews/2026-11-16-physics-2.md)) the author, on the in-tube Conditions
@@ -3777,6 +3803,8 @@ measures the line with `redraw.cjs --headed` on a GPU, holds one keyed walk per 
 read, and profiles any miss with `--trace`. The Phase 5 plan's criterion 6 goes with it.
 
 **Re-placed** (§8.2.46 AV4, 20 November 2026): WP5.24, after the tree of results and the layers, whose views it times.
+
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's performance package, WP5.24 until then, with the 200 ms measure and the author's session on a GPU; it times the restructured views.
 
 ### REV-259: A bridge suite between Molecular and Continuum
 
@@ -3896,6 +3924,8 @@ tolerance dashed in the muted grey; the chip naming what it links; the pick keye
 
 **Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass.
 
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's polish pass, WP5.26 until then.
+
 ### REV-262: An exposed value's first name, and Exposed values' list as Study setup draws it
 
 An exposed value's name is an identifier (`[A-Za-z][A-Za-z0-9_]*`, §5.3.1's NOTE on model files): the library's
@@ -3911,6 +3941,8 @@ The critique asks for the field's label, *Size scale*, which the rule refuses. T
 **Open**: a question for the author, at WP5.26's round.
 
 **Placed** (§8.2.46 AV2, 20 November 2026): put to the author at WP5.26's round.
+
+**Moved** (§8.2.47 AW1, 21 November 2026): put to the author at the round of Phase 6's polish pass, WP5.26 until then.
 
 ### REV-263: What code review 060 of the Study suite left open
 
@@ -3935,6 +3967,8 @@ The critique asks for the field's label, *Size scale*, which the rule refuses. T
 choice for its design round. None gives a wrong number; the offset is still refused before any build.
 
 **Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass; the unit box at its round.
+
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's polish pass, WP5.26 until then; the unit box at its round.
 
 ### REV-264: A reproduction of a record stopped at its solve compares no number of the solve
 
@@ -3972,6 +4006,8 @@ layer: each Meso tool's *Structure* switch.
 Molecular's View takes the same list is decided there.
 
 **Placed** (§8.2.46 AV3, 20 November 2026): WP5.23, after the tree of results and before the performance package. Molecular's View and Prepare take the same list.
+
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's layers, WP5.23 until then.
 
 ### REV-266: What the Meso suite's round left open
 
@@ -4011,6 +4047,8 @@ WP5.20's round ([the record](../design/reviews/2026-11-19-meso.md)) and its revi
 **Open**: WP5.26.
 
 **Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass; the map's default share and *One subunit*'s overlay at its round. A residue named by its first present copy is a library step of that package.
+
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's polish pass, WP5.26 until then; the map's default share and *One subunit*'s overlay at its round.
 
 ### REV-267: What the Analysis suite's first review left open
 
@@ -4059,6 +4097,8 @@ WB-57 (21 November 2026) chose Plotly for every chart and every (r, z) view, `we
 (the convergence chart's rungs and mixed powers, the square-root ticks, the series' hues), the 3D view's points of
 item 14 and the one-bias I–V axis fall to WP5.22, which redraws each of those views.
 
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's polish pass, WP5.26 until then; the points that fell to WP5.22 go with its tree of results.
+
 ### REV-268: Analysis as an editable tree of results, and the charts' library
 
 At WP5.21's round the author asked for Analysis to be reorganised: "a lot of screen real-estate is being given to the
@@ -4106,6 +4146,8 @@ and following the newest; default plot groups from what the run provides; *Mirro
 user or else named by what differs. The critique's five points are answered: the map framed at equal aspect with its
 key beside it, *Side by side* kept as a view, *Mirrored* first, a run named by sight. Open until WP5.22 builds them.
 
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's tree of results, WP5.22 until then, built on the restructured view area and results side; its round's rulings WB-54 to WB-63 stand but for the three the verdicts reopen (REV-273).
+
 ### REV-269: The workbench's wording
 
 At WP5.21's round the author asked to remove a way of wording "throughout the package": "\"Its rungs\" --> \"The
@@ -4130,6 +4172,8 @@ V", and a bare "M" after a field in Setup.
 
 **Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass, sweeps every other screen's text by the rule, with its check.
 
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's polish pass, WP5.26 until then.
+
 ### REV-270: A map reads its field linearly on each cell split in four
 
 The physics review at WP5.21's ship (doubt 4): `post/fields.py:field_at` reads a field at a point linearly on the four
@@ -4149,6 +4193,8 @@ to be compared near the pore wall before that package ships.
 
 **Placed** (§8.2.46 AV4, 20 November 2026): WP5.22, the tree of results.
 
+**Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's tree of results, WP5.22 until then; the survey's step R3 carries the read by the cell's own basis.
+
 ### REV-271: The Phase 5 plan exceeds its word target a third time
 
 The Phase 5 plan held 8,206 words by `wc -w` after the sixth amendment (§8.2.46), against `np-plan`'s 1,500-word target
@@ -4161,6 +4207,11 @@ the design decisions (about 490), the seven planned packages (about 950) and the
 **Open** for the author, as REV-216 left it: cut the live sections to the target (the delivered packages' verification
 rows and the settled design decisions to the record, the stubs to one line each), or restate the target for a phase
 amended in flight. Whichever is ruled lands at the next `/np-plan amend 5`, or in WP5.28, the close, at the latest.
+
+**Accepted** (§8.2.47 AW5, 21 November 2026): the author chose to restate the target, against the recommendation of a
+cut now. The plan keeps its length, less the entries AW1 moves (about 4,100 words by `wc -w`). The target for a phase amended in flight
+is set at Phase 6's cleanup, with the reading limit REV-272 proposes; until then §8.4.4's target stands and the excess
+is recorded here.
 
 ### REV-272: Phase 5 closes early; Phase 6 opens with its scope, a cleanup and the foundations
 
@@ -4194,6 +4245,36 @@ WP5.22 (the tree), WP5.23 (the layers), WP5.24 (performance and criterion 6), WP
 error base), WP5.26 (the polish pass) and WP5.27's route and new models move to Phase 6, each after the foundations
 that would otherwise rebuild it; QR-10's observation (criterion 5) moves with the route. REV-271 is answered by the
 same amendment. Then `/np-plan project` re-aligns Phase 6's scope, Z6's speed-up first included.
+
+**Placed** (§8.2.47 AW1 to AW6, 21 November 2026), as proposed but for the trial: Phase 5 keeps WP5.27, Qt's removal
+with a short guide (AW3), and WP5.28, the close, under their numbers (AW4); the tree of results, the layers, the
+performance package, the refusals, the polish pass and the guided route with new models are Phase 6's provisional
+packages, named by scope (AW1); QR-10's trial waits for a v1.0 release candidate (AW2); REV-271's target is restated at
+the cleanup (AW5).
+
+**Proposed for Phase 6's scope round**, by the author on 21 November 2026, each to be put to the author there. Until
+that round rules, the models of `CLAUDE.md` and §8.2.38 AN8 stand.
+
+1. **Measure the cleanup.** Set a limit on what a package session reads before it starts, and check it with `usage.py`
+   before and after. Target the records more than the instruction files: `decisions.md`, this register, the
+   specification's history and a plan's length are the large numbers above; the `np-*` skills and `CLAUDE.md` are the
+   small ones.
+2. **Start the cleanup with an audit.** The `claude-api` skill's `prompt-audit` command finds instructions a repository
+   has outgrown or that contradict each other, and reports each with its file and line and a proposed diff. Run it
+   over `CLAUDE.md` and `.claude/`.
+3. **Order the foundations.** The library's come before the workbench's. The style is built into the workbench's shared
+   parts (the form builder, the tree, the view area), not laid over today's widgets.
+4. **Reorder Phase 6's existing packages.** The round revisits Z6's rule that the speed-up goes first. REV-224 and
+   REV-257 join the library cleanup that makes the force code share the weak form's terms (the survey's step R9).
+5. **Models by session type.** Ruling rounds, the scope round and the cleanup: Fable 5.2 at high effort, where a wrong
+   call costs most. Implementation packages: Opus 5.5 at high effort, set explicitly because its default is medium.
+   Mechanical or survey sub-agents: Sonnet 5.5. Fable's price is twice Opus's for input and output ($8 and $40 against
+   $4 and $20 per million tokens), but a cached read costs the same, $0.20 per million, and cached reads dominate
+   these sessions: the tree round used 87 M cached tokens and 0.32 M of output, about $24 on Opus against $30 on
+   Fable before cache writes. A session is expected to cost a quarter to a half more, not double. Anthropic notes that
+   over-prescriptive prompts lower Fable 5.2's output quality, one more reason for the cleanup to come first. The
+   prices, the default effort and the `prompt-audit` command were checked against the `claude-api` skill's tables,
+   cached on 3 November 2026.
 
 ### REV-273: The tree round's verdicts reopen where the settings stand, the views shown and the runs in Data
 
