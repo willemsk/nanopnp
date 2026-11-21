@@ -47,7 +47,7 @@ from nanopnp.gui.web.tools import (
     current_name,
 )
 from nanopnp.io.case_paths import case_fields, schema_default, value_at
-from nanopnp.io.models import MODEL_KINDS, Kind, owner_of
+from nanopnp.io.models import METADATA_KEYS, MODEL_KINDS, Kind
 from nanopnp.physics.models import case_model, role_conditions
 from nanopnp.physics.terms import CONDITIONS
 from nanopnp.pipeline.run import RUN_RECORD_FILENAME
@@ -129,6 +129,14 @@ def _default(path: str) -> object:
 
 # A number with an exponent and no point, which YAML 1.1 reads as text.
 _EXPONENT = re.compile(r"[+-]?(?:\d+\.?\d*|\.\d+)[eE][+-]?\d+")
+
+
+def _offered(path: str) -> bool:
+    # A header key, an input, a variable and a list's member are not a study's to set by path.
+    parts = path.split(".")
+    if parts[0] in METADATA_KEYS or parts[0] in ("inputs", "variables"):
+        return False
+    return not any(part.isdigit() for part in parts)
 
 
 def _parsed(text: str) -> object:
@@ -598,7 +606,7 @@ class _StudyPane(_Pane[StudyModel]):
                     else "No model exposes a value, and the study sets none."
                 )
                 ui.label(said).classes("later")
-            self.more_values({value.path for value in listed})
+            self.more_values({value.path for value in listed} | set(self.tool.fields))
         with self.variables_box:
             self.variable_rows()
 
@@ -679,9 +687,7 @@ class _StudyPane(_Pane[StudyModel]):
         offered = {
             field.path: FIELDS[field.path].label if field.path in FIELDS else field.path
             for field in case_fields()
-            if owner_of(field.path) in MODEL_KINDS
-            and field.path not in listed
-            and not field.path.startswith(("inputs.", "models."))
+            if field.path not in listed and _offered(field.path)
         }
         with ui.column().classes("study-adder w-full gap-1"):
             ui.label("More values").classes("field-label")
