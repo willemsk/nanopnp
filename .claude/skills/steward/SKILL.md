@@ -54,9 +54,6 @@ pytest runs `-n auto --dist loadfile`. Three settings apply:
 - `NPY_DISABLE_CPU_FEATURES` caps NumPy's SIMD dispatch at `X86_V3`. This is VER-62's reference
   environment
   (`knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#815-within-one-build-a-deployed-walks-quantities-repeat-bit-for-bit`).
-- `tests/tier1/test_gui_widgets.py` is the exception. It runs serially in its own step, on Windows and
-  macOS only. It waits on a real QtWebEngine page by the wall clock, and busy workers starved it
-  (run 113). On ubuntu it skips itself, because PySide6 does not import there.
 
 The jobs:
 
@@ -77,7 +74,7 @@ The jobs:
   anchor. Reproduce it with
   `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict`.
 - **`platforms`** runs after a merge. It runs the per-push selection on ubuntu, macOS and Windows,
-  3.14, and the GUI file serially on the last two. A platform-only failure shows up here, on `main`.
+  3.14, then `nanopnp gui --selftest`. A platform-only failure shows up here, on `main`.
   Fix it forward in a new PR.
 - **`full-matrix`** runs when `full: true` (a dispatch, or `release.yml` before it builds a tag). It
   covers the three platforms × 3.11 to 3.14, with `--nightly`: the whole of Tiers 1 and 2 (QR-09,
@@ -87,11 +84,8 @@ The jobs:
       platforms (§8.2.13 N4);
     - Tier 1 on 3.11 to 3.13 on the three platforms, with dependencies from wheels only.
 
-  A failure of the first part, or of `bundle`, opens an issue and blocks nothing; the 3.11–3.13 legs
+  A failure of the first part opens an issue and blocks nothing; the 3.11–3.13 legs
   and `tier3` are recorded in the run only. Fix it forward in a PR.
-- **`bundle`** is **gated**. It builds the Windows PyInstaller bundle of `packaging/nanopnp-probe.spec`,
-  then runs the bundle's own `--selftest` (RSK-13, §8.2.1 A4). It runs after a merge, before a release
-  and nightly, as the runner-image drift probe.
 - **`tier3`** runs nightly, on a dispatch and before a release, with `continue-on-error`. It is
   recorded and never gated (§7.1, §7.6). Without `$NANOPNP_REFERENCE_DATA`, every Tier 3 test skips
   visibly. That skip is missing evidence, not a defect.
@@ -119,7 +113,7 @@ matrix leg, reproduce it under that interpreter (`uv run --python 3.11 pytest �
 | `docs` | A broken link, anchor or nav entry, or a moved generated page | Fix it. Never drop `--strict` or exclude the page |
 | `mypy src/` | Strict-mode gap | Annotate; extend `core/typing.py`'s aliases rather than `Any` or a bare `type: ignore` |
 | Lockfile out of date | `pyproject.toml` moved without `uv lock` | `uv lock`, commit it |
-| `bundle` | A binary dependency defeating packaging (RSK-13) | Root-cause it. Never add `continue-on-error` (§8.2.1 A4) |
+| `nanopnp gui --selftest` | A compiled payload broken on that runner, or the served renderer changed (RSK-13) | Root-cause it. Never add `continue-on-error` |
 | One Python version only | A compatibility gap | Fix across 3.11–3.14; **never** narrow `requires-python` (QR-09) |
 | Windows or macOS only | Paths, line endings, thread counts, float repr | `pathlib` everywhere; pin thread counts in the test |
 | A tier 1 test | A real regression | Root-cause it |

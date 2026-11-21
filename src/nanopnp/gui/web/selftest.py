@@ -135,7 +135,7 @@ def _exercise_gmsh() -> str:
     gmsh.initialize(interruptible=False)
     try:
         gmsh.option.setNumber("General.Terminal", 0)
-        gmsh.model.add("nanopnp-probe")
+        gmsh.model.add("nanopnp-selftest")
         gmsh.model.occ.addRectangle(0.0, 0.0, 0.0, 1.0, 1.0)
         gmsh.model.occ.synchronize()
         gmsh.option.setNumber("Mesh.MeshSizeMax", 0.5)

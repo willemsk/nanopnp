@@ -13,6 +13,9 @@ _REPO_TEST_STRUCTURES = _PACKAGE_ROOT.parents[1] / "tests" / "data" / "structure
 
 PACKAGE_ROOT: Path = _PACKAGE_ROOT
 
+LICENCE_NOTICE: Path = _PACKAGE_ROOT / "THIRD-PARTY-LICENSES.md"
+"""The installation's licence notice, which hatchling packs from ``src/nanopnp/``."""
+
 DATA_DIR: Path = _PACKAGED_DATA if _PACKAGED_DATA.is_dir() else _REPO_DATA
 
 CORRECTIONS_DIR: Path = DATA_DIR / "corrections"

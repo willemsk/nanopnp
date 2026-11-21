@@ -19,11 +19,10 @@ sync:
 test *args:
     uv run pytest "$@"
 
-# The default selection in parallel, then the widget tests that run serially
+# The default selection in parallel
 test-parallel:
     OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
-        uv run pytest -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
-    uv run pytest tests/tier1/test_gui_widgets.py
+        uv run pytest -n auto --dist loadfile
 
 # Lint, format check and strict types; the gate adds the lock and decisions-page checks
 lint:

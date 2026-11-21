@@ -1,4 +1,4 @@
-"""VER-43 and VER-44: the shell's view-models, asserted where Qt cannot be built."""
+"""VER-43 and VER-44: the workbench's view-models, asserted without a front-end framework."""
 
 from __future__ import annotations
 
@@ -36,14 +36,26 @@ VOCABULARY = (
 def test_if09_the_view_models_import_no_qt_and_no_ngsolve() -> None:
     probe = (
         "import sys;"
-        "import nanopnp.gui.case_model, nanopnp.gui.run_model,"
-        " nanopnp.gui.solver, nanopnp.gui.probe,"
-        " nanopnp.gui.convergence, nanopnp.gui.scene, nanopnp.gui.render,"
+        "import nanopnp.gui.run_model, nanopnp.gui.solver,"
+        " nanopnp.gui.convergence, nanopnp.gui.render,"
         " nanopnp.gui.geometry, nanopnp.gui.assess, nanopnp.gui.charge,"
         " nanopnp.gui.web.continuum, nanopnp.gui.web.physics, nanopnp.gui.web.plane;"
         "print(sorted(m for m in ('PySide6','PyQt5','PyQt6','ngsolve','netgen',"
         " 'MDAnalysis','skimage','shapely','gmsh','pdb2pqr','propka','nicegui')"
         " if m in sys.modules))"
+    )
+    found = subprocess.run(
+        [sys.executable, "-c", probe], capture_output=True, text=True, check=True
+    )
+    assert found.stdout.strip() == "[]", found.stdout
+
+
+# VER-43
+def test_ver43_importing_the_server_loads_no_ngsolve_and_no_structure_payload() -> None:
+    probe = (
+        "import sys; import nanopnp.gui.web.server;"
+        "print(sorted(m for m in ('ngsolve','netgen','MDAnalysis','skimage','shapely','gmsh',"
+        " 'pdb2pqr','propka','gemmi') if m in sys.modules))"
     )
     found = subprocess.run(
         [sys.executable, "-c", probe], capture_output=True, text=True, check=True

@@ -31,7 +31,6 @@ DEFERRABLE: frozenset[str] = frozenset(
         "pdb2pqr",
         "propka",
         "gemmi",
-        "PySide6",
         "gmsh",
         "matplotlib",
         "apbs_binary",

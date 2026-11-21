@@ -1,4 +1,4 @@
-"""VER-43, VER-60, RSK-13: the self-test exercises the payloads an installation needs."""
+"""VER-43, VER-60, RSK-13, CON-11: the self-test exercises the payloads an installation needs."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ import pytest
 
 from nanopnp.charge import protonation
 from nanopnp.cli import main as cli_main
+from nanopnp.core.paths import LICENCE_NOTICE
 from nanopnp.gui.web import selftest
 from nanopnp.gui.web.selftest import (
     FRAGMENT,
@@ -35,6 +36,19 @@ AMENDED_PAYLOAD_SET = frozenset(
         "propka",
     }
 )
+
+# CON-11
+NOTICE_NAMES = {
+    "ngsolve": "NGSolve",
+    "netgen": "Netgen",
+    "MDAnalysis": "MDAnalysis",
+    "gemmi": "gemmi",
+    "skimage": "scikit-image",
+    "shapely": "Shapely",
+    "gmsh": "Gmsh",
+    "pdb2pqr": "PDB2PQR",
+    "propka": "PROPKA",
+}
 
 
 def _runtime_imports(source: Path) -> set[str]:
@@ -73,6 +87,27 @@ def test_rsk13_the_selftest_imports_no_undeclared_binary_payload() -> None:
     assert third_party == declared, (
         f"the self-test imports {sorted(third_party)}; amendment A4 declares {sorted(declared)}"
     )
+
+
+def test_con11_the_licence_notice_states_the_installations_licence() -> None:
+    text = LICENCE_NOTICE.read_text(encoding="utf-8")
+    for obligation in ("BSD-3-Clause", "LGPL-2.1", "LGPL-3", "GPL-2+"):
+        assert obligation in text, f"the licence notice does not name {obligation}"
+    assert "is used under the GNU General Public License, version 2 or later" in text
+    assert "UMFPACK" in text
+
+
+def test_ver60_the_notice_has_a_row_for_each_payload() -> None:
+    assert set(NOTICE_NAMES) == {payload.split(".")[0] for payload in PAYLOADS}
+    rows = [
+        line.split("|")[1]
+        for line in LICENCE_NOTICE.read_text(encoding="utf-8").splitlines()
+        if line.startswith("| ")
+    ]
+    unlisted = sorted(
+        name for name in NOTICE_NAMES.values() if not any(name in row for row in rows)
+    )
+    assert not unlisted, f"the licence notice has no row for {unlisted}"
 
 
 def test_ver43_a_hidden_ngsolve_fails_naming_ngsolve(monkeypatch: pytest.MonkeyPatch) -> None:

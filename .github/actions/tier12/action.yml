@@ -2,8 +2,8 @@ name: Tiers 1 and 2
 description: >-
   The steps of the `platforms` and `full-matrix` jobs of ci.yml (section 7.6;
   section 8.2.13 N4): install uv, the system libraries and the extras, then
-  run Tiers 1 and 2 (with --nightly and the slow tests when asked), and the GUI widget file serially where
-  PySide6 imports. The checkout and the job's environment stay in the job.
+  run Tiers 1 and 2 (with --nightly and the slow tests when asked), then the
+  installation's self-test. The checkout and the job's environment stay in the job.
 inputs:
   python-version:
     description: The interpreter to run on.
@@ -30,17 +30,10 @@ runs:
     - if: inputs.code == 'true'
       shell: bash
       run: uv sync --all-extras
-    # CON-13 names Windows, macOS and Linux. Qt's platform plugin works unaided on
-    # the first two, so `offscreen` is all the widget tests of
-    # tests/tier1/test_gui_widgets.py need there; on ubuntu-latest PySide6 does not
-    # import at all (no libEGL) and those tests skip themselves. Installing system
-    # packages to change that would buy Linux widget coverage at the price of a
-    # portability promise per runner image
-    # (knowledge/07-software-stack/05-gui-and-packaging.md).
     - if: inputs.code == 'true'
       shell: bash
       run: |
-        run=(uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py)
+        run=(uv run pytest -rs -n auto --dist loadfile)
         status=0
         if [[ $NIGHTLY == true ]]; then
           "${run[@]}" --nightly -m "(tier1 or tier2) and slow" || status=$?
@@ -49,16 +42,8 @@ runs:
         "${run[@]}" || status=$?
         exit $status
       env:
-        QT_QPA_PLATFORM: offscreen
         NIGHTLY: ${{ inputs.nightly }}
     # The installation's self-test (RSK-13): each compiled payload, and the server's renderer.
     - if: inputs.code == 'true'
       shell: bash
       run: uv run nanopnp gui --selftest
-    # A nonzero exit here, 5 ("no tests ran") included, is a real failure: on
-    # these two runners the module must import and run.
-    - if: inputs.code == 'true' && runner.os != 'Linux'
-      shell: bash
-      run: uv run pytest -rs tests/tier1/test_gui_widgets.py
-      env:
-        QT_QPA_PLATFORM: offscreen
