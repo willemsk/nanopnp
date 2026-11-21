@@ -26,16 +26,16 @@
   </div>
   <div class="grid">
     <div class="cell"><h3>Surface <small class="kind">2D</small><small>φ in the fluid, the 99th percentile, reflected about the axis</small></h3><div class="plot" id="surface"></div></div>
-    <div class="cell"><h3>Contours <small class="kind">2D</small><small>c, coloured lines alone</small></h3><div class="plot" id="contours"></div></div>
-    <div class="cell"><h3>Arrows <small class="kind">2D</small><small>u over p</small></h3><div class="plot" id="arrows"></div></div>
+    <div class="cell"><h3>Contours <small class="kind">2D</small><small>c, labelled lines alone</small></h3><div class="plot" id="contours"></div></div>
+    <div class="cell"><h3>Arrows <small class="kind">2D</small><small>u over p, each scaled to the fastest</small></h3><div class="plot" id="arrows"></div></div>
     <div class="cell"><h3>Mirrored <small class="kind">2D, two runs</small><small>neutral left, charged right</small></h3><div class="plot" id="mirrored"></div></div>
     <div class="cell"><h3>Line along a cut <small class="kind">1D</small><small>c on the axis, two runs, log</small></h3><div class="plot" id="cut"></div></div>
     <div class="cell"><h3>Point graph <small class="kind">1D</small><small>c at P1 against bias</small></h3><div class="plot" id="point"></div></div>
     <div class="cell"><h3>Global <small class="kind">1D</small><small>current against bias</small></h3><div class="plot" id="global"></div></div>
-    <div class="cell"><h3>Difference <small class="kind">2D, two runs</small><small>neutral less charged</small></h3><div class="plot" id="difference"></div></div>
+    <div class="cell"><h3>Difference <small class="kind">2D, two runs</small><small>neutral less charged, the library's</small></h3><div class="plot" id="difference"></div></div>
     <div class="cell" style="grid-column: span 2"><h3>Revolution <small class="kind">3D</small><small>c turned about the axis, a quarter cut away; drag to turn</small></h3><div class="plot" id="revolution"></div></div>
     <div class="cell text"><h3>Mesh <small class="kind">2D, as today</small></h3><p>The field on the solve's own (r, z) mesh, drawn by NGSolve's renderer (WB-53). Kept as a plot type, or folded into Surface as <i>Show mesh</i>.</p><h3>Scatter <small class="kind">1D</small></h3><p>One quantity of each run against another (conductance against the transport number, across a sweep). Drawn as the global plot with markers alone.</p></div>
-    <div class="cell text"><h3>Not drawn here</h3><p><b>Streamlines</b> of u: traced by the library from the solved velocity, a step of its own with a Tier 1 test.</p><p><b>Integrals</b> over a line or a domain (a flux through a section): computed by the library and shown as a quantity.</p><p><b>Export</b> of a figure or its data: FR-28, v0.7.</p></div>
+    <div class="cell text"><h3>Not drawn here</h3><p><b>Streamlines</b> of u: traced by the library from the solved velocity, a step of its own with a Tier 1 test.</p><p><b>Integrals</b> over a line or a domain (a flux through a section): computed by the library and shown as a quantity.</p><p><b>Export</b> of a figure or its data from the workbench: later (FR-28, v0.7; AG6). The command line draws figures today (FR-44).</p></div>
   </div>
 </div>
 <script>
@@ -47,7 +47,7 @@
   draw.plotlyCut(document.getElementById("cut"), { quantity: sp, log: true });
   draw.plotlyPoint(document.getElementById("point"));
   draw.plotlyGlobal(document.getElementById("global"), {});
-  draw.plotlyMap(document.getElementById("difference"), { map: draw.difference(), diverging: true, reflect: true });
+  draw.plotlyMap(document.getElementById("difference"), { map: draw.difference(), diverging: true, reflect: true, label: "difference" });
   draw.plotlyRevolution(document.getElementById("revolution"), { quantity: sp });
 </script>
 </body>

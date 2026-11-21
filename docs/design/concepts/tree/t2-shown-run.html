@@ -9,72 +9,82 @@
 <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.1.1/plotly.min.js"></script>
 <script src="draw.js"></script>
 <style>
-  .suite-area { grid-template-columns: 290px 1fr; }
-  .pane .tree { flex: 0 0 auto; max-height: 52%; }
-  .pane .settings { flex: 1; }
+  .suite-area { grid-template-columns: 300px 1fr; }
+  .pane .tree { flex: 1; min-height: 0; }
+  .pane .settings { flex: none; }
+  .toolsw { display: flex; gap: 4px; padding: 6px 10px 0; }
+  .toolsw span { padding: 3px 10px; border-radius: 4px; font-size: 12.5px; color: var(--muted); }
+  .toolsw span.on { background: var(--sel); color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
   .shown { padding: 6px 10px 8px; border-bottom: 1px solid var(--line); }
   .shown label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 3px; }
-  .tiles { grid-template-columns: 1.15fr 1fr; grid-template-rows: 1fr 1fr; }
+  .tiles { grid-template-columns: 1.1fr 1fr; grid-template-rows: 1fr 1fr; }
   .tile .plot { flex: 1; }
+  .pin { color: var(--muted); font-size: 12px; }
 </style>
 </head>
 <body>
 <div class="board" data-screen>
   <div class="caption">
     <h1>T2 · One shown run, tiles of plot groups</h1>
-    <p>A <b>shown run</b> at the head of the pane, as Physics' <i>Shown in</i>: every plot group follows it unless pinned to its own run (◆). The tree holds plot groups, definitions, probes and quantities. The pinned groups stand as tiles; the selected tile's node opens its settings. Comparison stays a tool of its own.</p>
+    <p>A <b>shown run</b> at the head of the pane, as Physics' <i>Shown in</i>: every plot group follows it unless set to a run of its own (⊙). Each plot group the tree shows stands as a tile; the selected tile's node opens its settings. The tree holds plot groups, definitions, probes and quantities; Comparison stays a tool of its own, and a plot group may add a second run.</p>
     <span class="tag">2WCD, solved · drawn with Plotly</span>
   </div>
   <div class="screen">
-    <div class="titlebar"><b>nanopnp</b><span class="menus"><span>File</span><span>Edit</span><span>View</span><span>Run</span><span>Help</span></span><span class="changed">◆ 3 changed</span><span class="palette">Search commands…  Ctrl+Shift+P</span></div>
+    <div class="titlebar"><b>nanopnp</b><span class="menus"><span>File</span><span>Edit</span><span>View</span><span>Run</span><span>Help</span></span><span class="changed">◆ 4 changed</span><span class="palette">Search commands…  Ctrl+Shift+P</span></div>
     <div class="body">
       <div class="activity"><span class="grp">Build</span><span class="suite"><b></b>Molecular</span><span class="suite"><b></b>Meso</span><span class="suite"><b></b>Continuum</span><span class="suite"><b></b>Physics</span><span class="grp">Use</span><span class="suite"><b></b>Study</span><span class="suite on"><b></b>Analysis</span></div>
-      <div class="rail">2wcd-project · Analysis › Results</div>
+      <div class="rail">2wcd · Analysis › Results</div>
       <div class="suite-area">
         <div class="pane">
-          <div class="shown"><label>Shown run</label><div class="box sel">2wcd · +50 mV · run 394c…</div></div>
+          <div class="toolsw"><span class="on">Results</span><span>Comparison</span></div>
+          <div class="shown"><label>Shown run</label><div class="box sel">2wcd-charged, +50 mV</div></div>
           <h2>Results <span class="tools"><span class="btn" title="Add a plot group">＋</span><span class="btn" title="Delete">✕</span><span class="btn" title="Move up">↑</span><span class="btn" title="Move down">↓</span></span></h2>
           <div class="tree">
-            <div class="node" style="--d:0"><span class="tw">▾</span><span class="ic plot"></span>Potential (r, z)<span class="meta">tile 1</span></div>
+            <div class="node" style="--d:0"><span class="tw">▾</span><span class="ic plot"></span>Potential (r, z)<span class="meta">shown</span></div>
             <div class="node sel" style="--d:1"><span class="ic plot"></span>Surface<span class="meta">φ</span></div>
             <div class="node" style="--d:1"><span class="ic">≈</span>Contours<span class="meta">φ, 5 mV</span></div>
             <div class="node" style="--d:1"><span class="ic">→</span>Arrows<span class="meta">u</span></div>
-            <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic line"></span>Along the axis<span class="meta">tile 2</span></div>
-            <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic line"></span>Current against bias<span class="meta"><span class="pin">◆</span> Bias sweep · tile 3</span></div>
+            <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic line"></span>Current against bias<span class="meta"><span class="pin">⊙</span> Bias sweep</span></div>
+            <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic line"></span>Along the axis<span class="meta">+ ASP neutral</span></div>
             <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic three"></span>Pore in 3D<span class="meta">hidden</span></div>
             <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic plot"></span>Concentrations (r, z)<span class="meta">hidden</span></div>
-            <div class="node branch"><span class="tw">▾</span>Definitions</div>
-            <div class="node" style="--d:1"><span class="ic">ƒ</span>ρ_e = F·(c_Na − c_Cl)<span class="meta">C/m³</span></div>
-            <div class="node branch"><span class="tw">▸</span>Probes<span class="meta">2</span></div>
-            <div class="node branch"><span class="tw">▸</span>Quantities<span class="meta">6 of 15</span></div>
+            <div class="node branch"><span class="tw">▸</span>Definitions<span class="meta">ρ_e, |u|</span></div>
+            <div class="node branch"><span class="tw">▸</span>Probes and cuts<span class="meta">P1, P2, Axis</span></div>
+            <div class="node branch"><span class="tw">▸</span>Quantities<span class="meta">6 of 15 shown</span></div>
           </div>
           <div class="settings">
             <h2>Surface</h2>
             <div class="field"><label>Expression</label><div class="box sel">potential φ</div></div>
             <div class="field"><label>Unit</label><div class="box sel">mV</div></div>
-            <div class="field"><label>Colour map</label><div class="box sel">Diverging, positive blue</div></div>
-            <div class="field"><label>Range</label><div class="box num" data-range="potential">−13.1 … 13.1<span class="u">mV</span></div></div>
+            <div class="field"><label>Domain</label><div class="box sel">The fluid</div></div>
+            <div class="field"><label>Colour map</label><div class="box sel">Diverging, + blue</div></div>
+            <div class="field"><label>Range</label><div class="box num" data-range="potential">−63.0 … 63.0<span class="u">mV</span></div></div>
             <div class="check"><i class="on"></i>Range from the 99th percentile</div>
-            <div class="field"><label>Run</label><div class="box sel">Follows the shown run</div></div>
           </div>
         </div>
         <div class="graphics">
-          <div class="ghead"><b>2wcd · +50 mV</b><span class="chip">3 of 5 plot groups shown</span><span class="right"><span class="btn">1</span><span class="btn">2 × 2</span><span class="btn">• Probe</span><span class="btn">┆ Cut</span></span></div>
+          <div class="ghead"><b>2wcd-charged, +50 mV</b><span class="chip">3 of 5 plot groups shown</span><span class="right"><span class="btn">Open in Runs</span><span class="btn">• Probe</span><span class="btn">┆ Cut</span></span></div>
           <div class="tiles">
-            <div class="tile sel" style="grid-row: span 2"><div class="th"><b>Potential (r, z)</b><span class="muted">P1, P2 · Axis</span></div><div class="plot" id="a"></div></div>
-            <div class="tile"><div class="th"><b>Along the axis</b><span class="muted">φ, two runs</span></div><div class="plot" id="b"></div></div>
-            <div class="tile"><div class="th"><b>Current against bias</b><span class="muted">◆ Bias sweep</span></div><div class="plot" id="c"></div></div>
+            <div class="tile sel" style="grid-row: span 2"><div class="th"><b>Potential (r, z)</b><span class="muted">Linked: probes and cut · Unlink</span></div><div class="plot" id="a"></div></div>
+            <div class="tile"><div class="th"><b>Current against bias</b><span class="muted">⊙ Bias sweep</span></div><div class="plot" id="c"></div></div>
+            <div class="tile"><div class="th"><b>Along the axis</b><span class="muted">φ; second run: ASP neutral</span></div><div class="plot" id="b"></div></div>
           </div>
         </div>
       </div>
     </div>
-    <div class="bottom"><div class="tabs"><span class="on">Queue</span><span>Log</span><span class="status">✓ Nothing running</span></div></div>
+    <div class="bottom">
+      <div class="tabs"><span>Queue</span><span>Log</span><span class="on">Probes</span><span>Quantities</span><span>Cut values</span><span class="status">✓ Nothing running</span></div>
+      <div class="table">
+        <table class="t" data-probes><thead></thead><tbody></tbody></table>
+        <table class="t" data-quantities><thead><tr><th>Quantity</th><th>Value</th><th>Unit</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
   </div>
 </div>
 <script>
   draw.plotlyMap(document.getElementById("a"), { quantity: "potential", contours: true, arrows: true, probes: true, cutline: true, reflect: true });
-  draw.plotlyCut(document.getElementById("b"), { quantity: "potential" });
   draw.plotlyGlobal(document.getElementById("c"), {});
+  draw.plotlyCut(document.getElementById("b"), { quantity: "potential" });
 </script>
 </body>
 </html>

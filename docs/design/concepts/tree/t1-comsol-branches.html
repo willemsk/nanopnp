@@ -12,30 +12,29 @@
   .suite-area { grid-template-columns: 300px 1fr; }
   .pane .tree { flex: 1; min-height: 0; }
   .pane .settings { flex: none; }
-  .bottom .table { height: 118px; overflow: auto; display: grid; grid-template-columns: 1.3fr 1fr; gap: 0 12px; align-items: start; }
 </style>
 </head>
 <body>
 <div class="board" data-screen>
   <div class="caption">
     <h1>T1 · COMSOL's branches</h1>
-    <p>The tree holds <b>Data</b>, <b>Definitions</b>, <b>Probes and cuts</b>, <b>Quantities</b> and <b>Plot groups</b>. Each plot group names its data; a comparison is a kind of data, so the Comparison tool folds in. One plot group is drawn at a time; its tables open in the bottom panel.</p>
+    <p>The tree holds <b>Data</b>, <b>Definitions</b>, <b>Probes and cuts</b>, <b>Quantities</b> and <b>Plot groups</b>. Each plot group names its data, so a comparison is a kind of data and the Comparison tool folds into the tree. The selected plot group fills the view; the tables open in the bottom panel beside Queue and Log, as COMSOL's tables do.</p>
     <span class="tag">2WCD, solved · drawn with Plotly</span>
   </div>
   <div class="screen">
-    <div class="titlebar"><b>nanopnp</b><span class="menus"><span>File</span><span>Edit</span><span>View</span><span>Run</span><span>Help</span></span><span class="changed">◆ 3 changed</span><span class="palette">Search commands…  Ctrl+Shift+P</span></div>
+    <div class="titlebar"><b>nanopnp</b><span class="menus"><span>File</span><span>Edit</span><span>View</span><span>Run</span><span>Help</span></span><span class="changed">◆ 4 changed</span><span class="palette">Search commands…  Ctrl+Shift+P</span></div>
     <div class="body">
       <div class="activity"><span class="grp">Build</span><span class="suite"><b></b>Molecular</span><span class="suite"><b></b>Meso</span><span class="suite"><b></b>Continuum</span><span class="suite"><b></b>Physics</span><span class="grp">Use</span><span class="suite"><b></b>Study</span><span class="suite on"><b></b>Analysis</span></div>
-      <div class="rail">2wcd-project · Analysis › Results</div>
+      <div class="rail">2wcd · Analysis › Results</div>
       <div class="suite-area">
         <div class="pane">
           <h2>Results <span class="tools"><span class="btn" title="Add a node">＋</span><span class="btn" title="Delete">✕</span><span class="btn" title="Move up">↑</span><span class="btn" title="Move down">↓</span></span></h2>
           <div class="tree">
             <div class="node branch"><span class="tw">▾</span>Data</div>
-            <div class="node" style="--d:1"><span class="ic data">R</span>Shown run<span class="meta">+50 mV</span></div>
-            <div class="node" style="--d:1"><span class="ic data">S</span>Bias sweep<span class="meta">4 runs</span></div>
-            <div class="node" style="--d:1"><span class="ic data">C</span>ASP neutral vs charged<span class="meta">2 runs</span></div>
-            <div class="node" style="--d:1"><span class="ic data three">3</span>Revolution<span class="meta">of Shown run</span></div>
+            <div class="node" style="--d:1"><span class="ic data" title="A run">R</span>Shown run<span class="meta">2wcd-charged, +50 mV</span></div>
+            <div class="node" style="--d:1"><span class="ic data" title="A sweep's runs">S</span>Bias sweep<span class="meta">4 runs</span></div>
+            <div class="node" style="--d:1"><span class="ic data" title="A comparison of two runs">C</span>ASP neutral vs charged<span class="meta">2 runs</span></div>
+            <div class="node" style="--d:1"><span class="ic data three" title="A revolution about the axis">3</span>Revolution<span class="meta">of Shown run</span></div>
             <div class="node branch"><span class="tw">▸</span>Definitions<span class="meta">ρ_e, |u|</span></div>
             <div class="node branch"><span class="tw">▸</span>Probes and cuts<span class="meta">P1, P2, Axis</span></div>
             <div class="node branch"><span class="tw">▸</span>Quantities<span class="meta">6 of 15 shown</span></div>
@@ -46,8 +45,8 @@
             <div class="node" style="--d:2"><span class="ic">→</span>Arrows<span class="meta">u</span></div>
             <div class="node" style="--d:2"><span class="ic">▭</span>Outline</div>
             <div class="node" style="--d:1"><span class="tw">▸</span><span class="ic plot"></span>Concentrations (r, z)<span class="meta">Shown run</span></div>
-            <div class="node" style="--d:1"><span class="tw">▸</span><span class="ic line"></span>Along the axis<span class="meta">Axis</span></div>
             <div class="node" style="--d:1"><span class="tw">▸</span><span class="ic line"></span>Current against bias<span class="meta">Bias sweep</span></div>
+            <div class="node" style="--d:1"><span class="tw">▸</span><span class="ic line"></span>Along the axis<span class="meta">ASP neutral vs charged</span></div>
             <div class="node" style="--d:1"><span class="tw">▸</span><span class="ic plot"></span>Charged against neutral<span class="meta">Mirrored</span></div>
             <div class="node" style="--d:1"><span class="tw">▸</span><span class="ic three"></span>Pore in 3D<span class="meta">Revolution</span></div>
           </div>
@@ -55,13 +54,14 @@
             <h2>Surface</h2>
             <div class="field"><label>Expression</label><div class="box sel">potential φ</div></div>
             <div class="field"><label>Unit</label><div class="box sel">mV</div></div>
-            <div class="field"><label>Colour map</label><div class="box sel">Diverging, positive blue</div></div>
-            <div class="field"><label>Range</label><div class="box num" data-range="potential">−13.1 … 13.1<span class="u">mV</span></div></div>
+            <div class="field"><label>Domain</label><div class="box sel">The fluid</div></div>
+            <div class="field"><label>Colour map</label><div class="box sel">Diverging, + blue</div></div>
+            <div class="field"><label>Range</label><div class="box num" data-range="potential">−63.0 … 63.0<span class="u">mV</span></div></div>
             <div class="check"><i class="on"></i>Range from the 99th percentile</div>
           </div>
         </div>
         <div class="graphics">
-          <div class="ghead"><b>Potential (r, z)</b><span class="chip">Data: Shown run, +50 mV</span><span class="chip">Linked: probes and cut ✕</span><span class="right"><span class="btn" title="Frame the data">⤢</span><span class="btn" title="The whole domain">▢</span><span class="btn" title="Place a probe">• Probe</span><span class="btn" title="Place a cut">┆ Cut</span></span></div>
+          <div class="ghead"><b>Potential (r, z)</b><span class="chip">Data: Shown run</span><span class="chip">Linked: probes and cut · Unlink</span><span class="right"><span class="btn">Open in Runs</span><span class="btn" title="Frame the data">⤢</span><span class="btn">• Probe</span><span class="btn">┆ Cut</span></span></div>
           <div class="plot" id="g"></div>
         </div>
       </div>
@@ -69,8 +69,8 @@
     <div class="bottom">
       <div class="tabs"><span>Queue</span><span>Log</span><span class="on">Probes</span><span>Quantities</span><span>Cut values</span><span class="status">✓ Nothing running</span></div>
       <div class="table">
-        <table class="t"><thead id="ph"></thead><tbody id="pb"></tbody></table>
-        <table class="t"><tr><th>Quantity</th><th>Value</th><th>Unit</th></tr><tbody id="q"></tbody></table>
+        <table class="t" data-probes><thead></thead><tbody></tbody></table>
+        <table class="t" data-quantities><thead><tr><th>Quantity</th><th>Value</th><th>Unit</th></tr></thead><tbody></tbody></table>
       </div>
     </div>
   </div>
@@ -78,12 +78,6 @@
 <script>
   document.querySelector(".node.sel").scrollIntoView({ block: "nearest" });
   draw.plotlyMap(document.getElementById("g"), { quantity: "potential", contours: true, arrows: true, probes: true, cutline: true, reflect: true });
-  const sp = TREE.species.map((s) => s.replace("_mol_m3", "").replace("c_", "c "));
-  document.getElementById("ph").innerHTML = `<tr><th>Probe</th><th>r (nm)</th><th>z (nm)</th><th>φ (mV)</th>${sp.map((s) => `<th>${s} (mM)</th>`).join("")}</tr>`;
-  TREE.probes.forEach((p, i) => document.getElementById("pb").insertAdjacentHTML("beforeend",
-    `<tr><td>P${i + 1}</td><td class="v">${p.r_nm.toFixed(2)}</td><td class="v">${p.z_nm.toFixed(2)}</td><td class="v">${(p.potential * 1e3).toFixed(2)}</td>${TREE.species.map((s) => `<td class="v">${p[s].toFixed(1)}</td>`).join("")}</tr>`));
-  const q = document.getElementById("q");
-  for (const row of draw.shownQuantities()) q.insertAdjacentHTML("beforeend", `<tr><td>${row.quantity}</td><td class="v">${row.value}</td><td>${row.unit}</td></tr>`);
 </script>
 </body>
 </html>
