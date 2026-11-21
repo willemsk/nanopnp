@@ -5,12 +5,12 @@ Updated 21 November 2026. Navigation;
 
 ## In brief
 
-The old desktop program's removal is planned. Checking its 41 capabilities against the browser workbench found a few
+The old desktop program's removal is planned and reviewed. Checking its 41 capabilities against the browser workbench found a few
 missing; you ruled: a running solve will name its stage and step and write its log, Study setup will reach every
 setting, and five smaller details wait for the next phase. The package then removes the desktop program, adds a
 self-test of an installation and writes a short guide. About seven sessions; the close follows.
 
-**Your call.** Approve the plan once reviewed? *Recommendation:* approve: it holds your three rulings.
+**Your call.** Approve the plan? *Recommendation:* approve: it holds your three rulings.
 
 ## Position
 
@@ -18,8 +18,8 @@ self-test of an installation and writes a short guide. About seven sessions; the
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **closing early**: WP5.01 to WP5.21 merged
   (`v0.6.0-alpha.21`). Its seventh amendment (§8.2.47; REV-272) keeps WP5.27, Qt's removal with a short guide, and
   WP5.28, the close; the other planned packages are Phase 6's, named by scope.
-  [WP5.27](phase-5/wp5.27-qts-removal-and-the-short-guide.md) is **planned** (AW9 to AW11).
-  **Next:** `/np-plan wp 5.27 review`, then `/np-implement wp 5.27`. host: claude-code.
+  [WP5.27](phase-5/wp5.27-qts-removal-and-the-short-guide.md) is **planned** and reviewed (AW9 to AW11;
+  [review 068](../code_reviews/CODE_REVIEW_068.md)). **Next:** `/np-implement wp 5.27`. host: claude-code.
 
 ## Not to be re-decided
 
