@@ -18,8 +18,11 @@ def entries(kind):
         stem = f"{p.parent.name}-{p.stem}" if kind == "mockups" else p.stem
         for w, h in SIZES[kind]:
             for scheme in ("light", "dark"):
-                yield {"id": f"{kind}-{stem}-{w}-{scheme}", "url": p.as_uri(), "viewport": [w, h], "scheme": scheme,
-                       "wait_ms": WAITS.get(kind, 300), "expand": "[data-screen]"}
+                entry = {"id": f"{kind}-{stem}-{w}-{scheme}", "url": p.as_uri(), "viewport": [w, h], "scheme": scheme,
+                         "wait_ms": WAITS.get(kind, 300), "expand": "[data-screen]"}
+                if kind == "tree":  # a board is one screen, shot whole
+                    del entry["expand"]
+                yield entry
 
 
 if __name__ == "__main__":

@@ -53,11 +53,11 @@
       <div class="suite-area">
         <div class="pane">
           <h2>Surface · Potential (r, z)</h2>
-          <div class="field"><label>Run</label><div class="box sel">+50 mV · run 3f2a…</div></div>
+          <div class="field"><label>Run</label><div class="box sel">+50 mV · run 394c…</div></div>
           <div class="field"><label>Expression</label><div class="box sel">potential φ</div></div>
           <div class="field"><label>Unit</label><div class="box sel">mV</div></div>
           <div class="field"><label>Colour map</label><div class="box sel">Diverging, positive blue</div></div>
-          <div class="field"><label>Range</label><div class="box num">−13.1 … 13.1<span class="u">mV</span></div></div>
+          <div class="field"><label>Range</label><div class="box num" data-range="potential">−13.1 … 13.1<span class="u">mV</span></div></div>
           <div class="check"><i class="on"></i>Range from the 99th percentile</div>
           <div class="check"><i></i>Interpolate between samples</div>
           <div class="note">The rail holds every study's results; the Analysis suite shows the node picked there.</div>
@@ -75,9 +75,9 @@
   </div>
 </div>
 <script>
-  draw.plotlyMap(document.getElementById("g"), { quantity: "potential", contours: true, arrows: true });
+  draw.plotlyMap(document.getElementById("g"), { quantity: "potential", contours: true, arrows: true, reflect: true });
   const q = document.getElementById("q");
-  for (const row of TREE.quantities.slice(0, 6)) q.insertAdjacentHTML("beforeend", `<tr><td>${row.quantity}</td><td class="v">${row.value}</td><td>${row.unit}</td></tr>`);
+  for (const row of draw.shownQuantities()) q.insertAdjacentHTML("beforeend", `<tr><td>${row.quantity}</td><td class="v">${row.value}</td><td>${row.unit}</td></tr>`);
 </script>
 </body>
 </html>

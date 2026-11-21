@@ -25,7 +25,7 @@
     <span class="tag">2WCD, solved · drawn with Plotly</span>
   </div>
   <div class="grid">
-    <div class="cell"><h3>Surface <small class="kind">2D</small><small>φ, the 99th percentile</small></h3><div class="plot" id="surface"></div></div>
+    <div class="cell"><h3>Surface <small class="kind">2D</small><small>φ in the fluid, the 99th percentile, reflected about the axis</small></h3><div class="plot" id="surface"></div></div>
     <div class="cell"><h3>Contours <small class="kind">2D</small><small>c, coloured lines alone</small></h3><div class="plot" id="contours"></div></div>
     <div class="cell"><h3>Arrows <small class="kind">2D</small><small>u over p</small></h3><div class="plot" id="arrows"></div></div>
     <div class="cell"><h3>Mirrored <small class="kind">2D, two runs</small><small>neutral left, charged right</small></h3><div class="plot" id="mirrored"></div></div>
@@ -40,14 +40,14 @@
 </div>
 <script>
   const sp = TREE.species[0];
-  draw.plotlyMap(document.getElementById("surface"), { quantity: "potential" });
+  draw.plotlyMap(document.getElementById("surface"), { quantity: "potential", reflect: true });
   draw.plotlyMap(document.getElementById("contours"), { quantity: sp, surface: false, contours: true });
-  draw.plotlyMap(document.getElementById("arrows"), { quantity: "p_Pa", arrows: true });
+  draw.plotlyMap(document.getElementById("arrows"), { quantity: "p_Pa", arrows: true, reflect: true });
   draw.plotlyMap(document.getElementById("mirrored"), { quantity: "potential", mirrored: true });
   draw.plotlyCut(document.getElementById("cut"), { quantity: sp, log: true });
   draw.plotlyPoint(document.getElementById("point"));
   draw.plotlyGlobal(document.getElementById("global"), {});
-  draw.plotlyMap(document.getElementById("difference"), { map: draw.difference(), diverging: true });
+  draw.plotlyMap(document.getElementById("difference"), { map: draw.difference(), diverging: true, reflect: true });
   draw.plotlyRevolution(document.getElementById("revolution"), { quantity: sp });
 </script>
 </body>
