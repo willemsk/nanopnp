@@ -231,7 +231,7 @@ under `OUTPUT / "project"`; their sources join `exclude_docs`; the navigation an
 - [x] be2951a 4. The capability record (D1); done when every row has a verdict and none is `missing`. **Executor:** main,
   with the `gui-reviewer` sub-agent on the shots
 - [x] 5. Compaction checkpoint. **Executor:** main
-- [ ] 6. `gui/web/selftest.py`, `cli/workbench.py`, `core/errors.py`, `tests/tier1/test_gui_selftest.py`, CI and
+- [x] d293aa7 6. `gui/web/selftest.py`, `cli/workbench.py`, `core/errors.py`, `tests/tier1/test_gui_selftest.py`, CI and
   the gate (D6); done when its tests pass and the command exits 0 here. **Executor:** main
 - [ ] 7. The removal, the notice (D5, D7); done when Tier 1 and the two Tier 2 files pass and `uv lock --check`
   is clean. **Executor:** main
