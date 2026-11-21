@@ -4301,3 +4301,27 @@ WB-54's branches, WB-56's plot types and WB-57's library, and reopen four points
    of the panes so a reviewer reads 12 px text, and one 1440 × 900 shot per screen as the small-window check.
 
 **Open** for the author at the tree's next round, in Phase 6 (REV-272).
+
+### REV-274: Five details the Qt panels show are carried to Phase 6
+
+WP5.27's plan checked rows Q01 to Q41 of the Qt shell against the browser shell's code
+([the plan](../plans/phase-5/wp5.27-qts-removal-and-the-short-guide.md), D1). Beside the two rows it builds (AW9, AW10)
+and the deviations it corrects (its D4), five details of the Qt panels have no place in the browser:
+
+1. **Protonation's frames** (Q27). `gui/web/molview.py:titration_states` gives the states of the first frame alone,
+   and no row for a PQR without PROPKA's groups; the chain differences and the record's source and variant are not
+   shown. `gui/charge.py:ProtonationView.frame` holds each frame's rows and stays for it. *Phase 6: the structure's
+   layers.*
+2. **The failing place of *Measure*** (Q18). The Outline lists each failed criterion; `gui/assess.py`'s
+   `location_nm` is read by nothing, so the place is not marked. *Phase 6: the polish pass.*
+3. **The dielectric on the mesh** (Q29). Charge map draws the deployed charge alone: `ChargeRequest.quantity` is
+   never χ, and the dielectric's source and the materials are not shown. *Phase 6: the structure's layers.*
+4. **The conservation view's figures** (Q30). The legs and the three charges are shown; the solid share, the charge
+   per material, the axis guard's deficit and the boundary ring are not. *Phase 6: the polish pass.*
+5. **A stage's record, in part** (Q13, Q14, Q21, Q22, Q26). Not shown: the alignment's point group as found, its axis
+   and superposition; the density's grid record; the region's assembly record; the mesh's wall-size statistics and
+   the places of its worst elements as figures; a stage's stored hash in the tool list. *Phase 6: the polish pass.*
+
+Every number is in the run's record and on the command line.
+
+**Accepted** (the author, 21 November 2026, §8.2.47 AW11): carried, and the Qt shell leaves without them.
