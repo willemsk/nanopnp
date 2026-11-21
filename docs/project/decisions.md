@@ -4,7 +4,7 @@ Every decision the records hold, one row each, written by `.claude/scripts/decis
 
 Rows: 1,521. By source: history ruling 386; plan decision row 748; REV row 276; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
 
-By decider: author 669; open 5; session, own call 844; session, put to the author 3.
+By decider: author 670; open 5; session, own call 843; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1435,8 +1435,8 @@ By decider: author 669; open 5; session, own call 844; session, put to the autho
 | REV-272 | author | `docs/project/review-findings.md` |  |  | Phase 5 closes early; Phase 6 opens with its scope, a cleanup and the foundations | ruled by the author, 21 November 2026; §8.2.47 AW1 to AW3: Phase 6, its scope round, with the proposals put to it | accepted |
 | REV-273 | session, own call | `docs/project/review-findings.md` |  |  | The tree round's verdicts reopen where the settings stand, the views shown and the runs in Data | for the author, at the tree's next round in Phase 6 | open |
 | REV-274 | author | `docs/project/review-findings.md` |  |  | Five details the Qt panels show are carried to Phase 6 | §8.2.47 AW11: Phase 6, the structure's layers and the polish pass | accepted |
-| REV-275 | author | `docs/project/review-findings.md` |  |  | What WP5.27's screen review left open | for the author: recommended for Phase 6's polish pass and forms (§8.2.47 AW1, AW10) | open |
-| REV-276 | session, own call | `docs/project/review-findings.md` |  |  | The radius set's notice names the removed bundle notice | for the author: recommended at the radius set's next change | open |
+| REV-275 | author | `docs/project/review-findings.md` |  |  | What WP5.27's screen review left open | ruled by the author, 21 November 2026; §8.2.47 AW1, AW10: Phase 6, its forms, the tree of results and the polish pass | accepted |
+| REV-276 | author | `docs/project/review-findings.md` |  |  | The radius set's notice names the removed bundle notice | ruled by the author, 21 November 2026: at the radius set's next change | accepted |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |

@@ -4360,6 +4360,8 @@ colon, and a study's own value names its default. These stay open:
 
 *Recommendation:* Phase 6's polish pass for 3 to 6, its forms for 1 (AW10), its tree of results for 2.
 
+**Accepted** (the author, 21 November 2026): Phase 6 takes them as recommended; Phase 5 closes without them.
+
 ### REV-276: The radius set's notice names the removed bundle notice
 
 `data/radii/pdb2pqr_charmm.yaml` carries PDB2PQR's copyright notice and says the licence's full text "is in
@@ -4368,4 +4370,6 @@ the wheel carries. The file's sha256 is part of every density's provenance (`den
 editing the notice changes every stored density's key. Code review 069's finding 9.
 
 *Recommendation:* repoint the notice when the radius set next changes for a reason of its own.
+
+**Accepted** (the author, 21 November 2026): repointed at the radius set's next change.
 
