@@ -373,7 +373,7 @@ method by default, per the configuration table below. `sparsecholesky` SHALL NOT
 
 | Path | Solver | Settings and constraints |
 |---|---|---|
-| Desktop, pip wheel (default) | `umfpack`, or scipy `superlu` as a BSD-licensed fallback | `sparsecholesky` is SPD-only and cannot factorise this unsymmetric coupled system; SuiteSparse UMFPACK is GPL-2+, which bears on the redistributable bundle (ADR-003) |
+| An installation, pip wheel (default) | `umfpack`, or scipy `superlu` as a BSD-licensed fallback | `sparsecholesky` is SPD-only and cannot factorise this unsymmetric coupled system; SuiteSparse UMFPACK is GPL-2+, which bears on an installation's obligations (CON-11, ADR-003) |
 | HPC, source build | MUMPS via ngsPETSc / PETSc | `icntl_14 = 40` because the block system is badly scaled; BLR via `icntl_35` when memory-constrained; also unlocks `PCFIELDSPLIT` for the 3D phase |
 
 Rationale: in 2D, nested-dissection fill is O(N log N) and factorisation O(N^1.5); direct methods

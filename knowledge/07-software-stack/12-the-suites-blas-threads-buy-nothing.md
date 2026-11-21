@@ -52,7 +52,7 @@ not take the seed.
 `-m tier2` on the command line *replaces* the default `not slow` filter and pulls in the `slow`
 tests. Pass `-m 'tier2 and not slow'` to time what the gate runs.
 
-`tests/tier1/test_gui_widgets.py` runs serially and alone. A test that waited 60 s for a real browser
+The Qt widget tests, removed at WP5.27, ran serially and alone. A test that waited 60 s for a real browser
 page passed twice under `-n auto` on a 3-core macOS runner and then failed once, while the other two
 workers were in the heavy solver modules; Chromium's helper processes starved of CPU is the likely
 cause, not proven.

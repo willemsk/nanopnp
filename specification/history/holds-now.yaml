@@ -3,7 +3,7 @@
 A1: FR-21, FR-22, §8.1
 A2: spent
 A3: spent
-A4: ADR-004 packaging NOTE, VER-55
+A4: superseded by S12 and S17
 B1: spent
 B2: VAL-05
 B3: superseded by G6
@@ -121,7 +121,7 @@ R10: spent
 R11: §8.4.4, §8.4.5
 R12: §8.4.4
 S1: §8.4.4
-S2: '§8.1; the v0.6 NOTEs beside P3 and QR-10; open: the package that removes Qt makes them the text (S17)'
+S2: '§8.1; §2.4''s P3; QR-10'
 S3: FR-40
 S4: §8.1, FR-38, FR-41; structure preparation brought into Phase 5 by the design document's WB-14, FR-37
 S5: §8.1, FR-42
@@ -131,7 +131,7 @@ S8: 'open: WP5.02''s spike, then ADR-004'
 S9: 'open: WP5.02 writes the workflow into §8.4.4 and CONTRIBUTING.md'
 S10: 'open: WP5.02 proposes its VER- identifier'
 S11: FR-32; the design document's *The project folder*
-S12: 'the v0.6 NOTEs beside ADR-004''s packaging NOTE, CON-09 and RSK-13; open: the package that removes Qt makes them the text'
+S12: ADR-004's packaging NOTE, CON-09, CON-11, RSK-13
 S13: '§8.1; its QR-10 gate amended by AW2'
 S14: spent
 S15: §2.7 Versioning NOTE, §8.4.1, §8.4.4
@@ -152,7 +152,7 @@ T5: spent
 T6: FR-43
 T7: spent
 T8: FR-34; the design document's WB-30 to WB-32
-U1: 'open: the package that removes Qt'
+U1: spent
 U2: 'the NOTE beside PHY-16 step 3; open: WP5.03 (AD3)'
 U3: 'ruled by AG6; open: WP5.21 (AJ10)'
 U4: ruled by AG2 to AG5
@@ -370,7 +370,7 @@ AU1: 'ADR-004''s NOTE on the front end; open: WP5.21 (the design document''s ren
 AU2: 'WB-20; §2.6''s NOTE on the workbench; open: WP5.21 (REV-240''s colour-map point)'
 AU3: 'open: WP5.21 (the design document''s Comparison row)'
 AV1: 'FR-35''s NOTE; open: Phase 6''s refusals package (REV-254, REV-242; WP5.25 until AW1)'
-AV2: 'the Phase 5 plan''s WP5.27 entry; open: WP5.27 for Qt''s removal, Phase 6''s polish pass and guided route for the rest (AW1)'
+AV2: 'the Phase 5 plan''s WP5.27 entry; open: Phase 6''s polish pass and guided route (AW1)'
 AV3: 'open: Phase 6''s layers package (the design document''s View, Prepare and Meso rows; REV-265, REV-243, REV-240; WP5.23 until AW1)'
 AV4: the Phase 5 plan; spent
 AV5: 'the review register; open: /np-plan phase 6'
@@ -381,8 +381,8 @@ AW3: '§8.1''s documentation increments 5 and 6; open: WP5.27'
 AW4: the Phase 5 plan; spent
 AW5: 'open: Phase 6''s cleanup (REV-271; §8.4.4)'
 AW6: 'pyproject.toml''s ruff selection; VER-61; spent'
-AW7: 'the design document''s row Q16 to Q20; open: WP5.27'
+AW7: the design document's row Q16 to Q20
 AW8: 'QR-16''s NOTE; Appendix A''s QR-16 row; open: Phase 6''s polish pass'
-AW9: 'the design document''s row Q31 to Q34; open: WP5.27'
-AW10: 'the design document''s row Q05 to Q08; open: WP5.27'
+AW9: the design document's row Q31 to Q34
+AW10: the design document's row Q05 to Q08
 AW11: '§8.1''s Phase 5 gate; REV-274; open: Phase 6''s layers and polish pass'

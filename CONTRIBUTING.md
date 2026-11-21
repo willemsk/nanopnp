@@ -134,7 +134,7 @@ electrolyte should never require touching solver code.
 
 - `gmsh` on the default import path (GPLv2+, optional backend only — CON-10), or any dependency on
   Triangle, MeshPy or TetGen (CON-12).
-- PyQt anywhere; the GUI is PySide6 (CON-09).
+- PyQt anywhere, or a front-end dependency under a licence CON-09 does not allow (CON-09).
 - Anything on the end-user path that needs a C++ compiler, a source build or a JIT toolchain
   (CON-07). This constraint is why NGSolve was chosen over DOLFINx.
 - Correction coefficients, `ε_protein`, or any fitted parameter hard-coded in Python.

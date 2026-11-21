@@ -1,7 +1,7 @@
 ---
 type: Library Behaviour
 title: 5. GUI and packaging
-description: 'The GUI and packaging stack: NiceGUI with Mol*, the Qt shell, the web viewer and PyInstaller.'
+description: 'The GUI and packaging stack: NiceGUI with Mol*, the web viewer and the self-test; what the removed Qt shell and bundle measured.'
 tags:
 - software
 - library-behaviour
@@ -9,8 +9,8 @@ generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
-- by: process:tests/tier1/test_gui_probe.py::test_rsk13_the_probe_names_the_payloads_it_must_carry
-  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_gui_selftest.py::test_rsk13_the_selftest_names_the_payloads_it_must_carry
+  at: '2026-11-21T00:00:00Z'
 - by: process:tests/tier1/test_gui_screens.py::test_ver78_a_rebound_shortcut_runs_its_command_and_the_old_chord_nothing
   at: '2026-11-08T00:00:00Z'
 - by: process:tests/tier1/test_library_behaviour.py::test_ngsolve_newton_and_webgui_api
@@ -52,15 +52,20 @@ tested_with:
 Versions are in `uv.lock`, and the role and licence of each dependency in `SPECIFICATION.md` §2.6
 (CON-07, CON-09). Licences as the installed metadata gives them.
 
+The workbench is the package with its `gui` extra, installed by `uv` with no bundle; `nanopnp gui
+--selftest` checks an installation's compiled payloads (ADR-004's packaging NOTE; RSK-13). The PySide6
+shell and its PyInstaller bundle were removed at WP5.27. The sections below on PySide6,
+`QWebEngineView` and PyInstaller record what they measured, for an installer after 1.0 (§8.1).
+
 | Tool | Licence | Note |
 |---|---|---|
 | **NiceGUI**, over **FastAPI** and **uvicorn** | MIT, MIT, BSD-3-Clause | The workbench's shell (the `gui` extra) |
 | **Mol*** | MIT | The molecule viewer, a standalone bundle loaded as separate files (`src/nanopnp/gui/web/assets/molstar/NOTICE.md`) |
 | NGSolve's `webgui` renderer | LGPL-2.1-or-later | Loaded as a separate file |
-| **PySide6** | LGPL-3 OR GPL-2 OR GPL-3 | The Qt shell; the LGPL option means no licence conflict. PySide6 leaves with the Qt shell |
+| PySide6 | LGPL-3 OR GPL-2 OR GPL-3 | The removed Qt shell's toolkit (WP5.27); no longer a dependency |
 | PyQt6 | **GPL-3 only** | Avoided (CON-09) |
-| `PySide6.QtWebEngineWidgets.QWebEngineView` | — | Hosts NGSolve webgui **[verified][^wp14-plan]**, where the GL libraries are present (below) |
-| PyInstaller | — | **Chosen** for the bundle, one-dir (ADR-004, amended 20 September 2026). `collect_all` over `ngsolve`, `netgen` and `ngsolve_openblas`, plus the `netgen-occt` libraries collected by hand (below); `upx=False`, which mangles Qt WebEngine's helper executable |
+| `PySide6.QtWebEngineWidgets.QWebEngineView` | — | Hosted NGSolve webgui in the removed shell **[verified][^wp14-plan]**, where the GL libraries are present (below) |
+| PyInstaller | — | Built the removed bundle, one-dir (WP14 to WP5.27). `collect_all` over `ngsolve`, `netgen` and `ngsolve_openblas`, plus the `netgen-occt` libraries collected by hand (below); `upx=False`, which mangles Qt WebEngine's helper executable |
 | Playwright | Apache-2.0 | The `dev` group: headless screens for the GUI tests |
 | briefcase / conda-constructor | — | The other two candidates; not used |
 
@@ -96,7 +101,7 @@ apt-get install -y --no-install-recommends libegl1 libgl1 libxkbcommon0 libnss3 
 
 With them, `from PySide6 import QtWidgets, QtWebEngineWidgets` imports, and the whole `MainWindow`
 constructs and runs under `QT_QPA_PLATFORM=offscreen` with `QTWEBENGINE_CHROMIUM_FLAGS="--disable-gpu --no-sandbox"`.
-`.claude/scripts/gui/capture_qt.py` drove it through example 07 (a charge build and a charged solve) to
+A capture script, removed with the shell, drove it through example 07 (a charge build and a charged solve) to
 22 window grabs in about eight minutes.
 
 Offscreen, a `QWebEngineView` loads the host document but gets no WebGL context. The scene's
@@ -110,7 +115,7 @@ not `import`, so a script that uses it is CommonJS (`.cjs`). It is not in the `u
 with `--enable-unsafe-swiftshader`, its Chromium renders a `host_document` page (WebGL2: colour bar, mesh)
 headless with no GPU. `node .claude/scripts/gui/shoot.cjs --self-check <dir>` checks it.
 
-This is for local design work and the `/np-gui render qt` target, never for the push gate (CON-07).
+This was for local design work on the Qt shell, never for the push gate (CON-07); the workbench's screens are drawn by `/np-gui render shell`.
 
 ### `QWebEngineView` loads a webgui document with no GPU at all **[verified][^wp14-plan]** {#qwebengineview-loads-a-webgui-document-with-no-gpu-at-all}
 
@@ -303,7 +308,8 @@ and Gmsh then loads unchanged. The library is 89 MB.
 bundle, the import prints a warning listing the paths it searched and returns. The first call then
 raises `AttributeError: ...: undefined symbol: gmshInitialize`. A probe that only imported Gmsh
 would pass on a bundle that cannot mesh. This is why the probe exercises each payload once
-**[tested: tests/tier1/test_gui_probe.py::test_rsk13_the_probe_names_the_payloads_it_must_carry]**, and it
+and the self-test that replaced it does the same
+**[tested: tests/tier1/test_gui_selftest.py::test_rsk13_the_selftest_names_the_payloads_it_must_carry]**; it
 is RSK-13's failure in its plainest form.
 
 The whole bundle is 1.3 GB, 501 MB of it PySide6, and builds in 74 s. The five exercises take
@@ -363,11 +369,9 @@ Measured 29 September 2026, best of three fresh processes, warm cache:
 | `nanopnp.gui.assess` | 52 ms |
 | `nanopnp.gui.run_model` | 200 ms, the comparison |
 
-Neither of the two new modules brings in PySide6, NGSolve, Netgen, NumPy, MDAnalysis,
-scikit-image, Shapely or Gmsh. `nanopnp.gui.assess` imports `geometry.contour`, and with it
-scikit-image, only inside the spawned child. A drag on the editor canvas can be driven offscreen by
-sending `QMouseEvent`s through `QApplication.sendEvent`: press, move, release. That is how
-`test_gui_widgets.py` asserts it.
+Neither of the two new modules brings in NGSolve, Netgen, NumPy, MDAnalysis, scikit-image,
+Shapely or Gmsh. `nanopnp.gui.assess` imports `geometry.contour`, and with it scikit-image, only
+inside the spawned child.
 
 The import costs of the case schema and the view-models are in `09-the-clis-import-budget-measured.md`.
 

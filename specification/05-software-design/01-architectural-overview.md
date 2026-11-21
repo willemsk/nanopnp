@@ -62,7 +62,7 @@ stage 7).
 | `pipeline/` | Case resolution and the checks against the registries, the pipeline walk: the assembler, which imports the stages (`MOD-04`; WP38) |
 | `api/` | The Python interface: the `Case`, the `Session` that runs, sweeps and reopens it, and reproduction; the command line, the shell and the sweep runner run through it, above `sweep/` (IF-01; §8.2.23 Y4) |
 | `cli/` | Command-line entry points |
-| `gui/` | The browser workbench (NiceGUI, `gui/web/`), and the PySide6 shell until WP5.27 |
+| `gui/` | The workbench: its view-models, and the browser shell in `gui/web/` (NiceGUI) |
 | `validation/` | Benchmarks, MMS, COMSOL comparison harness, regression fixtures |
 | `case.py` (top level) | The public case module: `Case` and its blocks, re-exported from `api/` and `io/` |
 

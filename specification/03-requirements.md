@@ -20,14 +20,10 @@ The subject of each requirement is the product unless stated otherwise.
 | **IF-06** | SHALL write meshes in Gmsh MSH 4.1 as the archival format, and SHOULD read any format meshio supports. |
 | **IF-07** | SHALL write solution fields in XDMF with HDF5 heavy data. |
 | **IF-08** | SHALL accompany every result artefact with a machine-readable provenance manifest (FR-25). |
-| **IF-09** | SHALL provide a desktop graphical interface covering case editing, run control, convergence monitoring and field visualisation, as a thin shell over the IF-01 interface. |
+| **IF-09** | SHALL provide a graphical workbench, served by a local server and opened in the browser by `nanopnp gui`, covering the six suites of the workbench design (Molecular, Meso, Continuum, Physics, Study and Analysis), the run queue and the project folder, as a thin shell over the IF-01 interface that speaks to its server through a network API. |
 
-NOTE (IF-09; lands with WP5.27, Qt's removal). When it lands, IF-09 reads:
-"SHALL provide a graphical workbench, served by a local server and opened in the browser by
-`nanopnp gui`, covering the six suites of the workbench design (Molecular, Meso, Continuum, Physics,
-Study and Analysis), the run queue and the project folder, as a thin shell over the IF-01 interface
-that speaks to its server through a network API." Until then the text above gates the Qt shell
-(§8.2.17 S12, S17; `docs/design/workbench.md`, WB-01, WB-29, WB-34; §8.2.34 AJ2; §8.2.42 AR8).
+NOTE (IF-09): the workbench design is `docs/design/workbench.md` (WB-01, WB-29, WB-34; §8.2.17 S12,
+S17; §8.2.34 AJ2; §8.2.42 AR8).
 
 Rationale (IF-06): MSH 4.1 is the only format in the toolchain carrying physical-group tags,
 higher-order elements and mixed element types without loss.
@@ -252,7 +248,7 @@ cell–annulus overlaps. §5.2's NOTE on stage 3 is the contract.
 | **QR-07** | A sparse direct factorisation of a production-sized problem (about 1.2 × 10⁵ cells, five fields) SHALL complete in acceptable time and memory on a laptop. | Performance |
 | **QR-08** | Re-running a case file with the recorded library versions SHALL reproduce every scalar QoI to within the solver tolerance, the FR-25 manifest sufficing to reconstruct the run. | Reproducibility |
 | **QR-09** | SHALL install from binary wheels on Windows, macOS and Linux for Python 3.11–3.14, with no compilation on the target machine. | Portability |
-| **QR-10** | A nanopore experimentalist without Python knowledge SHALL be able to load a structure, accept defaults and obtain a conductance prediction and a field visualisation in the desktop application unaided. | Usability |
+| **QR-10** | A nanopore experimentalist without Python knowledge SHALL be able to install the workbench, load a structure, accept defaults and obtain a conductance prediction and a field visualisation in it unaided. | Usability |
 | **QR-11** | Each release from v0.2 onward SHALL ship a usable graphical surface over the functionality existing at that release. | Usability |
 | **QR-12** | Every automatic gate failure SHALL abort the run with a diagnostic naming the gate, the offending quantity and its location. | Usability |
 | **QR-13** | The ePNP-NS weak forms SHALL be expressed once and SHALL NOT be duplicated per backend. Until a second backend is planned they are expressed against NGSolve directly, and the subpackages that import NGSolve or Netgen SHALL stay within a recorded set, which may shrink and grows only by the author's ruling (§5.4.1 NOTE). | Maintainability |
@@ -279,11 +275,7 @@ NOTE (QR-16, the keyboard; §8.2.47 AW1, AW8): v0.6 ships with these gaps. An ou
 click (REV-266), Continuum's handles have no keyboard path (REV-245), and a chord cannot be unbound (REV-236). They
 close with Phase 6's polish pass; until then QR-16 is met in part.
 
-NOTE (QR-10; lands with WP5.27, Qt's removal). When it lands, QR-10 reads: "A
-nanopore experimentalist without Python knowledge SHALL be able to install the workbench, load a
-structure, accept defaults and obtain a conductance prediction and a field visualisation in it
-unaided." Until then the text above gates the Qt shell. QR-10 is observed on v1.0's release candidate
-(§8.2.47 AW2).
+NOTE (QR-10): QR-10 is observed on v1.0's release candidate (§8.2.47 AW2).
 
 NOTE (QR-15): the user documentation and worked examples are delivered from v0.2 by the
 documentation track of §8.1, each phase documenting what it ships. VER-45 and VER-46 demonstrate the
@@ -308,30 +300,17 @@ comparison would, which is why the Tier-2 benchmarks, which localise to a single
 | **CON-05** | All concentration-dependent parameters are driven by one local mean concentration `⟨c⟩` (PHY-01) rather than by each ion's own concentration, as in the source model. This breaks down inside double layers, where local electroneutrality is violated, and SHALL be documented as the origin of residual discrepancy below 0.05 M. |
 | **CON-06** | The single production FEM backend SHALL be NGSolve/Netgen 6.2.2606+ (LGPL-2.1); its reach SHALL stay within QR-13's recorded set, so that a second backend stays bounded work (§5.4.1 NOTE). |
 | **CON-07** | No component on the end-user execution path SHALL require a C++ compiler, a source build or a JIT toolchain on the end-user machine. |
-| **CON-08** | The distributed wheels are serial-only and ship without MUMPS, and the reference model's PARDISO is equally unavailable; the desktop path SHALL use UMFPACK or scipy SuperLU. |
-| **CON-09** | The core library SHALL be licensed BSD-3-Clause. LGPL dependencies are acceptable under dynamic linking (NGSolve/Netgen LGPL-2.1, MDAnalysis LGPLv3, PROPKA LGPL-2.1, PySide6 LGPL-3). MPL-2.0 dependencies are acceptable used unmodified as separate packages (gemmi, the mmCIF reader of the `structure` extra). The field viewer's renderer, npm `webgui` (LGPL-2.1-or-later, bundling three.js under MIT and dat.gui under Apache-2.0), MAY be redistributed with the package, **unmodified and as a separate file** loaded at run time, beside its licence texts and a notice naming its corresponding source, which the repository and the source distribution carry verbatim; nothing in the library SHALL be linked against it. PyQt SHALL NOT be used, being GPL-3 or commercial only. |
+| **CON-08** | The distributed wheels are serial-only and ship without MUMPS, and the reference model's PARDISO is equally unavailable; the installed workbench SHALL use UMFPACK, as NGSolve's wheel provides it, or scipy SuperLU. |
+| **CON-09** | The core library SHALL be licensed BSD-3-Clause. LGPL dependencies are acceptable under dynamic linking (NGSolve/Netgen LGPL-2.1, MDAnalysis LGPLv3, PROPKA LGPL-2.1). MPL-2.0 dependencies are acceptable used unmodified as separate packages (gemmi, the mmCIF reader of the `structure` extra). The field viewer's renderer, npm `webgui` (LGPL-2.1-or-later, bundling three.js under MIT and dat.gui under Apache-2.0), MAY be redistributed with the package, **unmodified and as a separate file** loaded at run time, beside its licence texts and a notice naming its corresponding source, which the repository and the source distribution carry verbatim; nothing in the library SHALL be linked against it. A dependency of the workbench's front end SHALL be under a permissive licence, or under the LGPL or the MPL-2.0 used unmodified as a separate file as the renderer is. PyQt SHALL NOT be used, being GPL-3 or commercial only. |
 | **CON-10** | Gmsh (GPLv2+) SHALL be an optional backend only; the default path SHALL NOT link Gmsh, and the core library SHALL remain functional without it. |
-| **CON-11** | SuiteSparse UMFPACK is GPL-2+, so a bundle defaulting to UMFPACK carries GPL obligations even though the library does not. The core library SHALL remain BSD-3 and SHALL NOT itself depend on UMFPACK; the redistributable bundle SHALL default to UMFPACK, SHALL be distributed under the resulting GPL-2+ obligations and SHALL state them in its licence notice, scipy SuperLU remaining selectable at runtime. The default follows the §6.6 measurement: SuperLU did not factorise the reference-sized problem at all, so a SuperLU-default bundle could not run the published case. |
+| **CON-11** | SuiteSparse UMFPACK is GPL-2+, so an installation defaulting to UMFPACK carries GPL obligations even though the library does not. The core library SHALL remain BSD-3 and SHALL NOT itself depend on UMFPACK, which it reaches only through NGSolve's wheel; an installed workbench SHALL default to NGSolve's UMFPACK, scipy SuperLU remaining selectable at runtime, and `nanopnp --env` SHALL state the resulting GPL-2+ obligation. The default follows the §6.6 measurement: SuperLU did not factorise the reference-sized problem at all, so a SuperLU-default installation could not run the published case. |
 | **CON-12** | Meshing components with distribution-restricting licences SHALL NOT be depended upon, specifically Triangle (and MeshPy, which wraps it) and TetGen 1.5 (AGPLv3). |
 | **CON-13** | SHALL support Windows, macOS and Linux on desktop hardware, and Linux for headless and HPC execution. |
 | **CON-14** | The repository SHALL carry a `CITATION.cff` pointing at the Nanoscale paper and the software DOI. |
 
-NOTE (CON-09; lands with WP5.27, Qt's removal). When it lands, CON-09 drops "PySide6 LGPL-3" from its
-LGPL list and adds before its PyQt sentence: "A dependency of the workbench's front end SHALL be under a
-permissive licence, or under the LGPL or the MPL-2.0 used unmodified as a separate file as the renderer
-is." The renderer clause binds the browser shell. Until then CON-09 gates the Qt shell.
-
-NOTE (CON-08; lands with WP5.27, Qt's removal). When it lands, CON-08's last clause reads: "the
-installed workbench SHALL use UMFPACK, as NGSolve's wheel provides it, or scipy SuperLU." The browser
-shell ships no desktop path or bundle (§8.2.17 S12); the library's default is
-`numerics/linear.py:DEFAULT_SOLVER`, `"umfpack"`. Until then CON-08 gates the Qt shell (REV-141).
-
-NOTE (CON-11; lands with WP5.27, Qt's removal). When it lands, CON-11 speaks of an installation where it
-says a bundle, adds after "depend on UMFPACK" the words "which it reaches only through NGSolve's wheel",
-and its third clause reads: "an installed workbench SHALL default to NGSolve's UMFPACK, scipy SuperLU
-remaining selectable at runtime, and `nanopnp --env` SHALL state the resulting GPL-2+ obligation."
-`nanopnp --env` does not yet state it. Until WP5.27 the text above gates the bundle and its licence
-notice (VER-43; REV-141).
+NOTE (CON-08, CON-11): the library's default is `numerics/linear.py:DEFAULT_SOLVER`, `"umfpack"`; the
+workbench ships no bundle (§8.2.17 S12). `src/nanopnp/THIRD-PARTY-LICENSES.md` is the installation's licence
+notice, and `nanopnp --env` names its path (REV-141).
 
 ### 3.5 Exclusions
 

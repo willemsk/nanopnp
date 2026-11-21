@@ -450,7 +450,7 @@ class ProfileEditor:
                 schema=PROFILE_SCHEMA,
                 name=self.name,
                 description=(
-                    f"Edited by hand in the nanopnp desktop shell from {self.parent_name}, in "
+                    f"Edited by hand in the nanopnp workbench from {self.parent_name}, in "
                     "the stage-1 frame"
                 ),
                 provenance=provenance,

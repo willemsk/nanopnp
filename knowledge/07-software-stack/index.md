@@ -5,7 +5,7 @@
 * [2. Structure, trajectory and density](02-structure-trajectory-and-density.md) - The structure, trajectory and density libraries and how they behave.
 * [3. Charge and electrostatics](03-charge-and-electrostatics.md) - The charge and electrostatics tools PDB2PQR, PROPKA and APBS, as the pipeline drives them.
 * [4. Geometry, meshing and I/O](04-geometry-meshing-and-io.md) - The geometry, meshing and I/O libraries.
-* [5. GUI and packaging](05-gui-and-packaging.md) - The GUI and packaging stack: NiceGUI with Mol*, the Qt shell, the web viewer and PyInstaller.
+* [5. GUI and packaging](05-gui-and-packaging.md) - The GUI and packaging stack: NiceGUI with Mol*, the web viewer and the self-test; what the removed Qt shell and bundle measured.
 * [6. Licence summary](06-licence-summary.md) - The licences of the dependencies.
 * [7. Local assets](07-local-assets.md) - The external sources the knowledge base cites, and where each lives.
 * [8. Python 3.11 floor and the 3.14 development interpreter](08-python-version-floor-the-310-target-is.md) - Why the floor is 3.11, and what the 3.14 development interpreter changes.

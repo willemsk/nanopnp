@@ -235,7 +235,7 @@ under `OUTPUT / "project"`; their sources join `exclude_docs`; the navigation an
   the gate (D6); done when its tests pass and the command exits 0 here. **Executor:** main
 - [x] a8b05fd 7. The removal, the notice (D5, D7); done when Tier 1 and the two Tier 2 files pass and `uv lock --check`
   is clean. **Executor:** main
-- [ ] 8. `nanopnp --env`, `io/manifest.py` (D7, D8); done when `--env`'s test passes. **Executor:** main
+- [x] 9fe04ea 8. `nanopnp --env`, `io/manifest.py` (D7, D8); done when `--env`'s test passes. **Executor:** main
 - [ ] 9. The clauses (D9): `specification/`, `SPECIFICATION.md`, `gui/geometry.py`'s description,
   `knowledge/07-software-stack/05-gui-and-packaging.md` and `06-licence-summary.md`, `README.md`, `CONTRIBUTING.md`,
   `CLAUDE.md`; done when `clause.py` prints each clause without its NOTE and the strict build passes.

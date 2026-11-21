@@ -3,6 +3,8 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-21
+* **Update**: The Qt shell and its PyInstaller bundle are removed (WP5.27); the workbench is installed by `uv` and `nanopnp gui --selftest` checks its compiled payloads. The PySide6, `QWebEngineView` and PyInstaller measurements are kept as history for an installer after 1.0. ([5. GUI and packaging](07-software-stack/05-gui-and-packaging.md))
+* **Update**: UMFPACK's GPL-2+ obligation is an installation's, stated in `src/nanopnp/THIRD-PARTY-LICENSES.md` and by `nanopnp --env`. ([6. Licence summary](07-software-stack/06-licence-summary.md))
 * **Record**: NiceGUI 3.18 ships plotly.js 3.1.1 and ECharts 6.1.0 with ECharts GL 2.1.0; Plotly draws contours, arrows, equal aspect and a 3D surface coloured by a field, ECharts none of the first three, and Plotly's own mode bar misses WCAG's 24 px target and 3:1 focus ring (WP5.22's round; WB-57). ([GUI and packaging](07-software-stack/05-gui-and-packaging.md))
 
 ## 2026-11-20

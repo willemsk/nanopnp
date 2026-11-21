@@ -20,19 +20,12 @@ description: "Lists the RSK-nn risk register, each risk with its severity, likel
 | **RSK-10** | The NGSolve pip wheel ships without MUMPS, and UMFPACK or SuperLU may not handle production-size coupled factorisations | Med | Med | Two solver configurations (§6.6); measured on day one of Phase 0 (§8.2 criterion 3); iterative fieldsplit through ngsPETSc in reserve | Phase 0 |
 | **RSK-11** | NaN from 1/r terms at integration order 2, silent rather than a crash | Med | Med–High | Integration order ≥ 3 asserted on all 1/r forms; dedicated test on an axis-touching mesh (VER-07) | Tier 1 |
 | **RSK-12** | Transcription errors in the correction coefficients, the per-ion `D` and `μ` sets being easy to conflate | Med | Med | Coefficient files reviewed against the model report in a second pass; each `f(c)` property-tested against published check values (VER-03) | Tier 1 |
-| **RSK-13** | Desktop packaging defeated by a binary dependency | Med | Low–Med | NGSolve wheels chosen for this reason; packaging prototyped in Phase 0 (§8.2 criterion 4), not at the end. **Retired 24 September 2026** on the author's double-click (§8.2.1 NOTE); the gated `bundle` job re-detects it on every push to `main`, nightly and on a full run (`ci.yml`: not for a pull request) | Phase 0 |
+| **RSK-13** | The workbench's install defeated by a binary dependency | Med | Low–Med | Every payload is a binary wheel on Windows, macOS and Linux (QR-09); CI installs the `gui` extra on each and runs the server's self-test on every push to `main`, failing naming the payload; QR-10's observation includes the install (§8.2.17 S12) | Phase 5 |
 | **RSK-14** | COMSOL licence access lapses, removing the oracle | Med | Low | The gating comparison is against the published results (VAL-16, VAL-17), which need no licence (§8.2.4 D6); the field route stays available while access lasts | Continuous |
 | **RSK-15** | Scope creep from the GUI drawing effort away from validation | High | High | The GUI phase, Phase 5, precedes validation, so the shell holds no physics, no workflow depends on a Tier-3 number, and no screen is built for a capability Tiers 1 and 2 do not verify; the author accepts the residual risk that Phase 6 changes a number shown or forces rework of a screen (§8.2.6 F5). The workbench's new tools are each a library capability and a phase of their own, ordered against validation when Phase 5 closes, so validation is not held behind them (§8.2.17 S7) | Continuous |
 | **RSK-16** | Sole-maintainer bus factor | Med | Med | JOSS paper and DOI; small dependency surface; every stage independently usable | Continuous |
 | **RSK-17** | NGSolve MPI weakness blocks a future 3D phase | Med | Med | Not on the v1 path; 3D scaling prototyped before commitment; ngsPETSc and a DOLFINx backend as fallbacks | Post-v1 |
 | **RSK-18** | Reference stabilisation settings unknown. Resolved: stabilisation was on. Transport of Diluted Species used streamline and crosswind diffusion, crosswind type "Do Carmo and Galeão", approximate residual and conservative convective form; Laminar Flow used streamline and crosswind with P1+P1 elements | Closed | Closed | Consequence: cross-comparison requires either a matching stabilised mode (§6.4) or a systematic offset acknowledged as such when Tier 3 tolerances are set | Resolved |
 | **RSK-19** | Analyte force computation has no prior implementation. Retired. The PlyAB work (*Angew. Chem. Int. Ed.* 2022, DOI 10.1002/anie.202206227) is a full ePNP-NS continuum force computation with published targets and a retained COMSOL model | Closed | Closed | Superseded by RSK-04 | Retired |
-
-NOTE (RSK-13; lands with WP5.27, Qt's removal). When it lands, RSK-13 reads:
-"| **RSK-13** | The workbench's install defeated by a binary dependency | Med | Low–Med | Every
-payload is a binary wheel on Windows, macOS and Linux (QR-09); CI installs the `gui` extra on each and
-runs the server's self-test on every push, failing naming the payload; QR-10's observation includes
-the install (§8.2.17 S12) | Phase 5 |". Until then the row above gates the Qt shell's bundle
-(§8.2.17 S17).
 
 ---
