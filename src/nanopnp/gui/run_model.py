@@ -93,6 +93,7 @@ class RunModel:
     state: RunState = "idle"
     fraction: float = 0.0
     stage: Stage | None = None
+    rung: Rung | None = None
     log: tuple[str, ...] = ()
     exit_code: int = EXIT_OK
     diagnosis: str = ""
@@ -111,6 +112,7 @@ class RunModel:
             self.state = "running"
             self.fraction = 0.0
             self.stage = None
+            self.rung = None
             self.exit_code = EXIT_OK
             self.diagnosis = ""
             self.directory = None
@@ -120,6 +122,7 @@ class RunModel:
             self._say(f"running {event.case}")
         elif isinstance(event, Stage):
             self.stage = event
+            self.rung = None
             self.walked = (*self.walked, event.name)
             self._say(f"stage {event.index + 1} of {event.total}: {event.name}")
         elif isinstance(event, Produced):
@@ -129,6 +132,7 @@ class RunModel:
             )
         elif isinstance(event, Rung):
             # Not logged: the solve already reports the rung through progress.
+            self.rung = event
             self.convergence.rung(
                 event.name,
                 event.stage,
@@ -186,6 +190,15 @@ class RunModel:
 
     def _say(self, message: str) -> None:
         self.log = (*self.log, message)
+
+    def progress_line(self) -> str:
+        """Return the running walk's stage and rung, or an empty string unless it runs."""
+        if self.state != "running" or self.stage is None:
+            return ""
+        line = f"stage {self.stage.index + 1} of {self.stage.total}: {self.stage.name}"
+        if self.rung is not None:
+            line += f", rung {self.rung.index + 1} of {self.rung.total}"
+        return line
 
     @property
     def settled(self) -> bool:

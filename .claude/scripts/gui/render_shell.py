@@ -671,12 +671,23 @@ def meso_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[s
 
 
 STUDY_TOOLS = ("overview", "setup", "sweep", "runs")
-STUDY_EXTRAS: tuple[tuple[str, str, list[str]], ...] = (
+STUDY_EXTRAS: tuple[tuple[str, str, list[str | dict[str, Any]]], ...] = (
     ("overview-whole", "/study/overview", ["[data-control=overview-whole-case]"]),
     ("new", "/study/setup", ["[data-control=study-new]"]),
+    (
+        "more-solver",
+        "/study/setup",
+        [
+            {"fill": "[data-control=study-more]", "value": "numerics.linear.solver"},
+            ".q-menu .q-item",
+            {"fill": "[data-control=study-more-value]", "value": "superlu"},
+            "[data-control=study-more-add]",
+        ],
+    ),
 )
-"""The 2WCD study's tools in states of their own: Overview's whole case unfolded, and the *New
-study* window."""
+"""The 2WCD study's tools in states of their own: Overview's whole case unfolded, the *New study*
+window, and the linear solver set to SuperLU through *More values*, light only and last, since it
+changes the study."""
 SWEPT_BIAS_V = [-0.05, 0.05]
 """The bias the 2WCD study's sweep varies over: two points, so its forecast stays quick."""
 
@@ -713,24 +724,32 @@ def study_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[
         for scheme in SCHEMES
     ]
     for name, path, click in STUDY_EXTRAS:
-        for scheme in SCHEMES:
+        # The value set is then listed, and no longer offered: a light shot only.
+        for scheme in SCHEMES[:1] if name == "more-solver" else SCHEMES:
             shot = entry(f"shell-study-{name}", first["2wcd"], path, scheme, click)
             shot["wait_ms"] = 2500
             manifest.append(shot)
-    # The tube is run once, from the light shot; Runs then draws its convergence, the study's last
-    # run, once the 8 s solve has ended (WB-45).
+    # The tube is run once, from the running shot, which shows its queue line while it solves;
+    # Runs then draws its convergence, the study's last run, once the 8 s solve has ended (WB-45).
+    running = entry(
+        "shell-study-tube-running",
+        first["tube"],
+        "/study/setup?panel=queue",
+        SCHEMES[0],
+        ["[data-control=study-run]"],
+    )
+    running["wait_ms"] = 2000
+    manifest.append(running)
     for index, scheme in enumerate(SCHEMES):
-        run = entry(
-            "shell-study-tube-run",
-            first["tube"],
-            "/study/setup",
-            scheme,
-            [] if index else ["[data-control=study-run]"],
-        )
-        run["wait_ms"] = 12000 if not index else 500
+        run = entry("shell-study-tube-run", first["tube"], "/study/setup", scheme)
+        run["wait_ms"] = 10000 if not index else 500
         convergence = entry("shell-study-tube-convergence", first["tube"], "/study/runs", scheme)
         convergence["wait_ms"] = 2500
         manifest += [run, convergence]
+    # The run's lines in the log, light only, once it has ended.
+    manifest.append(
+        entry("shell-study-tube-log", first["tube"], "/study/runs?panel=log", SCHEMES[0])
+    )
     return manifest
 
 
