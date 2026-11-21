@@ -110,6 +110,15 @@ def test_ver60_the_notice_has_a_row_for_each_payload() -> None:
     assert not unlisted, f"the licence notice has no row for {unlisted}"
 
 
+def test_con11_nanopnp_env_states_the_gpl_obligation_and_the_notice(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert cli_main(["--env"]) == 0
+    printed = capsys.readouterr().out
+    assert "GPL-2+" in printed
+    assert str(LICENCE_NOTICE) in printed
+
+
 def test_ver43_a_hidden_ngsolve_fails_naming_ngsolve(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setitem(sys.modules, "ngsolve", None)
     with pytest.raises(PayloadError) as failed:

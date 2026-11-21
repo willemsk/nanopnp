@@ -55,7 +55,7 @@ GROUPS: tuple[str, ...] = (
 
 DISTRIBUTIONS: tuple[str, ...] = (
     # By distribution name, not import name (they differ for PyYAML, MDAnalysis, GridDataFormats,
-    # scikit-image and PySide6): importlib.metadata keys on the distribution.
+    # scikit-image): importlib.metadata keys on the distribution.
     "nanopnp",
     "ngsolve",
     "numpy",
@@ -73,8 +73,9 @@ DISTRIBUTIONS: tuple[str, ...] = (
     "shapely",
     "pdb2pqr",
     "propka",
-    "PySide6",
     "gmsh",
+    "nicegui",
+    "fastapi",
 )
 
 
