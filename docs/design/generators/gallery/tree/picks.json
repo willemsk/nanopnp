@@ -1,0 +1,137 @@
+{
+ "title": "Tree of results boards",
+ "lede": "WP5.22's design round (REV-268): three ways to organise Analysis as a tree, the plot types, and two chart libraries, each drawn on 2WCD solved at +50 mV, its bias sweep and its variant with one ASP neutral. Mark each board prefer, borrow or reject, with a note; the round's questions follow in the chat. Every value is read through the library. Two differences from today's explorer are the boards' own: a map draws the field in the fluid alone (today's draws the potential inside the protein too, so its range is ±155 mV, not ±63 mV), and a one-signed map opens on its 1st to 99th percentile.",
+ "round": 1,
+ "verdicts": [
+  "prefer",
+  "borrow",
+  "reject"
+ ],
+ "groups": [
+  {
+   "key": "tree",
+   "title": "How the tree is organised",
+   "sub": "The same 2WCD map in each; judge where things stand, not the plot"
+  },
+  {
+   "key": "types",
+   "title": "What a plot group draws",
+   "sub": "Every candidate type on the same runs"
+  },
+  {
+   "key": "library",
+   "title": "Which library draws it",
+   "sub": "The same four plots in each; open the live board to zoom, hover and turn"
+  },
+  {
+   "key": "today",
+   "title": "Today",
+   "sub": "The results explorer as WP5.21 shipped it, for reference"
+  }
+ ],
+ "decisions": {
+  "T": "tree",
+  "P": "plot types",
+  "L": "library"
+ },
+ "picks": [
+  {
+   "id": "tree-t1-comsol-branches-1440-light",
+   "group": "tree",
+   "title": "T1 · COMSOL's branches",
+   "decisions": [
+    "T"
+   ],
+   "why": "The tree as COMSOL builds it: Data, Definitions, Probes and cuts, Quantities, Plot groups. Each plot group names its data, so a comparison is data and the Comparison tool folds in.",
+   "look": "The pane: the tree above, the selected node's settings below, one column. One plot group fills the view. The probes and the quantities stand as tables in the bottom panel beside Queue and Log (\"a pane of their own, like in COMSOL\"); T2 and T3 draw the same tables, so judge the tree, not the tables.",
+   "stands_for": [
+    "tree-t1-*"
+   ],
+   "live": "live/tree/t1-comsol-branches.html"
+  },
+  {
+   "id": "tree-t2-shown-run-1440-light",
+   "group": "tree",
+   "title": "T2 · One shown run, tiles of plot groups",
+   "decisions": [
+    "T"
+   ],
+   "why": "The simplest tree: one run shown at the pane's head, as Physics' Shown in, which every plot group follows unless set to a run of its own (⊙).",
+   "look": "Several plot groups at once, as tiles, the selected one outlined; a plot group may add a second run (Along the axis). No Data branch, so Comparison stays a tool of its own. The bottom panel's tables are the same as T1's and T3's: only the organisation differs.",
+   "stands_for": [
+    "tree-t2-*"
+   ],
+   "live": "live/tree/t2-shown-run.html"
+  },
+  {
+   "id": "tree-t3-project-tree-1440-light",
+   "group": "tree",
+   "title": "T3 · One project tree",
+   "decisions": [
+    "T"
+   ],
+   "why": "COMSOL's single model tree: each study's results sit under it in the project rail, after its runs. The suite's column holds only the settings.",
+   "look": "The rail open at 270 px, holding models, studies, runs, results and the comparison's plot groups. The rail changes for every suite, not Analysis alone, and must stay unfolded to reach a plot.",
+   "stands_for": [
+    "tree-t3-*"
+   ],
+   "live": "live/tree/t3-project-tree.html"
+  },
+  {
+   "id": "tree-p1-plot-types-1440-light",
+   "group": "types",
+   "title": "P1 · The plot types",
+   "decisions": [
+    "P"
+   ],
+   "why": "Each candidate type drawn on the same 2WCD runs: surface, contours, arrows, mirrored and difference; a line along a cut, a point graph and a global plot; the 3D revolution.",
+   "look": "Which types v0.6 needs. The revolution is the true 3D view WB-53 asked for: the field turned about the axis, a quarter cut away; drag it on the live board. Grey is protein and membrane, where the field has no value.",
+   "stands_for": [
+    "tree-p1-*"
+   ],
+   "live": "live/tree/p1-plot-types.html"
+  },
+  {
+   "id": "tree-l1-plotly-1440-light",
+   "group": "library",
+   "title": "L1 · Plotly",
+   "decisions": [
+    "L"
+   ],
+   "why": "Plotly draws every type on P1 itself: contour lines, arrows, the equal-aspect map, log axes and the 3D revolution. It ships inside NiceGUI, so it adds no dependency.",
+   "look": "Zoom by dragging, hover for values, double-click to reset, turn the 3D view: open the live board. Its own toolbar shows on hover here only: its buttons miss the 24 px target and its focus ring fails on dark, so the workbench would hide it.",
+   "stands_for": [
+    "tree-l1-*"
+   ],
+   "live": "live/tree/l1-plotly.html"
+  },
+  {
+   "id": "tree-l2-echarts-1440-light",
+   "group": "library",
+   "title": "L2 · ECharts",
+   "decisions": [
+    "L"
+   ],
+   "why": "ECharts is lighter and also ships inside NiceGUI, but it has no contour lines or arrows, and no equal aspect on a map.",
+   "look": "The same four plots as L1, set up alike (fitted log axis, the shown run's ring, the solids grey), as far as ECharts draws them: the map without contours, arrows or equal aspect, the revolution as points. Open the live board to zoom and turn.",
+   "stands_for": [
+    "tree-l2-*"
+   ],
+   "live": "live/tree/l2-echarts.html"
+  },
+  {
+   "id": "shell-analysis-explorer-light",
+   "group": "today",
+   "title": "Today's results explorer",
+   "decisions": [
+    "T"
+   ],
+   "why": "The explorer as WP5.21 shipped it: the pane's settings beside four tiles. The reference the boards change.",
+   "look": "How much of the screen the pane's settings take, which the tree is to free (WB-51).",
+   "stands_for": [
+    "shell-analysis-*",
+    "shell-study-*"
+   ]
+  }
+ ]
+}
