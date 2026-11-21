@@ -247,9 +247,13 @@ Phase 6's provisional packages, named by scope (AV5); its scope round numbers an
 ### WP5.27 — Qt's removal and the short guide (REV-134, REV-228; S13, S17; §8.2.47 AW1, AW3)
 
 Every row Q01 to Q41 is checked present in the browser workbench as it stands (criterion 3; the design document's
-*Tabs or areas*); a miss keeps Qt. Then PySide6, the Qt widgets, the bundle and the packaging probe leave, with the
+*Tabs or areas*, whose rows Q37 to Q41 name WP5.21's explorer until the tree, and Q16 a vertex moved by typed values, AW7);
+a miss keeps Qt. Then PySide6, the Qt widgets, the bundle and the packaging probe leave, with `gui/app.py`,
+`case_model.py`, `scene.py`, the `nanopnp-gui` script and the
 Qt-only halves of `gui/geometry.py` and `gui/charge.py`, the halves the browser shell imports staying (the
-[survey](../../project/architecture-survey.md)'s inventory); and the restated NOTEs of IF-09, P3, QR-10, VER-43,
+[survey](../../project/architecture-survey.md)'s inventory); its plan rules on `io/manifest.py`'s `PySide6` row. The server gains the self-test the restated clauses ask
+in the probe's place, which the code lacks today, run by CI on the three platforms (VER-43, VER-44, VER-55; ADR-004's
+packaging NOTE; RSK-13); and the restated NOTEs of IF-09, P3, QR-10, VER-43,
 VER-44, VER-55, VER-60, CON-08, CON-09, CON-11, ADR-004's packaging NOTE and RSK-13 become their clauses (S17; T5).
 REV-134 closes (U1). The guide's desktop pages leave, and a short application guide says how to start the workbench and
 what each of the six suites does, with about one rendered screen a suite (AW3; §8.1's increment 5); the site's register
@@ -258,7 +262,7 @@ pages link the plans and reviews (REV-228; AM15). No number and no stored key mo
 ### WP5.28 — The close
 
 It resolves or carries each open decision, confirms Qt and the bundle are gone with the capability list covered, orders
-the tool phases (S7), carries any Copilot check not yet run (REV-166 to REV-168; AV6), hands the six moved packages
+the tool phases (S7) or hands their order to Phase 6's scope round (open decision 5), carries any Copilot check not yet run (REV-166 to REV-168; AV6), hands the six moved packages
 (AW1) and the open items' provisional Phase 6 packages (AV5) to Phase 6's scope round (REV-272), and writes the report,
 the changelog and `CITATION.cff`. QR-10 is not observed (AW2). Its last commit takes `v0.6.0` alone (§8.4.1).
 
@@ -308,10 +312,10 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.16, Molecular | 1, 2 | The channel's axis and the chain groups' ring axis against a known axis, and their gates (VER-48); a model built alone keys as a study's walk does; a linked variant follows its parent; VER-62 unmoved by REV-218; VER-78 |
 | WP5.17, Continuum | 1, 2 | VER-55 as restated, an unedited outline beside its structure depositing the same charge (AP1); VER-62's mesh hash unmoved by REV-170 and by untyped part sizes; MOD-03's edge gone (VER-61); a continuum model built alone keys as a study at its salt (FR-39); typed part sizes key as the table (VER-53); VER-78 |
 | WP5.18, Physics | 1 | A physics model edited in the suite resolves to the case it shows; VER-78 |
-| WP5.19, Study | 1, 2 | VER-44 and VER-60 as restated; FR-39's study and its sweep; VER-36's pair by resolved bias; VER-35 to a stage; VER-59's supplied spacing; a run's thread count keying nothing (VER-62); VER-78; the 200 ms measure (criterion 6) |
+| WP5.19, Study | 1, 2 | VER-44 and VER-60 as restated; FR-39's study and its sweep; VER-36's pair by resolved bias; VER-35 to a stage; VER-59's supplied spacing; a run's thread count keying nothing (VER-62); VER-78; the 200 ms measure, Phase 6's since AW1 (REV-258) |
 | WP5.20, the meso suite | 1, 2 | VER-60 as restated: a point names a residue once on a C<sub>n</sub> structure, an edit names the atoms it moves; the overlay's mean about the axis is the 3D charge's; VER-62 unmoved by the moved tools; VER-78 as amended, each moved tool's page at its new address |
 | WP5.21, Analysis | 1 | AG6's difference: exact for a linear field, zero for identical runs; a comparison item and a cleaned run rebuilt (FR-32, AN5); a recorded run's convergence as the live one (VER-44); uPlot unmodified (CON-09); VER-78 |
-| WP5.27, Qt's removal; WP5.28, the close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list, Q01 to Q41; VER-78 over every screen and state after the shared modules split; VER-62 unmoved; VER-45's strict build over the short guide |
+| WP5.27, Qt's removal; WP5.28, the close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as their clauses, the server's self-test failing on a payload that does not load; the capability list, Q01 to Q41, checked at review against the rendered screens (N3); VER-78 over every screen and state after the shared modules split; VER-62 unmoved; VER-45's strict build over the short guide |
 
 **The phase is complete when:**
 
@@ -321,7 +325,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 3. **Every Qt shell capability is in the browser shell**, checked against WP5.01's list before Qt
    leaves. A miss keeps Qt.
 4. **Each v0.6 requirement has its test or review check.** A miss is fixed, or deferred as a
-   `REV-nn` row.
+   `REV-nn` row. QR-16 is met in part: its keyboard gaps ship noted beside it (AW8).
 5. **QR-10's trial is not this phase's**: it is held on v1.0's release candidate (§8.2.47 AW2).
 6. **The redraw's 200 ms measure is not this phase's**: it moved with the performance package to Phase 6
    (§8.2.47 AW1; REV-258).
@@ -329,5 +333,6 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 ## End-of-phase report
 
 The close reports: the Qt capability list against the browser shell; VER-78's screen and state counts; the time from
-a click to a redrawn view on the reference charged case and the install's time on a clean machine, each re-run by the
-command WP5.02 names; the tool phases' order; and the packages and open items it hands to Phase 6's scope round.
+a click to a redrawn view on the reference charged case, headless (the GPU measure is Phase 6's, REV-258), and the
+install's time on a clean machine, each re-run by the command WP5.02 names; the tool phases' order, or its handing to
+Phase 6's scope round; and the packages and open items it hands to Phase 6's scope round.

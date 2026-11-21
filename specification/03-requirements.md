@@ -273,7 +273,11 @@ most 20 words, a description of at most 25, one topic to a sentence, the active 
 tenses, *must* for an obligation and *can* for an ability, and no noun cluster of more than three
 words. The rule, the value, the case path and the remedy that FR-35 and QR-12 ask for stay in the text,
 each case path and value as the case writes it. REV-254 lists the texts that do not yet follow it; they
-follow it with Phase 6's refusals package (§8.2.47 AW1).
+follow it with Phase 6's refusals package and, for the suites' own words, its polish pass (§8.2.47 AW1).
+
+NOTE (QR-16, the keyboard; §8.2.47 AW1, AW8): v0.6 ships with these gaps. An outline's vertex is picked only by a
+click (REV-266), Continuum's handles have no keyboard path (REV-245), and a chord cannot be unbound (REV-236). They
+close with Phase 6's polish pass; until then QR-16 is met in part.
 
 NOTE (QR-10; lands with WP5.27, Qt's removal). When it lands, QR-10 reads: "A
 nanopore experimentalist without Python knowledge SHALL be able to install the workbench, load a

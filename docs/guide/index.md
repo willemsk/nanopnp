@@ -6,8 +6,8 @@ verbatim, and the guide points into them by identifier (`PHY-`, `NUM-`, `FR-`) i
 an equation.
 
 The guide describes v0.5's features and the case file; the v0.6 workbench (`nanopnp gui`), projects
-and model files are in the generated references. The documentation package WP5.27 rewrites the
-guide for the workbench.
+and model files are in the generated references. The package WP5.27 writes a short
+guide for the workbench; the full guide follows in v0.7.
 
 | Page | What it covers |
 |---|---|

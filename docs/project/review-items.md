@@ -3182,6 +3182,7 @@ single source is put to the author with it.
 **Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass, with its keyboard pass.
 
 **Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's polish pass, WP5.26 until then, with its keyboard pass.
+v0.6 ships with the gap, noted beside QR-16 (AW8).
 
 ### REV-237: The author's notes on the frame's digest for the suites' prototype rounds
 
@@ -4049,6 +4050,8 @@ WP5.20's round ([the record](../design/reviews/2026-11-19-meso.md)) and its revi
 **Placed** (§8.2.46 AV2, 20 November 2026): WP5.26, the polish pass; the map's default share and *One subunit*'s overlay at its round. A residue named by its first present copy is a library step of that package.
 
 **Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's polish pass, WP5.26 until then; the map's default share and *One subunit*'s overlay at its round.
+Outline's keyboard pick ships as a gap at v0.6, noted beside QR-16 (AW8); a vertex moved by typed values stands for
+the Qt shell's drag until the pass (AW7).
 
 ### REV-267: What the Analysis suite's first review left open
 
@@ -4065,6 +4068,8 @@ place, the quantities shown and their order, and the charts' library (the review
 - **Charts**, unless REV-268's library settles them: the convergence chart labels no rung 1 to 3, 5 or 8 and mixes
   10⁵, 0.01 and 10⁻¹¹ on its log axis (22; the critique's 14); a fresh model's flat factors are not drawn and its
   square-root ticks are not round (23); the series share the info and warn hues (the critique's 16).
+- **The cut's line.** It is placed by a click and moved by typed values, not dragged (live link 3; added at the
+  seventh amendment's review, 21 November 2026, where the design document cited REV-238 for it).
 - **The no-run states.** The pointer to Study's Runs is no link (REV-269 words it), the refused state does not say
   Continuum's problem stops the study (26), and the empty state draws an empty box (27).
 - **Frames.** A tile's frames nest three deep, a map's key stands on the data (the critique's 11, 12), and *Axes*
@@ -4209,7 +4214,7 @@ rows and the settled design decisions to the record, the stubs to one line each)
 amended in flight. Whichever is ruled lands at the next `/np-plan amend 5`, or in WP5.28, the close, at the latest.
 
 **Accepted** (§8.2.47 AW5, 21 November 2026): the author chose to restate the target, against the recommendation of a
-cut now. The plan keeps its length, less the entries AW1 moves (about 4,100 words by `wc -w`). The target for a phase amended in flight
+cut now. The plan keeps its length, less the entries AW1 moves (about 4,200 words by `wc -w`). The target for a phase amended in flight
 is set at Phase 6's cleanup, with the reading limit REV-272 proposes; until then §8.4.4's target stands and the excess
 is recorded here.
 
@@ -4246,11 +4251,12 @@ error base), WP5.26 (the polish pass) and WP5.27's route and new models move to 
 that would otherwise rebuild it; QR-10's observation (criterion 5) moves with the route. REV-271 is answered by the
 same amendment. Then `/np-plan project` re-aligns Phase 6's scope, Z6's speed-up first included.
 
-**Placed** (§8.2.47 AW1 to AW6, 21 November 2026), as proposed but for the trial: Phase 5 keeps WP5.27, Qt's removal
+**Placed** (§8.2.47 AW1 to AW8, 21 November 2026), as proposed but for the trial: Phase 5 keeps WP5.27, Qt's removal
 with a short guide (AW3), and WP5.28, the close, under their numbers (AW4); the tree of results, the layers, the
 performance package, the refusals, the polish pass and the guided route with new models are Phase 6's provisional
 packages, named by scope (AW1); QR-10's trial waits for a v1.0 release candidate (AW2); REV-271's target is restated at
-the cleanup (AW5).
+the cleanup (AW5). At the amendment's review a typed vertex move was ruled to stand for the Qt shell's drag (AW7), and
+v0.6 to ship with QR-16's keyboard gaps noted (AW8).
 
 **Proposed for Phase 6's scope round**, by the author on 21 November 2026, each to be put to the author there. Until
 that round rules, the models of `CLAUDE.md` and §8.2.38 AN8 stand.
