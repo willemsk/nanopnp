@@ -1,25 +1,25 @@
 # Current work
 
-Updated 21 November 2026 (Phase 5 amended to close early). Navigation;
+Updated 21 November 2026. Navigation;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-This phase has two packages left: the old desktop shell's removal, with a short guide, and the close. The results
-tree, the display layers, the speed measurement, the plain-language messages, the polish pass and the guided route wait
-for the next phase, which opens with a scope round, a cleanup, then the restructured foundations. The trial with a new
-colleague waits for version 1's release candidate. Your five proposals are recorded.
+The old desktop program's removal is planned. Checking its 41 capabilities against the browser workbench found a few
+missing; you ruled: a running solve will name its stage and step and write its log, Study setup will reach every
+setting, and five smaller details wait for the next phase. The package then removes the desktop program, adds a
+self-test of an installation and writes a short guide. About seven sessions; the close follows.
 
-**Your call.** Approve the reviewed amendment? *Recommendation:* approve: it is what you ruled, and it moves the
-guided route and the results tree to the next release.
+**Your call.** Approve the plan once reviewed? *Recommendation:* approve: it holds your three rulings.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **closing early**: WP5.01 to WP5.21 merged
   (`v0.6.0-alpha.21`). Its seventh amendment (§8.2.47; REV-272) keeps WP5.27, Qt's removal with a short guide, and
-  WP5.28, the close; the other planned packages are Phase 6's, named by scope. **Next:** `/np-plan wp 5.27`.
-  host: claude-code.
+  WP5.28, the close; the other planned packages are Phase 6's, named by scope.
+  [WP5.27](phase-5/wp5.27-qts-removal-and-the-short-guide.md) is **planned** (AW9 to AW11).
+  **Next:** `/np-plan wp 5.27 review`, then `/np-implement wp 5.27`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -40,7 +40,7 @@ guided route and the results tree to the next release.
 - **Meso holds Density, Outline and Charge map** (AR8; AS1 to AS3). **An edit marks the atoms it moves; the overlay is kept; a study's charge node opens the continuum model's**
   (AT1 to AT4). **The charge map opens on the 99th percentile** (WB-49).
   **A plot's axes are the user's; any Matplotlib map; a true 3D view is the tree's**
-  (AU1 to AU3; WB-53). **Analysis is COMSOL's tree; Plotly draws every chart and map** (WB-54 to WB-63). **Phase 6 opens with its scope, a cleanup, then the foundations** (REV-272). **QR-10's trial waits for a v1.0 release candidate; WP5.22 to WP5.26 are retired numbers; typing a vertex stands for Qt's drag; QR-16's keyboard gaps ship noted** (§8.2.47). **The words follow
+  (AU1 to AU3; WB-53). **Analysis is COMSOL's tree; Plotly draws every chart and map** (WB-54 to WB-63). **Phase 6 opens with its scope, a cleanup, then the foundations** (REV-272). **QR-10's trial waits for a v1.0 release candidate; WP5.22 to WP5.26 are retired numbers; typing a vertex stands for Qt's drag; QR-16's keyboard gaps ship noted; five Qt details are carried** (§8.2.47; REV-274). **The words follow
   five rules** (WB-52). **Every open item names a package** (§8.2.46).
 
 ## Somebody else's

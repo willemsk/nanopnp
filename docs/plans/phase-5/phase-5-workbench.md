@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.21 merged (`v0.6.0-alpha.21`); closing early (REV-272; §8.2.47): next WP5.27, Qt's removal with a short guide, then WP5.28, the close. The tree of results, the layers, the performance package, the refusals, the polish pass and the guided route are Phase 6's.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.21 merged (`v0.6.0-alpha.21`); closing early (REV-272; §8.2.47): WP5.27, Qt's removal with a short guide, is planned; then WP5.28, the close. The tree of results, the layers, the performance package, the refusals, the polish pass and the guided route are Phase 6's.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -244,20 +244,26 @@ Phase 6's provisional packages, named by scope (AV5); its scope round numbers an
 | WP5.26 | The polish pass | QR-16's keyboard pass; WB-52; REV-235 to REV-237, REV-241, REV-245, REV-255, REV-261 to REV-263, REV-266, REV-267, REV-269; the former open decision 17 |
 | WP5.27's first part | The guided route and new models | FR-36; REV-240's safeguards, REV-241's PQR, REV-242's first two points, REV-249; the former open decision 18; the full guide (AW3) |
 
-### WP5.27 — Qt's removal and the short guide (REV-134, REV-228; S13, S17; §8.2.47 AW1, AW3)
+### WP5.27 — Qt's removal and the short guide (REV-134, REV-228; S13, S17; §8.2.47 AW1, AW3, AW9 to AW11)
 
-Every row Q01 to Q41 is checked present in the browser workbench as it stands (criterion 3; the design document's
-*Tabs or areas*, whose rows Q37 to Q41 name WP5.21's explorer until the tree, and Q16 a vertex moved by typed values, AW7);
-a miss keeps Qt. Then PySide6, the Qt widgets, the bundle and the packaging probe leave, with `gui/app.py`,
-`case_model.py`, `scene.py`, the `nanopnp-gui` script and the
-Qt-only halves of `gui/geometry.py` and `gui/charge.py`, the halves the browser shell imports staying (the
-[survey](../../project/architecture-survey.md)'s inventory); its plan rules on `io/manifest.py`'s `PySide6` row. The server gains the self-test the restated clauses ask
-in the probe's place, which the code lacks today, run by CI on the three platforms (VER-43, VER-44, VER-55; ADR-004's
-packaging NOTE; RSK-13); and the restated NOTEs of IF-09, P3, QR-10, VER-43,
-VER-44, VER-55, VER-60, CON-08, CON-09, CON-11, ADR-004's packaging NOTE and RSK-13 become their clauses (S17; T5).
-REV-134 closes (U1). The guide's desktop pages leave, and a short application guide says how to start the workbench and
-what each of the six suites does, with about one rendered screen a suite (AW3; §8.1's increment 5); the site's register
-pages link the plans and reviews (REV-228; AM15). No number and no stored key moves (VER-62). Tag `v0.6.0-alpha.27`.
+**Planned 21 November 2026** ([the plan](wp5.27-qts-removal-and-the-short-guide.md)).
+
+First the browser workbench gains what the capability check found missing: a running run's queue line names its stage
+and rung and the log takes the run's lines (rows Q33, Q34; AW9), Study setup's *More values* reaches every setting
+without a field (rows Q05, Q07; AW10), and the results explorer lists the deviations a stage contributed (row Q39;
+FR-25). Then every row Q01 to Q41 is checked on rendered screens (criterion 3; the design document's *Tabs or areas*,
+whose rows Q37 to Q41 name WP5.21's explorer until the tree, and Q16 a vertex moved by typed values, AW7), five details
+carried by REV-274 (AW11); any other miss keeps Qt and goes to the author. Then PySide6, the Qt widgets, the bundle and
+the packaging probe leave, with `gui/app.py`, `case_model.py`, `scene.py`, the `nanopnp-gui` script and the Qt-only
+halves of `gui/geometry.py`, `gui/charge.py`, `gui/run_model.py` and `gui/render.py`; a view-model stays where the
+browser shell imports it or a kept test of a restated clause reads it (the plan's D5). `io/manifest.py`'s `PySide6` row
+goes and `nicegui` and `fastapi` join (§5.3.3). The server gains its self-test, `nanopnp gui --selftest`, run by CI on
+the three platforms (VER-43, VER-44, VER-55; ADR-004's packaging NOTE; RSK-13); the licence notice travels in the wheel
+and `nanopnp --env` states the GPL-2+ obligation (CON-11). The restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44,
+VER-55, VER-60, CON-08, CON-09, CON-11, ADR-004's packaging NOTE and RSK-13 become their clauses (S17; T5). REV-134
+closes (U1). The guide's desktop page leaves, and a short application guide says how to start the workbench and what
+each of the six suites does, with one rendered screen a suite (AW3; §8.1's increment 5); the site's register pages
+link the plans and reviews (REV-228; AM15). No number and no stored key moves (VER-62). Tag `v0.6.0-alpha.27`.
 
 ### WP5.28 — The close
 
@@ -315,7 +321,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.19, Study | 1, 2 | VER-44 and VER-60 as restated; FR-39's study and its sweep; VER-36's pair by resolved bias; VER-35 to a stage; VER-59's supplied spacing; a run's thread count keying nothing (VER-62); VER-78; the 200 ms measure, Phase 6's since AW1 (REV-258) |
 | WP5.20, the meso suite | 1, 2 | VER-60 as restated: a point names a residue once on a C<sub>n</sub> structure, an edit names the atoms it moves; the overlay's mean about the axis is the 3D charge's; VER-62 unmoved by the moved tools; VER-78 as amended, each moved tool's page at its new address |
 | WP5.21, Analysis | 1 | AG6's difference: exact for a linear field, zero for identical runs; a comparison item and a cleaned run rebuilt (FR-32, AN5); a recorded run's convergence as the live one (VER-44); uPlot unmodified (CON-09); VER-78 |
-| WP5.27, Qt's removal; WP5.28, the close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as their clauses, the server's self-test failing on a payload that does not load; the capability list, Q01 to Q41, checked at review against the rendered screens (N3); VER-78 over every screen and state after the shared modules split; VER-62 unmoved; VER-45's strict build over the short guide |
+| WP5.27, Qt's removal; WP5.28, the close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as their clauses, the server's self-test failing on a payload that does not load; the capability list, Q01 to Q41, checked at review against the rendered screens (N3), run progress and *More values* with it; a contributed deviation listed (FR-25); VER-78 over every screen and state after the shared modules split; VER-62 unmoved; VER-45's strict build over the short guide |
 
 **The phase is complete when:**
 
@@ -323,7 +329,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 2. **The restated gating clauses and VER-78 pass** on every fixture state. A miss is fixed; a
    re-argued clause is a spec amendment.
 3. **Every Qt shell capability is in the browser shell**, checked against WP5.01's list before Qt
-   leaves. A miss keeps Qt.
+   leaves. A miss keeps Qt. Row Q16 is the typed move (AW7), and five details are carried by REV-274 (AW11).
 4. **Each v0.6 requirement has its test or review check.** A miss is fixed, or deferred as a
    `REV-nn` row. QR-16 is met in part: its keyboard gaps ship noted beside it (AW8).
 5. **QR-10's trial is not this phase's**: it is held on v1.0's release candidate (§8.2.47 AW2).
