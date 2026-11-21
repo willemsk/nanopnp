@@ -29,6 +29,12 @@
     return sorted[Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))];
   };
   const symmetric = (map) => { const s = percentile(flat(map.v), 99); return [-s, s]; };
+  // A one-signed field opens on its 1st to 99th percentile, as a diverging one on the 99th of its size.
+  const spread = (values) => {
+    const sorted = values.slice().sort((a, b) => a - b);
+    const at = (p) => sorted[Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))];
+    return [at(1), at(99)];
+  };
   const outlineXY = (mirror) => {
     const x = [], y = [];
     for (const [r0, z0, r1, z1] of T.outline) { x.push(mirror ? -r0 : r0, mirror ? -r1 : r1, null); y.push(z0, z1, null); }
@@ -49,16 +55,18 @@
     const key = o.quantity || "potential";
     const map = o.map || quantity(key);
     const div = o.diverging !== undefined ? o.diverging : key === "potential";
-    const range = div ? symmetric(map) : [Math.min(...flat(map.v)), Math.max(...flat(map.v))];
+    const range = div ? symmetric(map) : spread(flat(map.v));
     const traces = [];
     const surface = (m, mirror) => ({
       type: "heatmap", x: mirror ? m.r.map((r) => -r) : m.r, y: m.z, z: m.v, zmin: range[0], zmax: range[1],
       colorscale: div ? diverging() : viridis, zsmooth: "best", hoverongaps: false, showscale: !mirror,
       colorbar: { title: { text: label(map), side: "right" }, thickness: 12, len: 0.9, outlinecolor: t.ink, outlinewidth: 1, tickfont: { size: 11 } },
-      hovertemplate: `r %{x:.2f} nm<br>z %{y:.2f} nm<br>${map.name} %{z:.4g} ${map.unit}<extra>${mirror ? T.runs.second.label : T.runs.first.label}</extra>`,
+      hovertemplate: `r %{x:.2f} nm<br>z %{y:.2f} nm<br>${map.name} %{z:.4g} ${map.unit}<extra>${mirror && !o.reflect ? T.runs.second.label : T.runs.first.label}</extra>`,
     });
     if (o.surface !== false) traces.push(surface(map, false));
-    if (o.mirrored) traces.push(surface(T.mirrored, true));
+    // A second run reflected to r < 0, or with reflect the same run, so a pore reads whole.
+    const second = o.reflect ? map : T.mirrored;
+    if ((o.mirrored || o.reflect) && o.surface !== false) traces.push(surface(second, true));
     if (o.contours) {
       const step = o.step || (div ? 0.005 : (range[1] - range[0]) / 10);
       traces.push({ type: "contour", x: map.r, y: map.z, z: map.v, showscale: false, hoverinfo: "skip",
@@ -84,11 +92,11 @@
     const mask = (m, mirror) => ({ type: "heatmap", x: mirror ? m.r.map((r) => -r) : m.r, y: m.z, z: m.v.map((row) => row.map((v) => (v === null ? 1 : null))),
       colorscale: [[0, solid], [1, solid]], showscale: false, hoverinfo: "skip", zsmooth: false });
     traces.push(mask(map, false));
-    if (o.mirrored) traces.push(mask(T.mirrored, true));
+    if (o.mirrored || o.reflect) traces.push(mask(second, true));
     if (o.outline !== false) {
       const xy = outlineXY(false);
       traces.push({ type: "scatter", mode: "lines", x: xy.x, y: xy.y, hoverinfo: "skip", line: { color: t.ink, width: 1 } });
-      if (o.mirrored) { const m = outlineXY(true); traces.push({ type: "scatter", mode: "lines", x: m.x, y: m.y, hoverinfo: "skip", line: { color: t.ink, width: 1 } }); }
+      if (o.mirrored || o.reflect) { const m = outlineXY(true); traces.push({ type: "scatter", mode: "lines", x: m.x, y: m.y, hoverinfo: "skip", line: { color: t.ink, width: 1 } }); }
     }
     if (o.probes) {
       traces.push({ type: "scatter", mode: "markers+text", x: [0.02, 1.2], y: [0, 3], text: ["P1", "P2"], textposition: "middle right",
@@ -98,14 +106,14 @@
       traces.push({ type: "scatter", mode: "lines", x: [0.02, 0.02], y: [T.window_nm[2], T.window_nm[3]], hoverinfo: "skip", line: { color: t.accent, width: 2, dash: "dash" } });
     }
     const w = T.window_nm;
-    const xr = o.mirrored ? [-w[1], w[1]] : [w[0], w[1]];
+    const xr = o.mirrored || o.reflect ? [-w[1], w[1]] : [w[0], w[1]];
     Plotly.newPlot(el, traces, plotlyBase(t, {
       xaxis: axis(t, "r (nm)", { range: xr, constrain: "domain" }),
       yaxis: axis(t, "z (nm)", { range: [w[2], w[3]], scaleanchor: "x", scaleratio: 1, constrain: "domain" }),
       margin: { l: 48, r: 8, t: 6, b: 38 },
       annotations: o.mirrored ? [
-        { x: -w[1] / 2, y: w[3], yanchor: "top", text: T.runs.second.label, showarrow: false, font: { size: 11 }, bgcolor: t.bg },
-        { x: w[1] / 2, y: w[3], yanchor: "top", text: T.runs.first.label, showarrow: false, font: { size: 11 }, bgcolor: t.bg }] : [],
+        { x: -0.3, xanchor: "right", y: w[3], yanchor: "top", text: "ASP neutral", showarrow: false, font: { size: 12 }, bgcolor: t.bg },
+        { x: 0.3, xanchor: "left", y: w[3], yanchor: "top", text: "charged", showarrow: false, font: { size: 12 }, bgcolor: t.bg }] : [],
     }), config);
   }
 
@@ -156,11 +164,13 @@
     const m = T.revolved[key];
     const div = key === "potential";
     const values = flat(m.v);
-    const range = div ? (() => { const s = percentile(values, 99); return [-s, s]; })() : [Math.min(...values), Math.max(...values)];
+    const range = div ? (() => { const s = percentile(values, 99); return [-s, s]; })() : spread(values);
     const face = (angle, scale) => {
       const x = [], y = [], z = [];
       for (let j = 0; j < m.z.length; j++) {
-        x.push(m.r.map((r) => r * Math.cos(angle))); y.push(m.r.map((r) => r * Math.sin(angle))); z.push(m.r.map(() => m.z[j]));
+        // A solid's cell, where the field has no value, is a hole in the face.
+        const keep = (i, v) => (m.v[j][i] === null ? null : v);
+        x.push(m.r.map((r, i) => keep(i, r * Math.cos(angle)))); y.push(m.r.map((r, i) => keep(i, r * Math.sin(angle)))); z.push(m.r.map((_, i) => keep(i, m.z[j])));
       }
       return { type: "surface", x, y, z, surfacecolor: m.v, cmin: range[0], cmax: range[1], colorscale: div ? diverging() : viridis,
         showscale: scale, colorbar: { title: { text: `${m.name} (${m.unit})`, side: "right" }, thickness: 12, len: 0.7, outlinecolor: t.ink, outlinewidth: 1 },
@@ -188,7 +198,7 @@
     Plotly.newPlot(el, traces, plotlyBase(t, {
       margin: { l: 0, r: 0, t: 0, b: 0 },
       scene: { xaxis: sceneAxis("x (nm)"), yaxis: sceneAxis("y (nm)"), zaxis: sceneAxis("z (nm)"), aspectmode: "data",
-        camera: { eye: { x: 1.9, y: 1.1, z: 0.45 } } },
+        camera: { eye: { x: 1.5, y: -1.5, z: 0.35 } } },
     }), config);
   }
 
@@ -206,14 +216,14 @@
     const key = o.quantity || "potential";
     const map = quantity(key);
     const div = key === "potential";
-    const range = div ? symmetric(map) : [Math.min(...flat(map.v)), Math.max(...flat(map.v))];
+    const range = div ? symmetric(map) : spread(flat(map.v));
     const data = [];
     for (let j = 0; j < map.z.length; j++) for (let i = 0; i < map.r.length; i++) { const v = map.v[j][i]; if (v !== null) data.push([i, j, v]); }
     const chart = echarts.init(el, null, { renderer: "canvas" });
     const w = T.window_nm;
     const series = [{ type: "heatmap", data, progressive: 0, emphasis: { disabled: true } }];
     chart.setOption(Object.assign(ecTheme(t), {
-      grid: { left: 50, right: 70, top: 10, bottom: 40 },
+      grid: { left: 50, right: 96, top: 10, bottom: 40 },
       tooltip: { formatter: (p) => p.value ? `r ${map.r[p.value[0]].toFixed(2)} nm, z ${map.z[p.value[1]].toFixed(2)} nm<br>${map.name} ${Number(p.value[2]).toPrecision(4)} ${map.unit}` : "" },
       xAxis: ecAxis(t, "r (nm)", { type: "category", data: map.r.map((r) => r.toFixed(1)), axisLabel: { interval: Math.floor(map.r.length / 5), color: t.ink } }),
       yAxis: ecAxis(t, "z (nm)", { type: "category", data: map.z.map((z) => z.toFixed(1)), axisLabel: { interval: Math.floor(map.z.length / 8), color: t.ink } }),
@@ -256,7 +266,7 @@
     const m = T.revolved[key];
     const div = key === "potential";
     const values = flat(m.v);
-    const range = div ? (() => { const s = percentile(values, 99); return [-s, s]; })() : [Math.min(...values), Math.max(...values)];
+    const range = div ? (() => { const s = percentile(values, 99); return [-s, s]; })() : spread(values);
     const data = [];
     for (const angle of [0, 1.5 * Math.PI]) for (let j = 0; j < m.z.length; j++) for (let i = 0; i < m.r.length; i++) {
       const v = m.v[j][i]; if (v === null) continue;
@@ -264,7 +274,7 @@
     }
     const chart = echarts.init(el);
     chart.setOption(Object.assign(ecTheme(t), {
-      visualMap: { min: range[0], max: range[1], dimension: 3, inRange: { color: ecColours(div) }, right: 4, top: "middle", textStyle: { color: t.ink }, calculable: true },
+      visualMap: { min: range[0], max: range[1], dimension: 3, inRange: { color: ecColours(div) }, right: 4, top: "middle", textStyle: { color: t.ink }, calculable: true, precision: 3 },
       xAxis3D: { name: "x (nm)", type: "value" }, yAxis3D: { name: "y (nm)", type: "value" }, zAxis3D: { name: "z (nm)", type: "value" },
       grid3D: { axisLine: { lineStyle: { color: t.muted } }, axisLabel: { textStyle: { color: t.ink } }, viewControl: { alpha: 15, beta: 40 }, boxDepth: 80, boxWidth: 80, boxHeight: 160 },
       series: [{ type: "scatter3D", data, symbolSize: 3.2 }],
@@ -277,5 +287,20 @@
     return { name: "Δ potential φ", unit: a.unit, r: a.r, z: a.z, v: a.v.map((row, j) => row.map((v, i) => (v === null || b.v[j][i] === null ? null : b.v[j][i] - v))) };
   }
 
-  window.draw = { difference,  plotlyMap, plotlyCut, plotlyGlobal, plotlyPoint, plotlyRevolution, echartsMap, echartsCut, echartsGlobal, echartsRevolution };
+  // The quantities a board lists, in the order the Quantities node would keep them.
+  const SHOWN = ["current", "conductance", "transport number", "currents (Na+)", "currents (Cl-)", "bias"];
+  function shownQuantities() {
+    return SHOWN.map((name) => T.quantities.find((row) => row.quantity === name)).filter(Boolean);
+  }
+
+  // A map's opening range in mV, as its surface's settings show it.
+  function rangeText(key) {
+    const [lo, hi] = symmetric(quantity(key || "potential"));
+    return `${(lo * 1e3).toFixed(1).replace("-", "−")} … ${(hi * 1e3).toFixed(1)}`;
+  }
+  document.addEventListener("DOMContentLoaded", () => {
+    for (const el of document.querySelectorAll("[data-range]")) el.firstChild.textContent = rangeText(el.dataset.range);
+  });
+
+  window.draw = { difference, shownQuantities, rangeText,  plotlyMap, plotlyCut, plotlyGlobal, plotlyPoint, plotlyRevolution, echartsMap, echartsCut, echartsGlobal, echartsRevolution };
 })();

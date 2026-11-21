@@ -51,6 +51,10 @@ def _species(fields: Any) -> list[str]:  # noqa: ANN401 - SolutionFields
 
 def _grid(fields: Any, quantity: str, window: tuple[float, ...], cells: int) -> dict[str, Any]:  # noqa: ANN401
     r, z, values = field_grid(fields, quantity, window_nm=window, cells=cells)
+    # The fluid's cells alone, as a concentration has them: the potential inside the protein,
+    # beside its charges, would set the colour scale of a map of the pore.
+    _, _, fluid = field_grid(fields, _species(fields)[0], window_nm=window, cells=cells)
+    values = np.where(np.isfinite(fluid), values, np.nan)
     return {
         "name": quantity_name(quantity),
         "unit": field_unit(quantity),
@@ -61,7 +65,7 @@ def _grid(fields: Any, quantity: str, window: tuple[float, ...], cells: int) -> 
 
 
 def _own_run(choices: tuple[RunChoice, ...]) -> RunChoice:
-    return next(choice for choice in choices if choice.sweep is None)
+    return next(choice for choice in choices if not choice.sweep)
 
 
 def main(folder: Path, out: Path) -> None:
@@ -119,10 +123,12 @@ def main(folder: Path, out: Path) -> None:
             for quantity in ("potential", *species)
         ],
     }
-    points = sorted(
-        (choice for choice in choices if choice.bias_V is not None and choice.current_A),
-        key=lambda choice: choice.bias_V or 0.0,
-    )
+    # One point per bias: a sweep's member before the study's own run at the same bias.
+    by_bias: dict[float, RunChoice] = {}
+    for choice in sorted(choices, key=lambda choice: not choice.sweep):
+        if choice.bias_V is not None and choice.current_A:
+            by_bias.setdefault(choice.bias_V, choice)
+    points = [by_bias[bias] for bias in sorted(by_bias)]
     probe = (0.0, 0.0)
     iv = []
     for choice in points:

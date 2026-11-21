@@ -32,7 +32,7 @@
       <div class="rail">2wcd-project · Analysis › Results</div>
       <div class="suite-area">
         <div class="pane">
-          <div class="shown"><label>Shown run</label><div class="box sel">2wcd · +50 mV · run 3f2a…</div></div>
+          <div class="shown"><label>Shown run</label><div class="box sel">2wcd · +50 mV · run 394c…</div></div>
           <h2>Results <span class="tools"><span class="btn" title="Add a plot group">＋</span><span class="btn" title="Delete">✕</span><span class="btn" title="Move up">↑</span><span class="btn" title="Move down">↓</span></span></h2>
           <div class="tree">
             <div class="node" style="--d:0"><span class="tw">▾</span><span class="ic plot"></span>Potential (r, z)<span class="meta">tile 1</span></div>
@@ -41,25 +41,25 @@
             <div class="node" style="--d:1"><span class="ic">→</span>Arrows<span class="meta">u</span></div>
             <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic line"></span>Along the axis<span class="meta">tile 2</span></div>
             <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic line"></span>Current against bias<span class="meta"><span class="pin">◆</span> Bias sweep · tile 3</span></div>
-            <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic three"></span>Pore in 3D<span class="meta">tile 4</span></div>
+            <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic three"></span>Pore in 3D<span class="meta">hidden</span></div>
             <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic plot"></span>Concentrations (r, z)<span class="meta">hidden</span></div>
             <div class="node branch"><span class="tw">▾</span>Definitions</div>
-            <div class="node" style="--d:1"><span class="ic">ƒ</span>ρ_e = F·(c_K − c_Cl)<span class="meta">C/m³</span></div>
+            <div class="node" style="--d:1"><span class="ic">ƒ</span>ρ_e = F·(c_Na − c_Cl)<span class="meta">C/m³</span></div>
             <div class="node branch"><span class="tw">▸</span>Probes<span class="meta">2</span></div>
-            <div class="node branch"><span class="tw">▸</span>Quantities<span class="meta">6 of 14</span></div>
+            <div class="node branch"><span class="tw">▸</span>Quantities<span class="meta">6 of 15</span></div>
           </div>
           <div class="settings">
             <h2>Surface</h2>
             <div class="field"><label>Expression</label><div class="box sel">potential φ</div></div>
             <div class="field"><label>Unit</label><div class="box sel">mV</div></div>
             <div class="field"><label>Colour map</label><div class="box sel">Diverging, positive blue</div></div>
-            <div class="field"><label>Range</label><div class="box num">−13.1 … 13.1<span class="u">mV</span></div></div>
+            <div class="field"><label>Range</label><div class="box num" data-range="potential">−13.1 … 13.1<span class="u">mV</span></div></div>
             <div class="check"><i class="on"></i>Range from the 99th percentile</div>
             <div class="field"><label>Run</label><div class="box sel">Follows the shown run</div></div>
           </div>
         </div>
         <div class="graphics">
-          <div class="ghead"><b>2wcd · +50 mV</b><span class="chip">4 of 5 plot groups shown</span><span class="right"><span class="btn">1</span><span class="btn">2 × 2</span><span class="btn">• Probe</span><span class="btn">┆ Cut</span></span></div>
+          <div class="ghead"><b>2wcd · +50 mV</b><span class="chip">3 of 5 plot groups shown</span><span class="right"><span class="btn">1</span><span class="btn">2 × 2</span><span class="btn">• Probe</span><span class="btn">┆ Cut</span></span></div>
           <div class="tiles">
             <div class="tile sel" style="grid-row: span 2"><div class="th"><b>Potential (r, z)</b><span class="muted">P1, P2 · Axis</span></div><div class="plot" id="a"></div></div>
             <div class="tile"><div class="th"><b>Along the axis</b><span class="muted">φ, two runs</span></div><div class="plot" id="b"></div></div>
@@ -72,7 +72,7 @@
   </div>
 </div>
 <script>
-  draw.plotlyMap(document.getElementById("a"), { quantity: "potential", contours: true, arrows: true, probes: true, cutline: true });
+  draw.plotlyMap(document.getElementById("a"), { quantity: "potential", contours: true, arrows: true, probes: true, cutline: true, reflect: true });
   draw.plotlyCut(document.getElementById("b"), { quantity: "potential" });
   draw.plotlyGlobal(document.getElementById("c"), {});
 </script>

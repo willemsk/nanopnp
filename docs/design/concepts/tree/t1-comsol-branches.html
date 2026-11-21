@@ -38,7 +38,7 @@
             <div class="node" style="--d:1"><span class="ic data three">3</span>Revolution<span class="meta">of Shown run</span></div>
             <div class="node branch"><span class="tw">▸</span>Definitions<span class="meta">ρ_e, |u|</span></div>
             <div class="node branch"><span class="tw">▸</span>Probes and cuts<span class="meta">P1, P2, Axis</span></div>
-            <div class="node branch"><span class="tw">▸</span>Quantities<span class="meta">6 of 14 shown</span></div>
+            <div class="node branch"><span class="tw">▸</span>Quantities<span class="meta">6 of 15 shown</span></div>
             <div class="node branch"><span class="tw">▾</span>Plot groups</div>
             <div class="node" style="--d:1"><span class="tw">▾</span><span class="ic plot"></span>Potential (r, z)<span class="meta">Shown run</span></div>
             <div class="node sel" style="--d:2"><span class="ic plot"></span>Surface<span class="meta">φ</span></div>
@@ -56,7 +56,7 @@
             <div class="field"><label>Expression</label><div class="box sel">potential φ</div></div>
             <div class="field"><label>Unit</label><div class="box sel">mV</div></div>
             <div class="field"><label>Colour map</label><div class="box sel">Diverging, positive blue</div></div>
-            <div class="field"><label>Range</label><div class="box num">−13.1 … 13.1<span class="u">mV</span></div></div>
+            <div class="field"><label>Range</label><div class="box num" data-range="potential">−13.1 … 13.1<span class="u">mV</span></div></div>
             <div class="check"><i class="on"></i>Range from the 99th percentile</div>
           </div>
         </div>
@@ -77,13 +77,13 @@
 </div>
 <script>
   document.querySelector(".node.sel").scrollIntoView({ block: "nearest" });
-  draw.plotlyMap(document.getElementById("g"), { quantity: "potential", contours: true, arrows: true, probes: true, cutline: true });
+  draw.plotlyMap(document.getElementById("g"), { quantity: "potential", contours: true, arrows: true, probes: true, cutline: true, reflect: true });
   const sp = TREE.species.map((s) => s.replace("_mol_m3", "").replace("c_", "c "));
   document.getElementById("ph").innerHTML = `<tr><th>Probe</th><th>r (nm)</th><th>z (nm)</th><th>φ (mV)</th>${sp.map((s) => `<th>${s} (mM)</th>`).join("")}</tr>`;
   TREE.probes.forEach((p, i) => document.getElementById("pb").insertAdjacentHTML("beforeend",
     `<tr><td>P${i + 1}</td><td class="v">${p.r_nm.toFixed(2)}</td><td class="v">${p.z_nm.toFixed(2)}</td><td class="v">${(p.potential * 1e3).toFixed(2)}</td>${TREE.species.map((s) => `<td class="v">${p[s].toFixed(1)}</td>`).join("")}</tr>`));
   const q = document.getElementById("q");
-  for (const row of TREE.quantities.slice(0, 5)) q.insertAdjacentHTML("beforeend", `<tr><td>${row.quantity}</td><td class="v">${row.value}</td><td>${row.unit}</td></tr>`);
+  for (const row of draw.shownQuantities()) q.insertAdjacentHTML("beforeend", `<tr><td>${row.quantity}</td><td class="v">${row.value}</td><td>${row.unit}</td></tr>`);
 </script>
 </body>
 </html>
