@@ -5,9 +5,11 @@ from __future__ import annotations
 import http.cookiejar
 import importlib.util
 import math
+import queue
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import traceback
 import urllib.request
@@ -15,12 +17,11 @@ from importlib import metadata
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from nanopnp.core.errors import EXIT_OK
-from nanopnp.core.paths import structure_file
+from nanopnp.core.paths import LICENCE_NOTICE, structure_file
 from nanopnp.gui.render import RENDERER_DIRECTORY, RENDERER_URL, host_page
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from collections.abc import Callable, Collection, Sequence
+    from collections.abc import Callable, Collection
 
 __all__ = [
     "FRAGMENT",
@@ -30,7 +31,7 @@ __all__ = [
     "SERVER_TIMEOUT_S",
     "PayloadError",
     "exercise_payloads",
-    "main",
+    "notice_line",
 ]
 
 PAYLOADS: tuple[str, ...] = (
@@ -108,7 +109,7 @@ def _exercise_skimage() -> str:
     import skimage.morphology
 
     # The cross ``disk(1)``, as floats: made by the payload itself, because
-    # importing NumPy here would be a payload the probe does not declare. Its
+    # importing NumPy here would be a payload the self-test does not declare. Its
     # arms reach the edges, so the level cuts it into four open arcs.
     cross = skimage.morphology.disk(1).astype(float)  # type: ignore[no-untyped-call]
     contours = skimage.measure.find_contours(cross, 0.5)  # type: ignore[no-untyped-call]
@@ -214,9 +215,13 @@ def _exercise_protonation(scratch: Path) -> str:
 
 
 def _exercise_mesh() -> str:
-    import netgen
+    try:
+        import netgen
+        from netgen.occ import unit_square
+    except ImportError as error:
+        # Before NGSolve, which imports Netgen itself: a broken Netgen is Netgen's failure.
+        raise PayloadError("netgen", error) from error
     import ngsolve
-    from netgen.occ import unit_square
     from ngsolve.webgui import Draw
 
     mesh = ngsolve.Mesh(unit_square.GenerateMesh(maxh=0.3))
@@ -236,9 +241,25 @@ def _ready_address(child: subprocess.Popen[str]) -> str:
     from nanopnp.gui.web.server import READY
 
     assert child.stdout is not None
+    stream = child.stdout
+    lines: queue.Queue[str] = queue.Queue()
+
+    # A blocking readline would wait past the deadline for a child that hangs before its line.
+    def read() -> None:
+        try:
+            for line in stream:
+                lines.put(line)
+        except (OSError, ValueError):
+            pass
+        lines.put("")
+
+    threading.Thread(target=read, daemon=True).start()
     deadline = time.monotonic() + SERVER_TIMEOUT_S
-    while time.monotonic() < deadline:
-        line = child.stdout.readline()
+    while (left := deadline - time.monotonic()) > 0:
+        try:
+            line = lines.get(timeout=left)
+        except queue.Empty:
+            break
         if not line:
             break
         found = READY.match(line.strip())
@@ -266,8 +287,10 @@ def _exercise_renderer(expected: Path) -> str:
                 raise PayloadError(SERVER_MODULE, error) from error
             root, _, token = address.partition("/?token=")
             # The first answer sets the launch cookie, which the renderer's request then carries.
+            # No proxy: one set in the environment would be asked for the child's loopback port.
             opener = urllib.request.build_opener(
-                urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
+                urllib.request.ProxyHandler({}),
+                urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),
             )
             with opener.open(f"{root}/api/health?token={token}", timeout=30) as answer:
                 if answer.status != 200:
@@ -334,15 +357,14 @@ def exercise_payloads(
     return report
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    """Run the self-test, print a line a payload and return 0; a failed payload raises.
+def notice_line(notice: Path = LICENCE_NOTICE) -> str:
+    """Return a line naming the installed licence notice.
 
     Raises
     ------
     PayloadError
-        If a payload did not import or did not work; the message names it.
+        If the installation carries no licence notice.
     """
-    del argv
-    for line in exercise_payloads().values():
-        print(f"exercised {line}")
-    return EXIT_OK
+    if not notice.is_file():
+        raise PayloadError(notice.name, FileNotFoundError(f"no licence notice at {notice}"))
+    return f"found the licence notice at {notice}"

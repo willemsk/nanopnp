@@ -235,6 +235,7 @@ class _Frame:
         self.queue_box: ui.column
         self.log_box: ui.column
         self.queue_seen: tuple[int, int, int] = (-1, -1, -1)
+        self.log_shown = 0
         self.view: ui.element
         self.hosts: dict[str, ui.element] = {}
         self.chart: ChartView
@@ -873,6 +874,9 @@ class _Frame:
                 for name in PANELS:
                     ui.tab(name, label=name.capitalize()).props(f"data-control=panel-tab-{name}")
             self.tabs.set_value(self.panel)
+            self.tabs.on_value_change(
+                lambda e: self.pin_log(always=True) if e.value == "log" else None
+            )
             with ui.column().classes("panel-body w-full"):
                 with ui.tab_panels(self.tabs, value=self.panel).classes("w-full"):
                     with ui.tab_panel("queue"):
@@ -882,6 +886,9 @@ class _Frame:
                     with ui.tab_panel("log"):
                         self.log_box = ui.column().props("data-control=log-list")
                         self.log_rows()
+                        if self.panel == "log":
+                            # Opened on the log: its end is shown once the page has a socket.
+                            ui.timer(0.3, lambda: self.pin_log(always=True), once=True)
                     with ui.tab_panel("changes"):
                         self.changes_list()
                     with ui.tab_panel("problems"):
@@ -902,9 +909,28 @@ class _Frame:
                     self.run_entry(entry)
 
     def log_rows(self) -> None:
+        # Appended, not redrawn: a long run's log would otherwise be rebuilt at every line.
+        log = self.shell.queue.log
+        if self.log_shown == 0 or len(log) < self.log_shown:
+            self.log_box.clear()
+            self.log_shown = 0
         with self.log_box:
-            for line in self.shell.queue.log or ["The log is empty."]:
+            if not log:
+                ui.label("The log is empty.")
+            for line in log[self.log_shown :]:
                 ui.label(line)
+        self.log_shown = len(log)
+
+    def pin_log(self, *, always: bool = False) -> None:
+        """Bring the log's newest line into view, unless its reader scrolled away from the end."""
+        if self.tabs.value != "log" or not context.client.has_socket_connection:
+            return
+        # A reader within a few rows of the end is following the log.
+        near = "true" if always else "p.scrollHeight - p.scrollTop - p.clientHeight < 160"
+        ui.run_javascript(
+            "const p = document.querySelector('.bottom-panel');"
+            f"if (p && ({near})) p.scrollTop = p.scrollHeight;"
+        )
 
     def run_entry(self, entry: Entry) -> None:
         """Draw a run's entry: *Open* shows its convergence in Runs, *Result* its result."""
@@ -944,8 +970,10 @@ class _Frame:
         if (queue.moved, len(queue.log), len(queue.entries)) != self.queue_seen:
             self.queue_box.clear()
             self.queue_rows()
-            self.log_box.clear()
+            grew = len(self.shell.queue.log) != self.log_shown
             self.log_rows()
+            if grew:
+                self.pin_log()
             self.queue_moved()
 
     def changed_text(self, changed: int) -> str:

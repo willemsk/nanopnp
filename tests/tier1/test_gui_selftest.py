@@ -119,6 +119,14 @@ def test_con11_nanopnp_env_states_the_gpl_obligation_and_the_notice(
     assert str(LICENCE_NOTICE) in printed
 
 
+def test_con11_an_installation_without_its_licence_notice_fails_the_selftest(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(PayloadError) as failed:
+        selftest.notice_line(tmp_path / LICENCE_NOTICE.name)
+    assert failed.value.payload == LICENCE_NOTICE.name
+
+
 def test_ver43_a_hidden_ngsolve_fails_naming_ngsolve(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setitem(sys.modules, "ngsolve", None)
     with pytest.raises(PayloadError) as failed:
@@ -141,7 +149,8 @@ def test_ver43_the_whole_selftest_passes(capsys: pytest.CaptureFixture[str]) -> 
     assert cli_main(["gui", "--selftest"]) == 0
     printed = capsys.readouterr().out.splitlines()
     assert any("served the shipped renderer" in line for line in printed)
-    assert len(printed) == len([p for p in PAYLOADS if p not in ("netgen", "propka")]), printed
+    assert printed[-1] == f"found the licence notice at {LICENCE_NOTICE}"
+    assert len(printed) == len([p for p in PAYLOADS if p not in ("netgen", "propka")]) + 1, printed
 
 
 pdb2pqr_installed = pytest.mark.skipif(

@@ -109,11 +109,19 @@ def _gui(args: argparse.Namespace) -> int:
                 name=package,
             )
     if args.selftest:
-        if args.state is not None or args.dev or args.project is not None:
-            _refuse(args, "--selftest takes no project, --state or --dev")
+        if args.state is not None or args.dev or args.project is not None or args.port:
+            _refuse(args, "--selftest takes no project, --state, --port or --dev")
         # Named by string, as the server is.
-        code: int = importlib.import_module("nanopnp.gui.web.selftest").main()
-        return code
+        selftest = importlib.import_module("nanopnp.gui.web.selftest")
+        exercised: dict[str, str] = selftest.exercise_payloads()
+        notice: str = selftest.notice_line()
+        report: dict[str, Canonicalisable] = {**exercised, "licence notice": notice}
+        _emit(
+            report,
+            [*(f"exercised {line}" for line in exercised.values()), notice],
+            as_json=bool(getattr(args, "json", False)),
+        )
+        return EXIT_OK
     # Named by string: gui sits above cli in the layer order, so an import would point upward.
     server = importlib.import_module("nanopnp.gui.web.server")
     # The solved state, the browser tests' alone, is admitted though not listed.
