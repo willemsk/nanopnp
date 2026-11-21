@@ -1407,3 +1407,30 @@ The *End-of-phase report* read:
 > against the browser shell; VER-78's screen and state counts; the time from a click to a redrawn
 > view on the reference charged case and the install's time on a clean machine, each re-run by the
 > command WP5.02 names; and the tool phases' order.
+
+## Amended 21 November 2026, at WP5.27's plan (§8.2.47 AW9 to AW11)
+
+WP5.27's plan checked rows Q01 to Q41 against the browser shell's code and put what it found to the author. The package
+gains run progress and the run log (AW9), *More values* over every setting without a field (AW10) and the contributed
+deviations (FR-25); five details are carried by REV-274 (AW11). Its entry read:
+
+> ### WP5.27 — Qt's removal and the short guide (REV-134, REV-228; S13, S17; §8.2.47 AW1, AW3)
+>
+> Every row Q01 to Q41 is checked present in the browser workbench as it stands (criterion 3; the design document's
+> *Tabs or areas*, whose rows Q37 to Q41 name WP5.21's explorer until the tree, and Q16 a vertex moved by typed values, AW7);
+> a miss keeps Qt. Then PySide6, the Qt widgets, the bundle and the packaging probe leave, with `gui/app.py`,
+> `case_model.py`, `scene.py`, the `nanopnp-gui` script and the
+> Qt-only halves of `gui/geometry.py` and `gui/charge.py`, the halves the browser shell imports staying (the
+> [survey](../../project/architecture-survey.md)'s inventory); its plan rules on `io/manifest.py`'s `PySide6` row. The server gains the self-test the restated clauses ask
+> in the probe's place, which the code lacks today, run by CI on the three platforms (VER-43, VER-44, VER-55; ADR-004's
+> packaging NOTE; RSK-13); and the restated NOTEs of IF-09, P3, QR-10, VER-43,
+> VER-44, VER-55, VER-60, CON-08, CON-09, CON-11, ADR-004's packaging NOTE and RSK-13 become their clauses (S17; T5).
+> REV-134 closes (U1). The guide's desktop pages leave, and a short application guide says how to start the workbench and
+> what each of the six suites does, with about one rendered screen a suite (AW3; §8.1's increment 5); the site's register
+> pages link the plans and reviews (REV-228; AM15). No number and no stored key moves (VER-62). Tag `v0.6.0-alpha.27`.
+
+Criterion 3 read:
+
+> 3. **Every Qt shell capability is in the browser shell**, checked against WP5.01's list before Qt
+>    leaves. A miss keeps Qt.
+

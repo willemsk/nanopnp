@@ -247,7 +247,7 @@ list has a place in the workbench before Qt leaves (S13):
 | Rows | Today's tab | In the workbench |
 |---|---|---|
 | Q01 to Q04 | Window | `nanopnp gui [<project>]` opens the project; the browser tab and the project rail name it (WB-36); the queue and the problems list say what runs and what was refused; closing stops the builds and their child processes |
-| Q05 to Q08 | Case | Each field in the tool that sets it, checked as it is typed and refused at the field (WB-12); the study's *Overview* shows the resolved case file; a section is added by the tool that uses it; a build or run validates and writes the case first |
+| Q05 to Q08 | Case | Each field in the tool that sets it, checked as it is typed and refused at the field (WB-12); the study's *Overview* shows the resolved case file; a section is added by the tool that uses it; a build or run validates and writes the case first; a setting with no field of its own is set in Study setup's *More values*, by its path and a typed value, and a supplied input by import (WP5.27; §8.2.47 AW10) |
 | Q09 | Geometry | *Open structure…* in Molecular, Prepare structure |
 | Q10 to Q12, Q23 | Geometry | Each Continuum tool's *Build*, queued; the tool list's status per tool; *Cancel* in the queue; a tool's record under its *Checks*, the log in the bottom panel |
 | Q13 | Geometry | Prepare structure's orientation gate and its checks |
@@ -258,11 +258,14 @@ list has a place in the workbench before Qt leaves (S13):
 | Q24 to Q26, Q30 | Charge | Meso's *Charge map*, built by *Build charge map* over the continuum model's molecular model, with its conservation checks |
 | Q27 | Charge | Molecular, Protonation, its residue states, Q<sub>net</sub> and the PROPKA warnings |
 | Q28, Q29 | Charge | Charge map: the lattice and the deployed density in (r, z) beside the molecule, linked (S6), a residue named once with its copies |
-| Q31 to Q34 | Run | *Run study*; *Cancel* in the queue; the queue's "rung x of N" (WB-23); the log |
+| Q31 to Q34 | Run | *Run study*; *Cancel* in the queue; the queue's "stage i of N, rung x of N" (WB-23) and the run's lines in the log, both built by WP5.27 (§8.2.47 AW9) |
 | Q35, Q36 | Convergence | A run picked in Study › Runs or opened from its queue line: the convergence plot across the view, the rung table in the pane (WB-45) |
 | Q37, Q38 | Result | The results explorer: the run's folder and its quantities, in the quantities tile; *Open in Runs* (WP5.21), which WP5.27 checks. From Phase 6's tree of results (§8.2.47 AW1): *Data › Shown run* names the run, its folder in the tooltip, with *Open in Runs*; its quantities in the bottom panel's *Quantities* (WB-54, WB-59, WB-63) |
 | Q39 | Result | The quantities tile's *Changed from the validated default*, from the run's manifest (WP5.21); from the tree, beside the quantities (WB-59) |
 | Q40, Q41 | Fields | The results explorer's field tile: its quantity, its colour map and range, as a map or on the solve's mesh, the renderer's message in place of a view that does not draw (WP5.21, WB-53), which WP5.27 checks. From the tree: a plot group's surface, its expression, colour map and range, *Show mesh* for the solve's mesh (WB-56, WB-57) |
+
+Five details of rows Q13, Q14, Q18, Q21, Q22, Q26, Q27, Q29 and Q30 are carried to Phase 6, and the Qt shell leaves
+without them (REV-274; §8.2.47 AW11).
 
 ## Tools
 
