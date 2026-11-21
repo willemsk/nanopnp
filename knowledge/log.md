@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-21
+* **Record**: NiceGUI 3.18 ships plotly.js 3.1.1 and ECharts 6.1.0 with ECharts GL 2.1.0; Plotly draws contours, arrows, equal aspect and a 3D surface coloured by a field, ECharts none of the first three, and Plotly's own mode bar misses WCAG's 24 px target and 3:1 focus ring (WP5.22's round; WB-57). ([GUI and packaging](07-software-stack/05-gui-and-packaging.md))
+
 ## 2026-11-20
 * **Record**: `webgui.js` 0.2.39 takes its opening camera from a scene's `gui_settings.camera` and its background from its container's text colour, so a host page frames a region and follows a dark theme without modifying the renderer (WP5.21; WB-50). ([GUI and packaging](07-software-stack/05-gui-and-packaging.md))
 
