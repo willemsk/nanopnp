@@ -4161,3 +4161,56 @@ the design decisions (about 490), the seven planned packages (about 950) and the
 **Open** for the author, as REV-216 left it: cut the live sections to the target (the delivered packages' verification
 rows and the settled design decisions to the record, the stubs to one line each), or restate the target for a phase
 amended in flight. Whichever is ruled lands at the next `/np-plan amend 5`, or in WP5.28, the close, at the latest.
+
+### REV-272: Phase 5 closes early; Phase 6 opens with its scope, a cleanup and the foundations
+
+The author asked, collecting the tree round's verdicts, whether the system is robust and extensible or a patchwork,
+and when to refactor. Two read-only surveys answered ([architecture survey](architecture-survey.md), dated at
+`8f4b09a`). The library's pipeline is sound: its stages, artefacts, store, layering and model and output registries.
+Its results side is not: a run has seven representations and its `run.json` no typed model; the shell writes the
+fields file; units are tabled four times; `post/` is helpers per screen; `Project` is 1,522 lines; a physics switch
+touches about ten files. The shell's spine stops where the tree, the editor-like views and the properties pane land:
+four fixed view slots, one state for every browser tab, polling, five form implementations, and numbers computed in
+the shell against QR-13.
+
+The record and the instructions are heavy, in words by `wc -w` at `8f4b09a`: the specification's text 141,436 and its
+history 55,838 in 48 files; `decisions.md` 70,481; this register 48,572; the design document 16,184; the Phase 5
+record 15,317; the `np-*` skills 12,073 in 19 files; `CLAUDE.md` 2,189. A work package's plan grew from about 2,900
+words (WP5.05 to WP5.08) to about 4,900 (WP5.16 to WP5.21).
+
+**Accepted**, ruled by the author on 21 November 2026:
+
+- the restructure opens Phase 6, and Phase 5 closes as soon as it can, its remaining packages reviewed so that nothing
+  is built twice;
+- Phase 6 opens with a round that re-aligns its scope, then a general cleanup that removes conflicting and outdated
+  decisions from the record and reduces the instruction files to their essentials, then the foundations;
+- the library's deeper cleanup (`Project` split, one registry shape with switches as data, the force terms shared with
+  the weak form) is one of Phase 6's first packages, which moves H5's MOD-08 from after v1.0;
+- the boards' style is a Phase 6 package.
+
+**To place** at `/np-plan amend 5`, which puts each move to the author. The proposal: Phase 5 keeps Qt's removal with
+its capability check (criterion 3; M3), the application guide's minimum for the browser workbench, and the close.
+WP5.22 (the tree), WP5.23 (the layers), WP5.24 (performance and criterion 6), WP5.25 (the refusals, with the library's
+error base), WP5.26 (the polish pass) and WP5.27's route and new models move to Phase 6, each after the foundations
+that would otherwise rebuild it; QR-10's observation (criterion 5) moves with the route. REV-271 is answered by the
+same amendment. Then `/np-plan project` re-aligns Phase 6's scope, Z6's speed-up first included.
+
+### REV-273: The tree round's verdicts reopen where the settings stand, the views shown and the runs in Data
+
+The verdicts on the tree round's boards ([the record](../design/reviews/2026-11-21-tree.md), *The verdicts*) keep
+WB-54's branches, WB-56's plot types and WB-57's library, and reopen four points:
+
+1. **Every run in Data** (T1's note): Analysis reaches all of a project's runs in a general way, a comparison one case
+   of it; WB-54's Data and WB-61's single *Shown run* are reread. Proposed: Data lists every run by study, as COMSOL's
+   datasets; a plot group names one run or more, two giving the three two-run views; *Shown run* stays one entry that
+   follows the newest.
+2. **An editor-like view area** (T2's note): splits resized in either direction, tabs of plot groups in each, the
+   active one outlined. It replaces WB-55's one or two views, and is the frame's, for every suite (WB-13's docking).
+3. **A properties pane of its own** (T1's worry, T3's note): the settings leave WB-55's stack under the tree. Proposed:
+   tree, properties and view side by side, as COMSOL's Model Builder, Settings and Graphics, the properties about a
+   fifth of the width.
+4. **The render's size** (today's explorer's note): renders take the real estate of a 2560 × 1440 screen and are
+   stored smaller. Proposed: 2560 × 1440 CSS pixels drawn at a 0.75 device scale (1920 × 1080 files), full-size crops
+   of the panes so a reviewer reads 12 px text, and one 1440 × 900 shot per screen as the small-window check.
+
+**Open** for the author at the tree's next round, in Phase 6 (REV-272).

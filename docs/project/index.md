@@ -10,6 +10,7 @@ against a written specification. It is pre-alpha and single-maintainer.
 | [Adding a physics model](physics-models.md) | The §5.4.3 interface, walked through `poisson` |
 | [Modularity report](modularity.md) | The architecture measured against its own claims, and the `MOD-nn` findings it logs |
 | [Modularity findings](modularity-findings.md) | The findings log: each `MOD-nn`, its status and the ruling behind it |
+| [Architecture survey](architecture-survey.md) | The workbench and the library surveyed for robustness and extension on 21 November 2026, the evidence behind REV-272 |
 | [Modularity measurements](../_generated/project/modularity-measurements.md) | The report's measurements, run on the tree this site was built from |
 | [Architecture](../_generated/project/architecture.md) | The modules, their layers and stages, generated from the tree this site was built from |
 | [Review register](review-items.md) | Every item a work package's implementation or review left open, with what was measured and how it was resolved |
