@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T3 One project tree</title>
+<link rel="stylesheet" href="board.css">
+<script src="data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.1.1/plotly.min.js"></script>
+<script src="draw.js"></script>
+<style>
+  .body { grid-template-columns: 66px 260px 1fr; }
+  .rail.open .tree { padding: 0 2px; }
+  .rail.open h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0; padding: 4px 10px; font-weight: 600; }
+  .suite-area { grid-template-columns: 270px 1fr; }
+  .bottom .table { height: 130px; overflow: auto; }
+</style>
+</head>
+<body>
+<div class="board" data-screen>
+  <div class="caption">
+    <h1>T3 · One project tree</h1>
+    <p>The results live in the <b>project rail</b>, under each study, as COMSOL keeps them in its one model tree: a study's runs, then its plot groups. The suite's own column holds only the selected node's settings. Comparisons stay items of the rail.</p>
+    <span class="tag">2WCD, solved · drawn with Plotly</span>
+  </div>
+  <div class="screen">
+    <div class="titlebar"><b>nanopnp</b><span class="menus"><span>File</span><span>Edit</span><span>View</span><span>Run</span><span>Help</span></span><span class="changed">◆ 3 changed</span><span class="palette">Search commands…  Ctrl+Shift+P</span></div>
+    <div class="body">
+      <div class="activity"><span class="grp">Build</span><span class="suite"><b></b>Molecular</span><span class="suite"><b></b>Meso</span><span class="suite"><b></b>Continuum</span><span class="suite"><b></b>Physics</span><span class="grp">Use</span><span class="suite"><b></b>Study</span><span class="suite on"><b></b>Analysis</span></div>
+      <div class="rail open">
+        <h2>2wcd-project</h2>
+        <div class="tree">
+          <div class="node branch"><span class="tw">▸</span>Models<span class="meta">4</span></div>
+          <div class="node branch"><span class="tw">▾</span>Studies</div>
+          <div class="node" style="--d:1"><span class="tw">▾</span>2wcd<span class="meta">5 runs</span></div>
+          <div class="node" style="--d:2"><span class="tw">▸</span>Runs<span class="meta">+50 mV …</span></div>
+          <div class="node" style="--d:2"><span class="tw">▾</span>Results<span class="meta">+50 mV</span></div>
+          <div class="node" style="--d:3"><span class="ic">ƒ</span>Definitions<span class="meta">2</span></div>
+          <div class="node" style="--d:3"><span class="ic">•</span>Probes<span class="meta">2</span></div>
+          <div class="node" style="--d:3"><span class="ic tbl"></span>Quantities<span class="meta">6</span></div>
+          <div class="node" style="--d:3"><span class="tw">▾</span><span class="ic plot"></span>Potential (r, z)</div>
+          <div class="node sel" style="--d:4"><span class="ic plot"></span>Surface<span class="meta">φ</span></div>
+          <div class="node" style="--d:4"><span class="ic">≈</span>Contours</div>
+          <div class="node" style="--d:4"><span class="ic">→</span>Arrows</div>
+          <div class="node" style="--d:3"><span class="tw">▸</span><span class="ic line"></span>Along the axis</div>
+          <div class="node" style="--d:3"><span class="tw">▸</span><span class="ic line"></span>Current against bias</div>
+          <div class="node" style="--d:3"><span class="tw">▸</span><span class="ic three"></span>Pore in 3D</div>
+          <div class="node" style="--d:1"><span class="tw">▸</span>2wcd-asp21n<span class="meta">1 run</span></div>
+          <div class="node branch"><span class="tw">▾</span>Comparisons</div>
+          <div class="node" style="--d:1"><span class="ic data">C</span>charged-against-neutral</div>
+        </div>
+      </div>
+      <div class="suite-area">
+        <div class="pane">
+          <h2>Surface · Potential (r, z)</h2>
+          <div class="field"><label>Run</label><div class="box sel">+50 mV · run 3f2a…</div></div>
+          <div class="field"><label>Expression</label><div class="box sel">potential φ</div></div>
+          <div class="field"><label>Unit</label><div class="box sel">mV</div></div>
+          <div class="field"><label>Colour map</label><div class="box sel">Diverging, positive blue</div></div>
+          <div class="field"><label>Range</label><div class="box num">−13.1 … 13.1<span class="u">mV</span></div></div>
+          <div class="check"><i class="on"></i>Range from the 99th percentile</div>
+          <div class="check"><i></i>Interpolate between samples</div>
+          <div class="note">The rail holds every study's results; the Analysis suite shows the node picked there.</div>
+        </div>
+        <div class="graphics">
+          <div class="ghead"><b>Potential (r, z)</b><span class="chip">2wcd · +50 mV</span><span class="right"><span class="btn">⤢</span><span class="btn">• Probe</span><span class="btn">┆ Cut</span></span></div>
+          <div class="plot" id="g"></div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom">
+      <div class="tabs"><span>Queue</span><span>Log</span><span>Probes</span><span class="on">Quantities</span><span class="status">✓ Nothing running</span></div>
+      <div class="table"><table class="t"><tr><th>Quantity</th><th>Value</th><th>Unit</th></tr><tbody id="q"></tbody></table></div>
+    </div>
+  </div>
+</div>
+<script>
+  draw.plotlyMap(document.getElementById("g"), { quantity: "potential", contours: true, arrows: true });
+  const q = document.getElementById("q");
+  for (const row of TREE.quantities.slice(0, 6)) q.insertAdjacentHTML("beforeend", `<tr><td>${row.quantity}</td><td class="v">${row.value}</td><td>${row.unit}</td></tr>`);
+</script>
+</body>
+</html>

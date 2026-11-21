@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P1 Plot types</title>
+<link rel="stylesheet" href="board.css">
+<script src="data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.1.1/plotly.min.js"></script>
+<script src="draw.js"></script>
+<style>
+  .grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: 1.25fr 1fr 1.1fr; }
+  .cell .plot { flex: 1; }
+  .cell.text { padding: 8px 10px; font-size: 12.5px; }
+  .cell.text h3 { padding: 0 0 4px; }
+  .cell.text p { margin: 0 0 6px; }
+  .kind { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="board" data-screen>
+  <div class="caption">
+    <h1>P1 · The plot types a group takes</h1>
+    <p>Each drawn on 2WCD's solved study at +50 mV, its bias sweep and its ASP-neutral variant. A 2D group layers surface, contours, arrows and the outline; a 1D group draws lines along a cut, a probe or a global quantity against the swept value; a 3D group turns the (r, z) field about the axis.</p>
+    <span class="tag">2WCD, solved · drawn with Plotly</span>
+  </div>
+  <div class="grid">
+    <div class="cell"><h3>Surface <small class="kind">2D</small><small>φ, the 99th percentile</small></h3><div class="plot" id="surface"></div></div>
+    <div class="cell"><h3>Contours <small class="kind">2D</small><small>c, coloured lines alone</small></h3><div class="plot" id="contours"></div></div>
+    <div class="cell"><h3>Arrows <small class="kind">2D</small><small>u over p</small></h3><div class="plot" id="arrows"></div></div>
+    <div class="cell"><h3>Mirrored <small class="kind">2D, two runs</small><small>neutral left, charged right</small></h3><div class="plot" id="mirrored"></div></div>
+    <div class="cell"><h3>Line along a cut <small class="kind">1D</small><small>c on the axis, two runs, log</small></h3><div class="plot" id="cut"></div></div>
+    <div class="cell"><h3>Point graph <small class="kind">1D</small><small>c at P1 against bias</small></h3><div class="plot" id="point"></div></div>
+    <div class="cell"><h3>Global <small class="kind">1D</small><small>current against bias</small></h3><div class="plot" id="global"></div></div>
+    <div class="cell"><h3>Difference <small class="kind">2D, two runs</small><small>neutral less charged</small></h3><div class="plot" id="difference"></div></div>
+    <div class="cell" style="grid-column: span 2"><h3>Revolution <small class="kind">3D</small><small>c turned about the axis, a quarter cut away; drag to turn</small></h3><div class="plot" id="revolution"></div></div>
+    <div class="cell text"><h3>Mesh <small class="kind">2D, as today</small></h3><p>The field on the solve's own (r, z) mesh, drawn by NGSolve's renderer (WB-53). Kept as a plot type, or folded into Surface as <i>Show mesh</i>.</p><h3>Scatter <small class="kind">1D</small></h3><p>One quantity of each run against another (conductance against the transport number, across a sweep). Drawn as the global plot with markers alone.</p></div>
+    <div class="cell text"><h3>Not drawn here</h3><p><b>Streamlines</b> of u: traced by the library from the solved velocity, a step of its own with a Tier 1 test.</p><p><b>Integrals</b> over a line or a domain (a flux through a section): computed by the library and shown as a quantity.</p><p><b>Export</b> of a figure or its data: FR-28, v0.7.</p></div>
+  </div>
+</div>
+<script>
+  const sp = TREE.species[0];
+  draw.plotlyMap(document.getElementById("surface"), { quantity: "potential" });
+  draw.plotlyMap(document.getElementById("contours"), { quantity: sp, surface: false, contours: true });
+  draw.plotlyMap(document.getElementById("arrows"), { quantity: "p_Pa", arrows: true });
+  draw.plotlyMap(document.getElementById("mirrored"), { quantity: "potential", mirrored: true });
+  draw.plotlyCut(document.getElementById("cut"), { quantity: sp, log: true });
+  draw.plotlyPoint(document.getElementById("point"));
+  draw.plotlyGlobal(document.getElementById("global"), {});
+  draw.plotlyMap(document.getElementById("difference"), { map: draw.difference(), diverging: true });
+  draw.plotlyRevolution(document.getElementById("revolution"), { quantity: sp });
+</script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T2 One shown run</title>
+<link rel="stylesheet" href="board.css">
+<script src="data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.1.1/plotly.min.js"></script>
+<script src="draw.js"></script>
+<style>
+  .suite-area { grid-template-columns: 290px 1fr; }
+  .pane .tree { flex: 0 0 auto; max-height: 52%; }
+  .pane .settings { flex: 1; }
+  .shown { padding: 6px 10px 8px; border-bottom: 1px solid var(--line); }
+  .shown label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 3px; }
+  .tiles { grid-template-columns: 1.15fr 1fr; grid-template-rows: 1fr 1fr; }
+  .tile .plot { flex: 1; }
+</style>
+</head>
+<body>
+<div class="board" data-screen>
+  <div class="caption">
+    <h1>T2 · One shown run, tiles of plot groups</h1>
+    <p>A <b>shown run</b> at the head of the pane, as Physics' <i>Shown in</i>: every plot group follows it unless pinned to its own run (◆). The tree holds plot groups, definitions, probes and quantities. The pinned groups stand as tiles; the selected tile's node opens its settings. Comparison stays a tool of its own.</p>
+    <span class="tag">2WCD, solved · drawn with Plotly</span>
+  </div>
+  <div class="screen">
+    <div class="titlebar"><b>nanopnp</b><span class="menus"><span>File</span><span>Edit</span><span>View</span><span>Run</span><span>Help</span></span><span class="changed">◆ 3 changed</span><span class="palette">Search commands…  Ctrl+Shift+P</span></div>
+    <div class="body">
+      <div class="activity"><span class="grp">Build</span><span class="suite"><b></b>Molecular</span><span class="suite"><b></b>Meso</span><span class="suite"><b></b>Continuum</span><span class="suite"><b></b>Physics</span><span class="grp">Use</span><span class="suite"><b></b>Study</span><span class="suite on"><b></b>Analysis</span></div>
+      <div class="rail">2wcd-project · Analysis › Results</div>
+      <div class="suite-area">
+        <div class="pane">
+          <div class="shown"><label>Shown run</label><div class="box sel">2wcd · +50 mV · run 3f2a…</div></div>
+          <h2>Results <span class="tools"><span class="btn" title="Add a plot group">＋</span><span class="btn" title="Delete">✕</span><span class="btn" title="Move up">↑</span><span class="btn" title="Move down">↓</span></span></h2>
+          <div class="tree">
+            <div class="node" style="--d:0"><span class="tw">▾</span><span class="ic plot"></span>Potential (r, z)<span class="meta">tile 1</span></div>
+            <div class="node sel" style="--d:1"><span class="ic plot"></span>Surface<span class="meta">φ</span></div>
+            <div class="node" style="--d:1"><span class="ic">≈</span>Contours<span class="meta">φ, 5 mV</span></div>
+            <div class="node" style="--d:1"><span class="ic">→</span>Arrows<span class="meta">u</span></div>
+            <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic line"></span>Along the axis<span class="meta">tile 2</span></div>
+            <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic line"></span>Current against bias<span class="meta"><span class="pin">◆</span> Bias sweep · tile 3</span></div>
+            <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic three"></span>Pore in 3D<span class="meta">tile 4</span></div>
+            <div class="node" style="--d:0"><span class="tw">▸</span><span class="ic plot"></span>Concentrations (r, z)<span class="meta">hidden</span></div>
+            <div class="node branch"><span class="tw">▾</span>Definitions</div>
+            <div class="node" style="--d:1"><span class="ic">ƒ</span>ρ_e = F·(c_K − c_Cl)<span class="meta">C/m³</span></div>
+            <div class="node branch"><span class="tw">▸</span>Probes<span class="meta">2</span></div>
+            <div class="node branch"><span class="tw">▸</span>Quantities<span class="meta">6 of 14</span></div>
+          </div>
+          <div class="settings">
+            <h2>Surface</h2>
+            <div class="field"><label>Expression</label><div class="box sel">potential φ</div></div>
+            <div class="field"><label>Unit</label><div class="box sel">mV</div></div>
+            <div class="field"><label>Colour map</label><div class="box sel">Diverging, positive blue</div></div>
+            <div class="field"><label>Range</label><div class="box num">−13.1 … 13.1<span class="u">mV</span></div></div>
+            <div class="check"><i class="on"></i>Range from the 99th percentile</div>
+            <div class="field"><label>Run</label><div class="box sel">Follows the shown run</div></div>
+          </div>
+        </div>
+        <div class="graphics">
+          <div class="ghead"><b>2wcd · +50 mV</b><span class="chip">4 of 5 plot groups shown</span><span class="right"><span class="btn">1</span><span class="btn">2 × 2</span><span class="btn">• Probe</span><span class="btn">┆ Cut</span></span></div>
+          <div class="tiles">
+            <div class="tile sel" style="grid-row: span 2"><div class="th"><b>Potential (r, z)</b><span class="muted">P1, P2 · Axis</span></div><div class="plot" id="a"></div></div>
+            <div class="tile"><div class="th"><b>Along the axis</b><span class="muted">φ, two runs</span></div><div class="plot" id="b"></div></div>
+            <div class="tile"><div class="th"><b>Current against bias</b><span class="muted">◆ Bias sweep</span></div><div class="plot" id="c"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom"><div class="tabs"><span class="on">Queue</span><span>Log</span><span class="status">✓ Nothing running</span></div></div>
+  </div>
+</div>
+<script>
+  draw.plotlyMap(document.getElementById("a"), { quantity: "potential", contours: true, arrows: true, probes: true, cutline: true });
+  draw.plotlyCut(document.getElementById("b"), { quantity: "potential" });
+  draw.plotlyGlobal(document.getElementById("c"), {});
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tree round boards</title>
+<link rel="stylesheet" href="board.css">
+<style>
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
+  li { margin: 6px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>The tree of results: the round's boards</h1>
+  <p class="muted">WP5.22's design round (REV-268; WB-51, WB-53), drawn on 2WCD's solved study at +50 mV, its bias sweep and its variant with one ASP neutral. The data are written by <code>../../generators/tree/extract.py</code> into <code>data.js</code>.</p>
+  <h2>How the tree is organised</h2>
+  <ul>
+    <li><a href="t1-comsol-branches.html">T1 · COMSOL's branches</a>: data, definitions, probes and cuts, quantities and plot groups; one group drawn at a time, tables in the bottom panel</li>
+    <li><a href="t2-shown-run.html">T2 · One shown run, tiles of plot groups</a>: every group follows the shown run unless pinned; several groups as tiles</li>
+    <li><a href="t3-project-tree.html">T3 · One project tree</a>: the results under each study in the project rail; the suite holds the settings</li>
+  </ul>
+  <h2>What a plot group draws</h2>
+  <ul><li><a href="p1-plot-types.html">P1 · The plot types</a></li></ul>
+  <h2>Which library draws it</h2>
+  <ul>
+    <li><a href="l1-plotly.html">L1 · Plotly</a></li>
+    <li><a href="l2-echarts.html">L2 · ECharts</a></li>
+  </ul>
+</main>
+</body>
+</html>

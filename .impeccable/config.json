@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "docs/design/concepts/tree/board.css"
+        ],
+        "createdAt": "2026-11-21T07:16:15.844Z",
+        "reason": "tokens.css (--sel): a selected row or tab always carries a marker, the --accent edge, so selection does not rest on colour alone (WB-24); the shell's own selection"
+      }
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L1 Plotly</title>
+<link rel="stylesheet" href="board.css">
+<script src="data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.1.1/plotly.min.js"></script>
+<script src="draw.js"></script>
+<style>
+  .grid { grid-template-columns: 1fr 1.2fr; grid-template-rows: 1fr 1fr; }
+  .cell .plot { flex: 1; }
+  .left { grid-row: span 2; }
+</style>
+</head>
+<body>
+<div class="board" data-screen>
+  <div class="caption">
+    <h1>L1 · Plotly</h1>
+    <p>The same four plots as L2, on the same data. Zoom by dragging, pan with Shift, hover for values, double-click to reset; the 3D view turns by dragging.</p>
+    <span class="tag">plotly.js 3.1.1, as NiceGUI 3.18 ships it</span>
+  </div>
+  <div class="facts">
+    <div><b>Licence</b>MIT; shipped inside NiceGUI (<code>ui.plotly</code>), no new dependency</div>
+    <div><b>Size</b>4.8 MB, loaded only by a page that draws a plot</div>
+    <div><b>Draws</b>heatmaps and contour lines, arrows (as marked lines), lines and markers, log and category axes, 3D surfaces and meshes</div>
+    <div><b>Lacks</b>streamlines and quiver as types (the library computes them); maps on a triangle mesh (the library samples a grid)</div>
+  </div>
+  <div class="grid">
+    <div class="cell left"><h3>Map <small>φ, contours every 5 mV, u as arrows, the outline</small></h3><div class="plot" id="map"></div></div>
+    <div class="cell"><h3>Line along the axis <small>c, two runs, log axis</small></h3><div class="plot" id="cut"></div></div>
+    <div class="grid" style="grid-template-columns: 1fr 1.3fr; padding: 0; gap: 8px">
+      <div class="cell"><h3>Current against bias</h3><div class="plot" id="iv"></div></div>
+      <div class="cell"><h3>Revolution <small>φ</small></h3><div class="plot" id="rev"></div></div>
+    </div>
+  </div>
+</div>
+<script>
+  draw.plotlyMap(document.getElementById("map"), { quantity: "potential", contours: true, arrows: true });
+  draw.plotlyCut(document.getElementById("cut"), { quantity: TREE.species[0], log: true });
+  draw.plotlyGlobal(document.getElementById("iv"), {});
+  draw.plotlyRevolution(document.getElementById("rev"), { quantity: "potential" });
+</script>
+</body>
+</html>
