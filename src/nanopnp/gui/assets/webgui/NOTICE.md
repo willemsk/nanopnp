@@ -1,6 +1,6 @@
 # The field viewer's renderer
 
-`webgui.js` is the renderer the desktop shell's field viewer loads, so a field draws on a machine
+`webgui.js` is the renderer the workbench's field viewer loads, so a field draws on a machine
 with no network. It is redistributed **unmodified** and is loaded at run time as a separate file.
 Nothing in nanopnp is linked against it, and the nanopnp library remains BSD-3-Clause
 (`SPECIFICATION.md` CON-09).

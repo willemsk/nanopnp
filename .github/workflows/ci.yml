@@ -2,10 +2,10 @@
 #
 # - a pull request: one ubuntu leg on Python 3.14. `lint`, `docs`, the per-push
 #   selection as two shards (Tier 1, Tier 2), and `CI result`, the one required check;
-# - a push to `main`: the per-push selection on the three platforms, and the bundle.
+# - a push to `main`: the per-push selection on the three platforms, each with the self-test.
 #   A dispatch without `full` runs the same, and Tier 3;
 # - nightly: Tiers 1 and 2 with `--nightly` and the `slow` tests on the three
-#   platforms, Python 3.14, and the bundle, as the probe of the runner images' drift;
+#   platforms, Python 3.14, with the self-test as the probe of the runner images' drift;
 #   Tier 3, and Tier 1 on Python 3.11 to 3.13 on the three platforms from wheels,
 #   recorded and not gated. A failed night opens an issue and blocks nothing;
 # - `full: true` (a dispatch, or `release.yml` before it builds a tag): Tiers 1 and
@@ -51,12 +51,6 @@ env:
   # Serially the BLAS threads buy no wall time on this suite; under xdist they
   # oversubscribe the cores: 6m10s serial, 7m20s unpinned, 3m19s pinned on
   # four cores (knowledge/07-software-stack/index.md). The commit gate does the same.
-  # tests/tier1/test_gui_widgets.py is the exception and runs serially, alone,
-  # on the desktop runners where it runs at all (on ubuntu PySide6 does not
-  # import and the module skips itself). It waits on a real QtWebEngine page by
-  # the wall clock, and with every core busy with a solver in another worker
-  # Chromium's helper processes missed its 60 s on a 3-core macOS runner (run
-  # 113), where they never had serially.
   OMP_NUM_THREADS: "1"
   OPENBLAS_NUM_THREADS: "1"
   MKL_NUM_THREADS: "1"
@@ -253,7 +247,7 @@ jobs:
         run: |
           start=$SECONDS
           status=0
-          uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py \
+          uv run pytest -rs -n auto --dist loadfile \
             -m "$SHARD and not slow" || status=$?
           echo "### tests ($SHARD): $((SECONDS - start)) s, pytest exit $status" \
             >> "$GITHUB_STEP_SUMMARY"
@@ -379,17 +373,14 @@ jobs:
           UV_NO_BUILD: "1"
       - run: uv sync --all-extras
       - run: >-
-          uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
-          -m "tier1 and not slow"
-        env:
-          QT_QPA_PLATFORM: offscreen
+          uv run pytest -rs -n auto --dist loadfile -m "tier1 and not slow"
 
   # A failed night opens one issue naming the failed jobs and the run; it blocks
   # nothing (section 8.2.13 N4). The recorded legs are `continue-on-error`, so a
   # failure there is read in the run, not named here.
   nightly-issue:
     name: nightly issue
-    needs: [changes, platforms, bundle]
+    needs: [changes, platforms]
     if: always() && needs.changes.outputs.mode == 'nightly' && contains(needs.*.result, 'failure')
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -409,54 +400,6 @@ jobs:
           gh issue create --repo "$REPO" --label nightly \
             --title "Nightly failed: $(date -u +%F) ${SHA::7}" \
             --body "Failed jobs: $failed. Run: $RUN_URL"
-
-  # RSK-13's continuous detector: desktop packaging defeated by a binary
-  # dependency. GATED -- a failed build fails CI, because a probe nobody looks
-  # at is amendment A2 again (section 8.2.1 A4). It is demoted to
-  # `continue-on-error` only if PyInstaller proves flaky for reasons outside
-  # this repository, and that demotion is recorded with the failure that caused
-  # it. It runs after a merge, before a release and nightly, as the probe of the
-  # runner image's drift.
-  #
-  # The uploaded artefact is what the author double-clicks; that observation,
-  # and not this job's exit code, is what closes section 8.2 criterion 4.
-  bundle:
-    name: Windows bundle (RSK-13 probe, gated)
-    needs: changes
-    if: needs.changes.outputs.mode != 'pr'
-    runs-on: windows-latest
-    timeout-minutes: 30
-    env:
-      CODE: ${{ needs.changes.outputs.code }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ inputs.ref }}
-          fetch-depth: 0
-      - uses: astral-sh/setup-uv@v7
-        if: env.CODE == 'true'
-        with:
-          enable-cache: true
-          python-version: "3.14"
-      - if: env.CODE == 'true'
-        run: uv sync --all-extras --group packaging
-      - if: env.CODE == 'true'
-        run: uv run pyinstaller --clean --noconfirm packaging/nanopnp-probe.spec
-      # One process importing PySide6, QtWebEngineWidgets, ngsolve, netgen and
-      # ngsolve.webgui, constructing a QWebEngineView over a real webgui scene
-      # and reading the CON-11 licence notice out of the bundle.
-      - if: env.CODE == 'true'
-        run: dist/nanopnp-probe/nanopnp-probe.exe --selftest
-      - uses: actions/upload-artifact@v7
-        if: always() && env.CODE == 'true'
-        with:
-          name: nanopnp-probe-windows
-          path: dist/nanopnp-probe
-          # `warn`, as the tier3 upload below does, because this step runs
-          # `if: always()`: the only way to reach it with nothing to upload is a
-          # build that already failed loudly, and `error` would add a second red
-          # step pointing away from it.
-          if-no-files-found: warn
 
   # Tier 3 is RECORDED, NOT GATED (section 7.1, section 7.6): `continue-on-error`
   # is the whole point, and removing it would make a per-cent-level discrepancy

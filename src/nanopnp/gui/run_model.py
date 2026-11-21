@@ -1,11 +1,10 @@
-"""Run control: the state machine over a background solve, and what it read back."""
+"""Run control: the state machine over a background solve."""
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Literal, TypeAlias
 
 from nanopnp.core.errors import EXIT_OK, EXIT_UNEXPECTED
 from nanopnp.gui.convergence import ConvergenceModel
@@ -18,72 +17,20 @@ from nanopnp.gui.solver import (
     Progress,
     RunEvent,
     Rung,
-    RunRequest,
     SolverProcess,
     Stage,
     Started,
 )
-from nanopnp.io.manifest import DEVIATIONS_GROUP, MANIFEST_FILENAME
-from nanopnp.pipeline.run import RUN_RECORD_FILENAME
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Iterable
 
 __all__ = [
-    "DEVIATIONS_GROUP",
     "RunModel",
-    "RunOutcome",
     "RunState",
-    "run_outcome",
 ]
 
 RunState: TypeAlias = Literal["idle", "running", "finished", "failed", "cancelled"]
-
-RecordValue: TypeAlias = Any
-
-
-@dataclass(frozen=True)
-class RunOutcome:
-    """What a finished run left in its run directory.
-
-    Parameters
-    ----------
-    quantities
-        The stage-11 scalars; empty for a run that stopped before stage 11.
-    """
-
-    directory: Path
-    quantities: Mapping[str, RecordValue]
-    deviations: Mapping[str, RecordValue]
-    stages: tuple[Mapping[str, RecordValue], ...]
-    files: tuple[str, ...]
-
-
-def run_outcome(directory: str | Path) -> RunOutcome:
-    """Read a run directory back; raise FileNotFoundError if its record or manifest is absent."""
-    root = Path(directory)
-    record_path = root / RUN_RECORD_FILENAME
-    manifest_path = root / MANIFEST_FILENAME
-    for path in (record_path, manifest_path):
-        if not path.is_file():
-            raise FileNotFoundError(f"{path} is not there, so this run has no record to show")
-    record: dict[str, RecordValue] = json.loads(record_path.read_text(encoding="utf-8"))
-    manifest: dict[str, RecordValue] = json.loads(manifest_path.read_text(encoding="utf-8"))
-    # The eight groups sit at the manifest's top level, beside schema, created_at, hash and case.
-    deviations = manifest.get(DEVIATIONS_GROUP)
-    if not isinstance(deviations, dict):
-        raise ValueError(
-            f"{manifest_path} carries no {DEVIATIONS_GROUP!r} group; §5.3.3 requires all eight, "
-            "and showing a number without the switches it was produced under would attribute "
-            "it to the validated model"
-        )
-    return RunOutcome(
-        directory=root,
-        quantities=dict(record.get("quantities", {})),
-        deviations=dict(deviations),
-        stages=tuple(record.get("stages", ())),
-        files=tuple(str(name) for name in record.get("files", ())),
-    )
 
 
 @dataclass
@@ -205,41 +152,13 @@ class RunModel:
         """Whether the run reached one of its three terminal states."""
         return self.state in ("finished", "failed", "cancelled")
 
-    def outcome(self) -> RunOutcome | None:
-        """Read the run directory back, or return ``None`` unless the run finished."""
-        if self.state != "finished" or self.directory is None:
-            return None
-        return run_outcome(self.directory)
-
 
 @dataclass
 class RunControl:
-    """A :class:`RunModel` and the solver process feeding it: start, poll and cancel."""
+    """A :class:`RunModel` and the solver process feeding it: poll and cancel."""
 
     model: RunModel = field(default_factory=RunModel)
     process: SolverProcess | None = None
-
-    def start(
-        self, case: str | Path, *, store: str | Path | None = None, upto: str | None = None
-    ) -> None:
-        """Spawn a run of a case file; raise RuntimeError if a run is already in flight.
-
-        Parameters
-        ----------
-        case
-            The case file; the shell saves it before running.
-        store
-            The artefact store's root, or ``None`` for the process default.
-        upto
-            The last stage to walk, or ``None`` for the whole pipeline.
-        """
-        if self.process is not None and self.process.running:
-            raise RuntimeError("a run is already in flight; cancel it before starting another")
-        self.model = RunModel()
-        self.process = SolverProcess(
-            RunRequest(case=str(case), store=None if store is None else str(store), upto=upto)
-        )
-        self.process.start()
 
     def poll(self) -> RunModel:
         """Drain the child's events into the model and return it."""

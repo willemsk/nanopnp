@@ -1,4 +1,4 @@
-"""The charge tab's view-model: stage 7 as it lands, its pictures, and its records."""
+"""The charge view-models: stage 7's pictures and its records."""
 
 from __future__ import annotations
 
@@ -12,13 +12,8 @@ from nanopnp.charge.protonation import PAYLOAD_NAME as PROTONATION_PAYLOAD
 from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.charge.stage import StoredLattice, stored_lattice
 from nanopnp.core.constants import ELEMENTARY_CHARGE
-from nanopnp.gui.geometry import MODEL_FRAME, ImageModel, StageList, stored_artefact
+from nanopnp.gui.geometry import MODEL_FRAME, ImageModel, stored_artefact
 from nanopnp.gui.render import ChargeQuantity
-from nanopnp.pipeline.case import resolve
-from nanopnp.pipeline.run import (
-    UnknownStageError,
-    selected_stages,
-)
 from nanopnp.plot.data import colour_scale
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -27,13 +22,11 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
     from nanopnp.gui.solver import Produced
-    from nanopnp.io.case import CaseDocument
 
 __all__ = [
     "BUILD_UPTO",
     "CHARGE_STAGES",
     "MAX_PIXELS",
-    "BuildOffer",
     "ChargeMap",
     "ChargeView",
     "ConservationView",
@@ -42,9 +35,7 @@ __all__ = [
     "ProtonationView",
     "ResidueRow",
     "block_size",
-    "build_offer",
     "charge_image",
-    "charge_stages",
     "load_charge",
     "load_protonation",
 ]
@@ -54,42 +45,6 @@ CHARGE_STAGES: tuple[str, ...] = ("protonation", "charge")
 BUILD_UPTO = "charge"
 
 MAX_PIXELS = 1024
-
-
-@dataclass(frozen=True)
-class BuildOffer:
-    """Whether **Build charge** is offered, and if not, why."""
-
-    offered: bool
-    reason: str = ""
-
-
-def build_offer(document: CaseDocument) -> BuildOffer:
-    """Return whether a walk through ``charge`` has anything to build, with the reason if not."""
-    try:
-        resolved = resolve(document)
-    except (ValueError, NotImplementedError) as error:
-        return BuildOffer(offered=False, reason=str(error))
-    try:
-        selected_stages(resolved, BUILD_UPTO)
-    except UnknownStageError as error:
-        # Its ``__str__`` is the sentence as written, without ``KeyError``'s quoting.
-        return BuildOffer(offered=False, reason=str(error))
-    return BuildOffer(offered=True)
-
-
-def charge_stages(document: CaseDocument) -> StageList:
-    """Return the halves of stage 7 a walk through ``charge`` runs, as a stage list.
-
-    Raises
-    ------
-    nanopnp.io.case.CaseValidationError
-        If the case does not resolve.
-    nanopnp.pipeline.run.UnknownStageError
-        If the case walks no stage 7.
-    """
-    walked = selected_stages(resolve(document), BUILD_UPTO)
-    return StageList(planned=tuple(name for name in walked if name in CHARGE_STAGES))
 
 
 def block_size(shape: tuple[int, int], limit: int = MAX_PIXELS) -> int:
@@ -363,9 +318,9 @@ def _dielectric(summary: Mapping[str, object]) -> tuple[str, ...]:
     return tuple(lines)
 
 
-# Called off the Qt thread: the reference lattice is about 15 million nodes.
+# Called off the interface's thread: the reference lattice is about 15 million nodes.
 def load_charge(event: Produced, *, block: int | None = None) -> ChargeView:
-    """Read stage 7's artefact from the store into what the tab shows; call off the Qt thread.
+    """Read stage 7's artefact from the store into its view; call off the interface's thread.
 
     Raises
     ------
@@ -567,7 +522,7 @@ class ProtonationView:
 
 
 def load_protonation(event: Produced) -> ProtonationView:
-    """Read the protonation artefact from the store; call off the Qt thread.
+    """Read the protonation artefact from the store; call off the interface's thread.
 
     Raises
     ------

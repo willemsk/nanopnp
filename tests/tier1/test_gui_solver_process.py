@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 from nanopnp.core.hashing import decode_floats
-from nanopnp.gui.run_model import RunModel, run_outcome
+from nanopnp.gui.run_model import RunModel
 from nanopnp.gui.solver import (
     Cancelled,
     Failed,
@@ -103,14 +103,13 @@ def test_fr27_a_spawned_run_reports_progress_and_finishes(
     model.consume(events)
     assert model.state == "finished"
     assert model.fraction == 1.0
-    outcome = model.outcome()
-    assert outcome is not None
-    assert outcome.directory == directory
-    assert "current_A" in outcome.quantities
-    assert outcome.stages
-    switches = {entry["path"] for entry in outcome.deviations["switches"]}
+    run = open_run(directory)
+    assert run.directory == directory
+    assert run.stages
+    record = json.loads((directory / RUN_RECORD_FILENAME).read_text(encoding="utf-8"))
+    assert "current_A" in record["quantities"]
+    switches = {deviation.path for deviation in run.manifest.deviations}
     assert "electrolyte.corrections.viscosity.model" in switches
-    assert run_outcome(directory).quantities == outcome.quantities
 
 
 def _record(case: Path, store: Path, threads: int) -> dict[str, object]:

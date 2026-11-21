@@ -155,11 +155,6 @@ EXCLUDED: Final[dict[str, str]] = {
         "walk behind every command of the CLI gives each stage a fresh directory, so no command "
         "reaches it and the message names the files and the overwrite_workspace switch"
     ),
-    "nanopnp.gui.probe:PayloadError": (
-        "raised only inside the packaging probe's --selftest, which catches it, prints it naming "
-        "the payload and exits 1 itself (WP24 D17); no command of the CLI reaches the probe, and "
-        "a broken bundle is a packaging defect rather than a case, gate or convergence class"
-    ),
     "nanopnp.validation.findings:LogFormatError": (
         "raised only when the VER-61 guard reads a malformed findings log; "
         "no command of the CLI reads a findings log"

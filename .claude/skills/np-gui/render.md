@@ -1,20 +1,8 @@
 # Render screens headless
 
-`/np-gui render <qt | mockups | shell>` writes PNGs and an `index.json` into `<r>`, then reads them.
+`/np-gui render <mockups | shell>` writes PNGs and an `index.json` into `<r>`, then reads them.
 
 ## Targets
-
-**`qt`**, the Qt shell (removed in WP5.27):
-
-1. Install the system libraries Qt needs offscreen, once per container:
-   `apt-get install -y --no-install-recommends libegl1 libgl1 libxkbcommon0 libnss3 libxcomposite1
-   libxdamage1 libxrandr2 libxtst6 libxkbfile1 libasound2t64`
-   (`knowledge/07-software-stack/05-gui-and-packaging.md`).
-2. `uv run python .claude/scripts/gui/capture_qt.py <r>` in the background, about ten minutes: it
-   writes `<state>-<tab>[-<view>].png`, `qt-index.json` and `webgui-manifest.json`. A `missed` entry
-   in `qt-index.json` is a view it could not reach; report each.
-3. `node .claude/scripts/gui/shoot.cjs <r>/webgui-manifest.json <r>/html`: the HTML documents the
-   render children wrote, standing for the web views that draw nothing offscreen.
 
 **`mockups`**, every `docs/design/{concepts,style,choices,mockups}/**/*.html`. Write `<r>/manifest.json`
 with four entries per page:

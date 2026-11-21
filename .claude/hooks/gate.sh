@@ -573,21 +573,11 @@ if $docs_only; then
     say "gate: only prose changed; lock check, mypy and pytest skipped."
 else
     check "mypy --strict"   uv run mypy src/
-    # The GUI file runs serially and alone, as in CI: it waits on a real QtWebEngine page by
-    # the wall clock, which busy xdist workers can starve (ci.yml, run 113).
     if [[ $mode == run ]]; then
-        check "pytest (push selection)" uv run pytest -q -rsfE -n auto --dist loadfile \
-            --ignore=tests/tier1/test_gui_widgets.py
+        check "pytest (push selection)" uv run pytest -q -rsfE -n auto --dist loadfile
         check "self-test" uv run nanopnp gui --selftest
     else
-        check "pytest (tier 1)" uv run pytest -q -rsfE -n auto --dist loadfile \
-            --ignore=tests/tier1/test_gui_widgets.py -m "tier1 and not slow"
-    fi
-    # Where QtWidgets cannot import, the usual Linux case (no libEGL), the module skips itself,
-    # so pytest is not started for it. Exit 5 ("no tests ran") is any other self-skip; CI's
-    # desktop runners, where it must run, treat 5 as failure.
-    if uv run python -c 'from PySide6 import QtWidgets' >/dev/null 2>&1; then
-        check "pytest (GUI)" bash -c 'uv run pytest -q -rsfE tests/tier1/test_gui_widgets.py; s=$?; ((s == 5)) && s=0; exit $s'
+        check "pytest (tier 1)" uv run pytest -q -rsfE -n auto --dist loadfile -m "tier1 and not slow"
     fi
 fi
 

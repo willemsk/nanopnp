@@ -1,1 +1,1 @@
-"""Desktop application (PySide6 shell over the stage objects, ADR-004)."""
+"""The workbench: view-models over the stage objects, and the browser shell in ``web`` (ADR-004)."""

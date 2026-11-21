@@ -1,210 +1,59 @@
-"""The geometry tab's view-model: stages 1-6 as they land, their pictures, the contour editor."""
+"""The geometry view-models: stage pictures, colour maps and the contour editor."""
 
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 from pydantic import ValidationError
 
-from nanopnp.core.stages import describe, walk_order
-from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
-from nanopnp.density.map import DensityMap
 from nanopnp.geometry.profile import (
     HAND_EDIT_SOURCE,
     PROFILE_SCHEMA,
     PoreProfile,
     ProfileProvenance,
-    load_profile,
     min_feature_size,
     min_vertex_spacing,
     profile_digest,
     signed_area,
     write_profile,
 )
-from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
-from nanopnp.geometry.region import read_region
 from nanopnp.io.case import (
     CaseDocument,
-    Membrane,
     dump_case,
 )
 from nanopnp.io.case_paths import (
-    UnknownCasePathError,
-    value_at,
     with_profile,
 )
 from nanopnp.io.store import Store
-from nanopnp.pipeline.case import resolve
-from nanopnp.pipeline.run import (
-    DENSITY_RECORD_KEYS,
-    REDUCTION_RECORD_KEYS,
-    STRUCTURE_RECORD_KEYS,
-    selected_stages,
-)
-from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
-from nanopnp.symmetry.reduce import QUANTITIES, ReducedMap
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Sequence
 
     import numpy as np
 
-    from nanopnp.gui.case_model import CaseEditor
-    from nanopnp.gui.run_model import RunModel
     from nanopnp.gui.solver import Produced
     from nanopnp.io.artefact import Artefact
 
 __all__ = [
-    "BUILD_UPTO",
     "COLOUR_MAP_SIZE",
-    "GEOMETRY_STAGES",
     "MODEL_FRAME",
     "STAGE_1_FRAME",
     "ImageModel",
-    "ImageView",
-    "OutlineView",
     "Palette",
     "ProfileEditor",
-    "StageList",
-    "StageRow",
-    "StageStatus",
-    "StageView",
-    "SummaryView",
-    "ViewTransform",
-    "can_build",
     "colour_maps",
     "density_section",
-    "load_structure",
-    "load_view",
     "lookup_table",
-    "membrane_slab",
-    "nearest_edge",
-    "nearest_vertex",
     "reduced_image",
     "stored_artefact",
 ]
 
-GEOMETRY_STAGES: tuple[str, ...] = (
-    *(name for name in walk_order() if describe(name).needs_section == "structure"),
-    "region",
-    "mesh",
-)
-
-BUILD_UPTO = "mesh"
-
 STAGE_1_FRAME = "stage-1 frame"
 
 MODEL_FRAME = "model frame"
-
-StageStatus: TypeAlias = Literal["waiting", "running", "stored", "cached", "failed", "cancelled"]
-
-
-@dataclass(frozen=True)
-class StageRow:
-    """One stage of the list: what it is, where it got to, and what it left."""
-
-    name: str
-    number: int
-    title: str
-    status: StageStatus
-    produced: Produced | None = None
-
-    @property
-    def hash(self) -> str:
-        """The artefact's hash, or ``""`` before there is one."""
-        return self.produced.hash if self.produced is not None else ""
-
-
-def planned_stages(document: CaseDocument) -> tuple[str, ...]:
-    """Return the geometry stages this case walks, in order.
-
-    Raises
-    ------
-    nanopnp.io.case.CaseValidationError
-        If the case does not resolve.
-    """
-    walked = selected_stages(resolve(document), None)
-    return tuple(name for name in walked if name in GEOMETRY_STAGES)
-
-
-def can_build(document: CaseDocument) -> bool:
-    """Whether **Build geometry** is offered: only a case whose stages 5 and 6 build its mesh."""
-    try:
-        return resolve(document).generates_mesh
-    except (ValueError, NotImplementedError):
-        return False
-
-
-@dataclass(frozen=True)
-class StageList:
-    """The geometry stages of one case, and a projection of a run onto them."""
-
-    planned: tuple[str, ...]
-
-    def rows(self, model: RunModel) -> tuple[StageRow, ...]:
-        """Return one row per planned stage, placed by the run's event stream.
-
-        A stage with a ``Produced`` is ``stored`` or ``cached``; the last one entered without
-        one is ``running``, ``failed`` or ``cancelled``; the rest are ``waiting``.
-        """
-        produced = {event.name: event for event in model.produced}
-        entered = model.walked[-1] if model.walked else None
-        rows: list[StageRow] = []
-        for name in self.planned:
-            description = describe(name)
-            status: StageStatus = "waiting"
-            event = produced.get(name)
-            if event is not None:
-                status = "cached" if event.cached else "stored"
-            elif name == entered:
-                if model.state == "running":
-                    status = "running"
-                elif model.state in ("failed", "cancelled"):
-                    status = model.state
-            rows.append(
-                StageRow(
-                    name=name,
-                    number=description.number,
-                    title=description.title,
-                    status=status,
-                    produced=event,
-                )
-            )
-        return tuple(rows)
-
-
-def load_structure(editor: CaseEditor, path: str | Path) -> Path:
-    """Stage ``structure.source.path`` as the absolute path of a picked file.
-
-    Raises
-    ------
-    UnknownCasePathError
-        If the case declares no ``structure:`` section.
-    nanopnp.io.case.CaseValidationError
-        If the value is refused.
-    """
-    absolute = Path(path).expanduser().resolve()
-    try:
-        value_at(editor.document, "structure.source")
-    except UnknownCasePathError:
-        raise UnknownCasePathError(
-            f"case {editor.document.name!r} carries no structure: section, so there is no point "
-            "group to align a structure to; write the section, naming "
-            "structure.symmetry.point_group, in the case file first"
-        ) from None
-    editor.stage("structure.source.path", str(absolute))
-    return absolute
-
-
-def membrane_slab(document: CaseDocument) -> tuple[float, float]:
-    """Return the bilayer's z extent in the stage-1 frame: ``centre ± thickness/2``."""
-    membrane = document.geometry.membrane if document.geometry is not None else Membrane()
-    half = 0.5 * membrane.thickness_nm
-    return membrane.centre_z_nm - half, membrane.centre_z_nm + half
-
 
 # Nine anchors of viridis (van der Walt and Smith, CC0), interpolated to 256 entries.
 _VIRIDIS: tuple[tuple[int, int, int], ...] = (
@@ -438,159 +287,6 @@ def density_section(
     )
 
 
-@dataclass(frozen=True)
-class ViewTransform:
-    """A data rectangle in nm mapped into a widget rectangle in pixels, at one scale, z upwards."""
-
-    x_range: tuple[float, float]
-    z_range: tuple[float, float]
-    width: float
-    height: float
-    margin: float = 24.0
-
-    @property
-    def scale(self) -> float:
-        """Pixels per nm."""
-        span_x = max(self.x_range[1] - self.x_range[0], 1e-12)
-        span_z = max(self.z_range[1] - self.z_range[0], 1e-12)
-        room_x = max(self.width - 2.0 * self.margin, 1.0)
-        room_z = max(self.height - 2.0 * self.margin, 1.0)
-        return min(room_x / span_x, room_z / span_z)
-
-    @property
-    def _origin(self) -> tuple[float, float]:
-        s = self.scale
-        used_x = (self.x_range[1] - self.x_range[0]) * s
-        used_z = (self.z_range[1] - self.z_range[0]) * s
-        left = 0.5 * (self.width - used_x)
-        bottom = self.height - 0.5 * (self.height - used_z)
-        return left, bottom
-
-    def to_screen(self, x_nm: float, z_nm: float) -> tuple[float, float]:
-        """Return the pixel of a point in nm."""
-        left, bottom = self._origin
-        s = self.scale
-        return left + (x_nm - self.x_range[0]) * s, bottom - (z_nm - self.z_range[0]) * s
-
-    def to_data(self, x_px: float, y_px: float) -> tuple[float, float]:
-        """Return the point in nm under a pixel."""
-        left, bottom = self._origin
-        s = self.scale
-        return self.x_range[0] + (x_px - left) / s, self.z_range[0] + (bottom - y_px) / s
-
-    def rectangle(
-        self, x_low: float, x_high: float, z_low: float, z_high: float
-    ) -> tuple[float, float, float, float]:
-        """Return ``(left, top, width, height)`` in pixels of a data rectangle."""
-        left, top = self.to_screen(x_low, z_high)
-        right, bottom = self.to_screen(x_high, z_low)
-        return left, top, right - left, bottom - top
-
-
-def nearest_vertex(
-    vertices: Sequence[tuple[float, float]],
-    transform: ViewTransform,
-    x_px: float,
-    y_px: float,
-    *,
-    tolerance_px: float = 8.0,
-) -> int | None:
-    """Return the vertex nearest a pixel, if within ``tolerance_px`` of it."""
-    best: int | None = None
-    best_distance = tolerance_px
-    for index, (r, z) in enumerate(vertices):
-        px, py = transform.to_screen(r, z)
-        distance = math.hypot(px - x_px, py - y_px)
-        if distance <= best_distance:
-            best, best_distance = index, distance
-    return best
-
-
-def nearest_edge(
-    vertices: Sequence[tuple[float, float]],
-    transform: ViewTransform,
-    x_px: float,
-    y_px: float,
-    *,
-    tolerance_px: float = 8.0,
-) -> int | None:
-    """Return the edge nearest a pixel; edge ``i`` joins vertices ``i`` and ``i + 1``."""
-    best: int | None = None
-    best_distance = tolerance_px
-    count = len(vertices)
-    for index in range(count):
-        ax, ay = transform.to_screen(*vertices[index])
-        bx, by = transform.to_screen(*vertices[(index + 1) % count])
-        dx, dy = bx - ax, by - ay
-        length = dx * dx + dy * dy
-        t = (
-            0.0
-            if length == 0.0
-            else max(0.0, min(1.0, ((x_px - ax) * dx + (y_px - ay) * dy) / length))
-        )
-        distance = math.hypot(ax + t * dx - x_px, ay + t * dy - y_px)
-        if distance <= best_distance:
-            best, best_distance = index, distance
-    return best
-
-
-@dataclass(frozen=True)
-class SummaryView:
-    """A stage shown as the entries of its artefact's summary."""
-
-    name: str
-    lines: tuple[str, ...]
-    frame: str = STAGE_1_FRAME
-
-
-@dataclass(frozen=True)
-class ImageView:
-    """A stage shown as one or more images, and the contour over them if any."""
-
-    name: str
-    images: Mapping[str, ImageModel]
-    lines: tuple[str, ...] = ()
-    loop: tuple[tuple[float, float], ...] = ()
-    slab: tuple[float, float] | None = None
-    profile: PoreProfile | None = None
-
-    @property
-    def frame(self) -> str:
-        """Every image of one view is in one frame."""
-        return next(iter(self.images.values())).frame
-
-
-@dataclass(frozen=True)
-class OutlineView:
-    """Stage 5's region, drawn as outlines in the model frame."""
-
-    name: str
-    loop: tuple[tuple[float, float], ...]
-    chord: tuple[tuple[float, float], tuple[float, float]]
-    slab: tuple[float, float]
-    reservoir_nm: float
-    lines: tuple[str, ...] = ()
-    frame: str = MODEL_FRAME
-
-
-StageView: TypeAlias = SummaryView | ImageView | OutlineView
-
-
-def _format(value: object) -> str:
-    if isinstance(value, float):
-        return f"{value:.4g}"
-    if isinstance(value, dict):
-        return "{" + ", ".join(f"{key}: {_format(item)}" for key, item in value.items()) + "}"
-    if isinstance(value, (list, tuple)):
-        shown = ", ".join(_format(item) for item in list(value)[:8])
-        return f"[{shown}{', …' if len(value) > 8 else ''}]"
-    return str(value)
-
-
-def _lines(summary: Mapping[str, object], keys: Sequence[str]) -> tuple[str, ...]:
-    return tuple(f"{key}: {_format(summary[key])}" for key in keys if key in summary)
-
-
 def stored_artefact(event: Produced) -> Artefact:
     """Return the stored artefact an event names; say so if it is gone."""
     found = Store(event.store).get(event.schema, event.hash)
@@ -600,100 +296,6 @@ def stored_artefact(event: Produced) -> Artefact:
             f"{event.store}; it was removed after the build reported it"
         )
     return found
-
-
-# Called off the Qt thread: a stage-2 map is about 100 MB of compressed float32.
-def load_view(
-    event: Produced, produced: Mapping[str, Produced], document: CaseDocument
-) -> StageView:
-    """Read one stage's artefact from the store into what its pane shows; call off the Qt thread.
-
-    Parameters
-    ----------
-    produced
-        Every artefact the build has reported, by stage: the contour is drawn over stage 3's mean.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the artefact has been removed from the store.
-    ValueError
-        If the stage is not one of stages 1 to 6.
-    """
-    artefact = stored_artefact(event)
-    summary = dict(artefact.summary)
-    if event.name == "structure":
-        return SummaryView(name=event.name, lines=_lines(summary, STRUCTURE_RECORD_KEYS))
-    if event.name == "density":
-        density = DensityMap.read(artefact.payload[DENSITY_PAYLOAD])
-        grid = density.grid
-        section = density_section(
-            density.values, grid.axis_nm("x"), grid.axis_nm("z"), y_index=grid.half_width
-        )
-        return ImageView(
-            name=event.name,
-            images={"density": section},
-            lines=_lines(summary, DENSITY_RECORD_KEYS),
-            slab=membrane_slab(document),
-        )
-    if event.name in ("symmetry", "contour"):
-        symmetry = artefact if event.name == "symmetry" else stored_artefact(produced["symmetry"])
-        reduced = ReducedMap.read(symmetry.payload[REDUCED_PAYLOAD])
-        # The contour is drawn over the mean alone, so its view builds no variance.
-        quantities = QUANTITIES if event.name == "symmetry" else ("mean",)
-        images = {
-            quantity: reduced_image(
-                reduced.r_nm, reduced.z_nm, getattr(reduced, quantity), quantity=quantity
-            )
-            for quantity in quantities
-        }
-        if event.name == "symmetry":
-            return ImageView(
-                name=event.name,
-                images=images,
-                lines=_lines(summary, REDUCTION_RECORD_KEYS),
-                slab=membrane_slab(document),
-            )
-        # Deferred: stage 4's module imports scikit-image and Shapely, the
-        # ``structure`` extra, which a case supplying its profile does not need.
-        from nanopnp.geometry.contour import PAYLOAD_NAME as PROFILE_PAYLOAD
-
-        profile = load_profile(artefact.payload[PROFILE_PAYLOAD])
-        return ImageView(
-            name=event.name,
-            images=images,
-            lines=_lines(
-                summary,
-                (
-                    "vertex_count",
-                    "min_vertex_spacing_nm",
-                    "min_feature_size_nm",
-                    "band",
-                    "constriction",
-                ),
-            ),
-            loop=tuple((float(r), float(z)) for r, z in profile.vertices),
-            slab=membrane_slab(document),
-            profile=profile,
-        )
-    if event.name == "region":
-        outlines = read_region(artefact.payload[REGION_PAYLOAD]).outlines_nm()
-        half = outlines.membrane_half_thickness_nm
-        return OutlineView(
-            name=event.name,
-            loop=tuple((float(r), float(z)) for r, z in outlines.pore_nm),
-            chord=outlines.chord_nm,
-            slab=(-half, half),
-            reservoir_nm=outlines.reservoir_radius_nm,
-            lines=_lines(summary, tuple(summary)),
-        )
-    if event.name == "mesh":
-        return SummaryView(
-            name=event.name,
-            lines=_lines(summary, ("elements", "quality", "sizing", "content_hash")),
-            frame=MODEL_FRAME,
-        )
-    raise ValueError(f"stage {event.name!r} is not one of the geometry stages {GEOMETRY_STAGES}")
 
 
 Vertex: TypeAlias = tuple[float, float]

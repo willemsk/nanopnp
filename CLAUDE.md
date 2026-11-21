@@ -38,7 +38,7 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 |---|---|
 | `uv run pytest` | Tiers 1–2 without `nightly` and `slow` tests: the default selection |
 | `uv run pytest --nightly` | Adds the `nightly` walks. `-m "(tier1 or tier2) and slow"` adds the `slow` tests, as the nightly run does. Naming a `nightly` test's file runs it without the flag |
-| `uv run pytest -n auto --dist loadfile` | Parallel. Set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` to 1. `tests/tier1/test_gui_widgets.py` runs serially, apart |
+| `uv run pytest -n auto --dist loadfile` | Parallel. Set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` to 1 |
 | `uv run pytest -m tier1` / `-m tier3` / `-m slow` | Unit tests / reference comparison / benchmarks (the last two are not gated) |
 | `uv run ruff check . && uv run ruff format .`; `uv run mypy src/` | Lint and format; strict types |
 | `uv run nanopnp --env` | The resolved environment and data locations |

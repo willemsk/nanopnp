@@ -54,13 +54,11 @@ structure = [
     "pdb2pqr>=3.8",
     "gemmi>=0.7",
 ]
-# The workbench (ADR-004): the browser shell is NiceGUI over FastAPI (MIT, BSD-3);
-# PySide6 is the Qt shell, which leaves with Qt. PyQt is forbidden by CON-09.
+# The workbench (ADR-004): the browser shell is NiceGUI over FastAPI (MIT, BSD-3).
 gui = [
     "fastapi>=0.115",
     "matplotlib>=3.8",
     "nicegui>=3.0",
-    "PySide6>=6.7",
     "uvicorn>=0.30",
 ]
 # OPTIONAL MESHER BACKEND ONLY. gmsh is GPLv2+; the default path must never
@@ -85,10 +83,6 @@ Specification = "https://github.com/willemsk/nanopnp/blob/main/SPECIFICATION.md"
 
 [project.scripts]
 nanopnp = "nanopnp.cli:main"
-# The desktop shell and the RSK-13 packaging probe (IF-09, section 8.2
-# criterion 4). Both need the `gui` extra; neither is on the library path.
-nanopnp-gui = "nanopnp.gui.app:main"
-nanopnp-probe = "nanopnp.gui.probe:main"
 
 [dependency-groups]
 dev = [
@@ -101,12 +95,6 @@ dev = [
     "markdown>=3.5",
     "playwright>=1.49",
     "rust-just>=1.59.0",
-]
-# Bundle builders only (ADR-004, section 8.2 criterion 4). Not in
-# `default-groups`: PyInstaller is needed by the `bundle` CI job and by whoever
-# builds a release, never by a developer running the gate or by a user.
-packaging = [
-    "pyinstaller>=6.10",
 ]
 # The documentation site (QR-15, VER-45; WP16 D1, D12). Not a default group:
 # nothing on the end-user path needs it. Material for MkDocs is in maintenance
@@ -146,10 +134,6 @@ packages = ["src/nanopnp"]
 # location.
 [tool.hatch.build.targets.wheel.force-include]
 "data" = "nanopnp/data"
-# CON-11's bundle licence notice. `nanopnp-probe` is a declared console script
-# and `probe.licence_notice()` refuses to start without the notice, so it has to
-# travel in the wheel as well as in the PyInstaller bundle.
-"packaging/LICENSES-BUNDLE.md" = "nanopnp/LICENSES-BUNDLE.md"
 # The workbench's colours are the design's own tokens (docs/design/tokens.css); pages.py reads either.
 "docs/design/tokens.css" = "nanopnp/gui/web/assets/tokens.css"
 

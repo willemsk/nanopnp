@@ -6,8 +6,7 @@ tools: Read, Grep, Glob
 effort: high
 ---
 You are given a render directory, the design document (`docs/design/workbench.md`, or none yet) and
-the screens or the job in question. Read each PNG named, the directory's `index.json` (or
-`qt-index.json`), and the mockup HTML where the shot came from one.
+the screens or the job in question. Read each PNG named, the directory's `index.json`, and the mockup HTML where the shot came from one.
 
 Report findings, each with the shot id, the region of the screen, a severity (`blocking`, `major`,
 `minor`), the rule broken and a proposed change. Judge against:

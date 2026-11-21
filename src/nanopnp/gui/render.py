@@ -30,7 +30,6 @@ __all__ = [
     "CHARGE_ELEMENTS_FILENAME",
     "CHI_RANGE",
     "FIELDS_FILENAME",
-    "MESH_SCENE_STEM",
     "READY_FLAG",
     "RENDERER_DIRECTORY",
     "RENDERER_INTEGRITY",
@@ -43,7 +42,6 @@ __all__ = [
     "ChargeRequest",
     "DeployedCoefficient",
     "FieldsRequest",
-    "MeshRequest",
     "RenderFailed",
     "RenderProcess",
     "RenderRequest",
@@ -51,17 +49,13 @@ __all__ = [
     "RenderedCharge",
     "RenderedElements",
     "RenderedFields",
-    "RenderedMesh",
     "deployed_coefficient",
     "host_document",
     "host_page",
-    "readiness_script",
     "render",
     "render_charge",
     "render_charge_elements",
     "render_fields",
-    "render_mesh",
-    "renderer_source",
     "scene_stem",
 ]
 
@@ -88,9 +82,6 @@ RENDERER_URL = f"{RENDERER_ROUTE}/webgui.js"
 
 # Never an artefact and never hashed: a picture of a converged state is a view of a result (§5.3.2).
 VIEWER_DIRNAME = "viewer"
-
-# Not scene-*, so a field render's sweep of its own previous pair leaves the mesh picture alone.
-MESH_SCENE_STEM = "mesh"
 
 ChargeQuantity: TypeAlias = Literal["charge", "chi"]
 
@@ -138,20 +129,6 @@ _DOCUMENT = Template("""<!DOCTYPE html>
   </body>
 </html>
 """)
-
-
-def renderer_source() -> str:
-    """Return the address the host document loads the renderer from."""
-    return RENDERER_SOURCE
-
-
-def readiness_script() -> str:
-    """Return the JavaScript that reports whether the scene is ready, as a JSON object."""
-    return (
-        f"JSON.stringify(window.{READY_FLAG} || "
-        "{ready: false, renderer_loaded: false, "
-        'error: "the document did not run its initialisation", renderer: ""})'
-    )
 
 
 def host_document(scene: str, *, renderer: str, title: str) -> str:
@@ -337,34 +314,6 @@ class RenderFailed:
     message: str
 
 
-@dataclass(frozen=True)
-class MeshRequest:
-    """What the child is asked for by the geometry tab: a run's stage-6 mesh."""
-
-    run: str
-    renderer: str = RENDERER_SOURCE
-
-
-@dataclass(frozen=True)
-class RenderedMesh:
-    """The mesh was drawn by material; its paths and the figures its gates measured.
-
-    Parameters
-    ----------
-    quality
-        VER-10's figures and the ``(r, z)`` centroid of each least value.
-    wall
-        Stage 6's wall-size gate statistics; empty for a supplied mesh.
-    """
-
-    document: str
-    scene: str
-    elements: int
-    materials: tuple[str, ...]
-    quality: dict[str, object]
-    wall: dict[str, object]
-
-
 FIELDS_FILENAME = "fields.npz"
 """The file under a run's ``viewer/`` holding its solved fields at the P2 nodes."""
 
@@ -391,7 +340,7 @@ CHARGE_ELEMENTS_FILENAME = "charge.elements.npz"
 
 @dataclass(frozen=True)
 class ChargeRequest:
-    """What the charge tab asks for: a run's deployed charge or ``chi``.
+    """What the charge view asks for: a run's deployed charge or ``chi``.
 
     Parameters
     ----------
@@ -448,7 +397,7 @@ class RenderedElements:
 
 
 RenderEvent: TypeAlias = (
-    Rendered | RenderedMesh | RenderedCharge | RenderedElements | RenderedFields | RenderFailed
+    Rendered | RenderedCharge | RenderedElements | RenderedFields | RenderFailed
 )
 
 
@@ -678,50 +627,6 @@ def render(request: RenderRequest) -> Rendered:
     )
 
 
-def render_mesh(request: MeshRequest) -> RenderedMesh:
-    """Draw a run's stage-6 mesh by material into its ``viewer/``, with its gate figures."""
-    from nanopnp.mesh.ingest import deployed_mesh
-
-    run = Path(request.run)
-    resolved = _resolved_run(run)
-    artefact = _recorded_artefact(run, "mesh", needed=_mesh_need(resolved.mesh))
-    if artefact is None and _mesh_need(resolved.mesh) is not None:
-        raise FileNotFoundError(
-            f"{run} records no stage-6 artefact, so there is no stage-6 mesh to draw; run the "
-            "build through 'mesh' first"
-        )
-    ingested = deployed_mesh(resolved, artefact)
-    mesh = ingested.mesh
-    materials = tuple(str(name) for name in mesh.GetMaterials())
-
-    from ngsolve.webgui import Draw
-
-    colour = mesh.MaterialCF({name: float(index) for index, name in enumerate(materials)})
-    scene = Draw(colour, mesh, show=False).GetData()
-    report = ingested.quality
-    quality: dict[str, object] = {
-        "min_sicn": report.min_sicn,
-        "min_gamma": report.min_gamma,
-        "floor": report.summary()["floor"],
-        "worst_sicn_at_nm": report.centroid(report.worst_sicn_element),
-        "worst_gamma_at_nm": report.centroid(report.worst_gamma_element),
-    }
-    sizing = artefact.summary.get("sizing") if artefact is not None else None
-    wall = dict(sizing.get("wall_statistics", {})) if isinstance(sizing, dict) else {}
-
-    scene_path, document_path = _write_scene(
-        run, MESH_SCENE_STEM, scene, renderer=request.renderer, title="mesh"
-    )
-    return RenderedMesh(
-        document=str(document_path),
-        scene=str(scene_path),
-        elements=int(mesh.ne),
-        materials=materials,
-        quality=quality,
-        wall=wall,
-    )
-
-
 @dataclass(frozen=True)
 class DeployedCoefficient:
     """A run's deployed charge or ``chi``, as the solve assembles it."""
@@ -915,15 +820,13 @@ def render_fields(request: FieldsRequest) -> RenderedFields:
     )
 
 
-AnyRequest: TypeAlias = RenderRequest | MeshRequest | ChargeRequest | FieldsRequest
+AnyRequest: TypeAlias = RenderRequest | ChargeRequest | FieldsRequest
 
 
 def _worker(request: AnyRequest, events: Queue[RenderEvent]) -> None:
     try:
         if isinstance(request, FieldsRequest):
             events.put(render_fields(request))
-        elif isinstance(request, MeshRequest):
-            events.put(render_mesh(request))
         elif isinstance(request, ChargeRequest) and request.elements:
             events.put(render_charge_elements(request))
         elif isinstance(request, ChargeRequest):
