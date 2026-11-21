@@ -95,8 +95,8 @@ table.t td.v { text-align: right; font-family: var(--font-num, var(--font-ui)); 
 /* The library and plot-type boards */
 .grid { display: grid; gap: 8px; padding: 8px; flex: 1; min-height: 0; }
 .cell { background: var(--canvas-plot); border: 1px solid var(--line); border-radius: 4px; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
-.cell h3 { margin: 0; font-size: 13px; padding: 5px 8px 3px; display: flex; gap: 8px; align-items: baseline; }
-.cell h3 small { font-weight: 400; color: var(--muted); font-size: 12px; }
+.cell h2 { margin: 0; font-size: 13px; padding: 5px 8px 3px; display: flex; gap: 8px; align-items: baseline; }
+.cell h2 small { font-weight: 400; color: var(--muted); font-size: 12px; }
 .cell .plot { min-height: 0; }
 .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px 16px; padding: 6px 14px; background: var(--panel); border-bottom: 1px solid var(--line); font-size: 12.5px; }
 .facts div b { display: block; color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
