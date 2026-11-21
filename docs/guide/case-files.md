@@ -67,9 +67,9 @@ and solves nothing.
 
 Every field has a dotted path: `electrolyte.concentration_M`, `boundary_conditions.bias_V`,
 `electrolyte.corrections.diffusivity.wall`. A list element is reached by index:
-`electrolyte.species.0.name`. Sweeps vary a case by these paths. The desktop editor is generated
-from the same walk over the schema, so the reference, the editor and a sweep can never disagree about
-what a field is called.
+`electrolyte.species.0.name`. Sweeps vary a case by these paths. The workbench's fields come
+from the same walk over the schema, so the reference, the workbench and a sweep can never disagree
+about what a field is called.
 
 ## A case's paths are read beside the case file
 

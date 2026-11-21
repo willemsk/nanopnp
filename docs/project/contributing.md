@@ -19,7 +19,7 @@ is never loosened to let a number pass.
 The layering and the numbers are held by two guards (§8.2.7 G1, G10):
 
 - **The layering (VER-61).** `docs/project/modularity-layering.yaml` lists every import edge
-  between subpackages, as the [modularity report](modularity.md) records it. A commit that adds or
+  between subpackages, as the [modularity report](../_generated/project/modularity.md) records it. A commit that adds or
   removes an edge edits that file in the same commit, naming the `MOD-nn` finding the edge bears
   on. `tests/tier1/test_layering.py` names the module and the line of an edge the file lacks.
 - **The number-stability golden (VER-62).** Seven gated walks assert their currents, conductances,

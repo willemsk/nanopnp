@@ -68,6 +68,9 @@ REPOSITORY = "https://github.com/willemsk/nanopnp/blob/main"
 LINK = re.compile(r"(!?\[[^\]]*\])\(([^)\s]+)\)")
 """An inline Markdown link or image, capturing its text and its target."""
 
+REGISTERS = ("review-findings.md", "review-items.md", "modularity.md", "modularity-findings.md")
+"""The project pages copied so that their links into the plans and reviews reach the repository."""
+
 CODE = re.compile(r"(```.*?```|`[^`\n]*`)", re.DOTALL)
 """A fenced block or an inline code span, whose text is shown verbatim, never a link."""
 
@@ -89,6 +92,10 @@ def _copies() -> dict[Path, Path]:
     pages[specification / "index.md"] = OUTPUT / "model" / "specification" / "contents.md"
     for source in sorted((ROOT / "examples").glob("*/README.md")):
         pages[source] = OUTPUT / "examples" / f"{source.parent.name}.md"
+    # The registers link into plans/ and code_reviews/, which the site leaves out, so their copies
+    # point those links at the repository (mkdocs.yml's exclude_docs names the sources).
+    for name in REGISTERS:
+        pages[ROOT / "docs" / "project" / name] = OUTPUT / "project" / name
     return pages
 
 

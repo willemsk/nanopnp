@@ -5,9 +5,9 @@ model is documented by [the specification and the knowledge base](../model/index
 verbatim, and the guide points into them by identifier (`PHY-`, `NUM-`, `FR-`) instead of restating
 an equation.
 
-The guide describes v0.5's features and the case file; the v0.6 workbench (`nanopnp gui`), projects
-and model files are in the generated references. The package WP5.27 writes a short
-guide for the workbench; the full guide follows in v0.7.
+The guide describes v0.5's features and the case file. It has a short page on the v0.6 workbench
+(`nanopnp gui`); projects and model files are in the generated references. The full workbench guide
+follows in v0.7.
 
 | Page | What it covers |
 |---|---|
@@ -25,4 +25,4 @@ guide for the workbench; the full guide follows in v0.7.
 | [Stabilisation modes](stabilisation.md) | `none`, `supg` and `reference`, and why the default is `none` |
 | [The Python interface](python.md) | `Case`, `Session`, the result, its figures, sweeps, a stage of one's own, reopening a run |
 | [Notebooks](notebooks.md) | The six interactive notebooks, what each shows and the two commands that run one |
-| [Desktop shell](desktop.md) | The case editor, run control, convergence plot and field viewer |
+| [The workbench](workbench.md) | Install, start, the six suites, and the known gaps of the browser workbench |

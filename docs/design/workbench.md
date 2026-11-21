@@ -477,7 +477,7 @@ CON-08 and CON-11 name the installed workbench in place of the bundle and the de
 Fourteen deferred review rows and three modularity findings waited on this document (Phase 5 open decision
 3). The author ruled them on 27 October 2026, as proposed but for MOD-09, which the author brought into v0.6:
 [§8.2.18 T1 to T5](../_generated/model/specification/history/18-the-workbench-design-studys-rulings-agreed-27-oct.md)
-holds the rulings, and the [review register](../project/review-findings.md) each row's state.
+holds the rulings, and the [review register](../_generated/project/review-findings.md) each row's state.
 
 ## Decision log
 

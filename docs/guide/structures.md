@@ -151,4 +151,4 @@ $ nanopnp stage structure case.yaml --store store --export aligned.pdb
 `--export aligned.pdb` also writes the aligned ensemble as a PDB of its first frame, with
 `aligned.dcd` beside it holding every frame, both in ångströms. Open them in a molecular viewer to
 see the frame nanopnp works in. A case that points at the exported PDB can use `axis: z`. The
-[Desktop shell](desktop.md)'s Geometry tab shows the same record.
+[workbench](workbench.md)'s Molecular suite, in Prepare structure, shows part of the same record.

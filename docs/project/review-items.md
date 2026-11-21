@@ -1507,6 +1507,8 @@ The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at 
 
 **Re-placed** (§8.2.47 AW1, 21 November 2026): WP5.27, which removes Qt and no longer holds the route.
 
+**Fixed** in WP5.27: the Qt shell and its Result tab are removed, and with them `run_model.py:run_outcome`, the reader that kept the wrapper. The results explorer reads a run's quantities through `core/hashing.py:decode_floats` and `plot/data.py:qoi_rows` (`gui/web/analysis.py`), so it shows each number with its unit.
+
 ### REV-135: The density does not see the protonation chosen at the charge stage
 
 The density stage smears the atoms of the structure as loaded at stage 1 (`density/stage.py`, its record counting the
@@ -3037,6 +3039,8 @@ changes the site. The link check keeps checking the relative links meanwhile.
 **Re-placed** (§8.2.46 AV2, AV4, 20 November 2026): WP5.27, the route, which rewrites the guide and changes the site.
 
 **Re-placed** (§8.2.47 AW1, AW3, 21 November 2026): WP5.27, Qt's removal, which writes the short guide and changes the site.
+
+**Fixed** in WP5.27: `docs/scripts/generate.py` copies the four registers, `review-findings.md`, `review-items.md`, `modularity.md` and `modularity-findings.md`, to `docs/_generated/project/`, and its link rewrite points each link into a page the site leaves out at GitHub. `mkdocs.yml` excludes the sources and lists the copies; `links.py` still checks the sources' relative links.
 
 ### REV-229: Three checks the knowledge base proposed without a requirement
 

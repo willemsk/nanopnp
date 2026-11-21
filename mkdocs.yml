@@ -23,6 +23,10 @@ docs_dir: docs
 # scripts are not pages.
 exclude_docs: |
   plans/
+  project/review-findings.md
+  project/review-items.md
+  project/modularity.md
+  project/modularity-findings.md
   user-testing/
   code_reviews/
   superpowers/
@@ -114,7 +118,7 @@ nav:
       - Stabilisation modes: guide/stabilisation.md
       - The Python interface: guide/python.md
       - Notebooks: guide/notebooks.md
-      - Desktop shell: guide/desktop.md
+      - The workbench: guide/workbench.md
   - Examples:
       - examples/index.md
       - 01 Quick start: _generated/examples/01-quickstart.md
@@ -384,13 +388,13 @@ nav:
       - project/index.md
       - Contributing: project/contributing.md
       - Adding a physics model: project/physics-models.md
-      - Modularity report: project/modularity.md
-      - Modularity findings: project/modularity-findings.md
+      - Modularity report: _generated/project/modularity.md
+      - Modularity findings: _generated/project/modularity-findings.md
       - Architecture survey: project/architecture-survey.md
       - Modularity measurements: _generated/project/modularity-measurements.md
       - Architecture: _generated/project/architecture.md
-      - Review register: project/review-items.md
-      - Review findings: project/review-findings.md
+      - Review register: _generated/project/review-items.md
+      - Review findings: _generated/project/review-findings.md
       - Decisions register: project/decisions.md
       - Workbench design: design/workbench.md
       - Citing: project/citing.md
