@@ -74,7 +74,7 @@ the wheel exists. `tests/tier1/test_gui_screens.py` launches Chromium: the one `
 names, which `run` sets to one under `/opt/pw-browsers/` where it finds one, or else Playwright's own.
 A backend or browser that cannot start then fails; it does not skip.
 
-When only Markdown outside `packaging/`, `src/`, `data/` and `examples/` changed, the hook runs ruff
+When only Markdown outside `src/`, `data/` and `examples/` changed, the hook runs ruff
 and the decisions page's check alone (`.github/scripts/prose-only.sh`). CI's documentation build
 still runs.
 
@@ -214,7 +214,7 @@ scope opinions belong in the specification.
 - Use `pip`, a hand-activated venv, or bare `python` or `pytest`.
 - Import `gmsh` on the default path. It is GPLv2+ and an optional backend only (CON-10, ADR-002).
 - Depend on Triangle, MeshPy or TetGen (CON-12).
-- Use PyQt. Use PySide6 only (CON-09).
+- Use PyQt, or a front-end dependency under a licence CON-09 does not allow (CON-09).
 - Add anything to the end-user path that needs a C++ compiler, a source build or a JIT (CON-07).
 - Write the weak forms twice, or put backend-specific constructs in `physics/` (QR-13).
 - Hard-code correction coefficients, `ε_protein` or any fitted parameter in Python.

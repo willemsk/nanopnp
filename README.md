@@ -41,16 +41,16 @@ that can reconstruct the run.
   `nanopnp reproduce` re-solves a run and checks every number.
 - **Sweeps and clusters.** Any case field can be swept. Each point is an independent job that
   starts from a converged neighbour, so a sweep maps directly onto an HPC job array.
-- **Three ways in.** The `nanopnp` command line, a Python API of twenty stable names, and a graphical
-  shell: the browser workbench (`nanopnp gui`), whose suites are being built in Phase 5, and until it
-  leaves the PySide6 desktop shell, with live convergence plots and a field viewer.
+- **Three ways in.** The `nanopnp` command line, a Python API of twenty stable names, and the browser
+  workbench (`nanopnp gui`): six suites over a project folder, with a run queue, live convergence
+  plots and a field viewer.
 - **Comparable with the reference.** A reference-matching stabilised mode, and a Tier-3
   comparison against the paper's published current–voltage relationships and in-pore averages.
 
 ## Status and roadmap
 
-**Pre-alpha.** The solver core, the case file, the command line, parameter sweeps, provenance, a
-desktop shell, and the user documentation with seven worked examples are implemented and tested.
+**Pre-alpha.** The solver core, the case file, the command line, parameter sweeps, provenance, the
+browser workbench, and the user documentation with seven worked examples are implemented and tested.
 Meshes are supplied from outside, generated for an idealised pore or the ClyA reference geometry,
 or built from a PDB structure by the geometry pipeline (Phase 2). Fixed charge is supplied as a
 field, or protonated with PDB2PQR and PROPKA and deposited on the mesh by the charge pipeline
@@ -66,7 +66,7 @@ The case schema and the Python API may still change until the stable v1.0 (`SPEC
 | v0.3 | 2 | Geometry pipeline from a PDB structure: alignment, density, symmetry reduction, contour, mesh | **released**, [`v0.3.0`](CHANGELOG.md#030---2026-09-30) |
 | v0.4 | 3 | Charge pipeline: PDB2PQR charges, smeared fixed charge and dielectric; the paper's pipeline end to end | **released**, [`v0.4.0`](CHANGELOG.md#040---2026-10-04) |
 | v0.5 | 4 | Polish and user testing: the architecture's modularity explored, then the physics, numerics, API and CLI tested by a user | **released**, [`v0.5.0`](CHANGELOG.md#050---2026-11-02) |
-| v0.6 | 5 | Graphical interface: a design and requirements document with mockups, then the browser workbench that replaces the Qt shell | **in progress** |
+| v0.6 | 5 | Graphical interface: a design and requirements document with mockups, then the browser workbench, which replaced the Qt shell | **in progress** |
 | v0.7 | 6 | Validated release: the published results reproduced, V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |
 | v1.0 | — | Stable release: the API stability promise; its content is the author's to define | planned |
 
@@ -90,7 +90,7 @@ default install is the solver core and uses binary wheels only. The extras add:
 
 | Extra | Adds |
 |---|---|
-| `gui` | The browser workbench (`nanopnp gui`) and, until it leaves, the PySide6 shell `nanopnp-gui` |
+| `gui` | The browser workbench (`nanopnp gui`); `nanopnp gui --selftest` checks an installation |
 | `plot` | Matplotlib, for the figures of a run (`nanopnp plot`) |
 | `notebook` | The `plot` extra and marimo, for the [notebooks](notebooks/) |
 | `examples` | The `plot` extra, for the worked examples' plots |
@@ -136,7 +136,6 @@ model pages render the specification and the knowledge base verbatim.
 | [`docs/`](docs) | The documentation site's sources (`mkdocs.yml` at the root) |
 | [`data/corrections/`](data/corrections) | Fitted correction parameters, one file per electrolyte |
 | [`docs/validation/`](docs/validation) | The COMSOL field-comparison surface, kept but not required: the frozen cases, the probe grid, and the export contract |
-| [`packaging/`](packaging) | The desktop bundle: its PyInstaller recipe and its licence notice |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to report a finding, set up, and get a change accepted |
 | [`CLAUDE.md`](CLAUDE.md) | Working instructions for coding agents and new contributors |
 
@@ -171,7 +170,8 @@ Participation is under the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 BSD-3-Clause. See [`LICENSE`](LICENSE) and [`CITATION.cff`](CITATION.cff).
 
-The **desktop bundle** is a different matter: its default direct linear solver is SuiteSparse
-UMFPACK, which is GPL-2+ and ships inside the NGSolve wheel, so the bundle as a whole is
-distributed under GPL-2+ while the library stays BSD-3. See
-[`packaging/LICENSES-BUNDLE.md`](packaging/LICENSES-BUNDLE.md), which travels with every bundle.
+An **installation** that runs a case is a different matter: its default direct linear solver is
+SuiteSparse UMFPACK, which is GPL-2+ and ships inside the NGSolve wheel, so an installation is used
+under GPL-2+ while the library stays BSD-3. See
+[`src/nanopnp/THIRD-PARTY-LICENSES.md`](src/nanopnp/THIRD-PARTY-LICENSES.md), which travels with
+every installation; `nanopnp --env` states the obligation and names it.

@@ -22,7 +22,7 @@ GUI increments, one per phase to Phase 3 (ADR-004), then the GUI phase (§8.2.6 
 
 | Phase | GUI increment |
 |---|---|
-| 0 | Packaging probe: a trivial PySide6 and NGSolve `webgui` application that builds into a double-clickable Windows bundle |
+| 0 | Packaging probe: a trivial PySide6 and NGSolve `webgui` application that builds into a double-clickable Windows bundle; Phase 5 replaces it with the server's self-test (§8.2.17 S17) |
 | 1 | Case editor over the frozen schema, run control, live convergence plot, field viewer; meshes supplied externally |
 | 2 | Geometry pipeline surfaced: load a structure, inspect the density, contour and mesh steps, override the contour by hand |
 | 3 | Charge pipeline surfaced: pH selector, force field, charge map viewer, conservation report |

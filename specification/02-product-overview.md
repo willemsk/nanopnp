@@ -49,12 +49,7 @@ ClyA's C₁₂ symmetry.
 |---|---|---|---|
 | P1 | Method developers | Linux workstation and HPC, Python | Scriptable API, sweeps, ability to change the physics, full introspection |
 | P2 | Collaborating computational scientists | Linux/macOS, Python-literate | Config-file-driven CLI runs, reproducible cases, sensible defaults |
-| P3 | Experimental nanopore laboratories | Windows/macOS laptop, no Python | Desktop application: select a PDB, set salt and voltage, obtain a prediction and a visualisation |
-
-NOTE (P3; lands with WP5.27, Qt's removal). When it lands, P3's primary need
-reads: "The workbench, installed with one documented command and opened in the browser: select a
-PDB, set salt and voltage, obtain a prediction and a visualisation." Until then the text above gates
-the Qt shell (§8.2.17 S2, S12, S17).
+| P3 | Experimental nanopore laboratories | Windows/macOS laptop, no Python | The workbench, installed with one documented command and opened in the browser: select a PDB, set salt and voltage, obtain a prediction and a visualisation |
 
 ### 2.5 Operating environment
 
@@ -62,7 +57,7 @@ the Qt shell (§8.2.17 S2, S12, S17).
 |---|---|
 | Operating systems | Windows, macOS, Linux |
 | Python | 3.11 to 3.14 (§8.2.2 B4) |
-| Execution modes | Headless library and CLI; HPC job arrays; packaged desktop application |
+| Execution modes | Headless library and CLI; HPC job arrays; the browser workbench |
 | Solver hardware | Single node, serial per solve; parallelism at the job level |
 | Direct-solve ceiling | About 2–5 × 10⁶ DOF for a sparse direct factorisation |
 | Reference problem size | About 1.2 × 10⁵ cells, five fields, factorisable on a laptop |
@@ -82,11 +77,7 @@ the Qt shell (§8.2.17 S2, S12, S17).
 | meshio (MIT), GridDataFormats (LGPL) | as noted | Mesh interchange; OpenDX/CCP4 grid IO |
 | SuiteSparse UMFPACK | GPL-2+ | Direct linear solver, default (built into the NGSolve wheel; CON-11) |
 | scipy SuperLU | BSD | Direct linear solver, selectable fallback |
-| PySide6 | LGPL-3 | Desktop shell (ADR-004) |
-
-NOTE (§2.5, §2.6; lands with WP5.27, Qt's removal): §2.5's execution modes read "Headless library and
-CLI; HPC job arrays; the browser workbench"; the PySide6 row goes, and NiceGUI and FastAPI (MIT, BSD-3,
-the workbench's server and front end) join.
+| NiceGUI, FastAPI | MIT, BSD-3 | The workbench's front end and server, the `gui` extra (ADR-004) |
 
 NOTE (§2.6, the workbench, v0.6). The `gui` extra takes Matplotlib (its own permissive licence), whose
 registered colour maps the workbench offers by name (§8.2.45 AU2). From the tree of results' package (WP5.22, moved to Phase 6 by §8.2.47 AW1) the front end draws every

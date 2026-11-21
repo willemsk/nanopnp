@@ -20,7 +20,7 @@ needed.
 | IF-06 | VER-27 |
 | IF-07 | VER-33 |
 | IF-08 | VER-24, VER-35 |
-| IF-09 | VER-43, VER-44, VER-55 (the geometry pipeline built, inspected and hand-edited from the shell), VER-60 (the charge pipeline built and inspected from the shell, every number read from its stage's artefact), VER-78 (the browser workbench: every state loads every screen with its controls, and the server keeps its contract) |
+| IF-09 | VER-43, VER-44, VER-55 (the geometry pipeline built, inspected and hand-edited from the workbench), VER-60 (the charge pipeline built and inspected from the workbench, every number read from its stage's artefact), VER-78 (the browser workbench: every state loads every screen with its controls, and the server keeps its contract) |
 | FR-01 | VER-48 (frame window, superposition on the earliest frame's C-alpha, Kabsch against MDAnalysis) |
 | FR-02 | VER-48 (the permutation axis against a known axis, and against principal axes; the channel's axis against a known axis and against 2WCD's ring axis) |
 | FR-03 | VER-48 (missing, surplus and truncated chains, residue names and the point group refused) |
@@ -89,11 +89,11 @@ needed.
 | CON-06 | None yet |
 | CON-07 | None yet |
 | CON-08 | §6.6 measurement table (§8.2 criterion 3, discharged) |
-| CON-09 | VER-43 (no PyQt module is reachable from the shell's import paths); VER-44 (the shipped renderer is byte-identical to the npm tarball kept as its source, whose SHA-512 is npm's published integrity); VER-55 (nor from the geometry view-models'); VER-60 (nor from the charge view-models', which import neither PDB2PQR nor PROPKA) |
+| CON-09 | VER-43 (no PyQt module is reachable from the workbench's import paths); VER-44 (the shipped renderer is byte-identical to the npm tarball kept as its source, whose SHA-512 is npm's published integrity); VER-55 (nor from the geometry view-models'); VER-60 (nor from the charge view-models', which import neither PDB2PQR nor PROPKA) |
 | CON-10 | VER-27 (the default ingestion path imports no Gmsh), VER-53 (nor does generating a mesh through stages 5 and 6), VER-54 (nor resolving or keying a case that names the Gmsh backend; without the extra that backend is refused naming it), VER-55 (nor do the geometry view-models; the bundle carries it as the optional backend, §8.2.2 B8) |
-| CON-11 | §6.6 measurement table — measured; the conflict it exposed is resolved by CON-11 and ADR-003. VER-43 asserts that the bundle's licence notice states the resulting GPL-2+ obligation, and the probe refuses to start without it; VER-55 adds the geometry payloads, Gmsh (GPL-2+) and Shapely's GEOS (LGPL-2.1) among them, each exercised by the probe; VER-60 adds PDB2PQR (BSD-3) and PROPKA (LGPL-2.1, collected as source files), exercised by protonating a peptide at two pH values |
+| CON-11 | §6.6 measurement table — measured; the conflict it exposed is resolved by CON-11 and ADR-003. The installation's licence notice, `src/nanopnp/THIRD-PARTY-LICENSES.md`, states the GPL-2+ obligation and has a row for each payload the self-test exercises, and `nanopnp --env` states the obligation and names the notice (`tests/tier1/test_gui_selftest.py`); VER-55 and VER-60 exercise the geometry and protonation payloads, Gmsh (GPL-2+), Shapely's GEOS (LGPL-2.1), PDB2PQR (BSD-3) and PROPKA (LGPL-2.1) among them |
 | CON-12 | VER-54 (the lock names none of Triangle, MeshPy, TetGen, pygmsh or pygalmesh, and the `gmsh` API is called directly) |
-| CON-13 | VER-43 in part (the Windows bundle builds and launches headlessly on every push; widget construction is asserted on `windows-latest` and `macos-latest`). Linux *desktop* Qt is deliberately not asserted: the push gate installs no system packages, and PySide6 does not import on the runner image |
+| CON-13 | VER-43 in part (the server's self-test runs on ubuntu, macOS and Windows on every push to `main`, nightly and before a release, §7.6); VER-78 on ubuntu (the workbench in a headless Chromium) |
 | CON-14 | None yet |
 
 Coverage: 66 of the 83 requirements in §3 have a specified activity; 17 are recorded as "none yet",

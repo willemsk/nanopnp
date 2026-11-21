@@ -16,7 +16,9 @@ description: "Maps each CI trigger, a pull request, a push to main, or the night
 
 The per-push selection is Tier 1, the Tier 2 tests that neither walk the pipeline nor carry `slow`,
 example 01 while its solve takes under 60 s, and one charged walk, example 02's ePNP-NS pore with
-its VER-62 golden (§8.2.13 N4).
+its VER-62 golden (§8.2.13 N4). Each leg that runs Tier 1 then runs the server's self-test,
+`nanopnp gui --selftest`, on its platform (RSK-13): a pull request's Tier 1 leg, each platform on a
+push to `main`, the nightly run and the run before a release.
 
 Every pipeline run, a walk stopped before the end included, SHALL write a provenance manifest recording input hashes, library versions, mesh hash,
 solver settings, stabilisation mode and correction parameter file versions (FR-25).

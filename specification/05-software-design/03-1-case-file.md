@@ -540,7 +540,7 @@ vertex and stays in the stage-1 frame, so stage 5 applies `geometry.membrane.cen
 exactly as to a supplied profile. The document read back through `inputs.profile` is a supplied
 profile (the §5.2.1 NOTE on a supplied fixture). The conditioning and gate records belong to the
 stage-4 artefact, not to the document, so a hand edit cannot carry a stale one.
-A hand edit written by the desktop shell (§8.1, GUI increment 2) is a `nanopnp/profile/v0.5`
+A hand edit written by the workbench's outline editor (§8.1, GUI increment 2) is a `nanopnp/profile/v0.5`
 document with `provenance.source: hand-edit`, which is never a reference source. Its `sha256` is the
 canonical digest of the profile it was edited from, or, where it was started from a loop stage 4's
 gate refused (§8.2.2 B9), the digest of the stage-3 payload that loop was drawn from, as stage 4
@@ -731,7 +731,7 @@ quadratic `phi` and `c_i` with linear `u` and `p` — is expressible. An order f
 the order of `p` SHALL be refused unless `numerics.stabilisation` selects a mode supplying the flow
 stabilisation of §6.4.2, and the refusal SHALL name both the inf-sup condition and the mode that
 would permit the pair. The refusal is made when the case is loaded, so `nanopnp validate case`
-and the desktop shell's commit make it with the same text as a run. All three orders are recorded
+and the workbench's save make it with the same text as a run. All three orders are recorded
 in the run provenance record (NUM-03).
 
 NOTE (`numerics.stabilisation`): the value set is

@@ -46,13 +46,13 @@ the default path does not depend on Netgen's less-mature 2D boundary-layer gener
 | MeshPy, TetGen 1.5, pygmsh, pygalmesh | Excluded by CON-12: Triangle's distribution restriction, AGPLv3, and staleness respectively |
 
 Consequences: the core library stays permissively licensable and functional without Gmsh (CON-10);
-the contents of the distributed desktop bundle remain a later decision.
+Gmsh is the `gmsh` extra, and an installation without it is complete.
 
 **Delivered** (WP23, VER-54). `numerics.mesh.backend: gmsh` meshes the region
 stage 5 assembled with `netgen.occ`, read from its named edges into Gmsh's built-in kernel, under the
 size field of the §5.2.2 NOTE on the Gmsh backend, and joins netgen's route at the MSH 4.1 writer,
 so every gate is shared. Gmsh assembles no region of its own. Boundary layers remain FR-11, after
-v1.0, and whether the bundle carries Gmsh remains the later decision above.
+v1.0.
 
 #### ADR-003 Project licence
 
@@ -62,74 +62,48 @@ constraint applies.
 | Alternative | Assessment |
 |---|---|
 | GPL core, Gmsh in the default path | Deferred, not foreclosed: the package has no other GPL entanglement, so this stays a one-line relicense should GPL become acceptable |
-| PyQt for the desktop shell | Rejected: GPL-3 or commercial only. PySide6 (LGPL-3) is used instead (CON-09) |
-| Bundle defaulting to scipy SuperLU | Rejected on measurement (§6.6): SuperLU was OOM-killed on the reference-sized factorisation, so a SuperLU-default bundle cannot run the published case. The bundle defaults to UMFPACK and carries the GPL-2+ obligations that follow, stated in its licence notice; the library itself stays BSD-3 and depends on neither (CON-11) |
+| PyQt for a desktop shell | Rejected: GPL-3 or commercial only (CON-09) |
+| An installation defaulting to scipy SuperLU | Rejected on measurement (§6.6): SuperLU was OOM-killed on the reference-sized factorisation, so a SuperLU-default installation cannot run the published case. The installed workbench defaults to UMFPACK through NGSolve's wheel and carries the GPL-2+ obligation that follows, which `nanopnp --env` states; the library itself stays BSD-3 and depends on neither (CON-11) |
 
 Consequences: BSD-3 maximises adoption where both academic and industrial reuse matter and matches
 the scientific Python stack. Dependencies are compatible: NGSolve and Netgen LGPL-2.1 (dynamic
 linking), MDAnalysis LGPLv3, PDB2PQR BSD, APBS BSD-3, scikit-image BSD-3, Shapely BSD-3, meshio
-MIT, PySide6 LGPL-3. Gmsh is GPLv2+, hence optional. The repository carries a `CITATION.cff`
+MIT, NiceGUI MIT, FastAPI BSD-3. Gmsh is GPLv2+, hence optional. The repository carries a `CITATION.cff`
 pointing at the Nanoscale paper and the software DOI (CON-14).
 
-#### ADR-004 Desktop application
+#### ADR-004 Graphical interface
 
 Decision (§8.2.12 M3; §8.2.30 AF4): a browser workbench, NiceGUI on FastAPI in `gui/web/`,
-distributed as the `gui` extra. The PySide6 shell and its packaging NOTE stand until WP5.27, which
-removes Qt, lands (§8.2.17 S17). The consequences below hold for either shell.
-
-Superseded at WP5.27 (the Qt shell): Python core, PySide6 (LGPL-3) shell, NGSolve webgui in a `QWebEngineView` for field
-rendering, and a background solver process communicating over a queue so the interface stays
-responsive and can show live convergence. Packaged with PyInstaller, briefcase or
-conda-constructor. The graphical surface grows from Phase 1 onward.
+distributed as the `gui` extra (§8.2.17 S17). A background solver process communicates over a
+queue, so the interface stays responsive and shows live convergence.
 
 | Alternative | Assessment |
 |---|---|
+| A PySide6 (Qt) desktop shell | Superseded: the shell of Phases 1 to 4, removed at WP5.27 for the browser workbench (§8.2.12 M3; §8.2.17 S12, S17) |
 | PyQt6 shell | Rejected: GPL-3 only |
-| Local web application: FastAPI plus browser frontend wrapped in `pywebview` | Superseded: rejected for the Qt shell, then chosen for Phase 5 as the decision above, without `pywebview` (§8.2.12 M3; the desktop-wrapper NOTE) |
+| Local web application: FastAPI plus browser frontend wrapped in `pywebview` | Chosen for Phase 5 as the decision above, without `pywebview` (§8.2.12 M3; the desktop-wrapper NOTE) |
 | Defer the interface to a terminal phase | Rejected on two failure modes: an interface bolted on at the end exposes the API's accidental structure rather than the user's workflow, and a nine-month gap before any non-programmer touches the tool is a nine-month gap in shaping feedback |
 
-NOTE (packaging, the Qt shell until WP5.27). The redistributable bundle SHALL be built one-**dir**
-rather than one-file, for two independent reasons. PySide6 and Qt are used under the LGPL option
-(CON-09), which requires that a recipient be able to replace the covered libraries; a directory of
-shared libraries satisfies that plainly. And Qt WebEngine runs a separate helper executable, which a
-one-file extractor must locate at runtime inside a temporary directory. The bundle SHALL carry the
-licence notice CON-11 requires, stating that the bundle as a whole is distributed under GPL-2+
-because its default linear solver is, while the library itself remains BSD-3. The packaging probe
-SHALL carry, and its `--selftest` SHALL exercise once each, failing naming the payload: PySide6's
-widgets and Qt WebEngine, NGSolve, Netgen and `ngsolve.webgui` (§8.2.1 A4), and since WP24 the
-geometry pipeline's compiled payloads, MDAnalysis and gemmi reading a structure, scikit-image's
-contour extraction, Shapely's polygon checks through GEOS, and Gmsh meshing a square (§8.2.2 B8).
-An extension that imports and then cannot load its library is RSK-13's failure, which an import
-alone does not detect: Gmsh's Python module imports with its library missing and fails on its first
-call (`knowledge/07-software-stack/05-gui-and-packaging.md`). Since WP31 the bundle also carries the charge
-pipeline's protonation payloads, PDB2PQR and PROPKA, with the data files each reads beside its own
-modules. `--selftest` protonates a nine-residue peptide at two pH values and requires the two net
-charges measured for it, so that a bundle missing PROPKA's parameter file fails naming PROPKA,
-where a single run without titration would pass (WP31 D14). A
-pure-Python payload used under the LGPL SHALL be collected as source files on disk, and not into
-the bundle's module archive: a module inside the archive cannot be replaced in place, and the
-one-dir layout exists so that an LGPL component can be. That applies to PROPKA (LGPL-2.1),
-MDAnalysis and GridDataFormats (LGPL-3.0-or-later) (WP31 D15). The background solver
-process SHALL be started with the `spawn` start method: it is the only one Windows has, and a forked
-child would inherit both the parent's Qt event loop and its already-imported numerical libraries.
+NOTE (packaging). The workbench SHALL be distributed as the package with its `gui` extra, installed
+by one documented `uv` command, with no bundle (§8.2.17 S12). Its front end SHALL ship prebuilt inside
+the wheel, so no user builds it (CON-07), and the shipped renderer SHALL stay an unmodified, separate
+file (CON-09). The server's self-test, `nanopnp gui --selftest`, SHALL exercise once each, failing
+naming the payload: NGSolve and Netgen meshing a square, and a server child serving the shipped
+renderer, compared by its bytes; MDAnalysis and gemmi reading a structure, scikit-image's contour
+extraction and Shapely's polygon checks through GEOS, and Gmsh where its extra is installed; PDB2PQR
+and PROPKA protonating a nine-residue peptide at two pH values, whose two net charges it requires, so
+that PROPKA's parameter file out of reach fails naming PROPKA. An extension that imports and then
+cannot load its library is RSK-13's failure, which an import alone does not detect: Gmsh's Python
+module imports with its library missing and fails on its first call
+(`knowledge/07-software-stack/05-gui-and-packaging.md`). The background solver process SHALL be started
+with the `spawn` start method: it is the only one Windows has, and a forked child would inherit the
+server's event loop and its already-imported numerical libraries.
 
 Consequences: every pipeline stage must be independently invocable, cancellable, progress-reporting
 and introspectable (FR-27), which §5.1 requires on scientific grounds in any case, so the interface
 is a thin shell over the stage objects the CLI drives (IF-09). Each release from v0.2 onward ships
 a usable graphical surface over the functionality existing at that release (QR-11); the per-phase
 increments are in §8.1.
-
-NOTE (packaging; lands with WP5.27, Qt's removal). When it lands, the packaging NOTE above reads: "The workbench SHALL be distributed as the package with its `gui` extra, installed
-by one documented `uv` command, with no bundle (§8.2.17 S12). Its front end SHALL ship prebuilt inside
-the wheel, so no user builds it (CON-07), and the shipped renderer SHALL stay an unmodified, separate
-file (CON-09). The server's self-test SHALL exercise once each, failing naming the payload: NGSolve,
-Netgen and the renderer reaching its document; MDAnalysis and gemmi reading a structure,
-scikit-image's contour extraction and Shapely's polygon checks through GEOS, and Gmsh where its extra
-is installed; PDB2PQR and PROPKA protonating a nine-residue peptide at two pH values, whose two net
-charges it requires, so that PROPKA's parameter file out of reach fails naming PROPKA. The
-background solver process SHALL be started with the `spawn` start method: it is the only one Windows
-has, and a forked child would inherit the server's event loop and its already-imported numerical
-libraries." Until then the packaging NOTE gates the Qt shell (§8.2.17 S12, S17).
 
 NOTE (the desktop wrapper, v0.6). The browser shell SHALL NOT preclude a desktop wrapper, such as
 Electron, that spawns its server and loads its address; no wrapper is built before 1.0 (§8.2.17 S12;

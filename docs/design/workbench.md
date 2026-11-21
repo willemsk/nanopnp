@@ -1,6 +1,6 @@
 # Workbench design
 
-The design of the browser workbench that replaces the Qt desktop shell in v0.6 (Phase 5,
+The design of the browser workbench, which replaced the Qt desktop shell in v0.6 (Phase 5,
 §8.2.17 S1 to S24), written by the WP5.01 design study: today's shell critiqued, a design round with
 the author on the organisation and the look and feel, the areas drawn as choice panels and then as two
 whole workbenches, and the requirements. Each ruling is a `WB-nn` row of the *Decision log*, in the
@@ -12,10 +12,10 @@ and review in `docs/design/reviews/`, and WP5.02's framework spike in `docs/desi
 `report.md`, and the two windows' pictures). The tokens are `docs/design/tokens.css`.
 
 **What is live and what is record.** Live design: *Purpose and users*, *The areas* to *The shell's
-reading of artefacts*, the *Decision log* and the *Glossary*. The gate until WP5.27: *Today's shell*'s
-capability list, Q01 to Q41, which the Phase 5 close reads. Record: the rest of *Today's shell* (the
-critique and the verdicts), *Restated clauses*, whose home is the NOTE beside each clause in the
-specification, and *Inherited rows*. WP5.27 moves the records out.
+reading of artefacts*, the *Decision log* and the *Glossary*. Record: *Today's shell*, whose capability
+list, Q01 to Q41, WP5.27 checked in the workbench before Qt was removed
+([the record](reviews/2026-11-21-qt-capabilities.md)), with the critique and the verdicts; *Restated
+clauses*, which are now the clauses' own text in the specification; and *Inherited rows*.
 
 ## Purpose and users
 
@@ -448,8 +448,8 @@ REV-258).
 
 ## Restated clauses
 
-The clauses that gate the Qt shell are restated for the browser shell. Each restatement is a NOTE beside
-its clause, tagged for v0.6, and replaces it in the package that removes Qt (S17; WP5.01 D5). In brief:
+The clauses that gated the Qt shell were restated for the browser shell, each as a NOTE beside its
+clause, and WP5.27 made each NOTE the clause's text (S17; WP5.01 D5). In brief:
 
 | Clause | Today | For the browser shell |
 |---|---|---|
@@ -470,7 +470,7 @@ refusal at its field (FR-35), the guided route (FR-36), structure preparation (F
 mutator (FR-38), the study's overrides and sweeps (FR-39), and the accessibility target (QR-16); the
 composer (FR-40), the structural mutator (FR-41), the sketcher (FR-42) and fractional protonation (FR-43)
 are tagged for later phases.
-CON-08 and CON-11 still name the bundle and the desktop path: REV-141.
+CON-08 and CON-11 name the installed workbench in place of the bundle and the desktop path (REV-141).
 
 ## Inherited rows
 
