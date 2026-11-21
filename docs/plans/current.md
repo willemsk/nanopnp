@@ -1,17 +1,16 @@
 # Current work
 
-Updated 20 November 2026 (the sixth Phase 5 amendment: every open item placed). Navigation only; `SPECIFICATION.md` governs; an
+Updated 21 November 2026 (the tree of results' design round held). Navigation only; `SPECIFICATION.md` governs; an
 unmerged branch is not shipped.
 
 ## In brief
 
-Every point the reviews left open now has a package. Seven remain: results as an editable tree;
-display layers in every molecule view; speed on a graphics card; plain messages that lead to their field; a
-polish pass over every suite; the guided route, with new models and the old shell removed; the
-close. Later points name a later phase's package.
+The results tree is designed: Analysis becomes one editable tree, as in COMSOL, and one chart library
+draws every plot and map, so the older chart tools leave. Seven packages remain: the tree, display
+layers, speed, plain messages, polish, the guided route and the close.
 
-**Your call.** Approve the amended plan, reviewed, then the tree of results at its design round.
-*Recommendation:* settle it on drawn screens.
+**Your call.** Approve the tree package's plan when it comes. *Recommendation:* plan it in two halves,
+the tree first and the maps second, so each is checked alone.
 
 ## Position
 
@@ -20,7 +19,7 @@ close. Later points name a later phase's package.
   (`v0.6.0-alpha.19`; alpha.20 and .21 to be pushed). The sixth amendment (§8.2.46) placed
   every open item: WP5.22 the tree of results, WP5.23 the layers, WP5.24 performance,
   WP5.25 the refusals, WP5.26 the polish pass, WP5.27 the route, WP5.28 the close.
-  **Next:** `/np-gui grill` on the tree of results (REV-268), then `/np-plan wp 5.22`; REV-271, the plan's length, is the author's. host: claude-code.
+  Its round ruled WB-54 to WB-63 ([record](../design/reviews/2026-11-21-tree.md)). **Next:** `/np-plan wp 5.22`; REV-271, the plan's length, is the author's. host: claude-code.
 
 ## Not to be re-decided
 
@@ -42,7 +41,7 @@ close. Later points name a later phase's package.
   AS3). **An edit marks the atoms it moves; the overlay is kept; a study's charge node opens the continuum model's**
   (AT1 to AT4). **The charge map opens on the 99th percentile; a free list of layers is WP5.23, in every Mol* view** (WB-49; AV3).
   **A plot's axes are the user's; any Matplotlib map; a true 3D view is the tree's**
-  (AU1 to AU3; WB-53). **Analysis becomes a tree of results, its chart library chosen again** (WB-51). **The words follow
+  (AU1 to AU3; WB-53). **Analysis is COMSOL's tree; Plotly draws every chart and map** (WB-54 to WB-63). **Analysis becomes a tree of results, its chart library chosen again** (WB-51). **The words follow
   five rules** (WB-52). **Every open item names a package** (§8.2.46).
 
 ## Somebody else's

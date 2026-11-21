@@ -144,10 +144,13 @@ per-launch token of the address it printed nor the cookie that token sets.
 NOTE (the front end, v0.6). The workbench's front end SHALL be written in Python with NiceGUI, on the
 FastAPI server of the desktop-wrapper NOTE; it has no build step, and NiceGUI's own Vue layer ships
 prebuilt (CON-07). JavaScript SHALL be the bridge to a renderer and nothing else. The renderers are Mol*
-for the molecule, as its unmodified standalone bundle served as separate files (CON-09); `webgui` for
-meshes and fields (VER-44); a canvas for (r, z) maps; and uPlot 1.6.32 (MIT), vendored unmodified as
-separate files beside Mol* and KaTeX (CON-09), for every plot of y against x, each axis linear,
-logarithmic or square-root, its range typed by the user (§8.2.45 AU1). A call
+for the molecule, as its unmodified standalone bundle served as separate files (CON-09), and, from WP5.22,
+Plotly (plotly.js, MIT) as NiceGUI ships it, unmodified, for every plot of y against x and every (r, z) view:
+maps, meshes, drawings and the field turned about the axis, each axis linear or logarithmic, a
+square-root axis drawn as its root with ticks in its own units, its range typed by the user (WB-57,
+restating §8.2.45 AU1). Until WP5.22 lands, `webgui` draws meshes and fields (VER-44), a canvas the
+(r, z) maps, and uPlot 1.6.32 (MIT), vendored unmodified as separate files beside Mol* and KaTeX
+(CON-09), every plot of y against x. A call
 that starts the viewer from Python SHALL pass a timeout longer than the viewer's start, and a screen SHALL
 set `data-screen-ready` only when its viewer has built and drawn once. The author chose NiceGUI over
 a React application on the spike's six measures (`docs/design/spike/report.md`; §8.2.30 AF4).

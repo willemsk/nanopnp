@@ -289,7 +289,7 @@ is a rolling register, and its header stays `open`.
 | REV-265 | interface | low | accepted | §8.2.46 AV3: WP5.23 | [A free list of the structure's layers in Meso's Mol* view](review-items.md#rev-265-a-free-list-of-the-structures-layers-in-mesos-mol-view) |
 | REV-266 | interface | low | accepted | §8.2.46 AV2: WP5.26 | [What the Meso suite's round left open](review-items.md#rev-266-what-the-meso-suites-round-left-open) |
 | REV-267 | interface | low | accepted | §8.2.46 AV2: WP5.26 | [What the Analysis suite's first review left open](review-items.md#rev-267-what-the-analysis-suites-first-review-left-open) |
-| REV-268 | interface | medium | accepted | WB-51; §8.2.46 AV4: WP5.22 | [Analysis as an editable tree of results, and the charts' library](review-items.md#rev-268-analysis-as-an-editable-tree-of-results-and-the-charts-library) |
+| REV-268 | interface | medium | accepted | WB-51; WB-54 to WB-63; §8.2.46 AV4: WP5.22 | [Analysis as an editable tree of results, and the charts' library](review-items.md#rev-268-analysis-as-an-editable-tree-of-results-and-the-charts-library) |
 | REV-269 | interface | low | accepted | §8.2.46 AV2: WP5.26 | [The workbench's wording](review-items.md#rev-269-the-workbenchs-wording) |
 | REV-270 | numerics | low | accepted | ruled by the author, 20 November 2026: WP5.22 | [A map reads its field linearly on each cell split in four](review-items.md#rev-270-a-map-reads-its-field-linearly-on-each-cell-split-in-four) |
 | REV-271 | process | low | open | for the author; WP5.28 at the latest | [The Phase 5 plan exceeds its word target a third time](review-items.md#rev-271-the-phase-5-plan-exceeds-its-word-target-a-third-time) |
