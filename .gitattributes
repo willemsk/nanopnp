@@ -14,5 +14,8 @@ data/** -text
 # structure file's digest enters the stage-1 artefact key (WP18 D11, D16).
 tests/data/** -text
 
-# Vendored Mol*: checked byte for byte against the sha256 in its NOTICE.md.
+# Vendored Mol*, KaTeX and uPlot: checked byte for byte against the sha256 in
+# each NOTICE.md (tests/tier1/test_gui_screens.py, CON-09).
 src/nanopnp/gui/web/assets/molstar/** -text
+src/nanopnp/gui/web/assets/katex/** -text
+src/nanopnp/gui/web/assets/uplot/** -text

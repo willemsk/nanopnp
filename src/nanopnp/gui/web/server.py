@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import _thread
 import argparse
 import hashlib
 import hmac
@@ -224,12 +225,18 @@ _DEV_ENVIRONMENT = (
 )
 
 
-def _watch_input(server: uvicorn.Server | None) -> None:
-    sys.stdin.read()
+def _watch_input(server: uvicorn.Server | None, source: int | None = None) -> None:
+    if source is None:
+        sys.stdin.read()
+    else:
+        with os.fdopen(source) as watched:
+            watched.read()
     if server is not None:
         server.should_exit = True
     else:
-        os.kill(os.getpid(), signal.SIGINT)  # the reloading supervisor stops on it
+        # The reloading supervisor stops on SIGINT in its main thread. On Windows, os.kill with
+        # SIGINT would terminate this process outright and orphan the worker it spawned.
+        _thread.interrupt_main(signal.SIGINT)
 
 
 def _boot(
@@ -309,7 +316,14 @@ def _serve_dev(
         kwargs={"browser": browser, "as_json": as_json},
         daemon=True,
     ).start()
-    threading.Thread(target=_watch_input, args=(None,), daemon=True).start()
+    # The supervisor watches its input on a descriptor of its own, which no child inherits, and
+    # gives the worker the null device: on Windows a new process that shares a pipe with a pending
+    # read blocks at its start, so the worker would never serve.
+    watched = os.dup(sys.stdin.fileno())
+    null = os.open(os.devnull, os.O_RDONLY)
+    os.dup2(null, sys.stdin.fileno())
+    os.close(null)
+    threading.Thread(target=_watch_input, args=(None, watched), daemon=True).start()
     uvicorn.run(
         "nanopnp.gui.web.server:dev_app",
         factory=True,

@@ -4579,3 +4579,23 @@ tool or phase, and AZ1 to AZ6 with them. It names `/np-plan amend 6` as the step
 
 **Proposed** (review 073, 22 November 2026): WP6.03, the cleanup's instructions; the author's approval of the Phase 6
 plan accepts the placement.
+
+### REV-279: At a ragged rim the channel's axis can lock about 0.6° off, as rounding decides
+
+Found by WP6.01's dispatched [run 851](https://github.com/willemsk/nanopnp/actions/runs/45035649973), the Windows leg's
+failure at result 620: `test_ver48_the_channel_axis_gates_fire` read the axis of the 8-fold test wall, tilted 12°
+about x, as 11.38°. `structure/cavity.py:channel_axis` iterates a line through each plane's centre, and a plane's
+centre is the mean of its widest enclosed spaces within 1 pm of each other. At a ragged rim those are n equal spaces
+off the axis; a line a little off the axis breaks their tie, the mean of the few kept leans the way of the tilt, and
+the iteration holds a second fixed point (WP5.16 recorded the weakness, [knowledge 04/15](../../knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md)).
+On Linux a relative change of 1e-14 in the atoms' positions gives 11.381°, 11.446° or 11.780° for 3 of 8 draws, so
+which fixed point a platform reaches is decided by rounding. Without the rim the axis reads 12.0000° in 19 of 19
+draws. A real pore whose rim no atom lines on the axis's side may be given an axis about 0.01 rad off.
+
+*Recommendation:* make a plane's centre robust to a broken tie at a ragged rim, for instance by taking every
+enclosed space a symmetry image of the widest, or by leaving out of the fit a plane whose tie splits, and re-measure
+2WCD's axis (VER-48).
+
+**Accepted** (the author, 22 November 2026, at WP6.01's implementation): the gate test tilts a wall without the
+ragged rim, its precision kept; the method's fix waits for the rescoping round after WP6.03 (§8.2.50 AZ7), which
+places it.
