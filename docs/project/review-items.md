@@ -4373,6 +4373,8 @@ limit restates the phase plan's word target.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): WP6.02, the cleanup's measure, audit and records, where the reading limit restates the phase plan's word target.
 
+**Fixed** ([WP6.02](../plans/phase-6/wp6.02-the-cleanup-measure-audit-records.md)'s item 5, 22 November 2026; §8.2.50 AZ14): the author ruled a phase plan's target at 2,500 words, up to 10 % over, without its report, as recommended, with the reading baseline in hand. A delivered package's entry in the phase plan becomes one line, and its summary goes to its own plan. §8.4.4, `np-plan/phase.md` and `np-implement/wp.md` say so; the Phase 6 plan holds about 1,840 words, its WP6.01 entry cut to one line.
+
 ### REV-272: Phase 5 closes early; Phase 6 opens with its scope, a cleanup and the foundations
 
 The author asked, collecting the tree round's verdicts, whether the system is robust and extensible or a patchwork,

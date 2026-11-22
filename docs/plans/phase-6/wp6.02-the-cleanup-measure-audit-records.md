@@ -227,6 +227,12 @@ Then write rows AZ13 and AZ14 into record 50, with their `holds-now.yaml` entrie
 (what it counts, what it binds, its number) and for the target; `np-plan/phase.md`'s target line; the Phase 6 plan's
 open decision 2; and REV-271 `fixed`. Run `decisions.py`.
 
+> **Outcome — the limit is 6,500 words, against the recommendation; a phase plan 2,500.** The author chose 80 % of
+> the 8,095-word median over the recommended 65 % (5,500), and confirmed the window kind, a fresh `/np-implement`
+> window (AZ13); a phase plan holds 2,500 words with a delivered entry one line (AZ14, as recommended). The one-line
+> rule moved `np-implement/wp.md`'s delivered summary to the package's own plan, and WP6.01's entry was cut so in the
+> same commit. §8.4.4 states the limit from WP6.03's merge, which its done-criterion checks.
+
 **Item 6 (D5).** In `clause.py:clause`, for a history row that is not a definition, read its ruling's entry in
 `holds-now.yaml`. If the entry starts `spent` or `superseded by` and `--all` is not given, write
 `--- ruling [<entry>] (<file>:<line>) ---`, then the row's identifier with its first bold phrase. For the survey, a

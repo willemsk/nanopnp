@@ -19,14 +19,14 @@ about 2 sessions and 3. The fifteen drafted packages, if confirmed: 75 sessions,
 history. The rescoping could be read from stale records: it waits for the cleanup. A drafted package could be started
 before the round: none has a plan until the round rules.
 
-**Your call.** Settled on 22 November 2026. Still yours: the reading limit's number, inside the cleanup, once its
-baseline is measured; and the rescoping itself. *Recommendation:* bring to the round what you would keep, cut and add, so it
+**Your call.** Settled on 22 November 2026, with the reading limit and the length of a phase plan inside the cleanup.
+Still yours: the rescoping itself. *Recommendation:* bring to the round what you would keep, cut and add, so it
 starts from your view and not from the records.
 
 ## Context
 
 `SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 (AY1 to AY8) and §8.2.50 (AZ1
-to AZ8; AZ8 ruled at WP6.01's plan).
+to AZ14; AZ8 ruled at WP6.01's plan, AZ13 and AZ14 at WP6.02's item 5).
 
 Phase 6 answers one question: **can the library be made one sound base, without moving a number, before the workbench
 is rebuilt and three tools are built on it?** Its gate is §8.1's. Only WP6.01 to WP6.03 are fixed (AZ7); the
@@ -75,16 +75,7 @@ and 8 touches (§8.3).
 
 ### WP6.01 — The Windows leg (REV-277; AY4)
 
-Name the failing tests and the stall with a per-test timeout; fix each at its cause. A pull request's CI stays on Linux;
-this package's own dispatch of `ci.yml` on its branch shows the three legs green, and from it only `/np-ship phase`
-dispatches the three platforms and stops on a red leg (AZ8). [The plan](wp6.01-the-windows-leg.md).
-
-*Delivered 22 November 2026.* Each test is bounded (600 s; 7,200 s for `nightly` and `slow`), so a hang fails naming
-its test (§7.6). Run 851 named the stall and three failures; run 854 passed on ubuntu, macOS and Windows with the
-self-test, Windows in 13 min 32 s. Fixed at their causes: the reloading server reads a private copy of its input and
-ends its worker (VER-78); KaTeX and uPlot keep their bytes (CON-09). The channel axis's rim trap is REV-279, placed by
-the rescoping round; its test's wall has no ragged rim (D9). REV-277 is fixed. At the author's request the push gate
-checks prose since its last pass in seconds, and `main` keeps a linear history. Live: AZ8's ship rule.
+*Delivered 22 November 2026.* [The plan](wp6.01-the-windows-leg.md). Live: AZ8's ship rule; REV-279 waits for the rescoping round.
 
 ### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8; AZ9 to AZ12)
 
@@ -132,7 +123,7 @@ Each waits on the rescoping round; none is planned before it.
 | # | Decision | Owner and status |
 |---|---|---|
 | 1 | This round's seven rulings | **Settled by the author, 22 November 2026** (AZ1 to AZ7) |
-| 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 November 2026**: project text in words, six recent packages, nothing leaves, closed items archived (AZ9 to AZ12). The limit's number and the phase plan's word target: **author**, inside WP6.02, from the baseline (AY8; AW5) |
+| 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 November 2026**: project text in words, six recent packages, nothing leaves, closed items archived (AZ9 to AZ12). The limit's number and the phase plan's word target: **settled by the author, 22 November 2026**, inside WP6.02 from the baseline: 6,500 words for a fresh `/np-implement` window, 2,500 for a phase plan (AZ13, AZ14) |
 | 3 | The Copilot tag's name | **Author** confirms at WP6.03's plan (AY5) |
 | 4 | Whether a pull request's CI runs the Windows leg | **Settled by the author, 22 November 2026**: no; the three platforms at the close alone (AZ8) |
 | 5 | The project's scope, and WP6.04 to WP6.18 with it | **Author**, at the rescoping round (AZ7) |
@@ -143,7 +134,6 @@ Each waits on the rescoping round; none is planned before it.
 
 | Item | Needed by | If it does not arrive |
 |---|---|---|
-| The reading limit's number; the phase plan's word target | WP6.02, after its baseline | The package stops at its item 5 and waits |
 | The tag on the last commit that holds the Copilot host | WP6.03 | The session prints the command and the hash |
 | What to keep, cut and add | The rescoping round | The round proposes from the records |
 | Merges; tags a session cannot push | Each package | The session dispatches `tag.yml` and prints the commands |

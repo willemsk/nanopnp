@@ -80,8 +80,10 @@ tests. Each test is in the test scope and is named as `CLAUDE.md`'s *Testing* sa
 
 The core's *Records* table says what each record gets.
 
-- The phase plan's `### WP<n>` section gets a delivered summary (target 150 words): scope,
-  identifiers, live inherited constraints and links to evidence.
+- The delivered summary (target 150 words) goes under the WP plan's **Status** line: scope,
+  identifiers, live inherited constraints and links to evidence. The phase plan's `### WP<n>` section
+  becomes one line: *Delivered <date>.*, the link to the plan, and `Live:` the constraints for later
+  packages (§8.4.4).
 - Update `docs/plans/current.md` in place. With two lanes open, update only your lane's position line
   (the core's *Two lanes*). Its word target is in its *Handoff Rules*.
 - Change both plans' **Status** lines with the summary. The WP plan's line becomes
