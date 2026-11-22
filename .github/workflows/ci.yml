@@ -376,12 +376,15 @@ jobs:
           uv run pytest -rs -n auto --dist loadfile -m "tier1 and not slow"
 
   # A failed night opens one issue naming the failed jobs and the run; it blocks
-  # nothing (section 8.2.13 N4). The recorded legs are `continue-on-error`, so a
-  # failure there is read in the run, not named here.
+  # nothing (section 8.2.13 N4). A leg cancelled at its time limit counts as failed
+  # (section 7.6, NOTE (a stalled test)). The recorded legs are `continue-on-error`,
+  # so a failure there is read in the run, not named here.
   nightly-issue:
     name: nightly issue
     needs: [changes, platforms]
-    if: always() && needs.changes.outputs.mode == 'nightly' && contains(needs.*.result, 'failure')
+    if: >-
+      always() && needs.changes.outputs.mode == 'nightly' &&
+      (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -395,7 +398,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           RESULTS: ${{ toJSON(needs) }}
         run: |
-          failed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.value.result == "failure") | .key] | join(", ")')
+          failed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.value.result == "failure" or .value.result == "cancelled") | .key] | join(", ")')
           gh label create nightly --repo "$REPO" --color ededed 2>/dev/null || true
           gh issue create --repo "$REPO" --label nightly \
             --title "Nightly failed: $(date -u +%F) ${SHA::7}" \

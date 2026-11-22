@@ -33,7 +33,7 @@ runs:
     - if: inputs.code == 'true'
       shell: bash
       run: |
-        run=(uv run pytest -rs -n auto --dist loadfile)
+        run=(uv run pytest -rs --durations=20 -n auto --dist loadfile)
         status=0
         if [[ $NIGHTLY == true ]]; then
           "${run[@]}" --nightly -m "(tier1 or tier2) and slow" || status=$?

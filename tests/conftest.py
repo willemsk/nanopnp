@@ -50,6 +50,10 @@ REQUIRE_GMSH = "NANOPNP_REQUIRE_GMSH"
 
 NIGHTLY = "--nightly"
 
+# A `nightly` or `slow` test is bounded here; every other test by pyproject.toml's
+# `timeout`, PER_TEST_TIMEOUT_S = 600. Example 05's own walk is bounded at 7,200 s.
+LONG_TEST_TIMEOUT_S = 7200
+
 
 @pytest.fixture(scope="session", autouse=True)
 def _isolate_git_config() -> Iterator[None]:
@@ -89,6 +93,10 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         if left_out:
             config.hook.pytest_deselected(items=left_out)
             items[:] = kept
+    for item in items:
+        long = item.get_closest_marker("nightly") or item.get_closest_marker("slow")
+        if long and not item.get_closest_marker("timeout"):
+            item.add_marker(pytest.mark.timeout(LONG_TEST_TIMEOUT_S))
 
 
 def import_gmsh() -> ModuleType:

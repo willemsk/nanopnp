@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import http.client
 import json
 import os
+import queue
 import re
 import signal
 import socket
 import subprocess
 import sys
+import tempfile
+import threading
 import time
 from collections.abc import Iterator
 from pathlib import Path
@@ -28,7 +32,9 @@ if TYPE_CHECKING:
 
 BROWSER_ARGS = ["--enable-unsafe-swiftshader", "--use-gl=angle", "--use-angle=swiftshader"]
 READY_WAIT_MS = 90_000
+READY_WAIT_S = 120
 STOP_WITHIN_S = 10
+TAIL_CHARACTERS = 4000
 
 
 # Returns (playwright, browser), or skips, or fails where the gate requires a browser.
@@ -64,21 +70,52 @@ def _start(
 ) -> tuple[subprocess.Popen[str], re.Match[str]]:
     # The settings and the last project are the user's, so a test server keeps its own.
     environment = {**os.environ, **({} if config is None else {"NANOPNP_CONFIG": str(config)})}
-    process = subprocess.Popen(
-        [sys.executable, *entry, "--no-browser", *arguments],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        text=True,
-        env=environment,
-    )
-    assert process.stdout is not None
-    line = process.stdout.readline().strip()
+    command = [sys.executable, *entry, "--no-browser", *arguments]
+    process, line = _launched(command, environment)
     found = server.READY.match(line)
     if found is None:
         process.kill()
         raise AssertionError(f"the first line of output is not the ready line: {line!r}")
     return process, found
+
+
+# Starts the server and returns its first line of output. A server that prints none within
+# READY_WAIT_S is killed, and the test fails with its command and the tail of its errors.
+def _launched(
+    command: list[str], environment: dict[str, str] | None = None
+) -> tuple[subprocess.Popen[str], str]:
+    with tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as errors:
+        process = subprocess.Popen(
+            command,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=errors,
+            text=True,
+            env=environment,
+        )
+        stdout = process.stdout
+        assert stdout is not None
+        lines: queue.Queue[str] = queue.Queue()
+        threading.Thread(target=lambda: lines.put(stdout.readline()), daemon=True).start()
+        try:
+            return process, lines.get(timeout=READY_WAIT_S).strip()
+        except queue.Empty:
+            process.kill()
+            with contextlib.suppress(subprocess.TimeoutExpired):
+                process.wait(STOP_WITHIN_S)
+            errors.seek(0)
+            tail = errors.read()[-TAIL_CHARACTERS:]
+            pytest.fail(f"no ready line within {READY_WAIT_S} s from {command}: {tail}")
+
+
+# Closes the server's input, waits for it to stop, and kills it whatever the wait raised.
+def _stop(process: subprocess.Popen[str]) -> None:
+    assert process.stdin is not None
+    process.stdin.close()
+    try:
+        process.wait(STOP_WITHIN_S)
+    finally:
+        process.kill()
 
 
 @pytest.fixture(scope="module", params=STATES)
@@ -88,9 +125,7 @@ def running(
     config = tmp_path_factory.mktemp(f"config-{request.param}")
     process, found = _start("--state", request.param, entry=CLI, config=config)
     yield request.param, found.group(1)
-    assert process.stdin is not None
-    process.stdin.close()
-    process.wait(STOP_WITHIN_S)
+    _stop(process)
 
 
 @pytest.mark.parametrize("screen", SCREENS, ids=lambda screen: screen.id)
@@ -142,9 +177,7 @@ def test_ver78_a_refused_item_is_in_the_problems_list_and_opens_its_suite(
         page.wait_for_url(origin + "/continuum", timeout=READY_WAIT_MS)
     finally:
         page.close()
-        assert process.stdin is not None
-        process.stdin.close()
-        process.wait(STOP_WITHIN_S)
+        _stop(process)
 
 
 @pytest.fixture
@@ -155,9 +188,7 @@ def workbench(browser: Browser, tmp_path: Path) -> Iterator[tuple[Page, str, Pat
     page.goto(url)
     yield page, url.split("/?")[0], tmp_path
     page.close()
-    assert process.stdin is not None
-    process.stdin.close()
-    process.wait(STOP_WITHIN_S)
+    _stop(process)
 
 
 def _ready(page: Page, url: str) -> None:
@@ -238,9 +269,7 @@ def test_ver78_l_a_project_value_writes_the_project_file(browser: Browser, tmp_p
         assert not (tmp_path / "config" / "workbench.yaml").exists()
     finally:
         page.close()
-        assert process.stdin is not None
-        process.stdin.close()
-        process.wait(STOP_WITHIN_S)
+        _stop(process)
 
 
 def test_ver78_m_the_charge_map_shows_both_views_each_built_once(
@@ -271,9 +300,7 @@ def test_ver78_m_the_charge_map_shows_both_views_each_built_once(
         assert page.locator("[data-control=plane]").is_visible()
     finally:
         page.close()
-        assert process.stdin is not None
-        process.stdin.close()
-        process.wait(STOP_WITHIN_S)
+        _stop(process)
 
 
 def test_ver78_m_a_tool_change_keeps_the_window_and_builds_the_molecule_once(
@@ -302,9 +329,7 @@ def test_ver78_m_a_tool_change_keeps_the_window_and_builds_the_molecule_once(
         assert page.evaluate("window.nano.builds") == 1
     finally:
         page.close()
-        assert process.stdin is not None
-        process.stdin.close()
-        process.wait(STOP_WITHIN_S)
+        _stop(process)
 
 
 def test_ver78_m_two_continuum_tools_build_the_canvas_once_and_keep_the_molecule(
@@ -336,9 +361,7 @@ def test_ver78_m_two_continuum_tools_build_the_canvas_once_and_keep_the_molecule
         assert not page.locator("[data-control=plane]").is_visible()
     finally:
         page.close()
-        assert process.stdin is not None
-        process.stdin.close()
-        process.wait(STOP_WITHIN_S)
+        _stop(process)
 
 
 def test_ver78_m_continuum_and_physics_tools_share_the_canvas_and_keep_the_molecule(
@@ -380,9 +403,7 @@ def test_ver78_m_continuum_and_physics_tools_share_the_canvas_and_keep_the_molec
         assert page.locator("[data-control=molecule]").is_visible()
     finally:
         page.close()
-        assert process.stdin is not None
-        process.stdin.close()
-        process.wait(STOP_WITHIN_S)
+        _stop(process)
 
 
 def test_ver78_n_the_settings_open_as_a_window_over_the_open_tool(
@@ -411,9 +432,7 @@ def test_ver78_n_the_settings_open_as_a_window_over_the_open_tool(
         assert page.evaluate("window.nano.builds") == 1
     finally:
         page.close()
-        assert process.stdin is not None
-        process.stdin.close()
-        process.wait(STOP_WITHIN_S)
+        _stop(process)
 
 
 def _status(
@@ -476,16 +495,10 @@ def test_ver78_the_server_keeps_its_contract() -> None:
 
 
 def test_ver78_the_command_line_entry_writes_its_ready_line_as_json() -> None:
-    process = subprocess.Popen(
-        [sys.executable, *CLI, "--no-browser", "--json"],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        text=True,
-    )
+    process, line = _launched([sys.executable, *CLI, "--no-browser", "--json"])
     try:
-        assert process.stdout is not None and process.stdin is not None
-        record = json.loads(process.stdout.readline())
+        assert process.stdin is not None
+        record = json.loads(line)
         assert server.READY.match(f"nanopnp-gui ready {record['ready']}")
         process.stdin.close()
         assert process.wait(STOP_WITHIN_S) == 0
@@ -549,9 +562,7 @@ def solved(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
         "--state", "solved", entry=CLI, config=tmp_path_factory.mktemp("config-solved")
     )
     yield found.group(1)
-    assert process.stdin is not None
-    process.stdin.close()
-    process.wait(STOP_WITHIN_S)
+    _stop(process)
 
 
 SOLVE_WAIT_MS = 180_000
