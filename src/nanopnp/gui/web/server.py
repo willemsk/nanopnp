@@ -216,6 +216,11 @@ class _Server(uvicorn.Server):
 ANNOUNCE_WAIT_S = 60.0
 """How long ``--dev`` waits for its address to accept a connection before it prints nothing."""
 
+STOP_GRACE_S = 5.0
+"""How long a ``--dev`` worker has to stop on its own before its supervisor terminates it."""
+
+_DEV_STOP = "dev-stop"
+
 _DEV_ENVIRONMENT = (
     "NANOPNP_GUI_TOKEN",
     "NANOPNP_GUI_WORK",
@@ -230,17 +235,38 @@ def _watch_input(server: uvicorn.Server | None, source: int | None = None) -> No
     if source is None:
         sys.stdin.read()
     else:
-        with os.fdopen(source) as watched:
+        with os.fdopen(source, "rb") as watched:
             watched.read()
     if server is not None:
         server.should_exit = True
     else:
-        # The reloading supervisor ends its worker, then stops on SIGINT in its main thread. On
-        # Windows uvicorn's supervisor only waits for the worker, which a console's Ctrl+C would
-        # end, and os.kill with SIGINT would terminate the supervisor and orphan the worker.
-        for worker in multiprocessing.active_children():
-            worker.terminate()
+        _stop_dev(Path(os.environ["NANOPNP_GUI_WORK"]))
+
+
+# The reloading supervisor asks its workers to stop through a file in the folder they share, and
+# stops on SIGINT in its main thread. On Windows uvicorn's supervisor only waits for its worker,
+# which a console's Ctrl+C would end, os.kill with SIGINT would orphan the worker, and a SIGINT
+# during a reload is taken for the reload's own. So it repeats the signal until it exits, and
+# terminates each worker, one started by a reload included, that outlives STOP_GRACE_S.
+def _stop_dev(work: Path) -> None:
+    (work / _DEV_STOP).touch()
+    seen: dict[int | None, float] = {}
+    while True:
         _thread.interrupt_main(signal.SIGINT)
+        now = time.monotonic()
+        for worker in multiprocessing.active_children():
+            if now - seen.setdefault(worker.pid, now) > STOP_GRACE_S:
+                worker.terminate()
+        time.sleep(0.2)
+
+
+# A --dev worker stops through its own shutdown, which cancels its solves and builds, when the
+# supervisor asks or is gone: uvicorn's handler of SIGTERM ends its serving.
+def _watch_supervisor(stop: Path) -> None:
+    supervisor = multiprocessing.parent_process()
+    while not stop.exists() and (supervisor is None or supervisor.is_alive()):
+        time.sleep(0.2)
+    _thread.interrupt_main(signal.SIGTERM)
 
 
 def _boot(
@@ -271,6 +297,7 @@ def dev_app() -> Guard:
     token, work, case, state, project, walk = (os.environ.get(name) for name in _DEV_ENVIRONMENT)
     assert token is not None and work is not None
     guard = build_app(token, _boot(case, state, Path(work), project, walk=bool(walk)))
+    threading.Thread(target=_watch_supervisor, args=(Path(work) / _DEV_STOP,), daemon=True).start()
     port = int(os.environ["NANOPNP_GUI_PORT"])
     guard.hosts = frozenset({f"{HOST}:{port}", f"localhost:{port}"})
     return guard
@@ -320,14 +347,23 @@ def _serve_dev(
         kwargs={"browser": browser, "as_json": as_json},
         daemon=True,
     ).start()
+    (work / _DEV_STOP).unlink(missing_ok=True)
     # The supervisor watches its input on a descriptor of its own, which no child inherits, and
-    # gives the worker the null device: on Windows a new process that shares a pipe with a pending
-    # read blocks at its start, so the worker would never serve.
-    watched = os.dup(sys.stdin.fileno())
-    null = os.open(os.devnull, os.O_RDONLY)
-    os.dup2(null, sys.stdin.fileno())
-    os.close(null)
-    threading.Thread(target=_watch_input, args=(None, watched), daemon=True).start()
+    # gives the worker the null device: uvicorn's worker reopens the supervisor's input at its
+    # start, and on Windows that blocks while the supervisor reads the pipe, so it would never
+    # serve. With no input to watch (sys.stdin None, or no descriptor) it serves until a signal,
+    # as uvicorn's worker start allows.
+    stdin: int | None
+    try:
+        stdin = sys.stdin.fileno()
+    except (AttributeError, OSError):
+        stdin = None
+    if stdin is not None:
+        watched = os.dup(stdin)
+        null = os.open(os.devnull, os.O_RDONLY)
+        os.dup2(null, stdin)
+        os.close(null)
+        threading.Thread(target=_watch_input, args=(None, watched), daemon=True).start()
     uvicorn.run(
         "nanopnp.gui.web.server:dev_app",
         factory=True,

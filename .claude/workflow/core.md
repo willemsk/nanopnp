@@ -57,7 +57,10 @@ section is a session's conduct under it. While two package PRs are open:
   `host: copilot` in the lane line of `docs/plans/current.md` and in the PR's **Verification**
   checkpoint. If the other host is named and the branch moved within the hour, ask before you write.
 - Hosts never share a working tree. The two-lane cap and the renumbering above apply across hosts.
-- Before each push, rebase on `origin/<head>`. Never force-push a branch the other host may hold.
+- Before each push, rebase on `origin/<head>`, except after you rewrote the branch on `main`
+  (*Gate and push*, step 6): that push replaces `origin/<head>` with `--force-with-lease`, and a
+  rebase on it would replay `main`'s commits onto the old branch. Never force-push a branch the
+  other host may hold.
 
 ## Normativity
 

@@ -3,8 +3,8 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-22
-* **Record**: On Windows the reloading server's supervisor must read a private copy of its input and end its worker itself: a worker sharing a pipe with a pending read never starts, and uvicorn's Windows shutdown waits for a worker only a console's Ctrl+C ends (WP6.01; VER-78). ([GUI and packaging](07-software-stack/05-gui-and-packaging.md))
-* **Record**: At a ragged rim, rounding of 1e-14 decides whether the channel's axis iteration holds the true line or one about 0.6° off; Windows reads the tilted test wall at 11.38° (WP6.01; REV-279). ([The channel's axis of 2WCD against its ring axis](04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md))
+* **Record**: On Windows the reloading server's supervisor must read a private copy of its input, and its worker must stop itself: a worker reopening the supervisor's input behind a pending read never starts, uvicorn's Windows shutdown waits for a worker only a console's Ctrl+C ends, and terminating the worker skips the shutdown that cancels its solves (WP6.01; VER-78). ([GUI and packaging](07-software-stack/05-gui-and-packaging.md))
+* **Record**: At a ragged rim, rounding of 1e-14 decides whether the channel's axis iteration holds the true line or one up to 0.6° off; Windows reads the tilted test wall at 11.38° (WP6.01; REV-279). ([The channel's axis of 2WCD against its ring axis](04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md))
 * **Update**: The comparison against the published results gates v0.12, the Phase 11 release, after the re-plan of 22 November 2026 (`SPECIFICATION.md` §8.2.49 AY2); it gated v0.7 before. ([Tier 3 — COMSOL differential tests (hours, nightly)](08-validation-benchmarks/03-tier-3-comsol-differential-tests-hours.md))
 
 ## 2026-11-21

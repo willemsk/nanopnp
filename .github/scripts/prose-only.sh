@@ -2,8 +2,10 @@
 # Exit 0 if every path on stdin is prose, 1 if any is not.
 #
 # The one definition both the commit gate (.claude/hooks/gate.sh) and CI's
-# `changes` job use to skip the lock check, mypy and pytest. A path is prose
-# when it is Markdown and nothing reads it: *.md, except under
+# `changes` job use to skip the lock check, mypy and pytest; the gate still runs
+# the `records` tests, which hold code to a Markdown record (the specification's
+# clauses, the findings registers). A path is prose when it is Markdown that no
+# other test reads: *.md, except under
 #   src/, data/ package data, THIRD-PARTY-LICENSES.md among it, which
 #               tests/tier1/test_gui_selftest.py asserts (CON-11);
 #   examples/   the worked examples, whose READMEs tests/tier2/test_examples_*.py

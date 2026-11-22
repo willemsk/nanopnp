@@ -36,8 +36,8 @@ one against the other.
 - Atoms on one sphere, as the n images of an atom are, triangulate into tetrahedra some of which are flat; a flat one
   takes its neighbour's centre, or the on-axis Voronoi edges are cut. **[verified][^wp516]**
 - Two weaknesses, both at a ragged rim or lumen. Where no atom lines the axis's side of a plane, its widest spaces are
-  n equal ones off the axis; a line a little off the axis breaks their tie and can hold the iteration at a line about
-  0.01 rad off. And one such centre, 0.26 nm aside on the test wall, exceeds the straightness limit. A pore less regular
+  n equal ones off the axis; a line a little off the axis breaks their tie and can hold the iteration at a line up to
+  about 0.01 rad off. And one such centre, 0.26 nm aside on the test wall, exceeds the straightness limit. A pore less regular
   than 2WCD may therefore be warned of for its straightness, and refused by the `axis: z` budget (REV-239).
   **[verified][^wp516]**
 - Which line the iteration holds at a ragged rim is decided by rounding. The 8-fold test wall tilted 12° about x reads

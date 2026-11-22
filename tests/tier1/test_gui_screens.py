@@ -80,7 +80,8 @@ def _start(
 
 
 # Starts the server and returns its first line of output. A server that prints none within
-# READY_WAIT_S is killed, and the test fails with its command and the tail of its errors.
+# READY_WAIT_S, or ends first, is killed, and the test fails with its command and the tail of
+# its errors.
 def _launched(
     command: list[str], environment: dict[str, str] | None = None
 ) -> tuple[subprocess.Popen[str], str]:
@@ -97,15 +98,20 @@ def _launched(
         assert stdout is not None
         lines: queue.Queue[str] = queue.Queue()
         threading.Thread(target=lambda: lines.put(stdout.readline()), daemon=True).start()
+        line: str | None
         try:
-            return process, lines.get(timeout=READY_WAIT_S).strip()
+            line = lines.get(timeout=READY_WAIT_S)
         except queue.Empty:
-            process.kill()
-            with contextlib.suppress(subprocess.TimeoutExpired):
-                process.wait(STOP_WITHIN_S)
-            errors.seek(0)
-            tail = errors.read()[-TAIL_CHARACTERS:]
-            pytest.fail(f"no ready line within {READY_WAIT_S} s from {command}: {tail}")
+            line = None
+        if line:
+            return process, line.strip()
+        process.kill()
+        with contextlib.suppress(subprocess.TimeoutExpired):
+            process.wait(STOP_WITHIN_S)
+        errors.seek(0)
+        tail = errors.read()[-TAIL_CHARACTERS:]
+        ended = f"within {READY_WAIT_S} s" if line is None else "before the server ended"
+        pytest.fail(f"no ready line {ended} from {command}: {tail}")
 
 
 # Closes the server's input, waits for it to stop, and kills it whatever the wait raised.
@@ -494,8 +500,10 @@ def test_ver78_the_server_keeps_its_contract() -> None:
         terminated.kill()
 
 
-def test_ver78_the_command_line_entry_writes_its_ready_line_as_json() -> None:
-    process, line = _launched([sys.executable, *CLI, "--no-browser", "--json"])
+def test_ver78_the_command_line_entry_writes_its_ready_line_as_json(tmp_path: Path) -> None:
+    # The settings and the last project are the user's, so a test server keeps its own.
+    environment = {**os.environ, "NANOPNP_CONFIG": str(tmp_path)}
+    process, line = _launched([sys.executable, *CLI, "--no-browser", "--json"], environment)
     try:
         assert process.stdin is not None
         record = json.loads(line)

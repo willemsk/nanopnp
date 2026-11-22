@@ -262,6 +262,7 @@ def _refusal(text: str) -> str:
     return str(raised.value)
 
 
+@pytest.mark.records
 def test_ver56_every_registered_model_states_its_terms() -> None:
     defined: set[str] = set()
     for chapter in ("04-physics.md", "06-numerics.md"):

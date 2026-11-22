@@ -39,6 +39,7 @@ def test_ver61_live_relation_equals_the_recorded_layering() -> None:
     assert comparison.equal, comparison.describe()
 
 
+@pytest.mark.records
 def test_ver61_every_annotated_edge_names_a_finding_of_the_log() -> None:
     project = REPOSITORY / "docs" / "project"
     ids = {

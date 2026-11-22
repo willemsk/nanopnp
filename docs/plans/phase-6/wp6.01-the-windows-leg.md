@@ -168,8 +168,8 @@ item-2 fix a user meets; and *Changed* (development): each test bounded at 600 s
   > **Outcome — the three legs green.** [Run 854](https://github.com/willemsk/nanopnp/actions/runs/45043154991)
   > (dispatch at `9c15784`): ubuntu 8 min 20 s, macOS 11 min 36 s, Windows 13 min 32 s, each with its self-test; Windows
   > "1801 passed, 152 skipped" in 13 min 09 s. The causes, one line each:
-  > - The stall: the reloading supervisor read its input in a thread while uvicorn spawned the worker, which inherited
-  >   the pipe; on Windows a process sharing a pipe with a pending read blocks at its start. The supervisor reads a
+  > - The stall: the reloading supervisor read its input in a thread while uvicorn spawned the worker, which reopens
+  >   the supervisor's input descriptor at its start; on Windows that reopening blocked behind the pending read. The supervisor reads a
   >   private duplicate and gives fd 0 the null device. Grounding D3's reading, the announcer's silent give-up, was the
   >   symptom, not the cause.
   > - The stop, found by [run 852](https://github.com/willemsk/nanopnp/actions/runs/45040522408) at `dbdb2f3`
@@ -184,6 +184,22 @@ item-2 fix a user meets; and *Changed* (development): each test bounded at 600 s
 - [x] 5. 174b238 `.claude/hooks/gate.sh`, `.github/scripts/prose-only.sh`, `.claude/scripts/decisions.py`,
   `tests/tier1/test_written_architecture.py`, `CLAUDE.md` (D8), done first, at the author's request; done when a
   push of prose after a passing `run` skips the lock check, the types and pytest. **Executor:** main
+
+  > **Outcome — the ship's review and the author's two rulings.** [Code review 074](../../code_reviews/CODE_REVIEW_074.md)
+  > (`/code-review xhigh`, head `c257af5`) found 17; the ship took 15 and declined 2. The author ruled on two, at
+  > `/np-ship`:
+  > - D8 amended: three Tier 1 tests hold code to a Markdown record (VER-56's clauses, VER-61's findings, VER-79's
+  >   §5.1 rows), so a prose-only change still runs them, marked `records`: 9 s instead of 1 s.
+  > - The `--dev` server's stop fixed now, not recorded: the supervisor asks its workers to stop through a file in the
+  >   folder they share, repeats its SIGINT until it exits, and terminates a worker, one a reload started included,
+  >   that outlives 5 s; a worker stops through its own shutdown, cancelling its solves, when asked or when its
+  >   supervisor is gone. On Linux a worker outlived its killed supervisor by more than 5 s before, and 0.3 s after.
+  > - D2 widened by the review: a Tier 3 or Tier 4 test is bounded at 7,200 s, as a ClyA solve can pass 600 s.
+  > - Declined, the plan's own choices: the nightly issue also opening on a hand-cancelled run (the safer error than a
+  >   hidden time-out), and a longer ready bound for the `solved` state (120 s passed on the three platforms).
+  >
+  > Measured: the plan 1 session, 0.5 agent hours, 3 touches; the implementation and ship 1 session, 2.3 agent
+  > hours, 10 touches so far; against the estimate of about 5 sessions, 3 to 6 agent hours and 8 touches.
 
 ### Verification
 

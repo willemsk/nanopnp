@@ -141,8 +141,9 @@ jobs:
             *) range="" ;;
           esac
           code=true
+          # --no-renames: a rename names its source too, so a file moved out of src/ is not prose.
           if [[ -n $range && $range != 0000000000000000000000000000000000000000* ]] &&
-              files=$(git diff --name-only "$range"); then
+              files=$(git diff --name-only --no-renames "$range"); then
             printf '%s\n' "$files"
             printf '%s\n' "$files" | .github/scripts/prose-only.sh && code=false
           fi

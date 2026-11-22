@@ -533,9 +533,9 @@ def _wall(
     n: int, bend_nm: float = 0.0, half_nm: float = 4.4, per_chain: int = 600, *, rim: bool = True
 ) -> np.ndarray:
     # A wall dense enough to line a channel: 600 atoms a chain between 2.0 and 2.8 nm of a
-    # centre line, which a bend carries aside by ``bend_nm`` at either end. A tenth of them
-    # close each rim, unless ``rim`` is false: at a ragged rim a plane's widest spaces are n
-    # equal ones off the axis.
+    # centre line, which a bend carries aside by ``bend_nm`` at either end. Unless ``rim`` is
+    # false, a tenth of them lie in each end plane, a ragged rim: no atom there lines the axis's
+    # side, so the plane's widest spaces are n equal ones off the axis.
     rng = np.random.default_rng(516 + n)
     rho = rng.uniform(2.0, 2.8, per_chain)
     half_wedge = 0.8 * math.pi / n

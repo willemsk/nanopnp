@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 from nanopnp.validation.findings import REPOSITORY
 from nanopnp.validation.modularity import node_of, parse_package
 
@@ -39,6 +41,7 @@ def _subpackages() -> set[str]:
     return {node_of(module.name) for module in parse_package()} - {"nanopnp"}
 
 
+@pytest.mark.records
 def test_ver79_section_5_1_module_rows_equal_the_subpackages() -> None:
     text = OVERVIEW.read_text(encoding="utf-8")
     rows, subpackages = _module_rows(text), _subpackages()
@@ -49,5 +52,7 @@ def test_ver79_section_5_1_module_rows_equal_the_subpackages() -> None:
 
 
 def test_ver79_the_decisions_page_equals_what_the_script_renders() -> None:
-    # The check also holds every ruling to one holds-now entry.
-    assert decisions.main(["--check"]) == 0, f"docs/project/decisions.md is stale; run `{COMMAND}`"
+    # The check also holds every ruling to one holds-now entry; its output names which failed.
+    assert decisions.main(["--check"]) == 0, (
+        f"docs/project/decisions.md or holds-now.yaml disagrees with the records; run `{COMMAND}`"
+    )

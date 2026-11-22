@@ -50,9 +50,9 @@ no Tier 2 test (§8.2.11 L2); the push gate (`gate.sh run`) runs the per-push se
 never goes on an analytic benchmark, which is the test that localises a failure (§7.1).
 
 NOTE (a stalled test; WP6.01): every pytest run of the gate and of CI bounds each test, at 600 s in
-the per-push selection and at 7,200 s for a `nightly` or `slow` test, so a hang fails and names its
-test instead of spending the leg's limit. A leg cancelled at its limit opens the nightly issue as a
-failed one does. A bound is never raised to make a test pass (§8.2.49 AY4).
+the per-push selection and at 7,200 s for a `nightly`, `slow`, Tier 3 or Tier 4 test, so a hang
+fails and names its test instead of spending the leg's limit. A leg cancelled at its limit opens the
+nightly issue as a failed one does. A bound is never raised to make a test pass (§8.2.49 AY4).
 
 NOTE (Gmsh): `gate.sh run` and CI set `NANOPNP_REQUIRE_GMSH=1`, so a Gmsh that cannot import
 fails instead of skipping, and the commit hook sets it only for a change to Gmsh's own code or
