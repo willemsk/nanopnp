@@ -277,9 +277,9 @@ closed rows. `main` writes or checks both. The navigation gains `Decisions regis
 - [x] 4cb13f0 7. `.claude/scripts/archive_items.py`, `docs/project/review-archive.md`, the readers and the links (D6). Done
   when the tests of VER-61 and VER-79 pass, `duplicates.py` passes, and `links.py --anchors` names neither register
   file. **Executor:** main
-- [ ] 8. `decisions.py`'s two pages (D6). Done when VER-79's tests and the strict documentation build pass.
+- [x] d3fd23d 8. `decisions.py`'s two pages (D6). Done when VER-79's tests and the strict documentation build pass.
   **Executor:** main
-- [ ] 9. Compaction checkpoint. **Executor:** main
+- [x] 9. Compaction checkpoint. **Executor:** main
 - [ ] 10. The Outcome's outdated list (D7); REV-272's counts and `CHANGELOG.md` (D8). Done when the code and review
   say so. **Executor:** main
 
