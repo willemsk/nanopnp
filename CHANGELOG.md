@@ -24,6 +24,27 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.7.0-alpha.2]
+
+WP6.02: the cleanup's first half, the reading measured, the instructions audited, the records cut; tag
+`v0.7.0-alpha.2` once merged (§8.2.49 AY8; §8.2.50 AZ9 to AZ14; REV-271, REV-272). A user of the program sees no
+change. The [plan](docs/plans/phase-6/wp6.02-the-cleanup-measure-audit-records.md) records the work.
+
+- **Added**:
+  - `usage.py --reading` counts the project text a session's window read before its first edit. The
+    [baseline](docs/plans/sessions/reading-baseline.md) of six packages gives a fresh implementing window a median
+    of 8,095 words (AZ9, AZ10).
+  - The [instructions audit](docs/plans/sessions/instructions-audit.md) of `CLAUDE.md` and `.claude/`, with a
+    proposed diff for WP6.03 (AY8).
+  - `archive_items.py` moves the closed review items to `docs/project/review-archive.md` at a phase's close: 220
+    moved, 59 stay (AZ12).
+  - `docs/project/decisions-closed.md` lists the 1,079 closed decisions; `decisions.md` keeps the 495 that bind
+    (AZ12).
+- **Changed**:
+  - From WP6.03's merge, a fresh `/np-implement` window reads at most 6,500 words of project text before its first
+    edit (AZ13). A phase plan holds 2,500 words, a delivered package's entry one line (AZ14; REV-271 fixed).
+  - `clause.py` prints a spent or superseded ruling as one line; `--all` prints it in full (AZ11).
+
 ## [0.7.0-alpha.1]
 
 WP6.01: the Windows leg, Phase 6's first package; tag `v0.7.0-alpha.1` once merged (§8.2.49 AY4; §8.2.50 AZ8;
