@@ -66,6 +66,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * The workflow is three commands with levels: `/np-plan <project | phase n | amend n | wp n> [review]`,
   `/np-implement [wp n]` and `/np-ship [wp n | phase n]`, with no aliases. Each routes to a shared
   core and the file of its level. (§8.2.16 R5, R12; `.claude/workflow/core.md`)
+* A pull request's CI tests on Linux, and a package's `/np-ship` reads no platform leg. `/np-ship phase`
+  dispatches `ci.yml` on the close's head and stops while a `platforms` leg on ubuntu, macOS or Windows is
+  not `success`. (§7.6; §8.2.49 AY4; §8.2.50 AZ8; `.claude/skills/np-ship/phase.md`)
 * Beside them, `/np-gui <render | review | publish | collect | grill>` renders screens and mockups
   headless, has them reviewed, publishes them for the author's verdicts, collects the verdicts and
   runs a design round. A render goes to the author as a digest of at most 20 picks, each standing

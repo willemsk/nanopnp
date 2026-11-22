@@ -5,17 +5,15 @@ Updated 22 November 2026. Navigation;
 
 ## In brief
 
-Version 0.6.0 is released, and the next phase is planned. Three packages are fixed: the Windows test run is repaired,
-then the records and instructions are cut down to a measured reading limit, and the second host is retired with them.
+Version 0.6.0 is released and the next phase is under way. Its first package is planned: the Windows test run, which
+has hung since 3 November, gets a time limit per test so the hang names itself, then each failing test is fixed at
+its cause. Two faults a Windows user would meet are fixed with it. As you ruled today, pull requests stay tested on
+Linux alone, and the three systems are checked on a branch only at a phase's close.
 
-After those three comes the open-minded rescoping you asked for: one round with every requirement, tool and phase on
-the table. Fifteen more packages are drafted and wait for it. As drafted they restructure the library without moving
-a stored number, close the known gaps in the equations, add field exports and make the solve faster.
+The cleanup and the rescoping round you asked for follow. The package is about 5 sessions, 3 to 6 hours of
+agent work and 8 times you act.
 
-The three packages are about 15 sessions, 9 to 18 hours of agent work and 24 times you act; the fifteen drafted ones,
-if confirmed, 75 sessions, 45 to 90 hours and 120.
-
-**Your call.** The plan is reviewed and waits for your approval and merge. *Next:* the plan of the Windows package.
+**Your call.** None before the plan's review. *Next:* the review of this package's plan.
 
 ## Position
 
@@ -24,7 +22,8 @@ if confirmed, 75 sessions, 45 to 90 hours and 120.
 - **Phase 6 is planned** ([the plan](phase-6/phase-6-library-foundations.md); §8.2.50), `v0.7`: WP6.01 to WP6.03,
   then the rescoping round at `/np-plan project`; WP6.04 to WP6.18 provisional until it rules. Phases 7 to 11:
   [the input note](sessions/phases-6-to-11.md).
-  **Next:** the author approves and merges the plan; then `/np-plan wp 6.01`. host: claude-code.
+  **WP6.01 planned** ([the plan](phase-6/wp6.01-the-windows-leg.md); AZ8: the three platforms at the close alone).
+  **Next:** `/np-plan wp 6.01 review`; then `/np-implement wp 6.01`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -41,7 +40,8 @@ if confirmed, 75 sessions, 45 to 90 hours and 120.
   map (WB-54 to WB-63); every open item names a package (§8.2.46).
 - **QR-10's trial waits for v1.0's release candidate; QR-16's keyboard gaps and five Qt details are carried to
   Phase 7** (§8.2.47; REV-274).
-- **The Windows leg is first; every later gate asks the three platforms** (§8.2.49 AY4). **The Copilot host is
+- **The Windows leg is first; every later gate asks the three platforms** (§8.2.49 AY4); **a pull request and a
+  package's ship test Linux alone, the close the three** (§8.2.50 AZ8). **The Copilot host is
   retired at the cleanup** (AY5), **which ends at a measured reading limit** (AY8). **Fable 5.2 plans and ships,
   Opus 5.5 implements** (AY7).
 - **An open-minded rescoping follows WP6.03; no package from WP6.04 is planned before it** (§8.2.50 AZ7). Until it
