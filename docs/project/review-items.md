@@ -4381,3 +4381,19 @@ editing the notice changes every stored density's key. Code review 069's finding
 
 **Accepted** (the author, 21 November 2026): repointed at the radius set's next change.
 
+### REV-277: The Windows test leg has not passed since 10 November
+
+Found by WP5.28's report. `ci.yml`'s `platforms` job runs the per-push selection on ubuntu, macOS and Windows on each
+push to `main`, each nightly and each dispatch; a pull request's CI tests on Linux alone. The Windows leg has met its
+40-minute limit on every push run with tests since run 733 (`d3420d8`, 10 November 2026), and the nightly runs end
+`cancelled` with it. In the close's own run, [run 837](https://github.com/willemsk/nanopnp/actions/runs/45000286438)
+on `13f72c3`, one test failed at about a third of the 1,954 (`F` in the progress line at 33 %), the run reached 99 %
+by 08:13 and the last tests were still running at 08:34, when the job was cancelled. Linux and macOS passed (1,812
+passed, 142 skipped each). With `-q` and the job cancelled, pytest printed no summary, so neither test is named.
+
+*Recommendation:* rerun the leg with each test's name and a per-test timeout (`-v`, `pytest-timeout` or
+`--durations`), fix the failure and the stall, and make a pull request's CI fail on a platform leg that stalls.
+
+**Accepted** (§8.2.48 AX3, the author, 22 November 2026): v0.6.0 is released with the gap noted; Phase 6's V&V in CI
+fixes it, placed by its scope round.
+
