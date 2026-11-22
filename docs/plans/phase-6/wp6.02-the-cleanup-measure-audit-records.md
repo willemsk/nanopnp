@@ -10,7 +10,7 @@ where it and this plan disagree this plan is wrong. Identifiers are pointers int
 ## In brief
 
 **What changes.** A session reports how much of the project's own text it read before its first edit, and the last
-six packages are measured the same way, so the cleanup has a number to beat. The instruction files get an audit that
+six packages are measured too, so the cleanup has a number to beat. The instruction files get an audit that
 lists each outdated or contradicting instruction with a proposed change; the changes are the next package's. Then the
 records are cut to what binds. The review register keeps its 60 live items, and the 218 closed ones move to an
 archive. The decisions page shows about 490 decisions that bind now, and a second page lists the rest. Nothing leaves
@@ -42,11 +42,11 @@ it relies on it.
 | Decision | Choice | Why/source |
 |---|---|---|
 | **D1 The measure** | `usage.py --reading` prints, for each window that an `/np-` command opens, the words of project text read before the first `Edit`, `Write` or `NotebookEdit`: instructions, records and `CLAUDE.md`. Beside them it prints the words of code and of command output, the tokens at the window's start and at that edit, and the ten largest files. A window is fresh when no message precedes it, or its start holds under half the tokens of the message before it. The limit binds a fresh `/np-implement` window | Ruled by the author, §8.2.50 AZ9; the window kind and "fresh" decided by the plan, confirmed at D4 |
-| **D2 The baseline** | Sub-agents page the events of the twelve sessions of WP5.19, WP5.20, WP5.21, WP5.27, WP5.28 and WP6.01 with `list_events`; `usage.py --reading --pages` reads the pages from the sub-agents' transcripts. The pages stay in the scratch folder. `docs/plans/sessions/reading-baseline.md` holds the table. A session not served is named and left out | Ruled by the author, AZ10 |
+| **D2 The baseline** | Sub-agents page the events of the twelve sessions of WP5.19, WP5.20, WP5.21, WP5.27, WP5.28 and WP6.01 with `list_events`; `usage.py --reading --pages` reads the pages through the sub-agents' transcripts. The pages stay on the session's machine, outside the tree. `docs/plans/sessions/reading-baseline.md` holds the table. A session not served is named and left out | Ruled by the author, §8.2.50 AZ10 |
 | **D3 The audit** | The `claude-api` skill's `prompt-audit`, over `CLAUDE.md` and `.claude/`, run as its guide says. Its report, with the proposed diff, is `docs/plans/sessions/instructions-audit.md`. This package applies no hunk | AY8; the phase entry gives the changes to WP6.03; decided by the plan |
 | **D4 The stop** | Item 5 puts two questions to the author with the baseline's table: the limit's number, and a phase plan's word target. It records the answers as AZ13 and AZ14, or the next free pair, writes both into §8.4.4, and sets REV-271 `fixed` | AY8 ("proposes a limit to the author from it"); AW5; decided by the plan |
-| **D5 The history** | No row leaves a record. `clause.py` prints a ruling that only names the identifier, and that `holds-now.yaml` gives as `spent` or `superseded by`, as one line; `--all` prints it in full. An `open:` entry whose owner no longer exists is restated where a later ruling names the new owner, and listed under D7 otherwise | Ruled by the author, AZ11; the `open:` pass decided by the plan |
-| **D6 Closed items** | A kept script, `archive_items.py`, moves each `fixed`, `declined` or `wontfix` row with its section to `docs/project/review-archive.md` and rewrites every link to it. `decisions.py` writes the rows that bind to `decisions.md` and the rest to `decisions-closed.md`. A phase's close runs the mover | Ruled by the author, AZ12; the script and the close's step decided by the plan |
+| **D5 The history** | No row leaves a record. `clause.py` prints a ruling that only names the identifier, and that `holds-now.yaml` gives as `spent` or `superseded by`, as one line; `--all` prints it in full. An `open:` entry whose owner no longer exists is restated where a later ruling names the new owner, and listed under D7 otherwise | Ruled by the author, §8.2.50 AZ11; the `open:` pass decided by the plan |
+| **D6 Closed items** | A kept script, `archive_items.py`, moves each `fixed`, `declined` or `wontfix` row with its section to `docs/project/review-archive.md` and rewrites every link to it. `decisions.py` writes the rows that bind to `decisions.md` and the rest to `decisions-closed.md`. A phase's close runs the mover | Ruled by the author, §8.2.50 AZ12; the script and the close's step decided by the plan |
 | **D7 The outdated list** | The plan's Outcome lists, in at most 400 words, each decision, owner or instruction found outdated and not fixed here, with its file and the step that takes it: WP6.03 or the rescoping round. It gives the baseline's tokens at a session's start and names what loads them | The phase entry; AZ7; decided by the plan |
 | **D8 The records** | §8.4.4 to §8.4.6 and `CLAUDE.md`'s list of scripts say what each script does, in its item's commit. `CHANGELOG.md` gains `## [0.7.0-alpha.2]`. REV-272's section gains the cut's word counts | The core, *Normativity*; §8.4.1; decided by the plan |
 
@@ -64,7 +64,9 @@ it relies on it.
   "content"}` of a `user` event; `content` is a string, or a list of `{"type": "text", "text"}`.
 - `Read`'s input has `file_path`, `Bash`'s has `command`, `Grep`'s has an optional `path`.
 - A `Read` result starts each line with its number and a tab. Counted as it is, it adds a word per line.
-- The text of the command's skill arrives inside the typed prompt, after `Base directory for this skill:`.
+- The typed prompt holds `<command-name>/np-…</command-name>` and the arguments alone. The skill's text is the next
+  `user` event, with `isMeta` true, which `_typed` refuses; its text starts `Base directory for this skill:`. A
+  `Skill` call's text arrives the same way.
 - `CLAUDE.md` and a path-scoped rule arrive as attachments, which no tool result shows. `CLAUDE.md` holds 2,220 words;
   the two rules hold 715, which the measure does not see.
 - A prototype on this plan's session gave 93,575 tokens at the start. Before the first edit it gave 5,497 words of
@@ -82,8 +84,11 @@ it relies on it.
 - A page event is `{"created_at", "assistant": {"internal_anthropic_catchall": {"message", "parent_tool_use_id",
   "session_id", "timestamp"}}}`, or the same under `"user"`; `message` has the local form. One API message is one
   event per content block, each with the same `usage`. A sub-agent's event has a `parent_tool_use_id`.
-- A page over the inline limit is saved to a file that the tool result names; a small page comes inline. Both forms
-  are in the calling agent's transcript, `<project>/<session>/subagents/*.jsonl`, which `measure` already globs.
+- A small page comes inline, in the calling agent's transcript, `<project>/<session>/subagents/*.jsonl`, which
+  `measure` already globs. A page over the inline limit is not in it: the tool result names a file,
+  `<project>/<session>/tool-results/mcp-claude-code-remote-list_events-*.txt`, which opens with an
+  `<other-session …>` notice before the JSON `{"ccr": {"data": [...], "has_more", "first_id", "last_id"}}`.
+- The probe's page events show no `isMeta`. Whether a page marks a skill's text is read at item 2, step 1.
 - The probe saw no marker of a compaction; D1's "fresh" needs none.
 
 **D3**
@@ -123,10 +128,11 @@ it relies on it.
   tuple through `nanopnp.validation.findings.parse_log`; `docs/scripts/generate.py:REGISTERS`; and `mkdocs.yml`'s
   `exclude_docs` and its *Project* navigation, both written by hand.
 - `parse_log` needs the front matter's three keys and the header row, and reads the first table.
-- 605 links name `review-items.md#rev-`, in 8 files; 278 are the log's own. `links.py` checks an anchor only with
-  `--anchors`, which the gate and CI do not pass.
+- 605 links name `review-items.md#rev-`, in 8 Markdown files; 278 are the log's own. 222 more are in
+  `docs/code_reviews/CODE_REVIEW_039/decisions.json`, which `links.py` does not read. `links.py` checks an anchor
+  only with `--anchors`, which the gate and CI do not pass.
 - `decisions.py:render` writes one page of 1,556 rows, and `main` writes or checks `PAGE`. The statuses are:
-  delivered plan 749, in force 333, fixed 221, in the design document 63, spent 62, accepted 39, superseded 18,
+  delivered plan 749, in force 334, fixed 221, in the design document 63, spent 62, accepted 39, superseded 18,
   deferred 18, plan in flight 13, open 11, in force (cache) 7, declined 7, wontfix 5, post-1.0 5, closed 4.
 - `test_ver79_the_decisions_page_equals_what_the_script_renders` calls `main(["--check"])`.
 - `.claude/skills/np-ship/phase.md`, step 3, checks the status of each row a phase owns (AM4).
@@ -138,22 +144,28 @@ it relies on it.
 
 ### Implementation details
 
-**Item 1 (D1).** `usage.py --reading [--transcript <jsonl>] [--pages <jsonl> ...] [--json]`.
+**Item 1 (D1).** `usage.py --reading [--transcript <jsonl>] [--pages <jsonl> ...] [--json]`. It is refused with
+`--since` or `--all`; with no transcript it prints `Reading: not measured` and exits 0.
 
-1. Normalise. A local event is used as it is. A page event becomes `{"type", "message", "_t", "session"}`, and is
-   dropped when its `parent_tool_use_id` is set. Events are grouped by session.
-2. Windows. Each typed prompt whose text holds `/np-` opens one, which ends at the next. Its name is the command and
-   the two words after it.
+1. Normalise. A local event is used as it is. A page event becomes `{"type", "message", "_t", "session"}`, with
+   `isMeta` where the page gives it, and is dropped when its `parent_tool_use_id` is set. Events are grouped by
+   session.
+2. Windows. Each typed prompt whose text holds `/np-` opens one, which ends at the next. A `user` event whose text
+   starts `Base directory for this skill:` opens none, with or without `isMeta`. The window's name is the command
+   and its arguments' first two words.
 3. A message's tokens are the sum of the three `usage` fields of Grounding D1, taken once per `message.id`.
 4. The first edit is the first `tool_use` named `Edit`, `Write` or `NotebookEdit`. A window with none ends at its last
    message and prints `no edit`.
 5. The class of a result follows its call:
-   - `Read`, and `Grep` with a `path`, by the path. One that holds `/.claude/` or ends `CLAUDE.md` is instructions.
+   - `Read`, `Grep` with a `path`, and `Bash` whose command is `cat`, `head`, `tail` or `sed -n` on one file, by
+     the path. One that ends `.py` or `.sh` is code. Else one that holds `/.claude/` or ends `CLAUDE.md` is
+     instructions.
      Else one that holds `/docs/`, `/specification/` or `/knowledge/`, or is named `SPECIFICATION.md`, `CHANGELOG.md`,
      `CONTRIBUTING.md` or `README.md`, is records. Else one that holds `/src/`, `/tests/`, `/examples/` or `/data/`
      is code. Any other is commands.
    - `Bash` whose command holds `clause.py` is records, under the name `clause.py`.
-   - Every other call is commands. The window's own prompt is instructions.
+   - Every other call is commands. The window's own prompt is instructions. So is a skill's text (Grounding D1)
+     whose base directory holds `/.claude/`; any other skill's text is commands.
 6. Words are `len(text.split())`, after `re.sub(r"(?m)^\s*\d+\t", "", text)` on a `Read` result.
 7. Project text is instructions, records and the words of the tree's `CLAUDE.md`.
 8. The line: `Reading (np-implement wp 6.02, fresh): 14,200 words of project text before the first edit
@@ -161,12 +173,15 @@ it relies on it.
    158,000 at the edit; largest: <path> 3,400, …`. `--json` gives the same fields per window.
 
 The self-check, recorded in the item's Outcome: for the implementing session, the two token numbers equal the `usage`
-sums of the two messages the script names.
+sums of the two messages the script names, and the words it gives one whole-file `Read` of a record equal
+`wc -w` of that file.
 
 **Item 2 (D2).**
 
 1. In the main session, call `list_sessions` and pick the twelve by title and date. Call `list_events` once and read,
-   in this session's transcript, how a saved page and an inline page appear. Write the page reader to those two forms.
+   in this session's transcript, how a saved page and an inline page appear, and how a page gives a command's prompt
+   and its skill's text. Write the page reader to those two forms; for a saved page it opens the file the result
+   names.
 2. Start one sub-agent per session, at most four at once. Its whole brief: the session's id; call `list_events` with
    `kinds: ["assistant", "user"]` and `limit: 100`; repeat with `before_id` set to the last page's `first_id` until
    `has_more` is absent; open no page; report the number of calls.
@@ -174,7 +189,7 @@ sums of the two messages the script names.
 4. Write `reading-baseline.md`. One row per window: package, command, fresh or not, project text with its three
    parts, code, commands, and the two token numbers. Then, for the fresh `/np-implement` windows: the median and the
    range of project text, and each file among the ten largest in at least half of them, with its words. It holds no
-   session id and no transcript text.
+   session id and no transcript text. `uv run .claude/scripts/index_records.py` lists it, and item 3's report.
 
 **Item 5 (D4).** Two questions, as `.claude/workflow/author.md` says, each with the baseline's median and range.
 
@@ -203,9 +218,9 @@ reads the list before it changes an entry.
    table's header and the closed rows in number order, each *Finding* link made in-page; `## Items`; and the closed
    sections in number order. A later run merges into what is there.
 3. The closed rows and sections leave the two register files.
-4. In every tracked Markdown file, a link to `review-items.md#rev-<n>-…` of a moved `n` becomes the same link into
-   `review-archive.md`, relative to the linking file. An in-page link between a moved and a kept section gains the
-   file name.
+4. In every tracked Markdown file, and in `CODE_REVIEW_039/decisions.json`, a link to `review-items.md#rev-<n>-…`
+   of a moved `n` becomes the same link into `review-archive.md`, relative to the linking file. An in-page link
+   between a moved and a kept section gains the file name.
 5. By hand, in the same commit: `decisions.py:registers`, `duplicates.py:main` and the VER-61 test also read
    `review-archive.md`; `generate.py:REGISTERS`, `exclude_docs` and the navigation gain it; `np-ship/phase.md`'s
    step 3 runs the script after its check; §8.4.6, §8.4.5 and `CLAUDE.md` name the eighth script.
@@ -228,7 +243,7 @@ closed rows. `main` writes or checks both. The navigation gains `Decisions regis
 - [ ] 5. The stop: the two questions, rulings AZ13 and AZ14, §8.4.4, `np-plan/phase.md`, REV-271 (D4). Done when the
   author has ruled and `decisions.py --check` passes. **Executor:** main
 - [ ] 6. `.claude/scripts/clause.py`, the stale owners of `holds-now.yaml`, §8.4.4 (D5). Done when `clause.py AY5`
-  prints AA6 and AV6 as one line each, `--all` prints them in full, and VER-79's tests pass. **Executor:** main; the
+  prints AA6 and AV6 as a label and one line each, `--all` prints them in full, and VER-79's tests pass. **Executor:** main; the
   survey by a `general-purpose` sub-agent on Sonnet, high effort
 - [ ] 7. `.claude/scripts/archive_items.py`, `docs/project/review-archive.md`, the readers and the links (D6). Done
   when the tests of VER-61 and VER-79 pass, `duplicates.py` passes, and `links.py --anchors` names neither register
