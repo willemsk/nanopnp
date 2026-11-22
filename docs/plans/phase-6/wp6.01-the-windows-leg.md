@@ -1,6 +1,6 @@
 # WP6.01 — The Windows leg: the stall named and bounded, the failures fixed
 
-**Status: planned, not started.** Written 22 November 2026, grounded in the code at `2b1a468` (the Phase 6 plan's
+**Status: in progress.** Written 22 November 2026, grounded in the code at `2b1a468` (the Phase 6 plan's
 merge). Inherits §8.2.49 AY4 and §8.2.50 AZ4, AZ7 and AZ8 (ruled at this plan), REV-277 and the test scope (§8.2.13
 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.1` (§8.4.1).
 
@@ -148,9 +148,18 @@ item-2 fix a user meets; and *Changed* (development): each test bounded at 600 s
 
 ### Work items
 
-- [ ] 1. `pyproject.toml`, `uv.lock`, `tests/conftest.py`, `tests/tier1/test_gui_screens.py`,
+- [x] 1. e4bfa56 `pyproject.toml`, `uv.lock`, `tests/conftest.py`, `tests/tier1/test_gui_screens.py`,
   `.github/actions/tier12/action.yml`, `.github/workflows/ci.yml`, §7.6 (D1, D2, D3); done when the gate passes and
   the dispatched run's Windows leg ends with a summary naming its failures and the stall. **Executor:** main
+
+  > **Outcome — the stall and the failures named.** [Run 851](https://github.com/willemsk/nanopnp/actions/runs/45035649973)
+  > (dispatch at `05a4ee3`): ubuntu 8 min and macOS 10 min green; the Windows leg ended in 11 min 50 s, "4 failed,
+  > 1797 passed, 152 skipped", no worker crashed and no test met 600 s. The stall is the predicted one:
+  > `test_ver78_the_reloading_server_prints_its_line_and_stops_with_its_input`, "no ready line within 120 s", its
+  > standard error empty. The failures: `test_con09_the_vendored_libraries_are_unmodified[katex]`
+  > (`katex.min.css`) and `[uplot]` (`uPlot.iife.min.js`), as predicted; and, at result 620, not predicted,
+  > `test_ver48_the_channel_axis_gates_fire` (`test_structure_axis.py:625`), the tilted wall's axis read 11.38°
+  > against 12 ± 0.005°. Slowest: the reloading test 120.0 s, then 71.1 s (`test_sweep.py` setup) and 60.7 s.
 - [ ] 2. `.gitattributes`, `src/nanopnp/gui/web/server.py`, and each file item 1's names lead to (D4, D5); done when
   a dispatched run on the branch has the three `platforms` legs and their self-tests green. **Executor:** main
 - [ ] 3. Compaction checkpoint. **Executor:** main
