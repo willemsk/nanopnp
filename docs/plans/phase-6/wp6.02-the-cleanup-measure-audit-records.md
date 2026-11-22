@@ -260,9 +260,9 @@ closed rows. `main` writes or checks both. The navigation gains `Decisions regis
   Done when the code and review say so and the self-check holds. **Executor:** main
 - [x] c0c5d4c 2. The baseline, `docs/plans/sessions/reading-baseline.md` (D2). Done when its table holds each window, or
   names the session not served. **Executor:** main; the paging by `general-purpose` sub-agents on Sonnet, high effort
-- [ ] 3. The audit, `docs/plans/sessions/instructions-audit.md` (D3). Done when the report gives each finding its six
+- [x] b755810 3. The audit, `docs/plans/sessions/instructions-audit.md` (D3). Done when the report gives each finding its six
   fields, and the proposed diff. **Executor:** main
-- [ ] 4. Compaction checkpoint. **Executor:** main
+- [x] 4. Compaction checkpoint. **Executor:** main
 - [ ] 5. The stop: the two questions, rulings AZ13 and AZ14, §8.4.4, `np-plan/phase.md`, REV-271 (D4). Done when the
   author has ruled and `decisions.py --check` passes. **Executor:** main
 - [ ] 6. `.claude/scripts/clause.py`, the stale owners of `holds-now.yaml`, §8.4.4 (D5). Done when `clause.py AY5`
