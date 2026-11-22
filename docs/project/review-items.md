@@ -4304,7 +4304,9 @@ WB-54's branches, WB-56's plot types and WB-57's library, and reopen four points
    stored smaller. Proposed: 2560 × 1440 CSS pixels drawn at a 0.75 device scale (1920 × 1080 files), full-size crops
    of the panes so a reviewer reads 12 px text, and one 1440 × 900 shot per screen as the small-window check.
 
-**Open** for the author at the tree's next round, in Phase 6 (REV-272).
+**Accepted** (§8.2.48 AX2, 22 November 2026): the author ruled at WP5.28's plan that the four points are Phase 6's
+tree of results', put to the author at that package's design round, on boards drawn for the restructured frame
+(REV-272). They would be ruled earlier if Phase 6's scope round needs the layout to size the foundations.
 
 ### REV-274: Five details the Qt panels show are carried to Phase 6
 

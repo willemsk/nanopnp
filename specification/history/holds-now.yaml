@@ -126,7 +126,7 @@ S3: FR-40
 S4: §8.1, FR-38, FR-41; structure preparation brought into Phase 5 by the design document's WB-14, FR-37
 S5: §8.1, FR-42
 S6: FR-33
-S7: §8.1, RSK-15, §8.3
+S7: '§8.1, RSK-15, §8.3; its ordering at Phase 5''s close amended by AX1'
 S8: 'open: WP5.02''s spike, then ADR-004'
 S9: 'open: WP5.02 writes the workflow into §8.4.4 and CONTRIBUTING.md'
 S10: 'open: WP5.02 proposes its VER- identifier'
@@ -386,3 +386,5 @@ AW8: 'QR-16''s NOTE; Appendix A''s QR-16 row; open: Phase 6''s polish pass'
 AW9: the design document's row Q31 to Q34
 AW10: the design document's row Q05 to Q08
 AW11: '§8.1''s Phase 5 gate; REV-274; open: Phase 6''s layers and polish pass'
+AX1: '§8.1''s GUI row; §2.7; RSK-15; the design document''s *Later tools*; open: Phase 6''s scope round'
+AX2: 'REV-273; open: Phase 6''s tree of results'

@@ -104,7 +104,8 @@ reference-solution generation; MD trajectories are supplied as input.
 | post-1.0 | — | Backlog: installers for all three platforms and in-application tutorials; 3D; transient; ion-specific rather than mean-concentration-driven property models; MD-fitting toolkit for corrections; solid-state pores; charge regulation; multi-species electrolytes beyond binary; non-axisymmetric analytes. |
 
 A requirement's release in §3 is a release of the table above, or one of the tool phases of §8.1
-(composer, structural mutator, sketcher, or "a later phase"), which takes a number when Phase 5 closes.
+(composer, structural mutator, sketcher, or "a later phase"), which takes a number at Phase 6's scope round
+(§8.2.48 AX1).
 
 NOTE (Versioning; §8.2.4 D1): the
 releases above are git tags `vX.Y.Z`, one minor version per phase, on the commit that merges the

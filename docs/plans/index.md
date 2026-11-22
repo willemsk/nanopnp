@@ -8,8 +8,8 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 
 ## Phase 5
 
-- [Phase 5 plan: the record](phase-5/phase-5-record.md): a record of replaced text, last added to on 21 November 2026 (§8.2.47); it states nothing that holds now.
-- [Phase 5 (Graphical interface): a molecular and continuum workbench in the browser](phase-5/phase-5-workbench.md): in progress; WP5.01 to WP5.21 merged (`v0.6.0-alpha.21`); closing early (REV-272; §8.2.47): WP5.27, Qt's removal with a short guide, is delivered; then WP5.28, the close. The tree of results, the layers, the performance…
+- [Phase 5 plan: the record](phase-5/phase-5-record.md): a record of replaced text, last added to on 22 November 2026 (§8.2.48); it states nothing that holds now.
+- [Phase 5 (Graphical interface): a molecular and continuum workbench in the browser](phase-5/phase-5-workbench.md): in progress; WP5.01 to WP5.21 and WP5.27 merged (`v0.6.0-alpha.21`; WP5.27's tag, `v0.6.0-alpha.27`, to be pushed); closing early (REV-272; §8.2.47): WP5.28, the close, is planned. The tree of results, the layers, the p…
 - [WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written](phase-5/wp5.01-workbench-design-study.md): delivered, 27 October 2026.
 - [WP5.02 — The framework spike and the visual-feedback workflow](phase-5/wp5.02-framework-spike.md): delivered, 2 November 2026.
 - [WP5.03 — Protonation before the density](phase-5/wp5.03-protonation-before-the-density.md): merged, 3 November 2026 (`v0.6.0-alpha.3`).
@@ -32,6 +32,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP5.20 — The meso suite](phase-5/wp5.20-the-meso-suite.md): delivered, 19 November 2026.
 - [WP5.21 — The Analysis suite](phase-5/wp5.21-the-analysis-suite.md): delivered, 20 November 2026.
 - [WP5.27 — Qt's removal and the short guide](phase-5/wp5.27-qts-removal-and-the-short-guide.md): delivered, 21 November 2026.
+- [WP5.28 — Phase 5 closed: the registers settled, the end-of-phase report and v0.6.0](phase-5/wp5.28-the-close.md): planned, not started.
 
 ## Phase 4
 

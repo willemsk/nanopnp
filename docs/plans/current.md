@@ -1,25 +1,25 @@
 # Current work
 
-Updated 21 November 2026. Navigation;
+Updated 22 November 2026. Navigation;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-The old desktop program is removed. Before it went, the browser workbench gained what you ruled: a running solve
-names its stage and step and writes its log, Study setup reaches every setting, and the results list every changed
-setting. All 41 of the desktop program's capabilities were checked on drawn screens: none is missing, nine details
-wait for Phase 6. A self-test checks an installation, and the guide has a short page on the workbench.
+The old desktop program is removed, and the phase's close is planned. It measures the final report again on its own
+tree, orders the registers, writes version 0.6.0's release notes and hands the moved packages and open items to the
+next phase's scope round. You ruled: the later tool phases are ordered at that round, and the tree's four reopened
+points go to its design round.
 
-**Your call.** None until the review. *Next:* `/np-ship wp 5.27`.
+**Your call.** Do you run the Copilot app's checks before the close merges? *Recommendation:* no; the close carries
+them on. *Next:* `/np-plan wp 5.28 review`.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **closing early**: WP5.01 to WP5.21 merged
-  (`v0.6.0-alpha.21`). Its seventh amendment (§8.2.47; REV-272) keeps WP5.27, Qt's removal with a short guide, and
-  WP5.28, the close; the other planned packages are Phase 6's, named by scope.
-  [WP5.27](phase-5/wp5.27-qts-removal-and-the-short-guide.md) is **delivered** on branch `ccr-867a032b-mcjt88`,
-  awaiting its review. **Next:** `/np-ship wp 5.27`, then WP5.28, the close. host: claude-code.
+- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **closing early** (§8.2.47; REV-272):
+  WP5.01 to WP5.21 and WP5.27 merged (`v0.6.0-alpha.21`; `v0.6.0-alpha.27` to be pushed).
+  [WP5.28](phase-5/wp5.28-the-close.md), the close, is **planned** on branch `claude/np-plan-wp-5-28-apae19`.
+  **Next:** `/np-plan wp 5.28 review`, then `/np-implement wp 5.28`, `/np-ship phase 5`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -40,15 +40,15 @@ wait for Phase 6. A self-test checks an installation, and the guide has a short 
 - **Meso holds Density, Outline and Charge map** (AR8; AS1 to AS3). **An edit marks the atoms it moves; the overlay is kept; a study's charge node opens the continuum model's**
   (AT1 to AT4). **The charge map opens on the 99th percentile** (WB-49).
   **A plot's axes are the user's; any Matplotlib map; a true 3D view is the tree's**
-  (AU1 to AU3; WB-53). **Analysis is COMSOL's tree; Plotly draws every chart and map** (WB-54 to WB-63). **Phase 6 opens with its scope, a cleanup, then the foundations** (REV-272). **QR-10's trial waits for a v1.0 release candidate; WP5.22 to WP5.26 are retired numbers; typing a vertex stands for Qt's drag; QR-16's keyboard gaps ship noted; five Qt details are carried** (§8.2.47; REV-274). **The words follow
-  five rules** (WB-52). **Every open item names a package** (§8.2.46).
+  (AU1 to AU3; WB-53). **Analysis is COMSOL's tree; Plotly draws every chart and map** (WB-54 to WB-63). **Phase 6 opens with its scope, a cleanup, then the foundations** (REV-272). **QR-10's trial waits for v1.0's release candidate; WP5.22 to WP5.26 are retired; typing a vertex stands for Qt's drag; QR-16's keyboard gaps ship noted; five Qt details are carried** (§8.2.47; REV-274). **The words follow
+  five rules** (WB-52). **Every open item names a package** (§8.2.46). **The tool phases are ordered at Phase 6's scope round** (§8.2.48).
 
 ## Somebody else's
 
 - **The paper's figure data** for VAL-16 and VAL-17 (D6); E1's ensemble legs; **Read the Docs**;
   **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
-- **The 200 ms redraw**'s GPU run (REV-258); **verdicts at each design round** (AJ8); **the Copilot host's checks**, before the close (REV-166 to REV-168; AV6).
+- **The 200 ms redraw**'s GPU run (REV-258); **verdicts at each design round** (AJ8); **the Copilot host's checks**, carried if not run (REV-166 to REV-168; AV6).
 - **Rulings on a cycle (H6) or drift (I4)**; **Tier 3's PQRs**.
 - **Phase 6's provisional packages** (AV5; AW1), Z6's speed-up first revisited (REV-272); **QR-10's observer** (AW2).
 

@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.21 merged (`v0.6.0-alpha.21`); closing early (REV-272; §8.2.47): WP5.27, Qt's removal with a short guide, is delivered; then WP5.28, the close. The tree of results, the layers, the performance package, the refusals, the polish pass and the guided route are Phase 6's.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.21 and WP5.27 merged (`v0.6.0-alpha.21`; WP5.27's tag, `v0.6.0-alpha.27`, to be pushed); closing early (REV-272; §8.2.47): WP5.28, the close, is planned. The tree of results, the layers, the performance package, the refusals, the polish pass and the guided route are Phase 6's.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -19,9 +19,9 @@ miss keeps the desktop shell. The removal could break a part the two shells shar
 in every state. This release has a short guide and no guided route, so a new user is not yet led through a first run;
 the trial with a colleague waits for the release candidate of version 1.
 
-**Your call.** When do the Copilot app's checks run? *Recommendation:* before the close; otherwise it carries them on.
-In what order do the later tool phases come against the next phase? *Recommendation:* settle it at that phase's scope
-round, which plans the phases again.
+**Your call.** Settled on 22 November 2026: the order of the later tool phases is set at the next phase's scope round,
+which plans the phases again. The Copilot app's checks are carried to the next phase unless you run them before the
+close merges.
 
 ## Context
 
@@ -246,8 +246,8 @@ Phase 6's provisional packages, named by scope (AV5); its scope round numbers an
 
 ### WP5.27 — Qt's removal and the short guide (REV-134, REV-228; S13, S17; §8.2.47 AW1, AW3, AW9 to AW11)
 
-**Delivered 21 November 2026** ([the plan](wp5.27-qts-removal-and-the-short-guide.md)); tag `v0.6.0-alpha.27` once
-merged.
+**Merged 22 November 2026** ([the plan](wp5.27-qts-removal-and-the-short-guide.md)); tag `v0.6.0-alpha.27`, to be
+pushed.
 
 The capability check found every row Q01 to Q41 in the workbench: 31 present, Q16 as ruled, nine carried by REV-274,
 none missing ([the record](../../design/reviews/2026-11-21-qt-capabilities.md); AW7, AW11). Before it, a running run
@@ -260,20 +260,20 @@ REV-228. No golden or stored key moves.
 
 Live constraints: REV-274's five details and QR-16's gaps are Phase 6's.
 
-### WP5.28 — The close
+### WP5.28 — The close (§8.2.47 AW1, AW2; §8.2.48 AX1, AX2)
 
-It resolves or carries each open decision, confirms Qt and the bundle are gone with the capability list covered, orders
-the tool phases (S7) or hands their order to Phase 6's scope round (open decision 5), carries any Copilot check not yet run (REV-166 to REV-168; AV6), hands the six moved packages
-(AW1) and the open items' provisional Phase 6 packages (AV5) to Phase 6's scope round (REV-272), and writes the report,
-the changelog and `CITATION.cff`. QR-10 is not observed (AW2). Its last commit takes `v0.6.0` alone (§8.4.1).
+**Planned 22 November 2026** ([the plan](wp5.28-the-close.md)).
+
+It confirms Qt and the bundle are gone with the capability list covered, hands the tool phases' order to Phase 6's
+scope round (AX1), carries any Copilot check not yet run (REV-166 to REV-168; AV6), hands the six moved packages (AW1)
+and the open items' provisional Phase 6 packages (AV5) to that round (REV-272), marks each ruling a delivered package
+landed, and writes the report, the changelog and `CITATION.cff`. No row of the review register is `open` (AX2). QR-10
+is not observed (AW2). Its last commit takes `v0.6.0` alone (§8.4.1).
 
 ## Open decisions
 
-| # | Decision | Owner and status |
-|---|---|---|
-| 5 | The order of the tool phases against Phase 6 | **Author**, at the close (S7), or handed by it to Phase 6's scope round, which plans the phases again (REV-272) |
-
-Settled rows: see §8.2.17 to §8.2.47 and [the record](phase-5-record.md). Decision 8, who observes QR-10, waits for
+None is open. Settled rows: see §8.2.17 to §8.2.48 and [the record](phase-5-record.md). Decision 5, the order of the
+tool phases, is set at Phase 6's scope round (§8.2.48 AX1). Decision 8, who observes QR-10, waits for
 v1.0's release candidate (AW2); decision 14 closed with neither xenon nor import-linter adopted (AW6); decisions 17 and
 18 moved to Phase 6 with the polish pass and the new models (AW1).
 
@@ -334,6 +334,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 ## End-of-phase report
 
 The close reports: the Qt capability list against the browser shell; VER-78's screen and state counts; the time from
-a click to a redrawn view on the reference charged case, headless (the GPU measure is Phase 6's, REV-258), and the
-install's time on a clean machine, each re-run by the command WP5.02 names; the tool phases' order, or its handing to
-Phase 6's scope round; and the packages and open items it hands to Phase 6's scope round.
+a click to a redrawn view on the reference charged case, headless (the GPU measure is Phase 6's, REV-258), re-run by
+`.claude/scripts/gui/redraw.cjs`, which replaced WP5.02's script; the built wheel's install into a fresh environment,
+its time and size, with the self-test's; the tool phases' order handed to Phase 6's scope round (AX1); and the packages
+and open items it hands to that round.
