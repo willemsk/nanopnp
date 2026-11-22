@@ -46,6 +46,7 @@ read in this session. The APIs named are pytest-timeout 2.4's `timeout` ini key,
 | **D4 A fix is at the cause** | Each named failure and the stall are fixed where they arise. A Windows skip, an `xfail`, a deselection, a raised limit or a slackened assertion is not a fix. If the cause is outside this repository and has no fix here, the package stops and the choice goes to the author | AY4 ("no waiver"); the steward's rules; decided by the plan |
 | **D5 The two faults found by reading** | `.gitattributes` marks `src/nanopnp/gui/web/assets/katex/**` and `.../uplot/**` `-text`. `gui/web/server.py:_watch_input` stops the reloading supervisor with `_thread.interrupt_main(signal.SIGINT)`, not `os.kill(os.getpid(), signal.SIGINT)` | Grounding D5; decided by the plan |
 | **D6 Where the three platforms are checked** | A pull request's CI stays on Linux. A package's `/np-ship` reads no platform leg. `/np-ship phase` dispatches `ci.yml` on the close's head and stops while a `platforms` leg is not `success`. This package's own done-criterion is one dispatch on its branch, three legs green | Ruled by the author at this plan, §8.2.50 AZ8, narrowing AY4; closes the Phase 6 plan's open decision 4 |
+| **D8 The push gate skips the tests for prose since its last pass** | `gate.sh run` judges a change prose against the branch's last commit whose tree passed `run`, or against `main` before the first pass; `specification/history/holds-now.yaml` counts as prose, its one check moved from a Tier 1 test into `decisions.py --check`, which the gate and CI run on every change | Asked by the author at `/np-implement`: a plan pushed after code waited seven minutes for the whole suite. Decided by this session; tooling, no clause changes |
 | **D7 The records** | REV-277 is set `fixed` with the names and causes; its "since 10 November" is corrected to run 621, 3 November. `CHANGELOG.md` gains `## [0.7.0-alpha.1]` | §8.4.6; `CONTRIBUTING.md`, *Versions and releases*; decided by the plan |
 
 ### Grounding
@@ -156,6 +157,9 @@ item-2 fix a user meets; and *Changed* (development): each test bounded at 600 s
 - [ ] 4. `.claude/skills/np-ship/phase.md`, `.claude/skills/steward/SKILL.md`, `docs/project/review-findings.md`,
   `review-items.md`, `CHANGELOG.md`, `docs/plans/current.md` (D6, D7); done when the strict documentation build and
   `decisions.py --check` pass and the review says so. **Executor:** main
+- [ ] 5. `.claude/hooks/gate.sh`, `.github/scripts/prose-only.sh`, `.claude/scripts/decisions.py`,
+  `tests/tier1/test_written_architecture.py`, `CLAUDE.md` (D8), done first, at the author's request; done when a
+  push of prose after a passing `run` skips the lock check, the types and pytest. **Executor:** main
 
 ### Verification
 

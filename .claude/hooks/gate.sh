@@ -442,14 +442,24 @@ if [[ -n $state ]] && { stamped "$state" push || { [[ $mode == hook ]] && stampe
 fi
 
 # The prose rule lives in one script that CI's `changes` job uses too. A commit is judged
-# against HEAD, which was gated when it was committed. `run` judges the whole branch since it
-# left main, as CI's pull_request range does: against HEAD alone the clean tree the skills run
-# it on would read as prose and the `push` tests would never run. With no merge base found
-# the whole gate runs.
+# against HEAD, which was gated when it was committed. `run` judges the branch since its last
+# commit whose tree passed `run`, or else since it left main, as CI's pull_request range
+# does: against HEAD alone the clean tree the skills run it on would read as prose and the
+# `push` tests would never run. A prose-only change since a pass cannot change what the
+# tests assert, so a plan or a record pushed after code reruns none of them. With no merge
+# base found the whole gate runs.
 base=HEAD
 if [[ $mode == run ]]; then
     base=$(git merge-base HEAD origin/main 2>/dev/null) ||
         base=$(git merge-base HEAD main 2>/dev/null) || base=""
+    if [[ -n $base && -f $stamp_file ]]; then
+        while read -r commit tree; do
+            if stamped "$tree" push; then
+                base=$commit
+                break
+            fi
+        done < <(git log --format='%H %T' "$base..HEAD" 2>/dev/null)
+    fi
 fi
 docs_only=false
 if [[ -n $base ]]; then
