@@ -8,11 +8,13 @@ row of ``docs/design/workbench.md``; the knowledge base's rulings of
 ``knowledge/00-orientation/05-*.md``; and the *Not to be re-decided* bullets of
 ``docs/plans/current.md``. Writes one row per decision in eight columns (source; decided by; where;
 date; package; what was decided; where it holds now; status), ordered by date, undated last, then
-by source, path and reading order, under the counts by source and by decider. Nothing is read but
-the tree, and *Where* names a file without a line, so an edit elsewhere leaves the page as it is.
+by source, path and reading order, under the counts by source and by decider. A decision of a
+delivered plan, fixed, spent, superseded, declined, closed or ``wontfix`` goes to
+``docs/project/decisions-closed.md`` instead (§8.2.50 AZ12). Nothing is read but the tree, and
+*Where* names a file without a line, so an edit elsewhere leaves the page as it is.
 
-Run it as ``uv run .claude/scripts/decisions.py`` to rewrite the page, or with ``--check`` to
-compare it with the tree and write nothing; the check exits 1 on a difference. Either exits 1, and
+Run it as ``uv run .claude/scripts/decisions.py`` to rewrite both pages, or with ``--check`` to
+compare them with the tree and write nothing; the check exits 1 on a difference. Either exits 1, and
 writes nothing, while a ruling of the history lacks its one ``holds-now.yaml`` entry.
 """
 
@@ -28,6 +30,9 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 PAGE = ROOT / "docs/project/decisions.md"
+CLOSED_PAGE = ROOT / "docs/project/decisions-closed.md"
+# A decision with one of these statuses binds nothing now; it is listed on the second page.
+CLOSED = {"delivered plan", "fixed", "spent", "superseded", "declined", "wontfix", "closed"}
 HISTORY = ROOT / "specification/history"
 HOLDS_NOW = HISTORY / "holds-now.yaml"
 COMMAND = "uv run .claude/scripts/decisions.py"
@@ -461,9 +466,18 @@ def _counts(counts: dict[str, int]) -> str:
     return "; ".join(f"{name} {count:,}" for name, count in counts.items())
 
 
-def render() -> str:
-    """Return the page as the records stand."""
+def _row(row: Decision) -> str:
+    return (
+        f"| {row.source_id} | {row.decided_by} | `{row.where}` | {row.date} | {row.package} | "
+        f"{row.decided} | {row.holds_now} | {row.status} |"
+    )
+
+
+def render() -> dict[Path, str]:
+    """Return both pages as the records stand: the decisions that bind, then the closed ones."""
     rows = decisions()
+    closed = [row for row in rows if row.status in CLOSED]
+    binding = [row for row in rows if row.status not in CLOSED]
     by_kind = {kind: sum(row.kind == kind for row in rows) for kind in KINDS}
     by_decider: dict[str, int] = {}
     for row in rows:
@@ -480,15 +494,44 @@ def render() -> str:
         "",
         f"By decider: {_counts(dict(sorted(by_decider.items())))}.",
         "",
+        f"This page lists the {len(binding):,} that bind now. The {len(closed):,} of a delivered "
+        "plan, fixed, spent, superseded, declined, closed or `wontfix` are in "
+        "[the closed decisions](decisions-closed.md) (§8.2.50 AZ12).",
+        "",
         HEADER,
         "|---|---|---|---|---|---|---|---|",
+        *(_row(row) for row in binding),
     ]
-    for row in rows:
-        lines.append(
-            f"| {row.source_id} | {row.decided_by} | `{row.where}` | {row.date} | {row.package} | "
-            f"{row.decided} | {row.holds_now} | {row.status} |"
+    closed_lines = [
+        "# Decisions register, closed",
+        "",
+        f"The {len(closed):,} decisions of [the register](decisions.md) that bind nothing now, "
+        f"written by `{COMMAND}`.",
+        "",
+        HEADER,
+        "|---|---|---|---|---|---|---|---|",
+        *(_row(row) for row in closed),
+    ]
+    return {PAGE: "\n".join(lines) + "\n", CLOSED_PAGE: "\n".join(closed_lines) + "\n"}
+
+
+def _differs(path: Path, page: str) -> bool:
+    """Print where ``path`` differs from ``page``, and return whether it does."""
+    expected = page.splitlines()
+    written = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+    for number, (want, have) in enumerate(zip(expected, written, strict=False), 1):
+        if want != have:
+            print(f"{_relative(path)}:{number} differs from the records; run `{COMMAND}`.")
+            print(f"  expected: {want[:200]}")
+            print(f"  found:    {have[:200]}")
+            return True
+    if len(expected) != len(written):
+        print(
+            f"{_relative(path)} has {len(written)} lines, the records give {len(expected)}; "
+            f"run `{COMMAND}`."
         )
-    return "\n".join(lines) + "\n"
+        return True
+    return False
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -499,25 +542,12 @@ def main(argv: list[str] | None = None) -> int:
     if problems := holds_now_problems():
         print("\n".join(problems))
         return 1
-    page = render()
+    pages = render()
     if not arguments.check:
-        PAGE.write_text(page, encoding="utf-8")
+        for path, page in pages.items():
+            path.write_text(page, encoding="utf-8")
         return 0
-    expected = page.splitlines()
-    written = PAGE.read_text(encoding="utf-8").splitlines() if PAGE.exists() else []
-    for number, (want, have) in enumerate(zip(expected, written, strict=False), 1):
-        if want != have:
-            print(f"{_relative(PAGE)}:{number} differs from the records; run `{COMMAND}`.")
-            print(f"  expected: {want[:200]}")
-            print(f"  found:    {have[:200]}")
-            return 1
-    if len(expected) != len(written):
-        print(
-            f"{_relative(PAGE)} has {len(written)} lines, the records give {len(expected)}; "
-            f"run `{COMMAND}`."
-        )
-        return 1
-    return 0
+    return int(any([_differs(path, page) for path, page in pages.items()]))
 
 
 if __name__ == "__main__":
