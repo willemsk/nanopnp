@@ -123,6 +123,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 
 - [Plan: run the nanopnp workflow in the GitHub Copilot app beside Claude Code](sessions/copilot-host.md): retired by the author's ruling, 22 November 2026 (§8.2.49 AY5).
 - [Historical prose in nanopnp: keep or remove](sessions/history-prose-review.md): decided and done, 4 October 2026.
+- [The instructions audit: `CLAUDE.md` and `.claude/`](sessions/instructions-audit.md): report, written 22 November 2026 at WP6.02 item 3 (§8.2.49 AY8); its proposed changes are WP6.03's, and this package applies no hunk.
 - [Audit nanopnp's written knowledge](sessions/kb-audit-brief.md): brief, not started.
 - [WP54 Review and Specification: Notebooks and Scientific Plots](sessions/notebooks-review-for-wp54.md): no status line
 - [WP47 — converter, ledger and gate rules](sessions/okf-converter-rules.md): planned, 14 October 2026.
