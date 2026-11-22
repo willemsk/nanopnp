@@ -13,7 +13,7 @@ Linux alone, and the three systems are checked on a branch only at a phase's clo
 The cleanup and the rescoping round you asked for follow. The package is about 5 sessions, 3 to 6 hours of
 agent work and 8 times you act.
 
-**Your call.** None before the plan's review. *Next:* the review of this package's plan.
+**Your call.** None before the merge. *Next:* its implementation; you waived the plan's review.
 
 ## Position
 
@@ -23,7 +23,7 @@ agent work and 8 times you act.
   then the rescoping round at `/np-plan project`; WP6.04 to WP6.18 provisional until it rules. Phases 7 to 11:
   [the input note](sessions/phases-6-to-11.md).
   **WP6.01 planned** ([the plan](phase-6/wp6.01-the-windows-leg.md); AZ8: the three platforms at the close alone).
-  **Next:** `/np-plan wp 6.01 review`; then `/np-implement wp 6.01`. host: claude-code.
+  **Next:** `/np-implement wp 6.01`; the plan's review waived by the author. host: claude-code.
 
 ## Not to be re-decided
 
