@@ -26,7 +26,7 @@ starts from your view and not from the records.
 ## Context
 
 `SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 (AY1 to AY8) and §8.2.50 (AZ1
-to AZ7).
+to AZ8; AZ8 ruled at WP6.01's plan).
 
 Phase 6 answers one question: **can the library be made one sound base, without moving a number, before the workbench
 is rebuilt and three tools are built on it?** Its gate is §8.1's. Only WP6.01 to WP6.03 are fixed (AZ7); the
@@ -75,9 +75,9 @@ and 8 touches (§8.3).
 
 ### WP6.01 — The Windows leg (REV-277; AY4)
 
-Name the failing test and the stall with per-test names and a timeout; fix both. A dispatch of `ci.yml` on the branch
-shows the three legs before the merge, which a pull request's CI does not; `/np-ship` reads the last full run and stops
-on a red leg.
+Name the failing tests and the stall with a per-test timeout; fix each at its cause. A pull request's CI stays on Linux;
+this package's own dispatch of `ci.yml` on its branch shows the three legs green, and from it only `/np-ship phase`
+dispatches the three platforms and stops on a red leg (AZ8). [The plan](wp6.01-the-windows-leg.md).
 
 ### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8)
 
@@ -125,7 +125,7 @@ Each waits on the rescoping round; none is planned before it.
 | 1 | This round's seven rulings | **Settled by the author, 22 November 2026** (AZ1 to AZ7) |
 | 2 | The reading limit; what may leave the history; the baseline's transcripts | **Author**, at WP6.02's plan (AY8) |
 | 3 | The Copilot tag's name | **Author** confirms at WP6.03's plan (AY5) |
-| 4 | Whether a pull request's CI runs the Windows leg | WP6.01's plan |
+| 4 | Whether a pull request's CI runs the Windows leg | **Settled by the author, 22 November 2026**: no; the three platforms at the close alone (AZ8) |
 | 5 | The project's scope, and WP6.04 to WP6.18 with it | **Author**, at the rescoping round (AZ7) |
 | 6 | What AM2's "moves one of them" means, and the drift that stops the re-pin | **Author**, at WP6.13's plan, before any measurement |
 | 7 | A run above order 2; the speed-up's thresholds; the names after `Project` splits | Their packages' plans |
