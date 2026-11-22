@@ -3,7 +3,7 @@
 The text that amendments replaced in [the Phase 5 plan](phase-5-workbench.md), copied verbatim, one
 dated section per amendment (§8.2.16 R4). Read it on demand; the plan states what holds now.
 
-**Status: a record of replaced text, last added to on 21 November 2026 (§8.2.47); it states nothing that holds now.**
+**Status: a record of replaced text, last added to on 22 November 2026 (§8.2.48); it states nothing that holds now.**
 
 ---
 
@@ -1434,3 +1434,40 @@ Criterion 3 read:
 > 3. **Every Qt shell capability is in the browser shell**, checked against WP5.01's list before Qt
 >    leaves. A miss keeps Qt.
 
+## Amended 22 November 2026 (§8.2.48 AX1, AX2)
+
+At WP5.28's plan, after WP5.27's merge, the author ruled that the tool phases' order is set at Phase 6's scope round
+(AX1) and that REV-273's four points are Phase 6's tree of results' (AX2). The plan's open decision 5 closed, and its
+end-of-phase report names the scripts that replaced WP5.02's. The plan's status read:
+
+> **Status: in progress; WP5.01 to WP5.21 merged (`v0.6.0-alpha.21`); closing early (REV-272; §8.2.47): WP5.27, Qt's removal with a short guide, is delivered; then WP5.28, the close.
+
+Its In brief's *Your call* read:
+
+> **Your call.** When do the Copilot app's checks run? *Recommendation:* before the close; otherwise it carries them on.
+> In what order do the later tool phases come against the next phase? *Recommendation:* settle it at that phase's scope
+> round, which plans the phases again.
+
+The close's entry read:
+
+> ### WP5.28 — The close
+>
+> It resolves or carries each open decision, confirms Qt and the bundle are gone with the capability list covered, orders
+> the tool phases (S7) or hands their order to Phase 6's scope round (open decision 5), carries any Copilot check not yet run (REV-166 to REV-168; AV6), hands the six moved packages
+> (AW1) and the open items' provisional Phase 6 packages (AV5) to Phase 6's scope round (REV-272), and writes the report,
+> the changelog and `CITATION.cff`. QR-10 is not observed (AW2). Its last commit takes `v0.6.0` alone (§8.4.1).
+
+Its open decisions read:
+
+> | # | Decision | Owner and status |
+> |---|---|---|
+> | 5 | The order of the tool phases against Phase 6 | **Author**, at the close (S7), or handed by it to Phase 6's scope round, which plans the phases again (REV-272) |
+>
+> Settled rows: see §8.2.17 to §8.2.47 and [the record](phase-5-record.md). Decision 8,
+
+Its end-of-phase report read:
+
+> The close reports: the Qt capability list against the browser shell; VER-78's screen and state counts; the time from
+> a click to a redrawn view on the reference charged case, headless (the GPU measure is Phase 6's, REV-258), and the
+> install's time on a clean machine, each re-run by the command WP5.02 names; the tool phases' order, or its handing to
+> Phase 6's scope round; and the packages and open items it hands to Phase 6's scope round.

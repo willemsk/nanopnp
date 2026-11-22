@@ -381,8 +381,8 @@ the range. The route of the mockups (`docs/design/mockups/a/00-guided-route.html
 
 ## Later tools
 
-Each later tool is a library capability and a phase of its own, ordered against validation when Phase 5
-closes (S7). The mockups draw where each will sit, with the later-phase banner and no working control.
+Each later tool is a library capability and a phase of its own, ordered against validation at Phase 6's
+scope round (S7; §8.2.48 AX1). The mockups draw where each will sit, with the later-phase banner and no working control.
 
 - **The physics composer** (S3), in the Physics suite (WB-34), composes a model from registered building blocks: a field set, weak-form
   contributions, boundary conditions and a solve strategy (FR-20), in `physics/` with its own tests. It opens
