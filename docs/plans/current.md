@@ -11,15 +11,15 @@ next phase's scope round. You ruled: the later tool phases are ordered at that r
 points go to its design round.
 
 **Your call.** Do you run the Copilot app's checks before the close merges? *Recommendation:* no; the close carries
-them on. *Next:* `/np-plan wp 5.28 review`.
+them on. *Next:* `/np-implement wp 5.28`.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **closing early** (§8.2.47; REV-272):
-  WP5.01 to WP5.21 and WP5.27 merged (`v0.6.0-alpha.21`; `v0.6.0-alpha.27` to be pushed).
-  [WP5.28](phase-5/wp5.28-the-close.md), the close, is **planned** on branch `claude/np-plan-wp-5-28-apae19`.
-  **Next:** `/np-plan wp 5.28 review`, then `/np-implement wp 5.28`, `/np-ship phase 5`. host: claude-code.
+  WP5.01 to WP5.21 and WP5.27 merged (`v0.6.0-alpha.21`, `v0.6.0-alpha.27`).
+  [WP5.28](phase-5/wp5.28-the-close.md), the close, is **planned and reviewed** on branch `claude/np-plan-wp-5-28-apae19`.
+  **Next:** `/np-implement wp 5.28`, then `/np-ship phase 5`. host: claude-code.
 
 ## Not to be re-decided
 
