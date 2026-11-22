@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import importlib.util
-import re
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -50,18 +49,5 @@ def test_ver79_section_5_1_module_rows_equal_the_subpackages() -> None:
 
 
 def test_ver79_the_decisions_page_equals_what_the_script_renders() -> None:
+    # The check also holds every ruling to one holds-now entry.
     assert decisions.main(["--check"]) == 0, f"docs/project/decisions.md is stale; run `{COMMAND}`"
-
-
-def test_ver79_every_ruling_has_one_holds_now_entry() -> None:
-    letters = decisions.ruling_letters()
-    entries = decisions.holds_now()
-    keys = re.findall(r"^([A-Z]+\d+):", decisions.HOLDS_NOW.read_text(encoding="utf-8"), re.M)
-    assert len(letters) == len(set(letters)), "a ruling letter is used twice in the history"
-    assert len(keys) == len(entries), "holds-now.yaml names a ruling twice"
-    assert not set(letters) - set(entries), (
-        f"rulings without a holds-now entry: {sorted(set(letters) - set(entries))}"
-    )
-    assert not set(entries) - set(letters), (
-        f"holds-now entries without a ruling: {sorted(set(entries) - set(letters))}"
-    )

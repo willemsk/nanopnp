@@ -76,9 +76,11 @@ the wheel exists. `tests/tier1/test_gui_screens.py` launches Chromium: the one `
 names, which `run` sets to one under `/opt/pw-browsers/` where it finds one, or else Playwright's own.
 A backend or browser that cannot start then fails; it does not skip.
 
-When only Markdown outside `src/`, `data/` and `examples/` changed, the hook runs ruff
-and the decisions page's check alone (`.github/scripts/prose-only.sh`). CI's documentation build
-still runs.
+When only prose changed, the gate runs ruff and the decisions page's check alone. Prose is
+Markdown outside `src/`, `data/` and `examples/`, and `specification/history/holds-now.yaml`
+(`.github/scripts/prose-only.sh`). The commit hook judges the change since `HEAD`; `run` judges it
+since the branch's last commit that passed `run`, or since `main` before the first pass. A plan or
+a record pushed after the code is then checked in seconds. CI's documentation build still runs.
 
 ## Project structure
 

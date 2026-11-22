@@ -187,6 +187,23 @@ def holds_now() -> dict[str, str]:
     return {str(letter): str(entry) for letter, entry in entries.items()}
 
 
+def holds_now_problems() -> list[str]:
+    """Return each mismatch between the history's rulings and ``holds-now.yaml``'s entries."""
+    letters = ruling_letters()
+    entries = holds_now()
+    keys = re.findall(r"^([A-Z]+\d+):", HOLDS_NOW.read_text(encoding="utf-8"), re.M)
+    problems = []
+    if len(letters) != len(set(letters)):
+        problems.append("a ruling letter is used twice in the history")
+    if len(keys) != len(entries):
+        problems.append(f"{_relative(HOLDS_NOW)} names a ruling twice")
+    if missing := sorted(set(letters) - set(entries)):
+        problems.append(f"rulings without a holds-now entry: {missing}")
+    if extra := sorted(set(entries) - set(letters)):
+        problems.append(f"holds-now entries without a ruling: {extra}")
+    return problems
+
+
 def _status_of_ruling(entry: str) -> str:
     if entry.startswith("spent"):
         return "spent"
@@ -478,6 +495,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--check", action="store_true", help="compare the page, write nothing")
     arguments = parser.parse_args(argv)
+    if problems := holds_now_problems():
+        print("\n".join(problems))
+        return 1
     page = render()
     if not arguments.check:
         PAGE.write_text(page, encoding="utf-8")

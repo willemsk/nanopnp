@@ -13,6 +13,9 @@
 # cases, the probe grid). Only its Markdown is, and CI's documentation build runs
 # on every change regardless.
 #
+# specification/history/holds-now.yaml is prose too: the one reader is
+# .claude/scripts/decisions.py, whose --check the gate and CI run on every change.
+#
 # Empty input is prose: there is nothing to test.
 set -uo pipefail
 
@@ -20,7 +23,7 @@ while IFS= read -r path; do
     [[ -z $path ]] && continue
     case $path in
         src/* | data/* | examples/*) exit 1 ;;
-        *.md) ;;
+        *.md | specification/history/holds-now.yaml) ;;
         *) exit 1 ;;
     esac
 done

@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,556. By source: history ruling 405; plan decision row 762; REV row 278; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
+Rows: 1,557. By source: history ruling 405; plan decision row 763; REV row 278; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
 
-By decider: author 696; open 5; session, own call 852; session, put to the author 3.
+By decider: author 696; open 5; session, own call 853; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1193,6 +1193,7 @@ By decider: author 696; open 5; session, own call 852; session, put to the autho
 | WP6.01 D4 | session, own call | `docs/plans/phase-6/wp6.01-the-windows-leg.md` | 2026-11-22 | WP6.01 | Each named failure and the stall are fixed where they arise. A Windows skip, an `xfail`, a deselection, a raised limit or a slackened assertion is not a fix. If the cause is outside this repository and has no fix here,… | unstated | plan in flight |
 | WP6.01 D5 | session, own call | `docs/plans/phase-6/wp6.01-the-windows-leg.md` | 2026-11-22 | WP6.01 | `.gitattributes` marks `src/nanopnp/gui/web/assets/katex/**` and `.../uplot/**` `-text`. `gui/web/server.py:_watch_input` stops the reloading supervisor with `_thread.interrupt_main(signal.SIGINT)`, not `os.kill(os.getp…` | unstated | plan in flight |
 | WP6.01 D6 | author | `docs/plans/phase-6/wp6.01-the-windows-leg.md` | 2026-11-22 | WP6.01 | A pull request's CI stays on Linux. A package's `/np-ship` reads no platform leg. `/np-ship phase` dispatches `ci.yml` on the close's head and stops while a `platforms` leg is not `success`. This package's own done-crit… | §8.2.50 AZ8 | plan in flight |
+| WP6.01 D8 | session, own call | `docs/plans/phase-6/wp6.01-the-windows-leg.md` | 2026-11-22 | WP6.01 | `gate.sh run` judges a change prose against the branch's last commit whose tree passed `run`, or against `main` before the first pass; `specification/history/holds-now.yaml` counts as prose, its one check moved from a T… | unstated | plan in flight |
 | WP6.01 D7 | session, own call | `docs/plans/phase-6/wp6.01-the-windows-leg.md` | 2026-11-22 | WP6.01 | REV-277 is set `fixed` with the names and causes; its "since 10 November" is corrected to run 621, 3 November. `CHANGELOG.md` gains `## [0.7.0-alpha.1]` \| §8.4.6; `CONTRIBUTING.md`, *Versions and releases*; decided by t… | REV-277, §8.4.6 | plan in flight |
 | REV-01 | session, own call | `docs/project/review-findings.md` |  | WP37 | TOL_NM's home loaded pydantic and yaml | WP37 | fixed |
 | REV-02 | session, own call | `docs/project/review-findings.md` |  | WP37 | cli/errors.py was a re-export nothing imported | WP37 | fixed |
