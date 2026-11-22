@@ -199,6 +199,15 @@ sums of the two messages the script names, and the words it gives one whole-file
    range of project text, and each file among the ten largest in at least half of them, with its words. It holds no
    session id and no transcript text. `uv run .claude/scripts/index_records.py` lists it, and item 3's report.
 
+> **Outcome — a page holds no prompt, so a paged window opens at the session's start and after each compaction.**
+> The probe of step 1 showed that a page starts at the session's first assistant message: the typed prompt and the
+> skill's text are not in it, and the compaction summary is. `--pages` therefore opens a window at the session's
+> start and at each `This session is being continued` event; the baseline reads each window's command from the level
+> file it reads. A path outside the tree (a saved tool result) counts as commands, and `.cjs`, `.js`, `.html` and
+> `.css` as code. The service served all twelve sessions in 299 calls. [The baseline](../sessions/reading-baseline.md):
+> 18 fresh `/np-implement` windows, a median of 8,095 words of project text (5,478 to 12,464), 78 % of it in files
+> this cleanup can shorten.
+
 **Item 5 (D4).** Two questions, as `.claude/workflow/author.md` says, each with the baseline's median and range.
 
 - The limit: 50 %, 65 % and 80 % of the median project text of the fresh `/np-implement` windows, rounded to 500
@@ -241,7 +250,7 @@ closed rows. `main` writes or checks both. The navigation gains `Decisions regis
 
 ### Work items
 
-- [ ] 1. `.claude/scripts/usage.py`, the reading measure (D1); §8.4.5's and `CLAUDE.md`'s lines for the script (D8).
+- [x] 2120ab9 1. `.claude/scripts/usage.py`, the reading measure (D1); §8.4.5's and `CLAUDE.md`'s lines for the script (D8).
   Done when the code and review say so and the self-check holds. **Executor:** main
 - [ ] 2. The baseline, `docs/plans/sessions/reading-baseline.md` (D2). Done when its table holds each window, or
   names the session not served. **Executor:** main; the paging by `general-purpose` sub-agents on Sonnet, high effort

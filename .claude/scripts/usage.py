@@ -30,7 +30,9 @@ records and the tree's ``CLAUDE.md``), of code and of command output, the tokens
 start and at that edit, and the ten largest files of project text. A window is fresh when no
 message precedes it, or when its start holds under half the tokens of the message before it.
 ``--transcript`` names a transcript; ``--pages`` reads instead the transcripts of agents that paged
-other sessions with the session service's ``list_events`` (AZ10), one session per paged id. Run it
+other sessions with the session service's ``list_events`` (AZ10), one session per paged id. A page
+holds no typed prompt and no skill text, so a paged session's windows open at its first message and
+after each compaction, and its window prompt is not counted. Run it
 as ``uv run .claude/scripts/usage.py --reading [--transcript <jsonl> | --pages <jsonl> ...]
 [--json]``.
 """
@@ -52,6 +54,7 @@ ROOT = Path(__file__).resolve().parents[2]
 AWAY_S = 30 * 60
 NOT_TYPED = ("<local-command-stdout>", "<local-command-caveat>", "<task-notification>")
 SKILL_TEXT = "Base directory for this skill:"
+CONTINUED = "This session is being continued from a previous conversation"
 EDITS = ("Edit", "Write", "NotebookEdit")
 PRINTERS = ("cat", "head", "tail", "sed")
 LIST_EVENTS = "mcp__claude-code-remote__list_events"
@@ -182,10 +185,15 @@ def _text(content: object) -> str:
 
 
 def _path_class(path: str) -> str:
-    """Return the class of a file read by its path: instructions, records, code or commands."""
+    """Return the class of a file read by its path: instructions, records, code or commands.
+
+    A path outside the tree, such as a saved tool result, is commands.
+    """
+    if path.startswith(("/", "~")) and not path.startswith(f"{ROOT}/"):
+        return "commands"
     path = path if path.startswith("/") else f"/{path}"
     name = path.rsplit("/", 1)[-1]
-    if path.endswith((".py", ".sh")):
+    if path.endswith((".py", ".sh", ".cjs", ".js", ".html", ".css")):
         return "code"
     if "/.claude/" in path or path.endswith("CLAUDE.md"):
         return "instructions"
@@ -251,7 +259,7 @@ def _classify(call: dict[str, Any]) -> tuple[str, str | None]:
         if files:
             classes = {_path_class(path) for path in files}
             if len(classes) == 1:
-                return classes.pop(), files[0] if len(files) == 1 else " ".join(files)
+                return classes.pop(), " ".join(dict.fromkeys(files))
     return "commands", None
 
 
@@ -291,6 +299,7 @@ def _page_events(path: Path) -> dict[str, list[dict[str, Any]]]:
                 "timestamp": inner["timestamp"],
                 "_t": datetime.fromisoformat(inner["timestamp"]).timestamp(),
                 "session": session,
+                "page": True,
             }
             if "isMeta" in inner:
                 event["isMeta"] = inner["isMeta"]
@@ -320,13 +329,23 @@ def _tokens(event: dict[str, Any]) -> int:
 
 def reading(events: list[dict[str, Any]], claude_md: int) -> list[dict[str, Any]]:
     """Return what each ``/np-`` window of one session's ``events`` read before its first edit."""
-    opens = [
-        index
-        for index, event in enumerate(events)
-        if _typed(event)
-        and "/np-" in _text((event.get("message") or {}).get("content"))
-        and not _text((event.get("message") or {}).get("content")).lstrip().startswith(SKILL_TEXT)
-    ]
+    if events and events[0].get("page"):
+        opens = [0] + [
+            index
+            for index, event in enumerate(events)
+            if event.get("type") == "user"
+            and _text((event.get("message") or {}).get("content")).startswith(CONTINUED)
+        ]
+    else:
+        opens = [
+            index
+            for index, event in enumerate(events)
+            if _typed(event)
+            and "/np-" in _text((event.get("message") or {}).get("content"))
+            and not _text((event.get("message") or {}).get("content"))
+            .lstrip()
+            .startswith(SKILL_TEXT)
+        ]
     windows = []
     for number, first in enumerate(opens):
         last = opens[number + 1] if number + 1 < len(opens) else len(events)
@@ -334,9 +353,11 @@ def reading(events: list[dict[str, Any]], claude_md: int) -> list[dict[str, Any]
         words: Counter[str] = Counter()
         files: Counter[str] = Counter()
         calls: dict[str, dict[str, Any]] = {}
-        words["instructions"] += len(_text(events[first]["message"].get("content")).split())
+        page = bool(events[first].get("page"))
+        if not page:
+            words["instructions"] += len(_text(events[first]["message"].get("content")).split())
         start_tokens, edit_tokens, edited = None, None, False
-        for event in events[first + 1 : last]:
+        for event in events[first + (not page) : last]:
             if event.get("type") == "assistant" and _tokens(event):
                 start_tokens = start_tokens if start_tokens is not None else _tokens(event)
                 edit_tokens = _tokens(event)
@@ -365,7 +386,11 @@ def reading(events: list[dict[str, Any]], claude_md: int) -> list[dict[str, Any]
         windows.append(
             {
                 "session": events[first].get("session", ""),
-                "window": _window_name(events[first]),
+                "window": (
+                    ("after compaction" if first else "start")
+                    if events[first].get("page")
+                    else _window_name(events[first])
+                ),
                 "fresh": not before or (start_tokens or 0) < previous / 2,
                 "edit": edited,
                 "project": project,
@@ -377,6 +402,7 @@ def reading(events: list[dict[str, Any]], claude_md: int) -> list[dict[str, Any]
                 "tokens_start": start_tokens or 0,
                 "tokens_edit": edit_tokens or 0,
                 "files": dict(files.most_common()),
+                "read_order": list(files),
             }
         )
     return windows
@@ -386,7 +412,8 @@ def _reading_line(window: dict[str, Any]) -> str:
     largest = ", ".join(f"{path} {count:,}" for path, count in list(window["files"].items())[:10])
     edit = "the first edit" if window["edit"] else "the window's end (no edit)"
     return (
-        f"Reading ({window['window']}, {'fresh' if window['fresh'] else 'not fresh'}): "
+        f"Reading ({window['session']}, {window['window']}, "
+        f"{'fresh' if window['fresh'] else 'not fresh'}): "
         f"{window['project']:,} words of project text before {edit} "
         f"(instructions {window['instructions']:,}; records {window['records']:,}; "
         f"CLAUDE.md {window['claude_md']:,}); code {window['code']:,}; "
