@@ -72,7 +72,7 @@ estimate moved.
 | `## Verification` | Gate commands; a `Package \| Tier \| Identifiers` table listing in-scope tests only (N1); **The phase is complete when:** the numbered criteria with test, tolerance, prediction and ruled fallback |
 | `## End-of-phase report` | Only the list of numbers it must report, each with the test that logs it; the close fills it |
 
-Target 1,500 words, without the report. Review checks each phase plan from Phase 4 on against these
+Target 2,500 words, up to 10% over, without the report (§8.4.4). Review checks each phase plan from Phase 4 on against these
 caps (§8.2.11 L7).
 
 **`docs/plans/current.md`**:

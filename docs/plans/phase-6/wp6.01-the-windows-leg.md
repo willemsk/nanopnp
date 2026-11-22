@@ -4,7 +4,14 @@
 merge). Inherits §8.2.49 AY4 and §8.2.50 AZ4, AZ7 and AZ8 (ruled at this plan), REV-277 and the test scope (§8.2.13
 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.1` (§8.4.1).
 
-The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.01 entry sets this scope; `SPECIFICATION.md` governs, and
+**Delivered.** Each test is bounded (600 s; 7,200 s for `nightly` and `slow`), so a hang fails naming its test (§7.6).
+Run 851 named the stall and three failures; run 854 passed on ubuntu, macOS and Windows with the self-test, Windows in
+13 min 32 s. Fixed at their causes: the reloading server reads a private copy of its input and ends its worker (VER-78);
+KaTeX and uPlot keep their bytes (CON-09). The channel axis's rim trap is REV-279, placed by the rescoping round; its
+test's wall has no ragged rim (D9). REV-277 is fixed. At the author's request the push gate checks prose since its last
+pass in seconds, and `main` keeps a linear history. Live: AZ8's ship rule.
+
+The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.01 entry set this scope; `SPECIFICATION.md` governs, and
 where it and this plan disagree this plan is wrong. Identifiers are pointers into it.
 
 ## In brief

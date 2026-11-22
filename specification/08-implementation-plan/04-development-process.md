@@ -151,9 +151,18 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   before `/np-ship`. (§8.2.11 L7; §8.2.16 R11; the WP5.10 plan, D10)
 * A phase plan states each package's current scope. The text of each amendment goes to the phase's
   record, read on demand. (§8.2.16 R4)
+* A phase plan holds 2,500 words, up to 10% over, without its end-of-phase report; review checks it.
+  When a package is delivered its entry becomes one line: the date, the link to its plan and the
+  constraints live for later packages. Its delivered summary goes under its own plan's Status line.
+  (§8.2.47 AW5; §8.2.50 AZ14)
 * Every ruling lands in a current clause. One with no clause to amend is written here once, pointing
   to its ruling. (§8.2.16 R3)
 * No ruling leaves the history: a spent or superseded ruling stays in its dated record. (§8.2.50 AZ11)
+* From WP6.03's merge, a fresh `/np-implement` window reads at most 6,500 words of project text before
+  its first edit: the instruction files, the records and `CLAUDE.md`, as `usage.py --reading` counts
+  them (§8.4.5). A window is fresh when no message precedes it, or its start holds under half the
+  tokens of the message before it. A window after a compaction and the plan and ship windows are
+  reported beside it, not limited. (§8.2.49 AY8; §8.2.50 AZ9, AZ13)
 
 #### 8.4.5 Agents and models
 
