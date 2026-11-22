@@ -269,7 +269,7 @@ closed rows. `main` writes or checks both. The navigation gains `Decisions regis
 - [x] b755810 3. The audit, `docs/plans/sessions/instructions-audit.md` (D3). Done when the report gives each finding its six
   fields, and the proposed diff. **Executor:** main
 - [x] 4. Compaction checkpoint. **Executor:** main
-- [ ] 5. The stop: the two questions, rulings AZ13 and AZ14, §8.4.4, `np-plan/phase.md`, REV-271 (D4). Done when the
+- [x] 7e2cf8d 5. The stop: the two questions, rulings AZ13 and AZ14, §8.4.4, `np-plan/phase.md`, REV-271 (D4). Done when the
   author has ruled and `decisions.py --check` passes. **Executor:** main
 - [ ] 6. `.claude/scripts/clause.py`, the stale owners of `holds-now.yaml`, §8.4.4 (D5). Done when `clause.py AY5`
   prints AA6 and AV6 as a label and one line each, `--all` prints them in full, and VER-79's tests pass. **Executor:** main; the

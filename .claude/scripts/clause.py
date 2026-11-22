@@ -8,7 +8,10 @@ it. The current files are searched before the history, each in path order with `
 Matching is on whole identifiers, so ``VER-6`` never matches ``VER-62``. An identifier with no
 definition is named on standard error and the exit status is non-zero.
 
-A ruling row whose text opens with *Superseded* is labelled ``ruling [superseded]``.
+A ruling row whose text opens with *Superseded* is labelled ``ruling [superseded]``. A ruling row
+that only names the identifier, and that ``history/holds-now.yaml`` gives as ``spent`` or
+``superseded by``, is printed as one line: its entry as the label, then its letter and first bold
+phrase. ``--all`` prints it in full; the ruling asked for is always printed in full (§8.2.50 AZ11).
 ``--no-history`` leaves the ruling rows out and prints the definitions and NOTEs only.
 
 Run it as ``uv run .claude/scripts/clause.py VER-62 §7.6``.
@@ -23,12 +26,16 @@ import re
 import sys
 from pathlib import Path
 
+import yaml
+
 BUNDLE = Path(__file__).resolve().parents[2] / "specification"
 # A ruling row's first cell is its letter alone or the letter and an italic annotation
 # (`| P4 *Its FR-28 sentence is amended by W3.* |`), so the letter is the cell's first token.
 RULING_ROW = re.compile(r"^\|\s*([A-Z]+\d+)(?=[\s|])[^|]*\|")
 SUPERSEDED_ROW = re.compile(r"^\|\s*[A-Z]+\d+(?=[\s|])[^|]*\|\s*\*?Superseded")
 PARAGRAPH_DEFINITION = re.compile(r"\*\*[A-Z]+-\d+\.\*\*")
+BOLD = re.compile(r"\*\*(.+?)\*\*")
+HOLDS_NOW = BUNDLE / "history" / "holds-now.yaml"
 
 
 def _pattern(identifier: str) -> re.Pattern[str]:
@@ -181,7 +188,27 @@ def _emit(path: Path, lines: list[str], label: str, start: int, end: int) -> Non
     sys.stdout.write("\n".join(lines[start:end]) + "\n")
 
 
-def clause(texts: dict[Path, list[str]], identifier: str, *, history: bool = True) -> bool:
+def _holds_now() -> dict[str, str]:
+    entries = yaml.safe_load(HOLDS_NOW.read_text(encoding="utf-8")) if HOLDS_NOW.exists() else {}
+    return {str(key): str(value) for key, value in (entries or {}).items()}
+
+
+def _emit_spent(path: Path, line: str, entry: str, row: int) -> None:
+    match = RULING_ROW.match(line)
+    letter = match.group(1) if match else ""
+    bold = BOLD.search(line)
+    where = f"{path.relative_to(BUNDLE.parent).as_posix()}:{row + 1}"
+    sys.stdout.write(f"--- ruling [{entry}] ({where}) ---\n")
+    sys.stdout.write(f"{letter} **{bold.group(1)}**\n" if bold else f"{letter}\n")
+
+
+def clause(
+    texts: dict[Path, list[str]],
+    identifier: str,
+    *,
+    history: bool = True,
+    holds_now: dict[str, str] | None = None,
+) -> bool:
     """Print every definition of ``identifier``, then the NOTEs and ruling rows that name it.
 
     Parameters
@@ -192,6 +219,9 @@ def clause(texts: dict[Path, list[str]], identifier: str, *, history: bool = Tru
         A requirement identifier, a ruling identifier or a section number with ``§``.
     history
         Whether to print the ruling rows that name ``identifier``.
+    holds_now
+        Where each ruling holds now, by its letter. A row it gives as spent or superseded is
+        printed as one line; ``None`` prints every row in full.
 
     Returns
     -------
@@ -215,6 +245,11 @@ def clause(texts: dict[Path, list[str]], identifier: str, *, history: bool = Tru
             continue
         for row in _rulings(lines):
             if not any(a <= row < b for a, b in definitions[path]) and pattern.search(lines[row]):
+                match = RULING_ROW.match(lines[row])
+                entry = (holds_now or {}).get(match.group(1) if match else "", "")
+                if entry.startswith(("spent", "superseded by")):
+                    _emit_spent(path, lines[row], entry, row)
+                    continue
                 label = "ruling [superseded]" if SUPERSEDED_ROW.match(lines[row]) else "ruling"
                 _emit(path, lines, label, row, row + 1)
     return True
@@ -229,6 +264,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="print the definitions and NOTEs only, without the ruling rows of history/",
     )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="print spent and superseded ruling rows in full, not as one line",
+    )
     arguments = parser.parse_args(argv)
     # Windows' console encoding (cp1252) cannot carry the specification's Greek and
     # mathematical characters; escape what the stream cannot encode rather than fail.
@@ -236,9 +276,10 @@ def main(argv: list[str] | None = None) -> int:
     if isinstance(sys.stdout, io.TextIOWrapper):
         sys.stdout.reconfigure(errors="backslashreplace")
     texts = {path: path.read_text(encoding="utf-8").splitlines() for path in _files()}
+    holds_now = None if arguments.all else _holds_now()
     status = 0
     for identifier in arguments.identifiers:
-        if not clause(texts, identifier, history=not arguments.no_history):
+        if not clause(texts, identifier, history=not arguments.no_history, holds_now=holds_now):
             sys.stderr.write(f"clause.py: no definition of {identifier} in {BUNDLE.name}/\n")
             status = 1
     return status
