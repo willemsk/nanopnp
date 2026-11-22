@@ -28,7 +28,8 @@ A **compaction checkpoint** is a work item (§8.2.16 R11):
 
 1. Tick it in its own commit. Gate and push as in *Finishing*.
 2. Write a prompt. It holds `/compact`, the package, the number of the next item, the values that later
-   items need and that the plan and `git log` do not hold, and "resume with `/np-implement wp <n>`".
+   items need and that the plan and `git log` do not hold, the model of the next step (the core's
+   *Models and executors*), and "resume with `/np-implement wp <n>`".
    Pipe it to `.claude/hooks/checkpoint.sh save implement <plan> <n>`, and print it in a `text` block.
 3. If that printed `off`, end the turn. The author compacts and resumes. The next item starts from the
    plan and `git log`.
@@ -114,7 +115,8 @@ monitor CI in this turn. Then pause (§8.2.33 AI4):
 
 1. Write a prompt. It holds `/compact`, the package, the PR, its head, each decision this session took
    that the plan does not hold, the values the review needs that the plan and `git log` do not hold,
-   and "resume with `/np-ship wp <n>`". Pipe it to `.claude/hooks/checkpoint.sh save ship <plan> <n>`,
+   the model of the next step (the core's *Models and executors*), and "resume with `/np-ship wp <n>`".
+   Pipe it to `.claude/hooks/checkpoint.sh save ship <plan> <n>`,
    and print it in a `text` block.
 2. If that printed `off`, end the turn. The author compacts and resumes here, or starts `/np-ship` in a
    fresh session.

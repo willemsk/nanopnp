@@ -75,4 +75,5 @@ decision on NUM-07; Tier 4 (VAL-07 to VAL-10); the tutorials, the JOSS paper, th
 | Phase 6's packages, their numbers and order | `/np-plan phase 6` |
 | Each tool phase's gate, estimate and dependencies | Its round |
 | Whether the library's refusals and REV-270's library part stay where this note puts them | `/np-plan phase 6` |
+| Whether §5.4.1's backend interface and the rest of MOD-13 (MOD-10; §8.2.8 H1, H3), deferred to "Phase 6" when that was validation, are decided with the library's shape | `/np-plan phase 6` |
 | v1.0's content and gate (OPN-08) | The author, at Phase 11's close at the latest |

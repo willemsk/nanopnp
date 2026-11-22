@@ -22,6 +22,6 @@ The level's commit names, in `docs/plans/current.md`, `/np-plan <level> [n] revi
 before the level's own next step. After the level's report:
 
 1. Print a prompt in a `text` block. It holds `/compact`, the level and n, the plan's path, the PR, the
-   commit, the close calls that the plan's text does not hold, and "resume with
-   `/np-plan <level> [n] review`".
+   commit, the close calls that the plan's text does not hold, the model of the next step (the core's
+   *Models and executors*), and "resume with `/np-plan <level> [n] review`".
 2. End the turn. The author compacts and resumes. A skill cannot run `/compact` itself.
