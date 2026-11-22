@@ -210,7 +210,7 @@ Phase 6's scope round. The phase plan's status: **delivered, <date>; closes at t
 
 ### Work items
 
-- [ ] 1. `specification/history/holds-now.yaml`, `docs/project/decisions.md` (D2); done when the item's checks pass
+- [x] 3b79cc6 1. `specification/history/holds-now.yaml`, `docs/project/decisions.md` (D2); done when the item's checks pass
   and main has read the diff. **Executor:** `general-purpose` on Sonnet, high effort; main for the three mixed lines
 - [ ] 2. REV-166 to REV-168 in `docs/project/review-findings.md` and `review-items.md`,
   `docs/plans/sessions/copilot-host.md`, the Phase 5 plan's supply row (D1); done when the owner script prints

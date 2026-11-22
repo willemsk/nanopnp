@@ -1334,9 +1334,9 @@ By decider: author 675; open 5; session, own call 846; session, put to the autho
 | REV-163 | session, own call | `docs/project/review-findings.md` |  |  | check_force_surface refuses a legitimate body straddling the lumen and reservoir seam | CODE_REVIEW_021 | fixed |
 | REV-164 | session, own call | `docs/project/review-findings.md` |  |  | default_ladder accepts a zeta-Dirichlet wall and a sigma_s wall together with no diagnostic | CODE_REVIEW_021 | fixed |
 | REV-165 | session, own call | `docs/project/review-findings.md` |  |  | The Gauss-balance test's own quadrature error is not bounded against the physics bound it resolves | CODE_REVIEW_021 | fixed |
-| REV-166 | author | `docs/project/review-findings.md` |  |  | The Copilot hook probes are incomplete | §8.2.25 AA6; §8.2.46 AV6: the Copilot host's session | accepted |
-| REV-167 | author | `docs/project/review-findings.md` |  |  | Six Copilot app behaviours the substitutes assume are unchecked | §8.2.25 AA6; §8.2.46 AV6: the Copilot host's session | accepted |
-| REV-168 | author | `docs/project/review-findings.md` |  |  | The Copilot host has not been verified live | §8.2.25 AA6; §8.2.46 AV6: the Copilot host's session | accepted |
+| REV-166 | author | `docs/project/review-findings.md` |  | WP5.28 | The Copilot hook probes are incomplete | §8.2.25 AA6; §8.2.46 AV6: the Copilot host's session; carried by WP5.28 to Phase 6's scope round | accepted |
+| REV-167 | author | `docs/project/review-findings.md` |  | WP5.28 | Six Copilot app behaviours the substitutes assume are unchecked | §8.2.25 AA6; §8.2.46 AV6: the Copilot host's session; carried by WP5.28 to Phase 6's scope round | accepted |
+| REV-168 | author | `docs/project/review-findings.md` |  | WP5.28 | The Copilot host has not been verified live | §8.2.25 AA6; §8.2.46 AV6: the Copilot host's session; carried by WP5.28 to Phase 6's scope round | accepted |
 | REV-169 | session, own call | `docs/project/review-findings.md` |  | WP59 | The Phase-1 reference sweep's base case writes its mesh path against the working directory | WP59 | fixed |
 | REV-170 | author | `docs/project/review-findings.md` |  | WP5.17 | Five callers pick the stage-5 region's kind | §8.2.28 AD4; §8.2.31 AG1; §8.2.36 AL22; WP5.17 | fixed |
 | REV-171 | author | `docs/project/review-findings.md` |  |  | The architecture review's unmeasured costs | §8.2.27 AC4; §8.2.28 AD5; §8.2.46 AV5: Phase 6, the speed-up | deferred |
