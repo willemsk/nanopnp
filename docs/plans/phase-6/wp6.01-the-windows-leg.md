@@ -161,9 +161,23 @@ item-2 fix a user meets; and *Changed* (development): each test bounded at 600 s
   > (`katex.min.css`) and `[uplot]` (`uPlot.iife.min.js`), as predicted; and, at result 620, not predicted,
   > `test_ver48_the_channel_axis_gates_fire` (`test_structure_axis.py:625`), the tilted wall's axis read 11.38°
   > against 12 ± 0.005°. Slowest: the reloading test 120.0 s, then 71.1 s (`test_sweep.py` setup) and 60.7 s.
-- [ ] 2. `.gitattributes`, `src/nanopnp/gui/web/server.py`, and each file item 1's names lead to (D4, D5); done when
-  a dispatched run on the branch has the three `platforms` legs and their self-tests green. **Executor:** main
-- [ ] 3. Compaction checkpoint. **Executor:** main
+- [x] 2. dbdb2f3, 9c15784 `.gitattributes`, `src/nanopnp/gui/web/server.py`, and each file item 1's names lead to (D4,
+  D5); done when a dispatched run on the branch has the three `platforms` legs and their self-tests green.
+  **Executor:** main
+
+  > **Outcome — the three legs green.** [Run 854](https://github.com/willemsk/nanopnp/actions/runs/45043154991)
+  > (dispatch at `9c15784`): ubuntu 8 min 20 s, macOS 11 min 36 s, Windows 13 min 32 s, each with its self-test; Windows
+  > "1801 passed, 152 skipped" in 13 min 09 s. The causes, one line each:
+  > - The stall: the reloading supervisor read its input in a thread while uvicorn spawned the worker, which inherited
+  >   the pipe; on Windows a process sharing a pipe with a pending read blocks at its start. The supervisor reads a
+  >   private duplicate and gives fd 0 the null device. Grounding D3's reading, the announcer's silent give-up, was the
+  >   symptom, not the cause.
+  > - The stop, found by [run 852](https://github.com/willemsk/nanopnp/actions/runs/45040522408) at `dbdb2f3`
+  >   ("1 failed, 1800 passed"): uvicorn's Windows shutdown waits for a worker that only a console's Ctrl+C ends. The
+  >   supervisor terminates its worker before `_thread.interrupt_main` (D5).
+  > - KaTeX's and uPlot's hashes: a Windows checkout rewrote their line endings; `.gitattributes` marks both `-text`.
+  > - The channel axis test: the rim trap of D9 and REV-279; the test's wall has no ragged rim.
+- [x] 3. Compaction checkpoint. **Executor:** main
 - [ ] 4. `.claude/skills/np-ship/phase.md`, `.claude/skills/steward/SKILL.md`, `docs/project/review-findings.md`,
   `review-items.md`, `CHANGELOG.md`, `docs/plans/current.md` (D6, D7); done when the strict documentation build and
   `decisions.py --check` pass and the review says so. **Executor:** main
