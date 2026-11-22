@@ -18,7 +18,7 @@ rulings. The second cleanup package and the rescoping round follow. This cleanup
 hours of agent work and 12 times you act.
 
 **Your call.** None before the merge. Inside the cleanup, after its baseline: the limit's number, and how long a phase
-plan may be. *Next:* the package's review and ship, then the review of the cleanup's plan.
+plan may be. *Next:* your approval of the cleanup's reviewed plan.
 
 ## Position
 
@@ -30,7 +30,7 @@ plan may be. *Next:* the package's review and ship, then the review of the clean
   **WP6.01 implemented** ([the plan](phase-6/wp6.01-the-windows-leg.md); run 854 green on the three platforms;
   REV-279 for the rescoping round). **Next:** `/np-ship wp 6.01`. host: claude-code.
   **WP6.02 planned** ([the plan](phase-6/wp6.02-the-cleanup-measure-audit-records.md); AZ9 to AZ12); it starts
-  after WP6.01 merges. **Next:** `/np-plan wp 6.02 review`, then `/np-implement wp 6.02`.
+  after WP6.01 merges. **Next:** `/np-implement wp 6.02`; the plan is reviewed ([report](../code_reviews/CODE_REVIEW_075.md)).
 
 ## Not to be re-decided
 
@@ -47,8 +47,8 @@ plan may be. *Next:* the package's review and ship, then the review of the clean
 - **The Windows leg is first; every later gate asks the three platforms** (§8.2.49 AY4); **a pull request and a
   package's ship test Linux alone, the close the three** (§8.2.50 AZ8). **The Copilot host is
   retired at the cleanup** (AY5). **Fable 5.2 plans and ships, Opus 5.5 implements** (AY7).
-- **The reading limit counts project text in words; nothing leaves the rulings' history; a closed item is archived**
-  (§8.2.50 AZ9 to AZ12).
+- **The reading limit counts project text in words** (§8.2.50 AZ9 to AZ12); **nothing leaves the rulings' history; a
+  closed item is archived**.
 - **An open-minded rescoping follows WP6.03; no package from WP6.04 is planned before it** (§8.2.50 AZ7). Until it
   rules: the phases are library, workbench, composer, mutator, sketcher, validation (AY1, AY2); the speed-up closes
   Phase 6, with no fixed target (AY3; AZ6); the equations are brought to §4 there (AY6); §5.4.1's interface is Phase 8's
