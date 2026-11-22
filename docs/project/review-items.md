@@ -4608,7 +4608,9 @@ off the axis; a line a little off the axis breaks their tie, the mean of the few
 the iteration holds a second fixed point (WP5.16 recorded the weakness, [knowledge 04/15](../../knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md)).
 On Linux a relative change of 1e-14 in the atoms' positions gives 11.381°, 11.446° or 11.780° for 3 of 8 draws, so
 which fixed point a platform reaches is decided by rounding. Without the rim the axis reads 12.0000° in 19 of 19
-draws. A real pore whose rim no atom lines on the axis's side may be given an axis about 0.01 rad off.
+draws. The three locked readings are 0.22° to 0.62° off, so a real pore whose rim no atom lines on the axis's side
+may be given an axis up to about 0.01 rad off. The recovery test's walls, tilted 8° and 35°, keep the ragged rim and
+read the axis within 1e-6 rad on the three platforms today; rounding could lock them too until the method is fixed.
 
 *Recommendation:* make a plane's centre robust to a broken tie at a ragged rim, for instance by taking every
 enclosed space a symmetry image of the widest, or by leaving out of the fit a plane whose tie splits, and re-measure

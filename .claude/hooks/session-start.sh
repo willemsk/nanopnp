@@ -51,7 +51,7 @@ if [ -n "$common" ]; then
     elif ! git -C "$primary" merge-base --is-ancestor origin/main HEAD 2>/dev/null; then
         primary_branch=$(git -C "$primary" symbolic-ref --quiet --short HEAD 2>/dev/null)
         if [ "$primary_branch" != main ]; then
-            main_note="- warning: ${primary_branch:-the detached HEAD}${where} lacks origin/main; merge it before relying on main's skills and rules"
+            main_note="- warning: ${primary_branch:-the detached HEAD}${where} lacks origin/main; rebase it on origin/main before relying on main's skills and rules"
         elif [ -n "$(git -C "$primary" status --porcelain 2>/dev/null)" ]; then
             main_note="- warning: main${where} is behind origin/main with uncommitted changes; not fast-forwarded"
         elif ! git -C "$primary" merge-base --is-ancestor HEAD origin/main 2>/dev/null; then
@@ -67,7 +67,7 @@ if [ -n "$common" ]; then
     fi
     # A linked worktree reads its own skills and rules, so its HEAD must hold origin/main too.
     if [ "$fetch_status" -eq 0 ] && [ -n "$where" ] && ! git merge-base --is-ancestor origin/main HEAD 2>/dev/null; then
-        worktree_note="- warning: this worktree lacks origin/main; merge it before relying on its skills and rules"
+        worktree_note="- warning: this worktree lacks origin/main; rebase it on origin/main before relying on its skills and rules"
     fi
 fi
 set -e

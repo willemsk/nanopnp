@@ -227,7 +227,8 @@ testpaths = ["tests"]
 addopts = "-m '(tier1 or tier2) and not slow' --strict-markers --strict-config"
 # Each test's bound (pytest-timeout; SPECIFICATION.md section 7.6, NOTE (a stalled test); WP6.01 D2):
 # PER_TEST_TIMEOUT_S = 600, ten times the slowest per-push test measured. tests/conftest.py
-# gives a `nightly` or `slow` test LONG_TEST_TIMEOUT_S instead. A hang fails naming its test.
+# gives a `nightly`, `slow`, Tier 3 or Tier 4 test LONG_TEST_TIMEOUT_S instead. A hang fails
+# naming its test.
 timeout = 600
 markers = [
     "tier1: unit and property tests, seconds, every push (SPECIFICATION.md section 7.2)",
@@ -236,4 +237,5 @@ markers = [
     "tier4: experimental reproduction, hours, before a tagged release (section 7.5)",
     "slow: takes more than a minute regardless of tier",
     "nightly: an end-to-end walk, run every night and by the release, and left out of the development selection unless --nightly (section 7.6)",
+    "records: holds code to a Markdown record; the push gate runs it on a prose-only change too (.claude/hooks/gate.sh)",
 ]

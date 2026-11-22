@@ -463,17 +463,24 @@ solved fields for WP5.22's round:
 `nanopnp gui --dev` runs uvicorn 0.54's reloading supervisor, which spawns its worker through `multiprocessing`.
 Two Windows behaviours held the screens test's server for three weeks:
 
-- A worker spawned while the supervisor's thread reads its standard input inherits the same pipe, and on Windows a
-  process that shares a pipe with a pending read blocks at its start: the worker never served, and no ready line
-  came. The supervisor reads a private duplicate of its input (`os.dup`, not inherited) and gives fd 0 the null
+- uvicorn hands its worker the supervisor's standard input descriptor, which the worker reopens at its start
+  (`os.fdopen(stdin_fileno)` in `uvicorn._subprocess`). On Windows, with the supervisor's thread reading that pipe,
+  the worker blocked there: it never served, and no ready line came. The non-reloading server, which also keeps a
+  read pending, starts its builds through `multiprocessing` without blocking, so the trigger is the reopened
+  descriptor, not the shared pipe alone. The supervisor reads a private duplicate of its input (`os.dup`, not inherited) and gives fd 0 the null
   device before uvicorn spawns the worker.
 - On Windows uvicorn's supervisor shuts down by waiting for its worker, which a console's Ctrl+C ends alongside it;
   a supervisor stopped any other way waits for ever. `os.kill(pid, SIGINT)` there is `TerminateProcess` with exit
-  code 2, which leaves the worker running. On closed input the supervisor terminates its worker
-  (`multiprocessing.active_children()`) and stops through `_thread.interrupt_main(SIGINT)`, which runs uvicorn's
-  handler in the main thread on every platform.
+  code 2, which leaves the worker running, and a SIGINT during a reload is taken for the reload's own. On closed
+  input the supervisor writes a stop file in the folder it shares with its workers, repeats
+  `_thread.interrupt_main(SIGINT)`, which runs uvicorn's handler in the main thread on every platform, until it
+  exits, and terminates a worker that outlives 5 s.
+- `TerminateProcess` skips the worker's own shutdown, which cancels its solves and builds, so a worker stops itself:
+  a thread calls `_thread.interrupt_main(SIGTERM)` when the stop file appears or `multiprocessing.parent_process()`
+  is no longer alive, and uvicorn's handler runs the shutdown. On Linux a worker outlived its killed supervisor by
+  more than 5 s before, and 0.3 s after.
 
-[^wp601-runs]: `docs/plans/phase-6/wp6.01-the-windows-leg.md`, items 1 and 2's Outcomes (runs 851, 852 and 854 on `windows-latest`, Python 3.14.10).
+[^wp601-runs]: `docs/plans/phase-6/wp6.01-the-windows-leg.md`, items 1 and 2's Outcomes (runs 851, 852 and 854 on `windows-latest`, Python 3.14.10), and item 5's, the ship's review (the worker's stop, measured on Linux).
 [^wp521-plan]: `docs/plans/phase-5/wp5.21-the-analysis-suite.md` (`webgui.js` 0.2.39's `setGuiSettings`, `loadSettings` and `getBackgroundColor`; `gui/render.py`'s host page).
 [^wp14-plan]: `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md` (PySide6 GL system-library requirement and Playwright Chromium GL shim).
 [^wp15-plan]: `docs/plans/phase-1/wp15-live-convergence-and-viewer.md` (`ngsolve_webgui_js` 0.2.39 npm metadata, `src/scene.ts`, and PyInstaller OCCT/OpenBLAS bundling).

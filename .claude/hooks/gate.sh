@@ -445,9 +445,9 @@ fi
 # against HEAD, which was gated when it was committed. `run` judges the branch since its last
 # commit whose tree passed `run`, or else since it left main, as CI's pull_request range
 # does: against HEAD alone the clean tree the skills run it on would read as prose and the
-# `push` tests would never run. A prose-only change since a pass cannot change what the
-# tests assert, so a plan or a record pushed after code reruns none of them. With no merge
-# base found the whole gate runs.
+# `push` tests would never run. A prose-only change since a pass reruns only the `records`
+# tests, the few that read Markdown, so a plan or a record pushed after code is checked in
+# seconds. With no merge base found the whole gate runs.
 base=HEAD
 if [[ $mode == run ]]; then
     base=$(git merge-base HEAD origin/main 2>/dev/null) ||
@@ -463,7 +463,8 @@ if [[ $mode == run ]]; then
 fi
 docs_only=false
 if [[ -n $base ]]; then
-    { git diff --name-only "$base"; git ls-files --others --exclude-standard; } 2>/dev/null |
+    # --no-renames: a rename names its source too, so a file moved out of src/ is not prose.
+    { git diff --name-only --no-renames "$base"; git ls-files --others --exclude-standard; } 2>/dev/null |
         .github/scripts/prose-only.sh && docs_only=true
 fi
 
@@ -580,7 +581,11 @@ check "ruff check"          uv run ruff check .
 check "ruff format --check" uv run ruff format --check .
 check "decisions page"      uv run .claude/scripts/decisions.py --check
 if $docs_only; then
-    say "gate: only prose changed; lock check, mypy and pytest skipped."
+    # A few tests hold code to a Markdown record (the clauses a model cites, the findings an
+    # accepted edge names, section 5.1's module rows); a prose edit can break them, and they
+    # take seconds.
+    check "pytest (records)" uv run pytest -q -rsfE -m records
+    say "gate: only prose changed; lock check, mypy and the rest of pytest skipped."
 else
     check "mypy --strict"   uv run mypy src/
     if [[ $mode == run ]]; then

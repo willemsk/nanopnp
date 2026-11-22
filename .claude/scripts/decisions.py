@@ -12,7 +12,8 @@ by source, path and reading order, under the counts by source and by decider. No
 the tree, and *Where* names a file without a line, so an edit elsewhere leaves the page as it is.
 
 Run it as ``uv run .claude/scripts/decisions.py`` to rewrite the page, or with ``--check`` to
-compare it with the tree and write nothing; the check exits 1 on a difference.
+compare it with the tree and write nothing; the check exits 1 on a difference. Either exits 1, and
+writes nothing, while a ruling of the history lacks its one ``holds-now.yaml`` entry.
 """
 
 from __future__ import annotations

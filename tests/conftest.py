@@ -50,9 +50,11 @@ REQUIRE_GMSH = "NANOPNP_REQUIRE_GMSH"
 
 NIGHTLY = "--nightly"
 
-# A `nightly` or `slow` test is bounded here; every other test by pyproject.toml's
-# `timeout`, PER_TEST_TIMEOUT_S = 600. Example 05's own walk is bounded at 7,200 s.
+# A `nightly`, `slow`, Tier 3 or Tier 4 test is bounded here; every other test by
+# pyproject.toml's `timeout`, PER_TEST_TIMEOUT_S = 600, measured on the per-push selection,
+# which a Tier 3 solve of ClyA can exceed. Example 05's own walk is bounded at 7,200 s.
 LONG_TEST_TIMEOUT_S = 7200
+LONG_MARKERS = ("nightly", "slow", "tier3", "tier4")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -94,7 +96,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
             config.hook.pytest_deselected(items=left_out)
             items[:] = kept
     for item in items:
-        long = item.get_closest_marker("nightly") or item.get_closest_marker("slow")
+        long = any(item.get_closest_marker(name) for name in LONG_MARKERS)
         if long and not item.get_closest_marker("timeout"):
             item.add_marker(pytest.mark.timeout(LONG_TEST_TIMEOUT_S))
 

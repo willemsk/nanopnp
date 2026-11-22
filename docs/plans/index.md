@@ -8,9 +8,9 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 
 ## Phase 6
 
-- [Phase 6 (Cleanup and the library's foundations): a library the workbench and the tools can build on](phase-6/phase-6-library-foundations.md): planned, not started. WP6.01 to WP6.03 as planned on 22 November 2026; then a rescoping round; WP6.04 to WP6.18 provisional until it rules (§8.2.50). Release: v0.7 (`v0.7.0`).
+- [Phase 6 (Cleanup and the library's foundations): a library the workbench and the tools can build on](phase-6/phase-6-library-foundations.md): in progress. Delivered: WP6.01. WP6.01 to WP6.03 as planned on 22 November 2026; then a rescoping round; WP6.04 to WP6.18 provisional until it rules (§8.2.50). Release: v0.7 (`v0.7.0`).
 - [Phase 6 plan: the record](phase-6/phase-6-record.md): no status line
-- [WP6.01 — The Windows leg: the stall named and bounded, the failures fixed](phase-6/wp6.01-the-windows-leg.md): planned, not started.
+- [WP6.01 — The Windows leg: the stall named and bounded, the failures fixed](phase-6/wp6.01-the-windows-leg.md): delivered, 22 November 2026.
 
 ## Phase 5
 

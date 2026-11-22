@@ -35,12 +35,14 @@ records the work.
 - **Fixed**:
   - `nanopnp gui --dev` starts and stops on Windows: its worker no longer shares the input pipe its supervisor
     watches, and closing that input stops the supervisor and its worker instead of terminating the supervisor alone
-    (VER-78).
+    (VER-78). The worker stops through its own shutdown, cancelling its solves, when asked or when its supervisor is
+    gone, a worker a reload started included.
   - The vendored KaTeX and uPlot keep their bytes on a Windows checkout, so their recorded hashes match (CON-09).
 - **Changed** (development):
-  - Each test is bounded at 600 s, a `nightly` or `slow` one at 7,200 s, so a hang fails naming its test (§7.6); CI
-    prints the 20 slowest tests, and a nightly leg cancelled at its limit opens the nightly issue.
-  - The push gate checks a prose-only change since its last pass in seconds, and `main` keeps a linear history.
+  - Each test is bounded at 600 s, a `nightly`, `slow`, Tier 3 or Tier 4 one at 7,200 s, so a hang fails naming its
+    test (§7.6); CI prints the 20 slowest tests, and a nightly leg cancelled at its limit opens the nightly issue.
+  - The push gate checks a prose-only change since its last pass in seconds, running only the `records` tests that
+    read Markdown, and `main` keeps a linear history.
   - The channel axis gate test tilts a wall without a ragged rim; the method's rim weakness is REV-279.
 
 ## [0.6.0] - 2026-11-22
