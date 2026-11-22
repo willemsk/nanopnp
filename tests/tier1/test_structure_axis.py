@@ -529,17 +529,21 @@ def test_ver48_chain_groups_superpose_as_one_ring() -> None:
     assert "lists 7 groups" in refused(GROUPED.removesuffix(",O+P"))
 
 
-def _wall(n: int, bend_nm: float = 0.0, half_nm: float = 4.4, per_chain: int = 600) -> np.ndarray:
+def _wall(
+    n: int, bend_nm: float = 0.0, half_nm: float = 4.4, per_chain: int = 600, *, rim: bool = True
+) -> np.ndarray:
     # A wall dense enough to line a channel: 600 atoms a chain between 2.0 and 2.8 nm of a
     # centre line, which a bend carries aside by ``bend_nm`` at either end. A tenth of them
-    # close each rim: at a ragged rim a plane's widest spaces are n equal ones off the axis.
+    # close each rim, unless ``rim`` is false: at a ragged rim a plane's widest spaces are n
+    # equal ones off the axis.
     rng = np.random.default_rng(516 + n)
     rho = rng.uniform(2.0, 2.8, per_chain)
     half_wedge = 0.8 * math.pi / n
     phi = rng.uniform(-half_wedge, half_wedge, per_chain)
     z = rng.uniform(-half_nm, half_nm, per_chain)
-    rim = per_chain // 10
-    z[:rim], z[rim : 2 * rim] = -half_nm, half_nm
+    if rim:
+        closing = per_chain // 10
+        z[:closing], z[closing : 2 * closing] = -half_nm, half_nm
     chains = _assembly(n, np.column_stack([rho * np.cos(phi), rho * np.sin(phi), z]))
     atoms = chains.reshape(-1, 3).copy()
     atoms[:, 0] += bend_nm * (atoms[:, 2] / half_nm) ** 2
@@ -618,7 +622,9 @@ def test_ver48_the_channel_axis_gates_fire(monkeypatch: pytest.MonkeyPatch) -> N
     assert 0.3 <= float(found.group(1)) <= 2.0
     assert cavity.straightness_warning(cavity.detect_channel(_wall(8))) is None
 
-    tilted = _wall(8) @ _rotation(np.array([1.0, 0.0, 0.0]), math.radians(12.0)).T
+    # Without a ragged rim: there a line a little off the axis breaks the n-fold tie and can hold
+    # the iteration about 0.6 degrees off, which rounding of 1e-14 decides (REV-279).
+    tilted = _wall(8, rim=False) @ _rotation(np.array([1.0, 0.0, 0.0]), math.radians(12.0)).T
     message = refused(lambda: cavity.detect_channel(tilted))
     found = re.search(r"orientation gate: the channel's axis is (\d+\.\d+) degrees", message)
     assert found is not None, message

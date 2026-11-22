@@ -40,5 +40,10 @@ one against the other.
   0.01 rad off. And one such centre, 0.26 nm aside on the test wall, exceeds the straightness limit. A pore less regular
   than 2WCD may therefore be warned of for its straightness, and refused by the `axis: z` budget (REV-239).
   **[verified][^wp516]**
+- Which line the iteration holds at a ragged rim is decided by rounding. The 8-fold test wall tilted 12° about x reads
+  12.000° on Linux, and 11.38° on Windows; on Linux a relative change of 1e-14 in the atoms' positions gives 11.381°,
+  11.446° or 11.780° for 3 of 8 draws, each a fixed point where the rim plane keeps 3 of its 8 tied spaces. Without the
+  rim the wall reads 12.0000° in 19 of 19 draws (REV-279). **[verified][^wp601]**
 
 [^wp516]: `docs/plans/phase-5/wp5.16-the-molecular-suite.md`, the Outcome under D2 (measured at item 2 on `tests/data/structures/2wcd.pdb.gz` and on synthetic walls).
+[^wp601]: `docs/plans/phase-6/wp6.01-the-windows-leg.md`, item 1's Outcome and D9 (run 851's Windows leg; the perturbed walls measured at item 2).
