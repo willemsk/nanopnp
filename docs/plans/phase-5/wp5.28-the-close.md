@@ -1,6 +1,6 @@
 # WP5.28 — The close of Phase 5: the registers settled, the end-of-phase report and v0.6.0
 
-**Status: planned, not started.** Written 22 November 2026, grounded in the code at `f853d52` (WP5.27's merge, pull
+**Status: delivered, 22 November 2026.** Written 22 November 2026, grounded in the code at `f853d52` (WP5.27's merge, pull
 request 200, tagged `v0.6.0-alpha.27`). Inherits §8.2.47 AW1 to AW11, §8.2.46 AV5 and AV6, §8.2.48
 AX1 and AX2 (ruled at this plan) and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.6.0` alone
 (§8.4.1).
@@ -221,8 +221,8 @@ Phase 6's scope round. The phase plan's status: **delivered, <date>; closes at t
   > **Outcome — run 837's Windows leg failed and stalled, as main's has since 10 November; the author ruled to release
   > and carry it (D7; §8.2.48 AX3; REV-277).** The report is in [the Phase 5 plan](phase-5-workbench.md#end-of-phase-report).
 - [x] 4. Compaction checkpoint. **Executor:** main
-- [ ] 5. `CHANGELOG.md`, `CITATION.cff` (D5); done when the strict documentation build passes. **Executor:** main
-- [ ] 6. `README.md`, `docs/overrides/main.html` (its version and its desktop shell), `docs/getting-started.md`,
+- [x] 10eecee 5. `CHANGELOG.md`, `CITATION.cff` (D5); done when the strict documentation build passes. **Executor:** main
+- [x] 430f782 6. `README.md`, `docs/overrides/main.html` (its version and its desktop shell), `docs/getting-started.md`,
   §8.1's Phase 5 gate, the Phase 5 plan's status and WP5.28 entry, `docs/plans/current.md` (D5, D6); done when the
   strict documentation build and `links.py` pass. **Executor:** main
 
