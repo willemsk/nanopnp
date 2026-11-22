@@ -14,7 +14,7 @@ Six optional extras:
 
 - `structure`, for building a geometry from a protein structure (stages 1 to 4:
   [Structures and trajectories](guide/structures.md));
-- `gui`, for the desktop shell;
+- `gui`, for the browser workbench ([The workbench](guide/workbench.md));
 - `gmsh`, the optional mesher backend, which is GPL-licensed and never needed;
 - `plot`, for the figures of a run ([Outputs and quantities](guide/outputs.md#figures));
 - `notebook`, for the [interactive notebooks](guide/notebooks.md), which adds marimo to `plot`;
