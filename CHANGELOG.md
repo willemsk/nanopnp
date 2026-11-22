@@ -31,14 +31,15 @@ across six suites from the structure to the comparison of two runs. The Qt deskt
 missing. The case file's schema is `nanopnp/case/v0.6`; a structure's density is smeared from its protonated atoms; a
 case can name its models, set variables and override a model's values; outputs and steric models are registries. The
 workbench's 32 screens load in four states in Chromium, and the installed `nanopnp gui --selftest` checks each
-compiled payload on three platforms. The suite holds 2,068 tests (Tier 1 1,758, Tier 2 220). A pick's redraw without
-a graphics card takes 314.6 ms (median) against the 200 ms line, reported for Phase 6's measure on a graphics card. A
-fresh install with the `structure` and `gui` extras takes 5.3 s and 763 MB. The review register holds 277 rows, none
-`open`; each that waits names its owner in Phase 6. No computed number moved beyond the bounds the number-stability
-golden records (VER-62) on Linux and macOS. **Windows is untested in this release:** its test leg has failed one test
-and then met its 40-minute limit on every run since 10 November 2026 (run 733); the author released with the gap
-and carried it to Phase 6's tests in CI (§8.2.48 AX3; REV-277). The end-of-phase report, every number measured on the
-close's own tree, is in [docs/plans/phase-5/phase-5-workbench.md](docs/plans/phase-5/phase-5-workbench.md#end-of-phase-report).
+compiled payload on Linux and macOS; the Windows leg never reaches it. The suite holds 2,068 tests (Tier 1 1,758,
+Tier 2 220). A pick's redraw without a graphics card takes 314.6 ms (median) against the 200 ms line, reported for
+Phase 6's measure on a graphics card. A fresh install with the `structure` and `gui` extras takes 5.3 s and 763 MB.
+The review register holds 277 rows, none `open`; each that waits names its owner. No computed number moved beyond the
+bounds the number-stability golden records (VER-62) on Linux and macOS. **Windows is untested in this release:** its
+test leg has not finished on any run since 10 November 2026 (run 733), and in the close's own run it failed one test
+and met its 40-minute limit; the author released with the gap and carried it to Phase 6's tests in CI (§8.2.48 AX3;
+REV-277). The end-of-phase report, every number measured on the close's own tree, is in
+[docs/plans/phase-5/phase-5-workbench.md](docs/plans/phase-5/phase-5-workbench.md#end-of-phase-report).
 
 The release gathers 23 work packages. Package WP5.N is `v0.6.0-alpha.N`; the close is described here and tagged
 `v0.6.0` alone (§8.4.1):
@@ -81,10 +82,11 @@ WP5.22 to WP5.26 are retired numbers: their scope moved to Phase 6, and no tag `
 
 - **§8.1's Phase 5 gate** reads that Tiers 1 and 2 pass on Linux and macOS, the Windows leg's failure carried to Phase 6
   (§8.2.48 AX3), and ends "Closed with v0.6.0".
-- The ruling index: the 49 rulings that a delivered Phase 5 package landed hold their clause or read `spent`; T3, AC3
-  and AW1 keep the parts that still wait (§8.2.48 AX2).
+- The ruling index: the 49 rulings that a delivered Phase 5 package landed hold their clause or read `spent`; T3 and
+  AW1 keep the parts that still wait, and AC3 keeps its clause alone, REV-170 being `fixed`.
 - REV-166 to REV-168, the Copilot host's checks, were not run before the close and are carried to Phase 6's scope
-  round; no row of the review register is `open`, and each that waits names its owner (§8.2.46 AV6).
+  round (§8.2.46 AV6); no row of the review register is `open` (§8.2.48 AX2), and each that waits names its owner
+  (§8.2.46 AV5).
 - `README.md`, the site's banner and the install page name the browser workbench where they named the desktop shell;
   `CITATION.cff` names `0.6.0`.
 
@@ -101,6 +103,9 @@ pre-release that broke it. A case file written for `v0.5.0` first takes the sche
 - **`symmetry.axis: z` on a C1 pore** is checked against the channel's axis found from its cavity, within 0.015 nm;
   `v0.5.0` took it unchecked. A file whose z axis strays further is refused, naming the displacement. Write
   `symmetry.axis: auto`, or orient the file (`alpha.16`).
+- **A structure case under `charge.forcefield: PEOEPB` or `SWANSON`**, with no `inputs.pqr`, is refused under the
+  default `geometry.density.atoms: protonated`, whose radii are CHARMM's. Set `as_loaded`, or
+  `charge.forcefield: CHARMM` (`alpha.3`).
 
 **The numbers and the stored results**
 
@@ -109,6 +114,9 @@ pre-release that broke it. A case file written for `v0.5.0` first takes the sche
   with them: a result stored by `v0.5.0` is built again. Example 07's walk moved from 0.9734 nS to 0.9598 nS
   (−1.40 %), its transport number from 0.5428 to 0.5421. Set `as_loaded` to keep `v0.5.0`'s numbers and keys
   (`alpha.3`). `nanopnp store prune` lists the entries an older release wrote, and `--remove` drops them (`alpha.8`).
+- **A supplied outline's ion-exclusion shell** is built at the point spacing its file records, held between 0.025
+  and 0.05 nm, where `v0.5.0` built it at the density grid's 0.05 nm. A case whose outline has points closer than
+  0.05 nm, with the shell on, builds a new region and stage-5 key, and its result is built again (`alpha.19`).
 - **`nanopnp reproduce` of a run `v0.5.0` recorded** is refused, its case naming the retired schema. Reproduce it
   under `v0.5.0`, or migrate its case and run it again (`alpha.3`).
 - **A positive charge is drawn blue and a negative one red**, in the 3D view, the charge map and the charge and
@@ -123,7 +131,13 @@ pre-release that broke it. A case file written for `v0.5.0` first takes the sche
 - **`nanopnp-gui` and `nanopnp-probe`** are gone with the Qt shell, its PyInstaller bundle, the `packaging/` directory
   and the `packaging` dependency group. Start the workbench with `nanopnp gui [<project>]` (`alpha.27`).
 - **The `gui` extra** installs NiceGUI, FastAPI, Uvicorn and Matplotlib, not PySide6; the `structure` extra asks for
-  PDB2PQR 3.8 or later (`alpha.2`, `alpha.27`). Install the extras again.
+  PDB2PQR 3.8 or later (`alpha.2`, `alpha.21`, `alpha.27`). Install the extras again.
+
+**The Python interface**
+
+- **`ModelDeclaration.quantities` is removed** from a physics model's declaration (F4). An output states what it
+  needs of a model, and a model provides every output whose need it meets. A model registered with `quantities=`
+  drops the argument; a quantity of its own is registered with `post.outputs.register_output` (`alpha.6`).
 
 **Internal modules** (IF-01: an internal path is not API; no old path is kept; `nanopnp.PUBLIC` only gains `Project`)
 

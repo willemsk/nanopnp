@@ -4389,7 +4389,7 @@ push to `main`, each nightly and each dispatch; a pull request's CI tests on Lin
 `cancelled` with it. In the close's own run, [run 837](https://github.com/willemsk/nanopnp/actions/runs/45000286438)
 on `13f72c3`, one test failed at about a third of the 1,954 (`F` in the progress line at 33 %), the run reached 99 %
 by 08:13 and the last tests were still running at 08:34, when the job was cancelled. Linux and macOS passed (1,812
-passed, 142 skipped each). With `-q` and the job cancelled, pytest printed no summary, so neither test is named.
+passed, 142 skipped each). With the job cancelled, pytest printed no summary, so neither test is named.
 
 *Recommendation:* rerun the leg with each test's name and a per-test timeout (`-v`, `pytest-timeout` or
 `--durations`), fix the failure and the stall, and make a pull request's CI fail on a platform leg that stalls.
