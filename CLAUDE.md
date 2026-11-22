@@ -197,6 +197,8 @@ branch at a time.
   body (`VER-03`).
 - A version is a git tag, never a number in `pyproject.toml` or the package (§2.7). The procedure is
   in `CONTRIBUTING.md`, *Versions and releases*.
+- `main` keeps a linear history. Rebase a branch on `main`, never merge `main` into it, and push a
+  rebased branch with `--force-with-lease` (`.claude/workflow/core.md`, *Gate and push*).
 
 ## Prose in code
 

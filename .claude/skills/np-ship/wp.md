@@ -34,9 +34,9 @@ Confirm these:
 - `CHANGELOG.md` carries the package's entry as `CONTRIBUTING.md`'s *Versions and releases* says. A
   package that takes a tag has the heading `tag.yml` greps (`grep -qF '## [X.Y.Z-alpha.N]' CHANGELOG.md`).
 
-If the branch is `main` or equals `origin/main`, stop and ask. If it is behind `main`, merge `main`
-into it and renumber as the core's *Two lanes* says. Then run `uv run .claude/scripts/duplicates.py`
-and renumber until it passes.
+If the branch is `main` or equals `origin/main`, stop and ask. If it is behind `main`, rebase it on
+`main` (the core's *Gate and push*, step 6) and renumber as the core's *Two lanes* says. Then run
+`uv run .claude/scripts/duplicates.py` and renumber until it passes.
 
 ## 2. Push
 

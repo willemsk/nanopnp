@@ -148,7 +148,7 @@ item-2 fix a user meets; and *Changed* (development): each test bounded at 600 s
 
 ### Work items
 
-- [x] 1. e4bfa56 `pyproject.toml`, `uv.lock`, `tests/conftest.py`, `tests/tier1/test_gui_screens.py`,
+- [x] 1. f04c9a8 `pyproject.toml`, `uv.lock`, `tests/conftest.py`, `tests/tier1/test_gui_screens.py`,
   `.github/actions/tier12/action.yml`, `.github/workflows/ci.yml`, §7.6 (D1, D2, D3); done when the gate passes and
   the dispatched run's Windows leg ends with a summary naming its failures and the stall. **Executor:** main
 
@@ -166,7 +166,7 @@ item-2 fix a user meets; and *Changed* (development): each test bounded at 600 s
 - [ ] 4. `.claude/skills/np-ship/phase.md`, `.claude/skills/steward/SKILL.md`, `docs/project/review-findings.md`,
   `review-items.md`, `CHANGELOG.md`, `docs/plans/current.md` (D6, D7); done when the strict documentation build and
   `decisions.py --check` pass and the review says so. **Executor:** main
-- [x] 5. 05a4ee3 `.claude/hooks/gate.sh`, `.github/scripts/prose-only.sh`, `.claude/scripts/decisions.py`,
+- [x] 5. 174b238 `.claude/hooks/gate.sh`, `.github/scripts/prose-only.sh`, `.claude/scripts/decisions.py`,
   `tests/tier1/test_written_architecture.py`, `CLAUDE.md` (D8), done first, at the author's request; done when a
   push of prose after a passing `run` skips the lock check, the types and pytest. **Executor:** main
 
