@@ -127,9 +127,9 @@ S4: §8.1, FR-38, FR-41; structure preparation brought into Phase 5 by the desig
 S5: §8.1, FR-42
 S6: FR-33
 S7: '§8.1, RSK-15, §8.3; its ordering at Phase 5''s close amended by AX1'
-S8: 'open: WP5.02''s spike, then ADR-004'
-S9: 'open: WP5.02 writes the workflow into §8.4.4 and CONTRIBUTING.md'
-S10: 'open: WP5.02 proposes its VER- identifier'
+S8: ADR-004
+S9: '§8.4.4; CONTRIBUTING.md'
+S10: VER-78
 S11: FR-32; the design document's *The project folder*
 S12: ADR-004's packaging NOTE, CON-09, CON-11, RSK-13
 S13: '§8.1; its QR-10 gate amended by AW2'
@@ -145,20 +145,20 @@ S22: §8.4.4, §8.4.5
 S23: the WP5.01 plan
 S24: 'the design document''s *The areas*; its naming of QR-10''s observer by the close amended by AW2'
 T1: spent
-T2: 'open: REV-62 in WP5.05 (AD3); REV-32, REV-52 and MOD-13''s command-line part in WP5.08, REV-39 in WP5.17, REV-28 and REV-30 in WP5.21 (AG1; AJ10)'
-T3: 'open: structure preparation''s package, the Study package, FR-28 and the composer phase'
-T4: 'open: WP5.06 (AD3)'
+T2: 'REV-28, REV-30, REV-32, REV-39, REV-52, REV-62; MOD-13'
+T3: 'REV-41, REV-45, REV-67; open: FR-28 (v0.7) and the composer''s phase'
+T4: spent
 T5: spent
 T6: FR-43
 T7: spent
 T8: FR-34; the design document's WB-30 to WB-32
 U1: spent
-U2: 'the NOTE beside PHY-16 step 3; open: WP5.03 (AD3)'
-U3: 'ruled by AG6; open: WP5.21 (AJ10)'
+U2: the NOTE beside PHY-16 step 3
+U3: ruled by AG6
 U4: ruled by AG2 to AG5
-U5: 'open: WP5.02'
+U5: spent
 U6: FR-38
-U7: 'open: WP5.02'
+U7: spent
 V1: FR-37
 V2: spent
 V3: spent
@@ -209,7 +209,7 @@ Z1: spent
 Z2: the Phase 4 plan
 Z3: §8.1's Phase 4 documentation increment
 Z4: the Phase 4 plan
-Z5: 'REV-121; open: WP5.16 (AG1; AJ10)'
+Z5: REV-121
 Z6: 'REV-156; open: Phase 6'
 AA1: §8.4.4
 AA2: §8.4.4; `.claude/workflow/hosts.md`
@@ -222,15 +222,15 @@ AA8: the Copilot host plan; `.claude/workflow/hosts.md`
 AB1: §8.4.2
 AC1: IF-01's NOTE on the interface; the Phase 4 plan
 AC2: NUM-16's NOTE
-AC3: 'REV-170; placed by AD4; open: the Geometry tool''s package'
+AC3: 'REV-170; placed by AD4'
 AC4: 'REV-171; amended by AD5; open: Phase 6'
 AC5: REV-169
 AC6: spent
 AD1: the Phase 5 plan; spent by AG1
 AD2: the Phase 5 plan
-AD3: 'the Phase 5 plan; open: WP5.03 to WP5.06'
-AD4: 'REV-170; open: WP5.17 (AG1; AJ10)'
-AD5: 'REV-171; open: WP5.06'
+AD3: the Phase 5 plan
+AD4: REV-170
+AD5: REV-171
 AE1: NUM-16's NOTE; REV-172
 AE2: NUM-16's NOTE; REV-172
 AE3: IF-01's NOTE; REV-173
@@ -245,7 +245,7 @@ AG2: FR-39; §5.3.1's NOTE on `variables:`
 AG3: FR-39; §5.3.1's NOTE on `variables:`
 AG4: FR-39; §5.3.1's NOTE on `variables:`; §5.3.3's inputs group
 AG5: FR-39; §5.3.4; §5.5's NOTE on the rebuild forecast
-AG6: 'FR-32; REV-136; open: WP5.21 (AJ10)'
+AG6: FR-32; REV-136
 AG7: 'amended by AR7; open: Phase 6''s performance package (moved by AW1)'
 AG8: VER-62; the NOTE beside PHY-16 step 3
 AG9: FR-38; REV-183
@@ -253,8 +253,8 @@ AG10: FR-38
 AG11: FR-38
 AG12: FR-39; the design document's WB-16
 AG13: FR-39
-AH1: '§5.4.3''s NOTE on what a model declares; §5.3.1''s NOTE on `outputs:`; VER-56; open: WP5.06 (§5.5)'
-AI1: 'QR-16; open: WP5.08'
+AH1: '§5.4.3''s NOTE on what a model declares; §5.3.1''s NOTE on `outputs:`; VER-56; §5.5'
+AI1: QR-16
 AI2: §8.4.4
 AI3: §8.4.4
 AI4: §8.4.4
@@ -262,26 +262,26 @@ AI5: §8.4.1
 AI6: §8.4.4
 AI7: §8.4.4
 AI8: §8.4.1
-AI9: 'open: WP5.08'
-AI10: 'open: WP5.08'
-AI11: '§8.4.4; open: WP5.08'
-AI12: 'open: WP5.08'
+AI9: spent
+AI10: spent
+AI11: §8.4.4
+AI12: spent
 AI13: its per-user rule amended by AJ9; WP5.08 spent
 AI14: §5.3.2's NOTE on older entries; its rule that a current result is never removed amended by AN5
 AI15: §8.4.4
-AJ1: 'the design document''s WB-33; open: WP5.15'
-AJ2: 'FR-31; FR-32; §8.1''s Phase 5 row; the design document''s WB-34; §5.3.1''s NOTE on `models:`, §5.3.2, §5.3.3; open: WP5.18 (the Physics suite)'
+AJ1: 'the design document''s WB-33'
+AJ2: 'FR-31; FR-32; §8.1''s Phase 5 row; the design document''s WB-34; §5.3.1''s NOTE on `models:`, §5.3.2, §5.3.3'
 AJ3: FR-39; §5.3.1's NOTE on `models:`
 AJ4: the design document's WB-34; S3, S7 and FR-40 stand
-AJ5: 'FR-39; the design document''s WB-35; §5.3.1''s NOTE on `models:`; open: WP5.19'
-AJ6: '§8.4.4; open: WP5.15'
-AJ7: 'FR-34; the design document''s WB-36; open: WP5.15'
-AJ8: '§8.4.4; the design document''s WB-38; open: WP5.15 to WP5.21'
-AJ9: 'the design document''s WB-37; open: WP5.15'
-AJ10: '§8.1''s Phase 5 row; the Phase 5 plan; open: WP5.15 to WP5.28; its sequence amended by AL25 and AS1, its numbers by AL26 and AS4'
+AJ5: 'FR-39; the design document''s WB-35; §5.3.1''s NOTE on `models:`'
+AJ6: §8.4.4
+AJ7: 'FR-34; the design document''s WB-36'
+AJ8: '§8.4.4; the design document''s WB-38'
+AJ9: 'the design document''s WB-37'
+AJ10: '§8.1''s Phase 5 row; the Phase 5 plan; its sequence amended by AL25, AS1 and AW1, its numbers by AL26, AS4 and AW4'
 AK1: §5.3.1's NOTE on `models:`
 AK2: §5.3.1's NOTE on `models:`
-AK3: '§5.3.1''s NOTE on `models:`; open: WP5.18, WP5.19'
+AK3: '§5.3.1''s NOTE on `models:`'
 AL1: §4 and §6's NOTE labels; spent
 AL2: §8.4.5; spent
 AL3: '§8.4.4, §8.4.5, VER-79'
@@ -303,7 +303,7 @@ AL18: spent
 AL19: '`knowledge/00-orientation/03-conventions-used-throughout.md`'
 AL20: spent
 AL21: spent
-AL22: '§8.1''s Phase 5 row; the Phase 5 plan; open: WP5.16, WP5.17'
+AL22: '§8.1''s Phase 5 row; the Phase 5 plan'
 AL23: '§5.3.1''s NOTEs on `models:` and `variables:`'
 AL24: the Phase 5 plan
 AL25: §8.1's Phase 5 row; the Phase 5 plan
@@ -329,16 +329,16 @@ AM15: docs/scripts/generate.py's copied registers (REV-228)
 AM16: spent
 AM17: the WP5.12 plan
 AM18: spent
-AN1: 'the design document''s WB-37; open: WP5.19 (the run record''s thread count)'
+AN1: 'the design document''s WB-37; FR-25''s run record'
 AN2: the design document's WB-37
-AN3: 'the design document''s WB-37; open: WP5.15'
+AN3: 'the design document''s WB-37'
 AN4: the Phase 5 plan
-AN5: 'open: WP5.15 (§5.3.2''s NOTE), WP5.21 (the rebuild on viewing)'
-AN6: 'open: WP5.15 (§5.3.2''s NOTE)'
-AN7: 'open: WP5.15'
+AN5: '§5.3.2''s NOTE; the Analysis suite''s rebuild (FR-32)'
+AN6: '§5.3.2''s NOTE'
+AN7: spent
 AN8: §8.4.5
 AN9: §8.4.5
-AO1: 'open: WP5.16 (§5.2''s NOTE on stage 1, §5.3.1''s NOTE on structure:, VER-48)'
+AO1: '§5.2''s NOTE on stage 1, §5.3.1''s NOTE on structure:, VER-48'
 AO2: the design document's Prepare row; REV-238
 AO3: the design document's Charge edit row; §5.3.1's NOTE on model files
 AO4: §5.2's NOTE on stage 1; VER-48; the IF-02 NOTE on preparation
@@ -347,35 +347,35 @@ AP2: the design document's Continuum rows; §5.3.1's NOTE on model files; §5.3.
 AP3: the design document's Mesh row; §5.2.2's NOTE on typed sizes; §5.3.1's NOTE on numerics.mesh
 AP4: the design document's Mesh row; §5.2.2's NOTE on typed sizes; §5.3.1's NOTE on numerics.mesh
 AP5: '§5.2''s NOTE on the ion-exclusion shell; §5.3.1''s NOTE on inputs.profile; amended by AR6'
-AQ1: 'the design document''s Physics rows; open: WP5.18 (§5.3.1''s NOTE on model files)'
-AQ2: 'the design document''s Equations row; open: WP5.18 (§5.3.1''s NOTE on model files)'
+AQ1: 'the design document''s Physics rows; §5.3.1''s NOTE on model files'
+AQ2: 'the design document''s Equations row; §5.3.1''s NOTE on model files'
 AR1: PHY-23 NOTE, the design document's Equations row
 AR2: PHY-23 NOTE
 AR3: 'FR-25; §5.3.3''s Solver group'
-AR4: 'the Phase 5 plan''s WP5.19 entry; open: WP5.19 (the design document''s Study rows)'
+AR4: 'the Phase 5 plan''s WP5.19 entry; the design document''s Study rows'
 AR5: 'AP1''s consequence; VER-55''s restated NOTE; §5.3.1''s NOTE on inputs.profile; PHY-16''s deposit gate'
 AR6: '§5.2''s NOTE on the ion-exclusion shell; §5.3.1''s NOTE on inputs.profile; amended by AR9'
 AR7: 'open: Phase 6''s performance package (REV-258; placed by AS2, moved by AW1)'
-AR8: 'open: WP5.20 (FR-31; REV-259; placed by AS1)'
+AR8: 'FR-31; REV-259; placed by AS1'
 AR9: '§5.2''s NOTE on the ion-exclusion shell; §5.3.1''s NOTE on inputs.profile'
-AS1: '§8.1''s Phase 5 row; the Phase 5 plan; open: WP5.20 (FR-31, §2''s v0.6 row, the design document''s suite rows)'
+AS1: '§8.1''s Phase 5 row; the Phase 5 plan; FR-31, §2''s v0.6 row, the design document''s suite rows'
 AS2: 'open: Phase 6''s performance package (WP5.24 until AW1)'
-AS3: 'open: WP5.20''s round (the Phase 5 plan''s open decision 15)'
+AS3: FR-31
 AS4: the Phase 5 plan; spent
-AT1: 'open: WP5.20 (VER-60''s restated NOTE; the design document''s Outline row)'
-AT2: 'the Phase 5 plan''s WP5.20 entry; open: WP5.20 (the design document''s Charge map row; REV-240)'
-AT3: 'open: WP5.20 (the design document''s Study setup and Charge map rows)'
-AT4: 'AT2''s consequence; the Phase 5 plan''s WP5.20 entry; open: WP5.20 (the design document''s Charge map row; REV-240)'
-AU1: 'ADR-004''s NOTE on the front end; open: WP5.21 (the design document''s renderer table; REV-253)'
-AU2: 'WB-20; §2.6''s NOTE on the workbench; open: WP5.21 (REV-240''s colour-map point)'
-AU3: 'open: WP5.21 (the design document''s Comparison row)'
+AT1: 'VER-60''s restated NOTE; the design document''s Outline row'
+AT2: 'the Phase 5 plan''s WP5.20 entry; the design document''s Charge map row; REV-240'
+AT3: 'the design document''s Study setup and Charge map rows'
+AT4: 'AT2''s consequence; the Phase 5 plan''s WP5.20 entry; the design document''s Charge map row; REV-240'
+AU1: 'ADR-004''s NOTE on the front end; the design document''s renderer table; REV-253'
+AU2: 'WB-20; §2.6''s NOTE on the workbench; REV-240''s colour-map point'
+AU3: 'the design document''s Comparison row'
 AV1: 'FR-35''s NOTE; open: Phase 6''s refusals package (REV-254, REV-242; WP5.25 until AW1)'
 AV2: 'the Phase 5 plan''s WP5.27 entry; open: Phase 6''s polish pass and guided route (AW1)'
 AV3: 'open: Phase 6''s layers package (the design document''s View, Prepare and Meso rows; REV-265, REV-243, REV-240; WP5.23 until AW1)'
 AV4: the Phase 5 plan; spent
 AV5: 'the review register; open: /np-plan phase 6'
 AV6: 'the review register; open: the Copilot host''s session (docs/plans/sessions/copilot-host.md)'
-AW1: '§2.7; FR-32''s and FR-36''s Release; §8.1''s Phase 5 row and GUI increments; §8.3; the Phase 5 plan; open: WP5.27, WP5.28 and Phase 6''s scope round'
+AW1: '§2.7; FR-32''s and FR-36''s Release; §8.1''s Phase 5 row and GUI increments; §8.3; the Phase 5 plan; open: Phase 6''s scope round'
 AW2: '§8.1''s Phase 5 gate and GUI row; §2.7''s v1.0 row; open: v1.0''s release candidate (OPN-08)'
 AW3: '§8.1''s documentation increment 5, docs/guide/workbench.md; open: Phase 6 (increment 6)'
 AW4: the Phase 5 plan; spent
