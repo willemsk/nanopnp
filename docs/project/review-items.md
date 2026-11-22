@@ -4564,3 +4564,18 @@ Phase 11. Every phase from Phase 6 closes with Tiers 1 and 2 passing on the thre
 while a platform leg of the last full run is red.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): WP6.01, the Windows leg, Phase 6's first package.
+
+### REV-278: `/np-plan project` as written cannot hold the rescoping round
+
+Found by [review 073](../code_reviews/CODE_REVIEW_073.md) of the Phase 6 plan. §8.2.50 AZ7 holds the rescoping round
+at `/np-plan project` after WP6.03 merges, with every requirement of §3, each tool and phase of §8.1 and v1.0's
+content open. `.claude/skills/np-plan/project.md` plans "the phases after the phase in flight", reads §3's Release
+column alone, "decides only what spans phases" (§8.2.16 R5) and changes the phase in flight only through
+`/np-plan amend`. A session that follows it as written reads no requirement and repeats §8.2.49's re-ordering.
+
+*Recommendation:* WP6.03, which changes the instructions, lets `project.md` hold a rescoping round. The round reads
+§3's requirements, WP6.02's Outcome, the architecture survey and Phase 5's measured cost. It may open any requirement,
+tool or phase, and AZ1 to AZ6 with them. It names `/np-plan amend 6` as the step that plans what it leaves of Phase 6.
+
+**Proposed** (review 073, 22 November 2026): WP6.03, the cleanup's instructions; the author's approval of the Phase 6
+plan accepts the placement.

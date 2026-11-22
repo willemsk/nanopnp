@@ -7,7 +7,7 @@
 **What changes.** Three packages are fixed now. The Windows test run is repaired. Then the project's records and
 instructions are cut down to a measured reading limit, and the second host is retired. After them comes the open-minded
 rescoping you asked for: one round with every requirement, tool and phase on the table, and the content of version 1
-with them, read from the cleaned-up records. Fifteen more packages are drafted and wait for that round, which may
+with them. Fifteen more packages are drafted and wait for that round, which may
 confirm, change or drop them. As drafted they restructure the library in small steps that leave every stored number as
 it is, close the known gaps in the flow equations, add field exports and make the solve faster; a project made with
 version 0.6 then opens without its finished runs.
@@ -25,17 +25,17 @@ starts from your view and not from the records.
 
 ## Context
 
-`SPECIFICATION.md` governs; identifiers here are pointers, never restatements, and the rulings behind this plan are
-§8.2.49 (AY1 to AY8) and §8.2.50 (AZ1 to AZ7), not re-argued here.
+`SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 (AY1 to AY8) and §8.2.50 (AZ1
+to AZ7).
 
 Phase 6 answers one question: **can the library be made one sound base, without moving a number, before the workbench
-is rebuilt and three tools are built on it?** Its gate is §8.1's. An open-minded rescoping follows the cleanup (AZ7), so
-only WP6.01 to WP6.03 are fixed; the [architecture survey](../../project/architecture-survey.md) shapes the rest.
+is rebuilt and three tools are built on it?** Its gate is §8.1's. Only WP6.01 to WP6.03 are fixed (AZ7); the
+[architecture survey](../../project/architecture-survey.md) shapes the rest.
 
 True of the codebase today:
 
 - **The Windows leg is red.** `ci.yml`'s `platforms` job has not finished on Windows since 10 November.
-- **A run's record is an untyped dict.** `pipeline/run.py` `RunResult.record` writes `run.json`; 13 sites parse it raw.
+- **A run's record is an untyped dict.** `pipeline/run.py` `RunResult.write` writes `run.json`; 13 sites parse it raw.
 - **A field carries neither its order nor its log branch.** `post/fields.py` `field_at` reads P2 values linearly;
   `gui/render.py` `render_fields` writes the fields file.
 - **The shell computes numbers at 12 sites**, among them `gui/render.py` `render_charge_elements`.
@@ -70,34 +70,35 @@ linear-solver swap (Z6).
 
 ## Work packages
 
-WP6.nn takes `v0.7.0-alpha.nn`; the close takes `v0.7.0` alone (§8.4.1). Each is about 5 sessions, 3 to 6 agent hours
+WP6.02 takes `v0.7.0-alpha.2`; the close takes `v0.7.0` alone (§8.4.1). Each is about 5 sessions, 3 to 6 agent hours
 and 8 touches (§8.3).
 
 ### WP6.01 — The Windows leg (REV-277; AY4)
 
-Name the failing test and the stall with per-test names and a timeout; fix both. `/np-ship` reads the last full run and
-stops while a platform leg is red.
+Name the failing test and the stall with per-test names and a timeout; fix both. A dispatch of `ci.yml` on the branch
+shows the three legs before the merge, which a pull request's CI does not; `/np-ship` reads the last full run and stops
+on a red leg.
 
 ### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8)
 
-A `usage.py` baseline of what package sessions read before their first edit; `prompt-audit` over `CLAUDE.md` and
-`.claude/`; the reading limit and what leaves the history, put to the author; then the decisions register, the review
-register, the history and a plan's length. Its Outcome lists what it found outdated, for the rescoping round.
+`usage.py` extended to measure what a session reads before its first edit, and its baseline; `prompt-audit` over
+`CLAUDE.md` and `.claude/`; the reading limit and what leaves the history, put to the author; then the decisions
+register, the review register, the history and a plan's length. Its Outcome lists what it found outdated, for the
+rescoping round. Both cleanup packages run on Fable 5.2 (AY7).
 
-### WP6.03 — The cleanup: instructions, the Copilot host retired (AY5; REV-166 to REV-168)
+### WP6.03 — The cleanup: instructions, the Copilot host retired (AY5; REV-166 to REV-168, REV-278)
 
 The audit's changes to the instructions; the host's files and rules removed, findable by the author's tag. Done when a
 fresh package session starts under the limit, which then stands in §8.4.4.
 
 ### The rescoping round (AZ7)
 
-`/np-plan project`, after WP6.03 merges, on Fable 5.2. Open: every requirement of §3, each tool and phase of §8.1, and
-v1.0's content (OPN-08). It reads the cleaned-up records, WP6.02's Outcome, the survey and Phase 5's measured cost.
-AZ1 to AZ6 are its to confirm or reopen. `/np-plan amend 6` then plans what it leaves.
+After WP6.03 merges. Open: every requirement of §3, each tool and phase of §8.1, and v1.0's content (OPN-08). It reads
+the cleaned-up records, WP6.02's Outcome, the survey and Phase 5's measured cost, and confirms or reopens AZ1 to AZ6.
 
 ### Provisional (AZ4; AZ7)
 
-Each waits on the rescoping round; none has a plan before it.
+Each waits on the rescoping round; none is planned before it.
 
 | Package | Scope |
 |---|---|
@@ -122,11 +123,11 @@ Each waits on the rescoping round; none has a plan before it.
 | # | Decision | Owner and status |
 |---|---|---|
 | 1 | This round's seven rulings | **Settled by the author, 22 November 2026** (AZ1 to AZ7) |
-| 2 | The reading limit; what may leave the history | **Author**, at WP6.02's plan (AY8) |
+| 2 | The reading limit; what may leave the history; the baseline's transcripts | **Author**, at WP6.02's plan (AY8) |
 | 3 | The Copilot tag's name | **Author** confirms at WP6.03's plan (AY5) |
 | 4 | Whether a pull request's CI runs the Windows leg | WP6.01's plan |
 | 5 | The project's scope, and WP6.04 to WP6.18 with it | **Author**, at the rescoping round (AZ7) |
-| 6 | What "moves a compared quantity" means, and the drift that stops the re-pin | **Author**, at WP6.13's plan, before any measurement |
+| 6 | What AM2's "moves one of them" means, and the drift that stops the re-pin | **Author**, at WP6.13's plan, before any measurement |
 | 7 | A run above order 2; the speed-up's thresholds; the names after `Project` splits | Their packages' plans |
 
 ## What the author supplies
@@ -148,7 +149,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | Package | Tier | Identifiers |
 |---|---|---|
 | WP6.01 | 1, 2 | The failing test, on the three platforms |
-| WP6.02, WP6.03 | none kept | VER-45; `clause.py` resolves every identifier |
+| WP6.02, WP6.03 | none kept | VER-45; `clause.py` resolves each identifier WP6.02's plan lists |
 | WP6.04 to WP6.18 | — | Set by `/np-plan amend 6` |
 
 **The phase is complete when** (§8.1's gate; criteria 2, 3 and 5 are the rescoping round's to confirm):

@@ -15,7 +15,7 @@ a stored number, close the known gaps in the equations, add field exports and ma
 The three packages are about 15 sessions, 9 to 18 hours of agent work and 24 times you act; the fifteen drafted ones,
 if confirmed, 75 sessions, 45 to 90 hours and 120.
 
-**Your call.** The plan waits for its review, then your approval and merge. *Next:* the plan of the Windows package.
+**Your call.** The plan is reviewed and waits for your approval and merge. *Next:* the plan of the Windows package.
 
 ## Position
 
@@ -24,7 +24,7 @@ if confirmed, 75 sessions, 45 to 90 hours and 120.
 - **Phase 6 is planned** ([the plan](phase-6/phase-6-library-foundations.md); §8.2.50), `v0.7`: WP6.01 to WP6.03,
   then the rescoping round at `/np-plan project`; WP6.04 to WP6.18 provisional until it rules. Phases 7 to 11:
   [the input note](sessions/phases-6-to-11.md).
-  **Next:** `/np-plan phase 6 review`; the author merges; then `/np-plan wp 6.01`. host: claude-code.
+  **Next:** the author approves and merges the plan; then `/np-plan wp 6.01`. host: claude-code.
 
 ## Not to be re-decided
 
