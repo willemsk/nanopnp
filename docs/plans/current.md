@@ -5,21 +5,20 @@ Updated 22 November 2026. Navigation;
 
 ## In brief
 
-Version 0.6.0 is released. The project is planned again from there, in six phases. The next phase cleans up the
-records and instructions and restructures the library, and changes no number a user sees. The phase after it rebuilds
-the workbench on new foundations and adds the tree of results and the guided route. Then come the three tools, each a
-phase: the physics composer, the structural mutator and the sketcher. Validation against the published results, with
-the paper, is the last phase before version 1.
+Version 0.6.0 is released. The project is planned again in six phases. The next phase cleans up the records and
+instructions and restructures the library, and changes no number a user sees except where an equation is corrected.
+The phase after it rebuilds the workbench on new foundations and adds the tree of results and the guided route. Then
+the three tools, each a phase: the physics composer, the structural mutator and the sketcher. Validation against the
+published results, with the paper, is the last phase before version 1.
 
 You ruled that all three tools come before validation, so no published number is reproduced until the last phase,
-and a gap found there would reach every tool built before it. The known gaps in the equations are closed in the next
-phase for that reason.
+and a gap found there would reach every tool built before it. So the next phase closes the known gaps in the
+equations.
 
 The next phase is about 15 packages: 75 sessions, 45 to 90 hours of agent work and 120 times you act. The workbench
-phase is about 14 packages: 85 sessions, 85 to 170 hours and 140. The tool phases are estimated when each is planned.
+phase is about 14 packages: 85 sessions, 85 to 170 hours and 140. Each tool phase is estimated at its plan.
 
-**Your call.** Approve the re-plan after its review, then merge it. *Next:* the review of this plan, then the plan of
-the next phase.
+**Your call.** The re-plan is reviewed: approve it, then merge it. *Next:* the plan of the next phase.
 
 ## Position
 
@@ -28,7 +27,8 @@ the next phase.
 - **The project is re-planned** (§8.2.49): Phase 6, the cleanup and the library's foundations (`v0.7`); Phase 7, the
   workbench rebuilt (`v0.8`); Phases 8 to 10, the tools (`v0.9` to `v0.11`); Phase 11, validation and release
   (`v0.12`). Their provisional packages: [the input note](sessions/phases-6-to-11.md).
-  **Next:** `/np-plan project review`, then `/np-plan phase 6`. host: claude-code.
+  Reviewed ([review 072](../code_reviews/CODE_REVIEW_072.md)).
+  **Next:** the author merges it, then `/np-plan phase 6`. host: claude-code.
 
 ## Not to be re-decided
 
