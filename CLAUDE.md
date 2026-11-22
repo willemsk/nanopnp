@@ -175,7 +175,8 @@ needs under 100k tokens of context (§8.2.38 AN8; §8.2.49 AY7). The kept helper
 `same_tree.py` checks that changed Python files differ only in prose (§8.2.11 L5),
 `decisions.py` writes the decisions register, `index_records.py` writes the indexes of the plans
 and reviews, `links.py` checks every relative link, and `usage.py` measures a session's cost in
-sessions, agent hours, touches and tokens from its transcript (§8.4.5). The
+sessions, agent hours, touches and tokens from its transcript, and with `--reading` the project
+text a window read before its first edit (§8.4.5). The
 caps on a WP plan, and its executors, are in `.claude/skills/np-plan/wp.md` (§8.4.4; §8.2.15 Q1;
 §8.2.16 R11).
 

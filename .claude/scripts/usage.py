@@ -23,6 +23,16 @@ is ``$CLAUDE_CODE_SESSION_ID``'s, else the newest transcript of the project. Whe
 on another host, the line says "not measured" and the exit status is 0.
 
 Run it as ``uv run .claude/scripts/usage.py [--label <level>] [--since <time|commit> | --all]``.
+
+``--reading`` measures instead what each window that an ``/np-`` command opens read before its first
+``Edit``, ``Write`` or ``NotebookEdit`` (§8.2.50 AZ9): the words of project text (instructions,
+records and the tree's ``CLAUDE.md``), of code and of command output, the tokens at the window's
+start and at that edit, and the ten largest files of project text. A window is fresh when no
+message precedes it, or when its start holds under half the tokens of the message before it.
+``--transcript`` names a transcript; ``--pages`` reads instead the transcripts of agents that paged
+other sessions with the session service's ``list_events`` (AZ10), one session per paged id. Run it
+as ``uv run .claude/scripts/usage.py --reading [--transcript <jsonl> | --pages <jsonl> ...]
+[--json]``.
 """
 
 from __future__ import annotations
@@ -31,6 +41,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import subprocess
 from collections import Counter
 from datetime import datetime
@@ -40,6 +51,14 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 AWAY_S = 30 * 60
 NOT_TYPED = ("<local-command-stdout>", "<local-command-caveat>", "<task-notification>")
+SKILL_TEXT = "Base directory for this skill:"
+EDITS = ("Edit", "Write", "NotebookEdit")
+PRINTERS = ("cat", "head", "tail", "sed")
+LIST_EVENTS = "mcp__claude-code-remote__list_events"
+RECORD_DIRS = ("/docs/", "/specification/", "/knowledge/")
+RECORD_NAMES = ("SPECIFICATION.md", "CHANGELOG.md", "CONTRIBUTING.md", "README.md")
+CODE_DIRS = ("/src/", "/tests/", "/examples/", "/data/")
+LINE_NUMBER = re.compile(r"(?m)^\s*\d+\t")
 
 
 def _transcript() -> Path | None:
@@ -150,6 +169,233 @@ def measure(path: Path, start: float) -> dict[str, Any]:
     }
 
 
+def _text(content: object) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return " ".join(
+            str(block.get("text", ""))
+            for block in content
+            if isinstance(block, dict) and block.get("type") == "text"
+        )
+    return ""
+
+
+def _path_class(path: str) -> str:
+    """Return the class of a file read by its path: instructions, records, code or commands."""
+    path = path if path.startswith("/") else f"/{path}"
+    name = path.rsplit("/", 1)[-1]
+    if path.endswith((".py", ".sh")):
+        return "code"
+    if "/.claude/" in path or path.endswith("CLAUDE.md"):
+        return "instructions"
+    if any(part in path for part in RECORD_DIRS) or name in RECORD_NAMES:
+        return "records"
+    if any(part in path for part in CODE_DIRS):
+        return "code"
+    return "commands"
+
+
+def _printed_files(command: str) -> list[str] | None:
+    """Return the files a command only prints (cat, head, tail, sed -n, with cd and echo)."""
+    try:
+        words = shlex.split(command, comments=True)
+    except ValueError:
+        return None
+    files: list[str] = []
+    segments: list[list[str]] = [[]]
+    for word in words:
+        if word in ("&&", ";"):
+            segments.append([])
+        elif word.endswith(";") and word != ";":
+            segments[-1].append(word[:-1])
+            segments.append([])
+        else:
+            segments[-1].append(word)
+    for segment in filter(None, segments):
+        head, args = segment[0], segment[1:]
+        if head in ("cd", "echo"):
+            continue
+        if head not in PRINTERS or any(arg in ("|", ">", ">>", "<") for arg in args):
+            return None
+        if head == "sed":
+            if not args or args[0] != "-n" or len(args) < 3:
+                return None
+            args = args[2:]
+        operands, skip = [], False
+        for arg in args:
+            if skip:
+                skip = False
+            elif arg in ("-n", "-c"):
+                skip = True
+            elif not arg.startswith("-"):
+                operands.append(arg)
+        if not operands:
+            return None
+        files += operands
+    return files or None
+
+
+def _classify(call: dict[str, Any]) -> tuple[str, str | None]:
+    """Return the class of a tool call's result, and the file it read where it read one."""
+    name, given = call.get("name"), call.get("input") or {}
+    if name == "Read" and given.get("file_path"):
+        return _path_class(str(given["file_path"])), str(given["file_path"])
+    if name == "Grep" and given.get("path"):
+        return _path_class(str(given["path"])), str(given["path"])
+    if name == "Bash":
+        command = str(given.get("command", ""))
+        if "clause.py" in command:
+            return "records", "clause.py"
+        files = _printed_files(command)
+        if files:
+            classes = {_path_class(path) for path in files}
+            if len(classes) == 1:
+                return classes.pop(), files[0] if len(files) == 1 else " ".join(files)
+    return "commands", None
+
+
+def _page_events(path: Path) -> dict[str, list[dict[str, Any]]]:
+    """Return the events that ``list_events`` pages hold, by the session paged, in local form."""
+    calls: dict[str, str] = {}
+    pages: list[tuple[str, str]] = []
+    for event in _events(path):
+        for block in _blocks(event):
+            if block.get("type") == "tool_use" and block.get("name") == LIST_EVENTS:
+                calls[block["id"]] = str((block.get("input") or {}).get("session_id", ""))
+            elif block.get("type") == "tool_result" and block.get("tool_use_id") in calls:
+                text = _text(block.get("content"))
+                saved = re.search(r"saved to (\S+?\.txt)", text)
+                if saved and Path(saved.group(1)).is_file():
+                    text = Path(saved.group(1)).read_text(encoding="utf-8")
+                pages.append((calls[block["tool_use_id"]], text))
+    found: dict[str, dict[str, dict[str, Any]]] = {}
+    for session, text in pages:
+        start, end = text.find('{"ccr"'), text.rfind("}")
+        if start < 0:
+            continue
+        try:
+            data = json.loads(text[start : end + 1])["ccr"]["data"]
+        except (json.JSONDecodeError, KeyError, TypeError):
+            continue
+        for raw in data:
+            kind = "assistant" if "assistant" in raw else "user" if "user" in raw else None
+            if kind is None:
+                continue
+            inner = raw[kind].get("internal_anthropic_catchall") or {}
+            if inner.get("parent_tool_use_id") or not inner.get("timestamp"):
+                continue
+            event = {
+                "type": kind,
+                "message": inner.get("message") or {},
+                "timestamp": inner["timestamp"],
+                "_t": datetime.fromisoformat(inner["timestamp"]).timestamp(),
+                "session": session,
+            }
+            if "isMeta" in inner:
+                event["isMeta"] = inner["isMeta"]
+            key = raw[kind].get("uuid") or f"{inner['timestamp']}{json.dumps(event['message'])}"
+            found.setdefault(session, {})[key] = event
+    return {
+        session: sorted(events.values(), key=lambda event: event["_t"])
+        for session, events in found.items()
+    }
+
+
+def _window_name(event: dict[str, Any]) -> str:
+    text = _text((event.get("message") or {}).get("content"))
+    command = re.search(r"/(np-[\w-]+)", text)
+    args = re.search(r"<command-args>(.*?)</command-args>", text, re.S)
+    rest = args.group(1) if args else text[command.end() :] if command else ""
+    return " ".join([command.group(1) if command else "np-", *rest.split()[:2]])
+
+
+def _tokens(event: dict[str, Any]) -> int:
+    usage = (event.get("message") or {}).get("usage") or {}
+    return sum(
+        usage.get(field) or 0
+        for field in ("input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")
+    )
+
+
+def reading(events: list[dict[str, Any]], claude_md: int) -> list[dict[str, Any]]:
+    """Return what each ``/np-`` window of one session's ``events`` read before its first edit."""
+    opens = [
+        index
+        for index, event in enumerate(events)
+        if _typed(event)
+        and "/np-" in _text((event.get("message") or {}).get("content"))
+        and not _text((event.get("message") or {}).get("content")).lstrip().startswith(SKILL_TEXT)
+    ]
+    windows = []
+    for number, first in enumerate(opens):
+        last = opens[number + 1] if number + 1 < len(opens) else len(events)
+        before = [event for event in events[:first] if event.get("type") == "assistant"]
+        words: Counter[str] = Counter()
+        files: Counter[str] = Counter()
+        calls: dict[str, dict[str, Any]] = {}
+        words["instructions"] += len(_text(events[first]["message"].get("content")).split())
+        start_tokens, edit_tokens, edited = None, None, False
+        for event in events[first + 1 : last]:
+            if event.get("type") == "assistant" and _tokens(event):
+                start_tokens = start_tokens if start_tokens is not None else _tokens(event)
+                edit_tokens = _tokens(event)
+            text = _text((event.get("message") or {}).get("content"))
+            if event.get("type") == "user" and text.lstrip().startswith(SKILL_TEXT):
+                base = text.split("\n", 1)[0]
+                words["instructions" if "/.claude/" in base else "commands"] += len(text.split())
+            for block in _blocks(event):
+                if block.get("type") == "tool_use":
+                    calls[block.get("id", "")] = block
+                    edited = edited or block.get("name") in EDITS
+                elif block.get("type") == "tool_result" and block.get("tool_use_id") in calls:
+                    call = calls[block["tool_use_id"]]
+                    kind, path = _classify(call)
+                    result = _text(block.get("content"))
+                    if call.get("name") == "Read":
+                        result = LINE_NUMBER.sub("", result)
+                    count = len(result.split())
+                    words[kind] += count
+                    if path and kind in ("instructions", "records"):
+                        files[path] += count
+            if edited:
+                break
+        previous = _tokens(before[-1]) if before else 0
+        project = words["instructions"] + words["records"] + claude_md
+        windows.append(
+            {
+                "session": events[first].get("session", ""),
+                "window": _window_name(events[first]),
+                "fresh": not before or (start_tokens or 0) < previous / 2,
+                "edit": edited,
+                "project": project,
+                "instructions": words["instructions"],
+                "records": words["records"],
+                "claude_md": claude_md,
+                "code": words["code"],
+                "commands": words["commands"],
+                "tokens_start": start_tokens or 0,
+                "tokens_edit": edit_tokens or 0,
+                "files": dict(files.most_common()),
+            }
+        )
+    return windows
+
+
+def _reading_line(window: dict[str, Any]) -> str:
+    largest = ", ".join(f"{path} {count:,}" for path, count in list(window["files"].items())[:10])
+    edit = "the first edit" if window["edit"] else "the window's end (no edit)"
+    return (
+        f"Reading ({window['window']}, {'fresh' if window['fresh'] else 'not fresh'}): "
+        f"{window['project']:,} words of project text before {edit} "
+        f"(instructions {window['instructions']:,}; records {window['records']:,}; "
+        f"CLAUDE.md {window['claude_md']:,}); code {window['code']:,}; "
+        f"commands {window['commands']:,}; {window['tokens_start']:,} tokens at the start, "
+        f"{window['tokens_edit']:,} at the {'edit' if window['edit'] else 'end'}; "
+        f"largest: {largest or 'none'}"
+    )
+
+
 def _count(number: int, noun: str) -> str:
     return f"{number} {noun}" + ("" if number == 1 else "es" if noun.endswith("ch") else "s")
 
@@ -162,7 +408,18 @@ def main() -> int:
     window.add_argument("--since", help="an ISO time or a git commit that opens the window")
     window.add_argument("--all", action="store_true", help="measure the whole session")
     parser.add_argument("--json", action="store_true", help="print the measurement as JSON")
+    parser.add_argument("--reading", action="store_true", help="measure the reading (AZ9)")
+    parser.add_argument("--transcript", type=Path, help="the transcript to read with --reading")
+    parser.add_argument(
+        "--pages", type=Path, nargs="+", help="transcripts of agents that paged sessions"
+    )
     args = parser.parse_args()
+    if (args.transcript or args.pages) and not args.reading:
+        parser.error("--transcript and --pages need --reading")
+    if args.reading:
+        if args.since or args.all:
+            parser.error("--reading takes no --since or --all")
+        return _main_reading(args.transcript, args.pages, args.json)
     path = _transcript()
     if path is None:
         print(f"Measured ({args.label}): not measured, no Claude Code transcript on this host.")
@@ -180,6 +437,31 @@ def main() -> int:
         f"{result['agent_hours']} agent hours, {_count(result['touches'], 'touch')}; "
         f"{spend or 'no tokens'}"
     )
+    return 0
+
+
+def _main_reading(transcript: Path | None, pages: list[Path] | None, as_json: bool) -> int:
+    claude_md = len((ROOT / "CLAUDE.md").read_text(encoding="utf-8").split())
+    sessions: dict[str, list[dict[str, Any]]] = {}
+    if pages:
+        for page in pages:
+            for session, events in _page_events(page).items():
+                merged = {
+                    json.dumps(event, sort_keys=True): event for event in sessions.get(session, [])
+                }
+                merged.update({json.dumps(event, sort_keys=True): event for event in events})
+                sessions[session] = sorted(merged.values(), key=lambda event: event["_t"])
+    else:
+        found = transcript or _transcript()
+        if found is None:
+            print("Reading: not measured, no Claude Code transcript on this host.")
+            return 0
+        sessions[found.stem] = [{**event, "session": found.stem} for event in _events(found)]
+    windows = [window for events in sessions.values() for window in reading(events, claude_md)]
+    if as_json:
+        print(json.dumps(windows, indent=2))
+    else:
+        print("\n".join(_reading_line(window) for window in windows) or "Reading: no /np- window")
     return 0
 
 

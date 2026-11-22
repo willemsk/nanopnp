@@ -172,6 +172,14 @@ it relies on it.
    (instructions 6,100; records 5,880; CLAUDE.md 2,220); code 3,100; commands 9,400; 97,000 tokens at the start,
    158,000 at the edit; largest: <path> 3,400, …`. `--json` gives the same fields per window.
 
+> **Outcome — the measure reads several printed files of one class.** Step 5's `Bash` rule takes a command whose
+> segments are `cat`, `head`, `tail` or `sed -n` on files, with `cd` and `echo` between them, and classes it by the
+> files when they share a class: a session reads two instructions with one `cat … && cat …` as often as one. Any
+> other mix, a pipe or a redirection, stays commands. The self-check on this session's window: 92,784 tokens at the
+> start and 183,755 at its last message equal the `usage` sums of `msg_011ChJVzYNNa4zcCV6NgpAuN` and
+> `msg_011ChJWCFVhfiV47orh6jMTu`; a whole-file `Read` of the Phase 6 plan gave 2,005 words, as `wc -w` does under
+> `LC_ALL=C.UTF-8` (the C locale's `wc` gives 2,001, as it splits no non-ASCII space).
+
 The self-check, recorded in the item's Outcome: for the implementing session, the two token numbers equal the `usage`
 sums of the two messages the script names, and the words it gives one whole-file `Read` of a record equal
 `wc -w` of that file.
