@@ -7,9 +7,9 @@
 **What changes.** The program has a browser workbench of six suites, four that build models and two that use them. A
 survey of the code found that the next features (results as an editable tree, views that split, a settings pane, the
 finer look) would be one-off work on today's foundations. You ruled that the next phase opens with a restructure and
-that this phase closes early. Two packages remain: the old desktop shell's removal, after a check that the browser
-workbench covers its 41 capabilities, with a short guide; and the close. Five packages and the guided route move to the
-next phase, after its foundations.
+that this phase closes early. Its last two packages are delivered: the old desktop shell's removal, after a check that
+the browser workbench covers its 41 capabilities, with a short guide; and the close. Five packages and the guided
+route move to the next phase, after its foundations.
 
 **Cost.** Two packages: about 12 sessions, 12 to 24 hours of agent work and 20 times you act. The seven planned before
 were about 36 sessions, 44 to 73 hours and 70.
@@ -264,14 +264,14 @@ Live constraints: REV-274's five details and QR-16's gaps are Phase 6's.
 **Delivered 22 November 2026** ([the plan](wp5.28-the-close.md)); its last commit takes `v0.6.0` alone after the
 merge (§8.4.1).
 
-The 49 rulings a delivered package landed hold their clause or read `spent`; T3, AC3 and AW1 keep what waits.
-REV-166 to REV-168 were not run and are carried to Phase 6's scope round (AV6); no review row is `open`, and each that
-waits names its owner (AX2). The [end-of-phase report](#end-of-phase-report), measured on the close's own tree, finds
-criteria 1 and 2 met on Linux and macOS, 3 met, 4 met in part (QR-16), 5 and 6 not this phase's. Run 837's Windows
-leg failed and met its limit, as `main`'s has since 10 November; the author released with the gap (§8.2.48 AX3;
-REV-277). `CHANGELOG.md`'s `[0.6.0]` gathers the 23 packages and each break since `v0.5.0` with its migration;
-`CITATION.cff`, the README, the site's banner and the install page name `v0.6.0` and the workbench; §8.1's Phase 5
-gate reads "Closed with v0.6.0".
+The 49 rulings a delivered package landed hold their clause or read `spent`; T3 and AW1 keep what waits, and AC3 its
+clause alone. REV-166 to REV-168 were not run and are carried to Phase 6's scope round (AV6); no review row is `open`,
+and each that waits names its owner (AX2). The [end-of-phase report](#end-of-phase-report), measured on the close's own
+tree, finds criteria 1 and 2 met on Linux and macOS, 3 met, 4 met in part (QR-16), 5 and 6 not this phase's. Run 837's
+Windows leg failed one test and met its 40-minute limit; `main`'s has not finished since 10 November; the author
+released with the gap (§8.2.48 AX3; REV-277). `CHANGELOG.md`'s `[0.6.0]` gathers the 23 packages and each break since
+`v0.5.0` with its migration; `CITATION.cff`, the README, the site's banner and the install page name `v0.6.0` and the
+workbench; §8.1's Phase 5 gate reads "Closed with v0.6.0".
 
 Live constraints: the six moved packages, REV-272's proposals, the tool phases' order and REV-277 are Phase 6's scope
 round's (AW1, AX1, AX3).
@@ -365,15 +365,15 @@ the final tree. Nothing is copied from an Outcome. Every number names its comman
   | darwin-arm64/ASIMDDP | mesh moved, against ≤ 10⁻³ | 1.5 × 10⁻¹³ (`eof_m3_s`) | 1.1 × 10⁻¹⁵ (`eof_m3_s`) | 1,812 passed, 142 skipped, 611 s |
   | win32-AMD64 | — | not reached | not reached | 1 failed, then stalled at 99 %; cancelled at its 40-minute limit |
 
-  Prediction: zero drift beyond round-off. Met. Each leg's `nanopnp gui --selftest` exercised NGSolve and Netgen
-  6.2.2606, `ngsolve.webgui`'s renderer (779,484 bytes), MDAnalysis, gemmi, scikit-image, Shapely, Gmsh 4.15.2 and
-  PDB2PQR 3.8.0 with PROPKA 3.5.1, and found the licence notice (VER-43, VER-44, VER-55, VER-60; CON-11).
-  The Windows leg failed one test and did not finish (REV-277); it has met its limit on every push and nightly run
-  with tests since 10 November (run 733), unseen because a pull request's CI tests on Linux alone. The author ruled
-  to release and carry it (§8.2.48 AX3).
-- **The suite** (`uv run pytest --collect-only -q`). 2,068 tests in all; 1,954 collected by default, 114 deselected
-  as `nightly` or `slow`. `-m tier1` selects 1,758, `-m tier2` 220. The push gate passed (`gate.sh run`, 539 s on
-  `13f72c3`, four CPUs).
+  Prediction: zero drift beyond round-off. Met. The Linux and macOS legs' `nanopnp gui --selftest` exercised NGSolve
+  and Netgen 6.2.2606, `ngsolve.webgui`'s renderer (779,484 bytes), MDAnalysis, gemmi, scikit-image, Shapely, Gmsh
+  4.15.2 and PDB2PQR 3.8.0 with PROPKA 3.5.1, and found the licence notice (VER-43, VER-44, VER-55, VER-60; CON-11).
+  The Windows leg failed one test and did not finish, so its self-test, the step after the tests, never ran
+  (REV-277); it has not finished on any push or nightly run with tests since 10 November (run 733), unseen
+  because a pull request's CI tests on Linux alone. The author ruled to release and carry it (§8.2.48 AX3).
+- **The suite** (`uv run pytest --collect-only -q`). 2,068 tests in all; 1,954 collected by default, 114 deselected:
+  94 as `nightly` or `slow`, and Tier 3's 20. `-m tier1` selects 1,758, `-m tier2` 220. The push gate passed
+  (`gate.sh run`, 539 s on `13f72c3`, four CPUs).
 - **The redraw, headless** (`node .claude/scripts/gui/redraw.cjs <address> --json` on the 2WCD project that
   `render_shell.py --only 2wcd` caches, continuum `2wcd-charged`, 20 picks after 3 warm-up, 1440 × 900; the page got
   SwiftShader's software Vulkan). Median and p95 in ms:
@@ -408,7 +408,8 @@ the final tree. Nothing is copied from an Outcome. Every number names its comman
 - **The registers.** `docs/project/review-findings.md`: 276 rows, none `open`: `fixed` 207, `accepted` 38,
   `deferred` 17, `declined` 7, `wontfix` 4, `post-1.0` 3; REV-277, raised by this report, makes 277 and 39 `accepted`. Every `accepted` or `deferred` row names its owner (item 2's
   owner script prints nothing). REV-166 to REV-168 were not run and are carried (D1). `holds-now.yaml`: the 49 rulings
-  a delivered package landed keep their clause or read `spent`; T3, AC3 and AW1 keep what waits; 22 lines hold
+  a delivered package landed keep their clause or read `spent`; T3 and AW1 keep what waits, and AC3 its clause alone
+  (REV-170 is `fixed`); 22 lines hold
   `open:` (`grep -c`): the 19 that name Phase 6, v1.0 or the Copilot session, T3, AW1 and the header's comment. AX3, ruled at
   this package, adds a 23rd.
 - **The development loop** (`<git dir>/nanopnp-gate.log`; run 837's job timings). The commit hook took 162 s on item

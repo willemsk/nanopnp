@@ -225,6 +225,12 @@ Phase 6's scope round. The phase plan's status: **delivered, <date>; closes at t
 - [x] 430f782 6. `README.md`, `docs/overrides/main.html` (its version and its desktop shell), `docs/getting-started.md`,
   §8.1's Phase 5 gate, the Phase 5 plan's status and WP5.28 entry, `docs/plans/current.md` (D5, D6); done when the
   strict documentation build and `links.py` pass. **Executor:** main
+  > **Outcome — the review settled four more rulings on their clauses and added three breaks.**
+  > [CODE_REVIEW_071](../../code_reviews/CODE_REVIEW_071.md): T4 holds §5.5, and AI9, AI10 and AI12 §5.3.5's NOTE,
+  > which cites them, where item 1's example gave `AI9: spent`. `[0.6.0]` gains the PEOEPB and SWANSON refusal, the
+  > outline shell's spacing and `ModelDeclaration.quantities`; `current.md` keeps the settled entries no ruling
+  > superseded. Measured cost: implement 1.5 + 0.4 and ship 0.3 agent hours, about 2.2 in one session and six touches,
+  > against the estimate of four sessions, three to six hours and eight touches.
 
 ### Verification
 
