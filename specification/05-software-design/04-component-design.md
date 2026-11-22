@@ -25,7 +25,9 @@ built.
 NOTE (QR-13, §8.2.8 H3): the interface above is not built for v1. With one backend it cannot be
 tested for the property it exists for, and a wrapper written now would wrap NGSolve without showing
 that it fits DOLFINx, so the backend's reach is pinned instead, as above; VER-65 asserts the
-`backend:` list in both directions. Phase 6 or a later plan decides the interface.
+`backend:` list in both directions. `/np-plan phase 8` decides the interface, and with it the size of
+`physics/models.py` and `default_ladder`, where the composer cuts the equations into registered building
+blocks (§8.2.50 AZ1).
 
 #### 5.4.2 Correction-model interface
 

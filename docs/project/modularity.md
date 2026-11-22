@@ -271,7 +271,8 @@ rest moves code without changing what can be extended.
 
 **User-visible.** No.
 
-**Outcome:** post-1.0, §8.2.8 H5.
+**Outcome:** post-1.0, §8.2.8 H5; brought forward to WP6.12, one registry shape with switches as data, by
+REV-272 and §8.2.50 AZ4 (22 November 2026).
 
 ### MOD-09 — Outputs and steric models are closed enumerations in the assembler
 
@@ -325,7 +326,8 @@ machinery can pin.
 
 **User-visible.** No.
 
-**Outcome:** deferred, §8.2.8 H3.
+**Outcome:** deferred, §8.2.8 H3. The author handed the decision to Phase 8's round, with the size of
+`physics/models.py` and `default_ladder` that MOD-13 tied to it (§8.2.50 AZ1, 22 November 2026).
 
 ### MOD-11 — with_section and register are outside PUBLIC
 

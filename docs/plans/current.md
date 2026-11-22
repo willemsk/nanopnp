@@ -5,30 +5,26 @@ Updated 22 November 2026. Navigation;
 
 ## In brief
 
-Version 0.6.0 is released. The project is planned again in six phases. The next phase cleans up the records and
-instructions and restructures the library, and changes no number a user sees except where an equation is corrected.
-The phase after it rebuilds the workbench on new foundations and adds the tree of results and the guided route. Then
-the three tools, each a phase: the physics composer, the structural mutator and the sketcher. Validation against the
-published results, with the paper, is the last phase before version 1.
+Version 0.6.0 is released, and the next phase is planned. Three packages are fixed: the Windows test run is repaired,
+then the records and instructions are cut down to a measured reading limit, and the second host is retired with them.
 
-You ruled that all three tools come before validation, so no published number is reproduced until the last phase,
-and a gap found there would reach every tool built before it. So the next phase closes the known gaps in the
-equations.
+After those three comes the open-minded rescoping you asked for: one round with every requirement, tool and phase on
+the table. Fifteen more packages are drafted and wait for it. As drafted they restructure the library without moving
+a stored number, close the known gaps in the equations, add field exports and make the solve faster.
 
-The next phase is about 15 packages: 75 sessions, 45 to 90 hours of agent work and 120 times you act. The workbench
-phase is about 14 packages: 85 sessions, 85 to 170 hours and 140. Each tool phase is estimated at its plan.
+The three packages are about 15 sessions, 9 to 18 hours of agent work and 24 times you act; the fifteen drafted ones,
+if confirmed, 75 sessions, 45 to 90 hours and 120.
 
-**Your call.** The re-plan is reviewed: approve it, then merge it. *Next:* the plan of the next phase.
+**Your call.** The plan waits for its review, then your approval and merge. *Next:* the plan of the Windows package.
 
 ## Position
 
 - Phases 1 to 5 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`, `v0.6.0`
   ([Phase 5's report](phase-5/phase-5-workbench.md#end-of-phase-report)).
-- **The project is re-planned** (§8.2.49): Phase 6, the cleanup and the library's foundations (`v0.7`); Phase 7, the
-  workbench rebuilt (`v0.8`); Phases 8 to 10, the tools (`v0.9` to `v0.11`); Phase 11, validation and release
-  (`v0.12`). Their provisional packages: [the input note](sessions/phases-6-to-11.md).
-  Reviewed ([review 072](../code_reviews/CODE_REVIEW_072.md)).
-  **Next:** the author merges it, then `/np-plan phase 6`. host: claude-code.
+- **Phase 6 is planned** ([the plan](phase-6/phase-6-library-foundations.md); §8.2.50), `v0.7`: WP6.01 to WP6.03,
+  then the rescoping round at `/np-plan project`; WP6.04 to WP6.18 provisional until it rules. Phases 7 to 11:
+  [the input note](sessions/phases-6-to-11.md).
+  **Next:** `/np-plan phase 6 review`; the author merges; then `/np-plan wp 6.01`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -45,10 +41,13 @@ phase is about 14 packages: 85 sessions, 85 to 170 hours and 140. Each tool phas
   map (WB-54 to WB-63); every open item names a package (§8.2.46).
 - **QR-10's trial waits for v1.0's release candidate; QR-16's keyboard gaps and five Qt details are carried to
   Phase 7** (§8.2.47; REV-274).
-- **The phases are library, workbench, composer, structural mutator, sketcher, validation** (§8.2.49 AY1, AY2). **The
-  Windows leg is Phase 6's first package; every later gate asks the three platforms** (AY4). **The speed-up closes
-  Phase 6; the equations are brought to §4 there** (AY3, AY6). **The Copilot host is retired at the cleanup** (AY5).
-  **Fable 5.2 plans and ships, Opus 5.5 implements** (AY7). **The cleanup ends at a measured reading limit** (AY8).
+- **The Windows leg is first; every later gate asks the three platforms** (§8.2.49 AY4). **The Copilot host is
+  retired at the cleanup** (AY5), **which ends at a measured reading limit** (AY8). **Fable 5.2 plans and ships,
+  Opus 5.5 implements** (AY7).
+- **An open-minded rescoping follows WP6.03; no package from WP6.04 is planned before it** (§8.2.50 AZ7). Until it
+  rules: the phases are library, workbench, composer, mutator, sketcher, validation (AY1, AY2); the speed-up closes
+  Phase 6, with no fixed target (AY3; AZ6); the equations are brought to §4 there (AY6); §5.4.1's interface is Phase 8's
+  round's (AZ1); a field is read by its cell's own basis (AZ2); a v0.6 run is refused, never converted (AZ5).
 
 ## Somebody else's
 
@@ -57,8 +56,8 @@ phase is about 14 packages: 85 sessions, 85 to 170 hours and 140. Each tool phas
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
 - **The 200 ms redraw**'s GPU run (REV-258); **verdicts at each design round** (AJ8).
 - **Rulings on a cycle (H6) or drift (I4)**.
-- **The reading limit and what leaves the history** (AY8), and **the Copilot host's tag** (AY5), at Phase 6's cleanup;
-  **QR-10's observer** (AW2).
+- **The reading limit and what leaves the history** (AY8), at WP6.02's plan; **the Copilot host's tag** (AY5), at
+  WP6.03; **what to keep, cut and add**, at the rescoping round (AZ7); **QR-10's observer** (AW2).
 
 ## On demand
 
