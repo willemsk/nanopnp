@@ -157,7 +157,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   (§8.2.47 AW5; §8.2.50 AZ14)
 * Every ruling lands in a current clause. One with no clause to amend is written here once, pointing
   to its ruling. (§8.2.16 R3)
-* No ruling leaves the history: a spent or superseded ruling stays in its dated record. (§8.2.50 AZ11)
+* No ruling leaves the history: a spent or superseded ruling stays in its dated record.
+  `clause.py` prints one that only names the identifier asked for as one line, its `holds-now.yaml`
+  entry and its first bold phrase, and `--all` prints it in full. (§8.2.50 AZ11)
 * From WP6.03's merge, a fresh `/np-implement` window reads at most 6,500 words of project text before
   its first edit: the instruction files, the records and `CLAUDE.md`, as `usage.py --reading` counts
   them (§8.4.5). A window is fresh when no message precedes it, or its start holds under half the
