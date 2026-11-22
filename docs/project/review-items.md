@@ -1434,6 +1434,12 @@ foundations land.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): the cleanup is WP6.02 and WP6.03; the library's foundations are WP6.04 to WP6.12. Phase 6 is 18 packages, the restructure before the equations.
 
+**The records cut** (WP6.02, 22 November 2026), in words by `wc -w` under `LC_ALL=C.UTF-8`, at `09b0d16` and
+`f8f4248`: this register 61,248 to 20,690, its 220 closed items moved to [the archive](review-archive.md) (40,745);
+`decisions.md` 75,431 to 25,751, its 1,079 closed rows on a second page (49,886); the Phase 6 plan 2,005 to 1,842;
+`CLAUDE.md` 2,330 to 2,349. The baseline gave a fresh implementing window a median of 8,095 words of project text
+read before its first edit, and the limit is 6,500 from WP6.03's merge (§8.2.50 AZ13).
+
 ### REV-273: The tree round's verdicts reopen where the settings stand, the views shown and the runs in Data
 
 The verdicts on the tree round's boards ([the record](../design/reviews/2026-11-21-tree.md), *The verdicts*) keep

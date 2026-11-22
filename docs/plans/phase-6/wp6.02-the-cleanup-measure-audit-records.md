@@ -260,6 +260,35 @@ reads the list before it changes an entry.
 with a link to the second page, and lists the rows that bind. `decisions-closed.md` has a one-line header and the
 closed rows. `main` writes or checks both. The navigation gains `Decisions register, closed`.
 
+> **Outcome — what the cleanup found outdated and left, each with its file and the step that takes it.**
+>
+> - **An owner that names no package.** REV-183 (`docs/project/review-findings.md`) is deferred to "FR-43's
+>   package"; FR-43 says "a later phase", and neither the Phase 6 plan nor `docs/plans/sessions/phases-6-to-11.md`
+>   names one. The rescoping round.
+> - **Scripts no instruction names.** `.claude/scripts/audit/` (ten files, which
+>   `knowledge/07-software-stack/25-complexity-and-import-contract-tools.md` still cites) and `.claude/scripts/gui/`
+>   (five, which `np-gui` runs) are outside the eight kept scripts of `CLAUDE.md` and §8.4.5 (audit F6). WP6.03:
+>   list, keep or delete.
+> - **The cleanup's model** (audit F1). `CLAUDE.md`'s *Models* and `.claude/skills/np-plan/wp.md` put
+>   `/np-implement` on Opus 5.5 and omit AY7's exception, so this package's implementing session ran on Opus 5.5.
+>   WP6.03, the audit's hunks 1 and 2; until then the author starts WP6.03 on Fable 5.2 by hand.
+> - **A ship on the implementer's model** (audit F2). `CLAUDE.md`, `.claude/workflow/core.md`, `np-ship/wp.md` and
+>   `np-implement/wp.md` let `/np-ship` run in the implementing session, and `NANOPNP_AUTO_SHIP` chains into it,
+>   against AY7. The author's call, at WP6.03.
+> - **Who owns the code** (audit F3). No instruction says whether a package may improve the structure it touches,
+>   while the Phase 6 plan records repeated code. The author's call, at the rescoping round, before WP6.04.
+> - **The audit's other hunks** (F4, F7, F8): a dated observation in `np-ship/wp.md`, the Copilot host (AY5), and a
+>   glob in `.claude/rules/python.md` that matches no file. WP6.03.
+> - **The tokens at a session's start.** A window opens at 92,000 to 98,000 tokens before it reads anything
+>   ([the baseline](../sessions/reading-baseline.md)). The app loads them: its system prompt, the tools' schemas, the
+>   skills' listing and the instructions of every enabled plug-in's servers, and `CLAUDE.md` (2,349 words, about
+>   3,000 tokens). The plug-ins are the author's settings; reported only.
+>
+> The cut, in words (`wc -w` under `LC_ALL=C.UTF-8`, at `09b0d16` and `f8f4248`): the review register 61,248 to
+> 20,690, its archive 40,745; `decisions.md` 75,431 to 25,751, its closed page 49,886; the Phase 6 plan 2,005 to
+> 1,842; `CLAUDE.md` 2,330 to 2,349. The baseline's fresh windows read a median of 469 words of the register, so the
+> cut shortens what a search or a link lands on more than the measured reading; the limit is checked at WP6.03's merge.
+
 ### Work items
 
 - [x] 2120ab9 1. `.claude/scripts/usage.py`, the reading measure (D1); §8.4.5's and `CLAUDE.md`'s lines for the script (D8).
