@@ -47,7 +47,7 @@ section is a session's conduct under it. While two package PRs are open:
 - `current.md` holds one position line per lane. Edit only your lane's line.
 - A package merged before its previous phase's release: its tag and its `CHANGELOG.md` entry follow
   `CONTRIBUTING.md`, *Versions and releases*.
-- After you merge `main`, renumber each new item of every register §8.4.4 lists. Start one above the
+- After you rebase on `main`, renumber each new item of every register §8.4.4 lists. Start one above the
   highest on `main`, change every reference, and repeat until `uv run .claude/scripts/duplicates.py`
   passes.
 
@@ -57,7 +57,7 @@ section is a session's conduct under it. While two package PRs are open:
   `host: copilot` in the lane line of `docs/plans/current.md` and in the PR's **Verification**
   checkpoint. If the other host is named and the branch moved within the hour, ask before you write.
 - Hosts never share a working tree. The two-lane cap and the renumbering above apply across hosts.
-- Before each push, merge `origin/<head>`. Never force-push a branch the other host may hold.
+- Before each push, rebase on `origin/<head>`. Never force-push a branch the other host may hold.
 
 ## Normativity
 
@@ -108,6 +108,12 @@ a choice to the author.
 4. Run the gate before a push as `CLAUDE.md`'s *Commands* say (on Copilot, `hosts/copilot.md`), and
    push only a tree it passed (§8.4.2).
 5. Run `git push -u origin <branch>`. On a network failure, retry after 2, 4, 8 and 16 s.
+6. `main` keeps a linear history: its branch protection refuses a merge commit. Bring a branch up to
+   `main` with `git rebase origin/main`, never by merging `main` into it. Where the branch carries
+   commits that `main` took in another form, as a plan's PR merged before its implementation, rebuild
+   it on `origin/main` from its own new commits (`git cherry-pick`). Push a rewritten branch with
+   `git push --force-with-lease=<branch>:<the sha last pushed>`, on the package's own branch only.
+   A tick names its commit's sha, so the next commit corrects the ticks a rewrite moved.
 
 ## The PR contract
 
