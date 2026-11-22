@@ -163,9 +163,11 @@ derived from them by hatch-vcs. Neither `pyproject.toml` nor the package names a
 is no version to bump.
 
 There is one minor version per phase: v0.1 is Phase 0, v0.2 Phase 1, v0.3 Phase 2, v0.4 Phase 3,
-v0.5 Phase 4 (polish and user testing), v0.6 Phase 5 (the graphical interface) and v0.7 Phase 6
-(the validated release). The stable v1.0 follows, its content the author's to define
-(`SPECIFICATION.md` §8.2.6, OPN-08).
+v0.5 Phase 4 (polish and user testing), v0.6 Phase 5 (the graphical interface), v0.7 Phase 6 (the
+cleanup and the library's foundations), v0.8 Phase 7 (the workbench rebuilt), v0.9 to v0.11 Phases 8
+to 10 (the composer, the structural mutator, the sketcher) and v0.12 Phase 11 (the validated
+release). The stable v1.0 follows, its content the author's to define (`SPECIFICATION.md` §8.2.6,
+§8.2.49, OPN-08).
 
 - **A work package's PR writes its own [`CHANGELOG.md`](CHANGELOG.md) section** under the version
   it will be tagged, `vX.Y.Z-alpha.N`, where `vX.Y.Z` is the phase's release and N is the package's

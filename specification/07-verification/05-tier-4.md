@@ -6,7 +6,7 @@ description: "Lists the Tier 4 experimental reproduction activities (VAL-07 onwa
 
 ### 7.5 Tier 4 experimental reproduction
 
-No Tier 4 test exists before Phase 6; VAL-07 to VAL-10 and VAL-12 to VAL-14 are not yet discharged
+No Tier 4 test exists before Phase 11 (§8.2.49 AY2); VAL-07 to VAL-10 and VAL-12 to VAL-14 are not yet discharged
 by a test (VAL-11 is gated at Tier 2: `tests/tier2/test_force_convergence.py`).
 
 | ID | Activity | Acceptance criterion |

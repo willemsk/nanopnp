@@ -1,12 +1,11 @@
 # Plan: run the nanopnp workflow in the GitHub Copilot app beside Claude Code
 
-Planning, not requirements: `SPECIFICATION.md` governs. Phase 6 below writes the specification change that
-this plan needs.
+**Status: retired by the author's ruling, 22 November 2026 (§8.2.49 AY5).** The checks this plan owned, REV-166 to
+REV-168, were not run. The cleanup of the project's Phase 6 removes the Copilot host's files and rules, and a git tag
+marks the last commit that holds them, this plan among them. Nothing is run on Copilot until then.
 
-This plan owns REV-166 to REV-168, the checks that need the Copilot app on a WSL host (§8.2.46 AV6). They were not
-run before Phase 5's close: WP5.28 carried them to Phase 6, and the author runs them there, outside its package
-sequence, where its scope round places them. Until then the gate is run by hand on Copilot
-(`.claude/workflow/hosts/copilot.md`).
+Planning, not requirements: `SPECIFICATION.md` governs. "Phase 6" below is this plan's own sixth step, which wrote
+the specification change the plan needed.
 
 ## In brief
 

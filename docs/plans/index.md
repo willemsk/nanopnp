@@ -114,9 +114,10 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 
 ## Sessions
 
-- [Plan: run the nanopnp workflow in the GitHub Copilot app beside Claude Code](sessions/copilot-host.md): no status line
+- [Plan: run the nanopnp workflow in the GitHub Copilot app beside Claude Code](sessions/copilot-host.md): retired by the author's ruling, 22 November 2026 (§8.2.49 AY5).
 - [Historical prose in nanopnp: keep or remove](sessions/history-prose-review.md): decided and done, 4 October 2026.
 - [Audit nanopnp's written knowledge](sessions/kb-audit-brief.md): brief, not started.
 - [WP54 Review and Specification: Notebooks and Scientific Plots](sessions/notebooks-review-for-wp54.md): no status line
 - [WP47 — converter, ledger and gate rules](sessions/okf-converter-rules.md): planned, 14 October 2026.
 - [The knowledge base as an Open Knowledge Format bundle — evaluation and decisions](sessions/okf-knowledge-bundle.md): decided, not planned.
+- [Phases 6 to 11: the input to each phase's round](sessions/phases-6-to-11.md): input note, written 22 November 2026 at `/np-plan project` (§8.2.49); each `/np-plan phase <n>` reads its section, numbers and orders its packages, may regroup them (§8.2.46 AV5) and estimates the phase again.

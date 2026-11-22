@@ -6,8 +6,10 @@ Every notable change to nanopnp, newest first. The format follows
 
 - a **release** `vX.Y.Z` closes a phase, one minor version per phase: v0.1 is Phase 0, v0.2 is
   Phase 1, v0.3 is Phase 2, v0.4 is Phase 3, v0.5 is Phase 4 (polish and user testing), v0.6 is
-  Phase 5 (the graphical interface) and v0.7 is Phase 6 (the validated release), before the
-  stable v1.0 (§8.2.6);
+  Phase 5 (the graphical interface), v0.7 is Phase 6 (the cleanup and the library's foundations),
+  v0.8 is Phase 7 (the workbench rebuilt), v0.9 to v0.11 are Phases 8 to 10 (the composer, the
+  structural mutator, the sketcher) and v0.12 is Phase 11 (the validated release), before the
+  stable v1.0 (§8.2.6; §8.2.49);
 - a **work-package pre-release** `vX.Y.Z-alpha.N` marks the merge of the N-th work package toward
   that release; from Phase 5, the package `WP5.N` (`WP5.02` is `v0.6.0-alpha.2`). A package merged
   before the previous release takes no tag, and its entry waits under `## [Unreleased]` (§8.4.1).
@@ -16,8 +18,8 @@ The package version comes from the tag (hatch-vcs). A commit between two tags in
 development version that names it, for example `0.2.0a11.dev3+g1a2b3c4`, and that is the version
 every provenance manifest records (FR-25). The versions were renumbered on 30 September 2026
 (`SPECIFICATION.md` §8.2.4 D1): Phase 1's tags were `v0.5.0-alpha.1` to `v0.5.0` and
-Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before then records the old
-version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
+Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`, names that Phase 8 takes again (§8.2.49 AY2). A
+manifest written before then records the old version, told from a later one by its `created_at`, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
 ## [Unreleased]

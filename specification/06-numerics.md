@@ -83,7 +83,8 @@ Under `physics.inertia` the left side gains `+ ∫ ϱ (u·∇)u·v r dr dz` (`ϱ
 
 NOTE (NUM-04, PHY-07; §8.2.37 AM2): PHY-07's density continuity, the reference's hand-added
 `∫ (u·∇ϱ) q r dr dz`, is not assembled, so the assembled `ϱ (u·∇)u` is PHY-07's `(u·∇)(ϱu)` only where
-`u·∇ϱ = 0`. REV-223, measured in Phase 6.
+`u·∇ϱ = 0`. REV-223: Phase 6's equations package, measured against the published results in Phase 11
+(§8.2.49 AY6).
 
 **NUM-05.** The cylindrical hoop-strain term `2η u_r v_r / r²` SHALL be assembled. After
 multiplication by the `r` weight it appears as `2η u_r v_r / r`, which is integrable because
@@ -119,7 +120,7 @@ NOTE (NUM-07, NUM-08, the `r` weight and the default order): NGSolve's default o
 the `r` weight, so non-singular P2 terms are integrated one order short; it is a consistency error, not
 a NaN, and it converges with the mesh. `poisson` assembles its stiffness, its source and PHY-09's
 prescribed surface charge with one extra order; the coupled models keep the default, and whether they
-gain it is decided in Phase 6 with VAL-16 and VAL-17. A supplied field's source term is assembled at
+gain it is decided in Phase 11 with VAL-16 and VAL-17 (§8.2.49 AY2). A supplied field's source term is assembled at
 order 8 (PHY-19's NOTE on the consumer leg), which settles that term and not this question.
 Measurements: `knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md` §2.2.
 

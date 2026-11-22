@@ -163,9 +163,10 @@ commands. A choice put to the author follows *Putting a choice to the author* in
 renders screens and mockups headless, reviews them, publishes them for the author's verdicts, and runs
 a design round (§8.4.4).
 
-**Models:** the implementing session runs on Opus at high effort, and a scoped item goes to a Sonnet
-sub-agent at high effort. Haiku takes only mechanical, repetitive work that is fully specified and
-needs under 100k tokens of context (§8.2.38 AN8). The kept helpers are the `physics-reviewer`,
+**Models:** `/np-plan` at each level, its review and `/np-ship` run on Fable 5.2 at high effort;
+`/np-implement` runs on Opus 5.5 at high effort, set explicitly. A scoped item goes to a Sonnet 5.5
+sub-agent at high effort. Haiku 5.5 takes only mechanical, repetitive work that is fully specified and
+needs under 100k tokens of context (§8.2.38 AN8; §8.2.49 AY7). The kept helpers are the `physics-reviewer`,
 `gui-reviewer` and `ci-log-classifier` sub-agents and seven scripts in `.claude/scripts/`:
 `clause.py` prints a clause, `duplicates.py` names a number that two items of one register share,
 `same_tree.py` checks that changed Python files differ only in prose (§8.2.11 L5),
