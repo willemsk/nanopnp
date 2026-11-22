@@ -95,6 +95,7 @@ dev = [
     "markdown>=3.5",
     "playwright>=1.49",
     "rust-just>=1.59.0",
+    "pytest-timeout>=2.4",
 ]
 # The documentation site (QR-15, VER-45; WP16 D1, D12). Not a default group:
 # nothing on the end-user path needs it. Material for MkDocs is in maintenance
@@ -224,6 +225,10 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-m '(tier1 or tier2) and not slow' --strict-markers --strict-config"
+# Each test's bound (pytest-timeout; SPECIFICATION.md section 7.6, NOTE (a stalled test); WP6.01 D2):
+# PER_TEST_TIMEOUT_S = 600, ten times the slowest per-push test measured. tests/conftest.py
+# gives a `nightly` or `slow` test LONG_TEST_TIMEOUT_S instead. A hang fails naming its test.
+timeout = 600
 markers = [
     "tier1: unit and property tests, seconds, every push (SPECIFICATION.md section 7.2)",
     "tier2: analytic benchmarks, minutes, every push (section 7.3)",
