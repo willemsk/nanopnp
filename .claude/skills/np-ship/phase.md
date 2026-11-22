@@ -12,7 +12,8 @@
    - Each findings log of the phase (`docs/user-testing/findings.md`, a study's log) has the header
      `closed`; `docs/project/review-findings.md` stays `open`. Each `REV-nn` row that the phase owns
      is `fixed`, or ruled `accepted` with its later package, `deferred`, `post-1.0`, `declined` or
-     `wontfix` (§8.4.6).
+     `wontfix` (§8.4.6). Then run `uv run .claude/scripts/archive_items.py`: it moves each closed
+     row, with its section, to `docs/project/review-archive.md` and rewrites the links to it.
    - The numbers of the end-of-phase report are run again on this tree. Never copy them from an
      Outcome.
    - `CHANGELOG.md` has the `[X.Y.0]` section, and `CITATION.cff` has its `version` and

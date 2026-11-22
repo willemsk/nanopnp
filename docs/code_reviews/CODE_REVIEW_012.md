@@ -222,12 +222,12 @@ The author ruled on each finding on 20 October 2026. Three items stay open in th
 | AR-06 | declined | Duplicates REV-120, open. |
 | AR-07 | declined | No measurement; the SICN > 0.3 quality gate refuses such a mesh. |
 | AR-08 | declined | No defect: it recommends keeping `divide_wall`. |
-| AR-09 | open | [REV-121](../project/review-items.md#rev-121-stage-1-checks-no-axis-for-a-monomeric-or-hetero-oligomeric-pore) |
+| AR-09 | open | [REV-121](../project/review-archive.md#rev-121-stage-1-checks-no-axis-for-a-monomeric-or-hetero-oligomeric-pore) |
 | AR-10 | declined | The §5.2 ruling: no fallback by element. |
 | AR-11 | declined | Duplicates NUM-22, which already precedes any 3D capability. |
 | AR-12 | declined | 3D is out of scope (N4); CON-01 asks only that the architecture not preclude it. |
 | AR-13 | declined | QR-14 holds: a model registered as one class runs as a single rung, and no model yet needs another ladder. |
 | AR-14 | declined | No requirement asks for a pore-wall surface charge in the case; surface charge belongs to the analyte, FR-21, v0.7. |
-| AR-15 | open | [REV-122](../project/review-items.md#rev-122-a-case-cannot-load-a-correction-file-from-outside-the-installed-package) |
-| AR-16 | open | [REV-123](../project/review-items.md#rev-123-the-library-has-no-plotting-helpers-or-notebook-display), with AR-17 |
+| AR-15 | open | [REV-122](../project/review-archive.md#rev-122-a-case-cannot-load-a-correction-file-from-outside-the-installed-package) |
+| AR-16 | open | [REV-123](../project/review-archive.md#rev-123-the-library-has-no-plotting-helpers-or-notebook-display), with AR-17 |
 | AR-17 | open | Merged into REV-123 |

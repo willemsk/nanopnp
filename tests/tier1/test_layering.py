@@ -44,7 +44,7 @@ def test_ver61_every_annotated_edge_names_a_finding_of_the_log() -> None:
     project = REPOSITORY / "docs" / "project"
     ids = {
         row.id
-        for name in ("modularity-findings.md", "review-findings.md")
+        for name in ("modularity-findings.md", "review-findings.md", "review-archive.md")
         for row in parse_log(project / name).rows
     }
     recorded = (*accepted_relation(), *(e for r in RATCHETS for e in accepted_upward(ratchet=r)))

@@ -147,14 +147,14 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   > `gate.sh`'s stamp with `cp -p`; `test_ver74_a_same_size_edit_in_the_index_second_is_seen` fails
   > on the old copy.
   > **Outcome — the hook misses 60 s on a `post/qoi.py` change: 115 s and 155 s
-  > ([REV-80](../../project/review-items.md#rev-80-a-source-change-selects-every-process-starting-test-file-so-the-commit-hook-misses-its-60-s-budget)).**
+  > ([REV-80](../../project/review-archive.md#rev-80-a-source-change-selects-every-process-starting-test-file-so-the-commit-hook-misses-its-60-s-budget)).**
   > 4 cores, Python 3.14.6, map recorded on the parent (2,136 tests, 249 s under the recorder), BLAS
   > threads 1. A planted body change in `rectification_ratio` selected 866 tests in 40 files and
   > committed in 115 s; one in `total_current`, 1,012 tests, in 155 s. The process-starting files
   > (151 tests in 30 files) take 64.7 s alone: D4's "any source change selects every process
   > starter", widened to whole files, is the floor, not the change's own callers (8 tests for
   > `rectification_ratio`). D9's prediction of 30 to 50 s did not count that floor. The fallback rate
-  > of past commits is [REV-81](../../project/review-items.md#rev-81-most-past-commits-would-fall-back-to-the-development-selection).
+  > of past commits is [REV-81](../../project/review-archive.md#rev-81-most-past-commits-would-fall-back-to-the-development-selection).
   > The orchestrator's review added two fixes: the selector's stderr is never read as a node id
   > (`14d759e`), and a selected GUI file stays serial.
 

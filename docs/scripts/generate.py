@@ -68,7 +68,13 @@ REPOSITORY = "https://github.com/willemsk/nanopnp/blob/main"
 LINK = re.compile(r"(!?\[[^\]]*\])\(([^)\s]+)\)")
 """An inline Markdown link or image, capturing its text and its target."""
 
-REGISTERS = ("review-findings.md", "review-items.md", "modularity.md", "modularity-findings.md")
+REGISTERS = (
+    "review-findings.md",
+    "review-items.md",
+    "review-archive.md",
+    "modularity.md",
+    "modularity-findings.md",
+)
 """The project pages copied so that their links into the plans and reviews reach the repository."""
 
 CODE = re.compile(r"(```.*?```|`[^`\n]*`)", re.DOTALL)

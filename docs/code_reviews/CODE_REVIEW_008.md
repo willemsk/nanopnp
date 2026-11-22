@@ -126,7 +126,7 @@ the tested-arithmetic rule, both log entries are preserved, and ARM detection al
 covers 32-bit ARM. Both reviews' distinct changes remain in the combined tree.
 
 The incoming review's unresolved no-MPI-symbols claim remains recorded as
-[REV-111](../project/review-items.md#rev-111-the-no-mpi-symbols-claim-is-backed-only-by-the-lock-file);
+[REV-111](../project/review-archive.md#rev-111-the-no-mpi-symbols-claim-is-backed-only-by-the-lock-file);
 it is not closed by this integration. This section records conflict adjudication,
 not an independent re-review of the incoming commits. The combined NGSolve-trap
 and bundle checks passed all 43 tests; PR #104 records the subsequent full gate,

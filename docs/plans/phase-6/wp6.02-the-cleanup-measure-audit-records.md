@@ -271,7 +271,7 @@ closed rows. `main` writes or checks both. The navigation gains `Decisions regis
 - [x] 4. Compaction checkpoint. **Executor:** main
 - [x] 7e2cf8d 5. The stop: the two questions, rulings AZ13 and AZ14, §8.4.4, `np-plan/phase.md`, REV-271 (D4). Done when the
   author has ruled and `decisions.py --check` passes. **Executor:** main
-- [ ] 6. `.claude/scripts/clause.py`, the stale owners of `holds-now.yaml`, §8.4.4 (D5). Done when `clause.py AY5`
+- [x] 0fd7ff5 6. `.claude/scripts/clause.py`, the stale owners of `holds-now.yaml`, §8.4.4 (D5). Done when `clause.py AY5`
   prints AA6 and AV6 as a label and one line each, `--all` prints them in full, and VER-79's tests pass. **Executor:** main; the
   survey by a `general-purpose` sub-agent on Sonnet, high effort
 - [ ] 7. `.claude/scripts/archive_items.py`, `docs/project/review-archive.md`, the readers and the links (D6). Done

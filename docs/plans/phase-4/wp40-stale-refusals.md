@@ -46,7 +46,7 @@ it where it exited 0 (D5). Exit codes do not change (VER-47). The schema identif
 Pointers: IF-02, FR-27, FR-10, FR-21, NUM-16, NUM-20, VER-24, VER-47, VER-61, VER-67 (proposed),
 VER-72; §2.7 NOTE (Versioning); §5.3.1 NOTEs on `inputs:` and `numerics.nonlinear`; §8.2.8 H1, H8;
 §8.2.9 I3; [`MOD-14`](../../project/modularity.md#mod-14-refusals-name-releases-that-have-shipped);
-[REV-62](../../project/review-items.md#rev-62-a-mesh-named-by-store-key-is-refused). No `OPN-` is open
+[REV-62](../../project/review-archive.md#rev-62-a-mesh-named-by-store-key-is-refused). No `OPN-` is open
 here.
 
 ### Decisions

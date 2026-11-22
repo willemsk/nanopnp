@@ -1210,283 +1210,283 @@ By decider: author 708; open 5; session, own call 858; session, put to the autho
 | WP6.02 D6 | author | `docs/plans/phase-6/wp6.02-the-cleanup-measure-audit-records.md` | 2026-11-22 | WP6.02 | A kept script, `archive_items.py`, moves each `fixed`, `declined` or `wontfix` row with its section to `docs/project/review-archive.md` and rewrites every link to it. `decisions.py` writes the rows that bind to `decisio…` | §8.2.50 AZ12 | plan in flight |
 | WP6.02 D7 | session, own call | `docs/plans/phase-6/wp6.02-the-cleanup-measure-audit-records.md` | 2026-11-22 | WP6.02 | The plan's Outcome lists, in at most 400 words, each decision, owner or instruction found outdated and not fixed here, with its file and the step that takes it: WP6.03 or the rescoping round. It gives the baseline's tok… | unstated | plan in flight |
 | WP6.02 D8 | session, own call | `docs/plans/phase-6/wp6.02-the-cleanup-measure-audit-records.md` | 2026-11-22 | WP6.02 | §8.4.4 to §8.4.6 and `CLAUDE.md`'s list of scripts say what each script does, in its item's commit. `CHANGELOG.md` gains `## [0.7.0-alpha.2]`. REV-272's section gains the cut's word counts \| The core, *Normativity*; §8.… | §8.4.4, §8.4.6, REV-272, §8.4.1 | plan in flight |
-| REV-01 | session, own call | `docs/project/review-findings.md` |  | WP37 | TOL_NM's home loaded pydantic and yaml | WP37 | fixed |
-| REV-02 | session, own call | `docs/project/review-findings.md` |  | WP37 | cli/errors.py was a re-export nothing imported | WP37 | fixed |
-| REV-03 | session, own call | `docs/project/review-findings.md` |  | WP38 | The solution-field names lived in two layers | WP38 | fixed |
-| REV-04 | session, own call | `docs/project/review-findings.md` |  | WP37 | VER-61's ratchet did not see an import moved into a function | WP37 | fixed |
-| REV-05 | session, own call | `docs/project/review-findings.md` |  | WP39 | The shells read the nanopnp facade | WP39 | fixed |
-| REV-06 | session, own call | `docs/project/review-findings.md` |  | WP41 | A supplied charge or permittivity field has no stated frame beside a moved structure | WP41 | fixed |
-| REV-07 | session, own call | `docs/project/review-findings.md` |  | WP41 | The conservation gate and the Poisson source integrate an areal charge differently | WP41 | fixed |
-| REV-08 | session, own call | `docs/project/review-findings.md` |  | WP41 | Newton's update test takes one norm over every field | WP41 | fixed |
-| REV-09 | session, own call | `docs/project/review-findings.md` |  | WP41 | A driver clamp under the ionic-strength driver is never logged | WP41 | fixed |
-| REV-10 | session, own call | `docs/project/review-findings.md` |  | WP37 | The prose rule let a ruling or a report heading change without VER-63 | WP37 | fixed |
-| REV-11 | session, own call | `docs/project/review-findings.md` |  | WP42 | No check catches a NaN-permissive gate comparison | WP42 | fixed |
-| REV-12 | session, own call | `docs/project/review-findings.md` |  | WP42 | No test shows every case leaf changes the forms or is provenance-only | WP42 | fixed |
-| REV-13 | session, own call | `docs/project/review-findings.md` |  | WP42 | Example 06's key test cannot see a stage-7 key change | WP42 | fixed |
-| REV-14 | session, own call | `docs/project/review-findings.md` |  | WP46 | A radial grid's .npz does not round-trip its spacing exactly | WP46 | fixed |
-| REV-15 | session, own call | `docs/project/review-findings.md` |  | WP46 | Example 05 quotes #SBATCH directives as shell words | WP46 | fixed |
-| REV-16 | session, own call | `docs/project/review-findings.md` |  | WP46 | A salt sweep regenerates an identical mesh at each concentration | WP46 | fixed |
-| REV-17 | session, own call | `docs/project/review-findings.md` |  | WP41 | A warm start is gated on free prose in the stabilisation provenance | WP41 | fixed |
-| REV-18 | session, own call | `docs/project/review-findings.md` |  | WP46 | Concurrent sweep members may write the same store key | WP46 | fixed |
-| REV-19 | session, own call | `docs/project/review-findings.md` |  | WP46 | A zero-frame trajectory raises a bare IndexError | WP46 | fixed |
-| REV-20 | author | `docs/project/review-findings.md` |  |  | The desktop shell has no multiprocessing.freeze_support | §8.2.18 T1 | wontfix |
-| REV-21 | author | `docs/project/review-findings.md` |  |  | numerics/linear.py imports scipy inside its functions | §8.2.8 H12 | declined |
-| REV-22 | author | `docs/project/review-findings.md` |  |  | write_dx formats with % | §8.2.8 H12 | declined |
-| REV-23 | session, own call | `docs/project/review-findings.md` |  | WP42 | The corrections test bounds both ions by one range | WP42 | fixed |
-| REV-24 | session, own call | `docs/project/review-findings.md` |  | WP46 | Sampler construction may still be duplicated | WP46 | fixed |
-| REV-25 | session, own call | `docs/project/review-findings.md` |  | WP46 | A post stage run without a solve writes scratch to the default store | WP46 | fixed |
-| REV-26 | session, own call | `docs/project/review-findings.md` |  | WP41 | stabilisation_parameters returns an empty mapping off the coupled model | WP41 | fixed |
-| REV-27 | session, own call | `docs/project/review-findings.md` |  | WP38 | The inf-sup check ran at resolve, not at validation | WP38 | fixed |
-| REV-28 | session, own call | `docs/project/review-findings.md` |  | WP5.21 | The viewer renders every finished run eagerly | WP5.21 | fixed |
-| REV-29 | session, own call | `docs/project/review-findings.md` |  | WP42 | The cylindrical-pore fixture is copied into four test modules | WP42 | fixed |
-| REV-30 | session, own call | `docs/project/review-findings.md` |  | WP5.21 | The viewer's scene is written twice | WP5.21 | fixed |
-| REV-31 | author | `docs/project/review-findings.md` |  |  | The bundle's size is not recorded | §8.2.18 T1 | wontfix |
-| REV-32 | author | `docs/project/review-findings.md` |  |  | Old store entries are neither migrated nor removed | §8.2.18 T2 | fixed |
-| REV-33 | author | `docs/project/review-findings.md` |  |  | writable_formats assumes the extra's floor | §8.2.9 I3 | declined |
-| REV-34 | session, own call | `docs/project/review-findings.md` |  | WP42 | Two reference tests duplicate the frozen case | WP42 | fixed |
+| REV-01 | session, own call | `docs/project/review-archive.md` |  | WP37 | TOL_NM's home loaded pydantic and yaml | WP37 | fixed |
+| REV-02 | session, own call | `docs/project/review-archive.md` |  | WP37 | cli/errors.py was a re-export nothing imported | WP37 | fixed |
+| REV-03 | session, own call | `docs/project/review-archive.md` |  | WP38 | The solution-field names lived in two layers | WP38 | fixed |
+| REV-04 | session, own call | `docs/project/review-archive.md` |  | WP37 | VER-61's ratchet did not see an import moved into a function | WP37 | fixed |
+| REV-05 | session, own call | `docs/project/review-archive.md` |  | WP39 | The shells read the nanopnp facade | WP39 | fixed |
+| REV-06 | session, own call | `docs/project/review-archive.md` |  | WP41 | A supplied charge or permittivity field has no stated frame beside a moved structure | WP41 | fixed |
+| REV-07 | session, own call | `docs/project/review-archive.md` |  | WP41 | The conservation gate and the Poisson source integrate an areal charge differently | WP41 | fixed |
+| REV-08 | session, own call | `docs/project/review-archive.md` |  | WP41 | Newton's update test takes one norm over every field | WP41 | fixed |
+| REV-09 | session, own call | `docs/project/review-archive.md` |  | WP41 | A driver clamp under the ionic-strength driver is never logged | WP41 | fixed |
+| REV-10 | session, own call | `docs/project/review-archive.md` |  | WP37 | The prose rule let a ruling or a report heading change without VER-63 | WP37 | fixed |
+| REV-11 | session, own call | `docs/project/review-archive.md` |  | WP42 | No check catches a NaN-permissive gate comparison | WP42 | fixed |
+| REV-12 | session, own call | `docs/project/review-archive.md` |  | WP42 | No test shows every case leaf changes the forms or is provenance-only | WP42 | fixed |
+| REV-13 | session, own call | `docs/project/review-archive.md` |  | WP42 | Example 06's key test cannot see a stage-7 key change | WP42 | fixed |
+| REV-14 | session, own call | `docs/project/review-archive.md` |  | WP46 | A radial grid's .npz does not round-trip its spacing exactly | WP46 | fixed |
+| REV-15 | session, own call | `docs/project/review-archive.md` |  | WP46 | Example 05 quotes #SBATCH directives as shell words | WP46 | fixed |
+| REV-16 | session, own call | `docs/project/review-archive.md` |  | WP46 | A salt sweep regenerates an identical mesh at each concentration | WP46 | fixed |
+| REV-17 | session, own call | `docs/project/review-archive.md` |  | WP41 | A warm start is gated on free prose in the stabilisation provenance | WP41 | fixed |
+| REV-18 | session, own call | `docs/project/review-archive.md` |  | WP46 | Concurrent sweep members may write the same store key | WP46 | fixed |
+| REV-19 | session, own call | `docs/project/review-archive.md` |  | WP46 | A zero-frame trajectory raises a bare IndexError | WP46 | fixed |
+| REV-20 | author | `docs/project/review-archive.md` |  |  | The desktop shell has no multiprocessing.freeze_support | §8.2.18 T1 | wontfix |
+| REV-21 | author | `docs/project/review-archive.md` |  |  | numerics/linear.py imports scipy inside its functions | §8.2.8 H12 | declined |
+| REV-22 | author | `docs/project/review-archive.md` |  |  | write_dx formats with % | §8.2.8 H12 | declined |
+| REV-23 | session, own call | `docs/project/review-archive.md` |  | WP42 | The corrections test bounds both ions by one range | WP42 | fixed |
+| REV-24 | session, own call | `docs/project/review-archive.md` |  | WP46 | Sampler construction may still be duplicated | WP46 | fixed |
+| REV-25 | session, own call | `docs/project/review-archive.md` |  | WP46 | A post stage run without a solve writes scratch to the default store | WP46 | fixed |
+| REV-26 | session, own call | `docs/project/review-archive.md` |  | WP41 | stabilisation_parameters returns an empty mapping off the coupled model | WP41 | fixed |
+| REV-27 | session, own call | `docs/project/review-archive.md` |  | WP38 | The inf-sup check ran at resolve, not at validation | WP38 | fixed |
+| REV-28 | session, own call | `docs/project/review-archive.md` |  | WP5.21 | The viewer renders every finished run eagerly | WP5.21 | fixed |
+| REV-29 | session, own call | `docs/project/review-archive.md` |  | WP42 | The cylindrical-pore fixture is copied into four test modules | WP42 | fixed |
+| REV-30 | session, own call | `docs/project/review-archive.md` |  | WP5.21 | The viewer's scene is written twice | WP5.21 | fixed |
+| REV-31 | author | `docs/project/review-archive.md` |  |  | The bundle's size is not recorded | §8.2.18 T1 | wontfix |
+| REV-32 | author | `docs/project/review-archive.md` |  |  | Old store entries are neither migrated nor removed | §8.2.18 T2 | fixed |
+| REV-33 | author | `docs/project/review-archive.md` |  |  | writable_formats assumes the extra's floor | §8.2.9 I3 | declined |
+| REV-34 | session, own call | `docs/project/review-archive.md` |  | WP42 | Two reference tests duplicate the frozen case | WP42 | fixed |
+| REV-36 | session, own call | `docs/project/review-archive.md` |  | WP39 | The gmsh session stops a caller's logger | WP39 | fixed |
+| REV-37 | session, own call | `docs/project/review-archive.md` |  | WP39 | A broken gmsh wheel is not a refusal | WP39 | fixed |
+| REV-38 | session, own call | `docs/project/review-archive.md` |  | WP39 | gmsh.model.remove() can mask the error it follows | WP39 | fixed |
+| REV-39 | author | `docs/project/review-archive.md` |  | WP5.17 | A case supplying inputs.profile gets no contour editor | §8.2.18 T2; WP5.17 | fixed |
+| REV-40 | session, own call | `docs/project/review-archive.md` |  | WP46 | DensityMap.read accepts a file written in nm | WP46 | fixed |
+| REV-42 | session, own call | `docs/project/review-archive.md` |  | WP42 | pnp carries inert flow keys | WP42 | fixed |
+| REV-43 | session, own call | `docs/project/review-archive.md` |  | WP46 | chain_characters duplicates the export's mapping | WP46 | fixed |
+| REV-44 | session, own call | `docs/project/review-archive.md` |  | WP42 | The Stern-layer test re-solves the drawn slab | WP42 | fixed |
+| REV-47 | author | `docs/project/review-archive.md` |  | WP60 | The test-duration targets are missed | WP60; §8.2.9 I3 | fixed |
+| REV-48 | session, own call | `docs/project/review-archive.md` |  | WP42 | The 2WCD walk test copies its constants | WP42 | fixed |
+| REV-49 | session, own call | `docs/project/review-archive.md` |  | WP46 | AXISYMMETRIC is replaced repeatedly | WP46 | fixed |
+| REV-50 | session, own call | `docs/project/review-archive.md` |  | WP46 | _inner_wall_nm re-implements innermost_crossings | WP46 | fixed |
+| REV-51 | session, own call | `docs/project/review-archive.md` |  | WP46 | A redundant reopen and resolve in WP34's walk | WP46 | fixed |
+| REV-52 | author | `docs/project/review-archive.md` |  |  | deviations and SolveReporting are off the stage protocol | §8.2.18 T2 | fixed |
+| REV-53 | author | `docs/project/review-archive.md` |  |  | Some walk rules stay as case logic | §8.2.9 I3 | declined |
+| REV-54 | session, own call | `docs/project/review-archive.md` |  | WP38 | The MOD-12 check compared names, not modules | WP38 | fixed |
+| REV-55 | session, own call | `docs/project/review-archive.md` |  | WP46 | Per-stage mkdtemp fallbacks | WP46 | fixed |
+| REV-56 | author | `docs/project/review-archive.md` |  |  | The geometry editor's simplicity check runs on the Qt thread | §8.2.18 T1 | wontfix |
+| REV-57 | session, own call | `docs/project/review-archive.md` |  | WP46 | frame_times decodes every frame | WP46 | fixed |
+| REV-59 | session, own call | `docs/project/review-archive.md` |  | WP46 | attribute_to_construction raises the wrong error on a lax comparison | WP46 | fixed |
+| REV-62 | session, own call | `docs/project/review-archive.md` |  | WP5.05 | A mesh named by store key is refused | WP5.05 | fixed |
+| REV-63 | session, own call | `docs/project/review-archive.md` |  | WP38 | The protonation stage walked through meshing | WP38 | fixed |
+| REV-65 | author | `docs/project/review-archive.md` |  |  | The Windows bundle exposes no mesh command | §8.2.18 T1 | wontfix |
+| REV-66 | session, own call | `docs/project/review-archive.md` |  | WP42 | A model without flow is refused on its element pair before its flow switch | WP42 | fixed |
+| REV-68 | session, own call | `docs/project/review-archive.md` |  | WP40 | The spec still promises a refusal that D8 removed | WP40 | fixed |
+| REV-69 | session, own call | `docs/project/review-archive.md` |  | WP40 | VER-67 defers its refusal texts to a plan | WP40 | fixed |
+| REV-70 | session, own call | `docs/project/review-archive.md` |  | WP40 | WP40 D5 and D8 go beyond MOD-14's letter | WP40 | fixed |
+| REV-71 | session, own call | `docs/project/review-archive.md` |  | WP42 | Stage 10's cache key does not move when the solver's algorithm does | WP42 | fixed |
+| REV-72 | session, own call | `docs/project/review-archive.md` |  | WP42 | A supplied field's rule order travels beside its source as a second argument | WP42 | fixed |
+| REV-73 | session, own call | `docs/project/review-archive.md` |  | WP42 | Cross-leaf inertness is not checked | WP42 | fixed |
+| REV-74 | session, own call | `docs/project/review-archive.md` |  | WP42 | An untested raise in the force extension carries a coverage pragma | WP42 | fixed |
+| REV-75 | session, own call | `docs/project/review-archive.md` |  | WP42 | The two defaults modules duplicate the specs' defaults | WP42 | fixed |
+| REV-76 | session, own call | `docs/project/review-archive.md` |  | WP42 | `ModelDeclaration.unread` paths are not validated against the schema | WP42 | fixed |
+| REV-77 | session, own call | `docs/project/review-archive.md` |  | WP42 | Pinning every artefact schema at v0.5 removes the cache-bust a payload change needs | WP42 | fixed |
+| REV-78 | session, own call | `docs/project/review-archive.md` |  | WP42 | The threads flag re-lists the thread variables and writes the environment for good | WP42 | fixed |
+| REV-79 | session, own call | `docs/project/review-archive.md` |  | WP42 | The exclusion shell raises a bare ValueError for a NaN ring coordinate | WP42 | fixed |
+| REV-80 | session, own call | `docs/project/review-archive.md` |  | WP44 | A source change selects every process-starting test file, so the commit hook misses its 60 s budget | WP44 | fixed |
+| REV-81 | session, own call | `docs/project/review-archive.md` |  | WP44 | Most past commits would fall back to the development selection | WP44 | fixed |
+| REV-82 | session, own call | `docs/project/review-archive.md` |  | WP43 | The push gate takes over 9 minutes against its 5-minute budget | WP43 | fixed |
+| REV-83 | session, own call | `docs/project/review-archive.md` |  | WP43 | The longest-first test order is inert under xdist file scheduling | WP43 | fixed |
+| REV-84 | session, own call | `docs/project/review-archive.md` |  | WP43 | A Markdown file that a WP43 test reads is classed as prose, so its test does not run on a change to it | WP43 | fixed |
+| REV-85 | session, own call | `docs/project/review-archive.md` |  | WP43 | tests/impact.py uses os.path against the coding conventions | WP43 | fixed |
+| REV-86 | session, own call | `docs/project/review-archive.md` |  | WP43 | ci.yml repeats the steps of the platforms job in the full-matrix job | WP43 | fixed |
+| REV-87 | session, own call | `docs/project/review-archive.md` |  | WP44 | The plan word cap counts the Outcome that /wp-implement appends | WP44 | fixed |
+| REV-88 | session, own call | `docs/project/review-archive.md` |  | WP44 | No check remains that the public API carries its docstrings | WP44 | fixed |
+| REV-89 | session, own call | `docs/project/review-archive.md` |  | WP44 | The shard partition test ignores collection errors and recollects the tree on every commit | WP44 | fixed |
+| REV-90 | session, own call | `docs/project/review-archive.md` |  | WP44 | VER-72 (d) and the planned-xfail logic guard a marker the workflow no longer writes | WP44 | fixed |
+| REV-92 | author | `docs/project/review-archive.md` |  |  | src prose share is 10.6 %, above the 10 % prediction | §8.2.11 L10 | declined |
+| REV-93 | session, own call | `docs/project/review-archive.md` |  | WP45 | VER-75 (a) says leading underscore; dunder methods count as public | WP45 | fixed |
+| REV-94 | session, own call | `docs/project/review-archive.md` |  | WP45 | 47 public functions and methods carry no docstring, and nothing checks them | WP45 | fixed |
+| REV-95 | session, own call | `docs/project/review-archive.md` |  | WP45 | VER-75 (a) states a check on derivations and history that no test makes | WP45 | fixed |
+| REV-96 | session, own call | `docs/project/review-archive.md` |  | WP45 | About 157 prose lines in src and tests still carry identifiers or plan history | WP45 | fixed |
+| REV-97 | session, own call | `docs/project/review-archive.md` |  | WP45 | A directive comment is defined twice, differently | WP45 | fixed |
+| REV-98 | session, own call | `docs/project/review-archive.md` |  | WP46 | The scratch directory is the workspace itself, where the specification says fresh per run | WP46 | fixed |
+| REV-99 | session, own call | `docs/project/review-archive.md` |  | WP46 | A put killed before the rename leaves a hidden staging directory nothing reclaims | WP46 | fixed |
+| REV-100 | session, own call | `docs/project/review-archive.md` |  | WP46 | A put copies and hashes a payload before learning the key is already stored | WP46 | fixed |
+| REV-101 | session, own call | `docs/project/review-archive.md` |  | WP46 | A pre-WP46 charge-grid npz in a store is served under an unchanged key | WP46 | fixed |
+| REV-102 | session, own call | `docs/project/review-archive.md` |  | WP46 | frame_times reads a private MDAnalysis attribute | WP46 | fixed |
+| REV-103 | session, own call | `docs/project/review-archive.md` |  | WP48 | A verified-only claim outside the test-evidence concepts is not yet classed as executable arithmetic or a source reading | WP48 | fixed |
+| REV-104 | session, own call | `docs/project/review-archive.md` |  | WP47 | A correction file keeps a dead citation to the removed flat knowledge file | WP47 | fixed |
+| REV-105 | session, own call | `docs/project/review-archive.md` |  | WP47 | SPECIFICATION G12 (7) says the navigation is generated from the index files; the build has one static entry | WP47 | fixed |
+| REV-106 | session, own call | `docs/project/review-archive.md` |  | WP47 | The heading-slug function differs from the table-of-contents slugger for emphasis, entities and images | WP47 | fixed |
+| REV-107 | session, own call | `docs/project/review-archive.md` |  | WP47 | About 40 log entries are fragments | WP47 | fixed |
+| REV-108 | session, own call | `docs/project/review-archive.md` |  | WP48 | WP48 omitted sourced arithmetic from its audit | WP48 plan amendment | fixed |
+| REV-109 | session, own call | `docs/project/review-archive.md` |  | WP48 | WP48 omitted version metadata coverage and refusal checks | WP48 plan amendment | fixed |
+| REV-110 | session, own call | `docs/project/review-archive.md` |  | WP48 | WP48 lacked an evidence route for historical numerical experiments | WP48 plan amendment | fixed |
+| REV-111 | author | `docs/project/review-archive.md` |  |  | The no-MPI-symbols claim is backed only by the lock file | §8.2.22 X7 | fixed |
+| REV-112 | session, own call | `docs/project/review-archive.md` |  | WP49 | Three suspected costs were never measured | WP49 plan | fixed |
+| REV-113 | session, own call | `docs/project/review-archive.md` |  | WP49 | The case schema has no JSON Schema export | WP49 plan | fixed |
+| REV-114 | author | `docs/project/review-archive.md` |  |  | The shell moves from Qt to a browser | §8.2.18 T5 | fixed |
+| REV-115 | author | `docs/project/review-archive.md` |  |  | The architecture review's already-met claims | §8.2.12 M1 | declined |
+| REV-116 | session, own call | `docs/project/review-archive.md` |  | WP60 | The cost record predates the harness fixes | WP60 | fixed |
+| REV-117 | session, own call | `docs/project/review-archive.md` |  |  | Tooling left without tests by the test scope | — | fixed |
+| REV-118 | author | `docs/project/review-archive.md` |  |  | Gate and mechanism tests the pruning removed | §8.2.13 N1 | fixed |
+| REV-119 | session, own call | `docs/project/review-archive.md` |  |  | The analyte benchmark meshes skip the quality gate | CODE_REVIEW_010 | declined |
+| REV-120 | author | `docs/project/review-archive.md` |  |  | The force-traction normal needs one material on the left along the whole surface | §8.2.22 X6 | fixed |
+| REV-121 | session, own call | `docs/project/review-archive.md` |  | WP5.16 | Stage 1 checks no axis for a monomeric or hetero-oligomeric pore | WP5.16 | fixed |
+| REV-122 | author | `docs/project/review-archive.md` |  |  | A case cannot load a correction file from outside the installed package | §8.2.22 X6 | fixed |
+| REV-123 | author | `docs/project/review-archive.md` |  |  | The library has no plotting helpers or notebook display | §8.2.14 P6 | fixed |
+| REV-124 | session, own call | `docs/project/review-archive.md` |  |  | The specification's site navigation is listed by hand | CODE_REVIEW_013 | fixed |
+| REV-125 | session, own call | `docs/project/review-archive.md` |  | WP53 | The workflow files exceed the plan's word caps | WP53 | fixed |
+| REV-126 | author | `docs/project/review-archive.md` |  |  | Package numbers can collide between the two lanes | §8.2.17 S16 | fixed |
+| REV-127 | author | `docs/project/review-archive.md` |  |  | WP57 may restate the Qt shell's gating clauses before v0.5.0 | §8.2.17 S17 | fixed |
+| REV-128 | author | `docs/project/review-archive.md` |  |  | The renumbering list leaves out other identifier kinds and the ruling letters | §8.2.17 S18 | fixed |
+| REV-129 | author | `docs/project/review-archive.md` |  |  | WP58's tag and the place of a held changelog entry are undefined | §8.2.17 S19 | fixed |
+| REV-130 | author | `docs/project/review-archive.md` |  |  | Nothing checks that identifiers stay unique after both lanes merge | §8.2.17 S20 | fixed |
+| REV-131 | session, own call | `docs/project/review-archive.md` |  |  | The charge-level mutator has no library step or tier row | Phase 5 plan | fixed |
+| REV-132 | session, own call | `docs/project/review-archive.md` |  |  | The Phase 5 end-of-phase report names no source for its numbers | Phase 5 plan | fixed |
+| REV-133 | session, own call | `docs/project/review-archive.md` |  |  | The Phase 5 plan and the core exceed their word caps | CODE_REVIEW_015 | fixed |
+| REV-134 | session, own call | `docs/project/review-archive.md` |  | WP5.27 | The Qt shell's Result tab prints the stored float wrapper, not the number | WP5.27 | fixed |
+| REV-135 | session, own call | `docs/project/review-archive.md` |  | WP5.03 | The density does not see the protonation chosen at the charge stage | WP5.03 | fixed |
+| REV-136 | session, own call | `docs/project/review-archive.md` |  | WP5.21 | The organisation round's rulings need library capabilities v0.5 lacks | WP5.21 | fixed |
+| REV-137 | session, own call | `docs/project/review-archive.md` |  | WP5.02 | No renderer is chosen for the molecule in 3D or for the explorer's controls | WP5.02 | fixed |
+| REV-138 | session, own call | `docs/project/review-archive.md` |  | WP5.02 | The render check measures text contrast but not the contrast of controls and graphics | WP5.02 | fixed |
+| REV-139 | session, own call | `docs/project/review-archive.md` |  | WP5.07 | The sweep needs a design round: any value, user-defined variables, rebuilds detected | WP5.07 | fixed |
+| REV-140 | author | `docs/project/review-archive.md` |  |  | Two of the author's marks on the mockups ask what is not yet said | §8.2.18 T6, T7 | fixed |
+| REV-141 | session, own call | `docs/project/review-archive.md` |  | WP5.02 | CON-08 and CON-11 name a bundle and a desktop path the browser shell removes | WP5.02 | fixed |
+| REV-142 | author | `docs/project/review-archive.md` |  |  | FR-38 drops the charge and radius edits of the charge-level mutator | §8.2.19 U6 | fixed |
+| REV-143 | session, own call | `docs/project/review-archive.md` |  | WP5.02 | The light theme's control edge is under 3:1 on a selected row | WP5.02 | fixed |
+| REV-144 | author | `docs/project/review-archive.md` |  |  | Case.cylinder takes a charge field, not a uniform wall surface charge | §8.2.22 X3 | fixed |
+| REV-145 | author | `docs/project/review-archive.md` |  |  | No case builders by section before Phase 5 | §8.2.21 W7; §8.2.23 Y2 | fixed |
+| REV-146 | author | `docs/project/review-archive.md` |  |  | The cylinder's default wall size is coarser than NUM-30's first layer | §8.2.20 V9 | fixed |
+| REV-147 | author | `docs/project/review-archive.md` |  |  | The lumen window is fixed, not read from the region | §8.2.20 V16 | fixed |
+| REV-148 | author | `docs/project/review-archive.md` |  |  | A concentration panel's bulk is the case's salt for every species | §8.2.20 V16 | fixed |
+| REV-150 | author | `docs/project/review-archive.md` |  |  | `wall_h_nm="debye"` is not capped at NUM-30's 0.05 nm ceiling | §8.2.20 V14 | fixed |
+| REV-152 | author | `docs/project/review-archive.md` |  |  | WP54 review items: cache key, restores, duplicated helpers, edge cases | §8.2.20 V17 | fixed |
+| REV-153 | author | `docs/project/review-archive.md` |  |  | Latent gaps the second WP54 review left: the bulk's source, the Debye length twice, two hand-kept lists | §8.2.22 X6 | fixed |
+| REV-154 | author | `docs/project/review-archive.md` |  |  | NUM-34's refusal names a setting that a supplied mesh ignores | §8.2.21 W5 | fixed |
+| REV-155 | author | `docs/project/review-archive.md` |  |  | WP55 review items the author rules on: the rectification claim's source, session 04's variation, a duplicated parser | §8.2.22 X6, X8 | fixed |
+| REV-157 | author | `docs/project/review-archive.md` |  |  | WP56 review items left open: the last rung's time, two readers of a run directory, the manifest read twice | §8.2.22 X6 | fixed |
+| REV-158 | session, own call | `docs/project/review-archive.md` |  |  | A correction file named by path puts its absolute path in the stage-8 and stage-10 keys | CODE_REVIEW_021 | fixed |
+| REV-159 | session, own call | `docs/project/review-archive.md` |  |  | Three in-memory routes read a relative path against the working directory, not beside the case | CODE_REVIEW_021 | fixed |
+| REV-160 | session, own call | `docs/project/review-archive.md` |  |  | StageInputs.options is unreachable, so three QoI settings and their deviation are dead | CODE_REVIEW_021 | fixed |
+| REV-161 | session, own call | `docs/project/review-archive.md` |  |  | The manifest records a null hash for a correction file it cannot find | CODE_REVIEW_021 | fixed |
+| REV-162 | session, own call | `docs/project/review-archive.md` |  |  | The wall surface charge's sign is written at four sites; Grahame's sigma and the sigma scale twice each | CODE_REVIEW_021 | fixed |
+| REV-163 | session, own call | `docs/project/review-archive.md` |  |  | check_force_surface refuses a legitimate body straddling the lumen and reservoir seam | CODE_REVIEW_021 | fixed |
+| REV-164 | session, own call | `docs/project/review-archive.md` |  |  | default_ladder accepts a zeta-Dirichlet wall and a sigma_s wall together with no diagnostic | CODE_REVIEW_021 | fixed |
+| REV-165 | session, own call | `docs/project/review-archive.md` |  |  | The Gauss-balance test's own quadrature error is not bounded against the physics bound it resolves | CODE_REVIEW_021 | fixed |
+| REV-169 | session, own call | `docs/project/review-archive.md` |  | WP59 | The Phase-1 reference sweep's base case writes its mesh path against the working directory | WP59 | fixed |
+| REV-170 | author | `docs/project/review-archive.md` |  | WP5.17 | Five callers pick the stage-5 region's kind | §8.2.28 AD4; §8.2.31 AG1; §8.2.36 AL22; WP5.17 | fixed |
+| REV-172 | session, own call | `docs/project/review-archive.md` |  |  | A non-finite trial residual at minimum damping is reported before the state gates name its location | CODE_REVIEW_025 | fixed |
+| REV-173 | session, own call | `docs/project/review-archive.md` |  |  | Plotting a run reads its record twice through the session | CODE_REVIEW_025 | fixed |
+| REV-174 | session, own call | `docs/project/review-archive.md` |  | WP5.02 | The command line names the workbench's server by string | WP5.02 | fixed |
+| REV-175 | session, own call | `docs/project/review-archive.md` |  | WP5.02 | pdb2pqr 3.8 is not read, and 3.7.1 pins docutils against the gui extra | WP5.02 | fixed |
+| REV-176 | session, own call | `docs/project/review-archive.md` |  | WP5.02 | The design mockups fail the non-text contrast measure | WP5.02 | fixed |
+| REV-177 | session, own call | `docs/project/review-archive.md` |  | WP5.02 | The workbench's link failures end the server at startup | WP5.02 | fixed |
+| REV-178 | session, own call | `docs/project/review-archive.md` |  | WP5.02 | The selected-fill measure does not read the strip's pressed item | WP5.02 | fixed |
+| REV-179 | session, own call | `docs/project/review-archive.md` |  | WP5.02 | `nanopnp gui` has no smoke test and takes no common flags | WP5.02 | fixed |
+| REV-184 | session, own call | `docs/project/review-archive.md` |  | WP5.04 | Stage 4's probe-radius gate ignores a `charge.edits` radius scale | WP5.04 review | fixed |
+| REV-185 | session, own call | `docs/project/review-archive.md` |  | WP5.04 | A charge-only edit moves stage 2's key and rebuilds the mesh | WP5.04 review | fixed |
+| REV-187 | session, own call | `docs/project/review-archive.md` |  | WP5.05 | A study that drops a mixed block writes a study form it cannot read | WP5.05 review | fixed |
+| REV-188 | session, own call | `docs/project/review-archive.md` |  | WP5.05 | The COMSOL comparison keys a stored mesh without a store | WP5.05 review | fixed |
+| REV-189 | session, own call | `docs/project/review-archive.md` |  | WP5.05 | A relative model path reads beside the study in `with_`, and against the working directory in `plan_sweep` | WP5.05 review | fixed |
+| REV-190 | session, own call | `docs/project/review-archive.md` |  | WP5.05 | `CaseDocument` equality counts `models` and the model record | WP5.05 review | fixed |
+| REV-191 | session, own call | `docs/project/review-archive.md` |  | WP5.05 | A stored generated mesh skips the field-frame check | WP5.05 review | fixed |
+| REV-192 | session, own call | `docs/project/review-archive.md` |  | WP5.05 | A run on a stored mesh records the generating case's Debye sizing | WP5.05 review | fixed |
+| REV-193 | session, own call | `docs/project/review-archive.md` |  | WP5.06 | An output that needs nothing and extracts is skipped for a model with no transport | WP5.06 review | fixed |
+| REV-194 | session, own call | `docs/project/review-archive.md` |  | WP5.06 | A registered steric form or output enters the key by name only | WP5.06 review | fixed |
+| REV-195 | session, own call | `docs/project/review-archive.md` |  | WP5.06 | The manufactured source builds the Borukhov flux whatever steric model is named | WP5.06 review | fixed |
+| REV-196 | session, own call | `docs/project/review-archive.md` |  | WP5.06 | The case JSON Schema no longer lists the steric models and the outputs | WP5.06 review | fixed |
+| REV-197 | session, own call | `docs/project/review-archive.md` |  | WP5.07 | Rectification does not pair a bias set through a variable | WP5.07; WP5.19 | fixed |
+| REV-198 | session, own call | `docs/project/review-archive.md` |  | WP5.07 | A sweep plan is not tied to the variables as written | WP5.07 review | fixed |
+| REV-199 | session, own call | `docs/project/review-archive.md` |  | WP5.07 | The sweep forecast resolves every point again | WP5.07 review | fixed |
+| REV-200 | session, own call | `docs/project/review-archive.md` |  | WP5.07 | A second type repeats the variable resolution | WP5.07 review | fixed |
+| REV-201 | session, own call | `docs/project/review-archive.md` |  | WP5.07 | `sweep plan --json` drops the reason a forecast could not be made, and the case JSON Schema does not describe variables | WP5.07 review | fixed |
+| REV-202 | session, own call | `docs/project/review-archive.md` |  | WP5.21 | The problems list leads to a suite, not to the field, and the suites' tools are not built | WP5.21 | fixed |
+| REV-203 | session, own call | `docs/project/review-archive.md` |  | WP5.15 | The frame's accessibility and layout limits | WP5.15 | fixed |
+| REV-204 | session, own call | `docs/project/review-archive.md` |  | WP5.15 | The settings and the changed list lack some guards and units | WP5.15 | fixed |
+| REV-205 | session, own call | `docs/project/review-archive.md` |  | WP5.19 | The Study page shows fixture names, and the charge screen lacks a colour bar and axes | WP5.19 | fixed |
+| REV-206 | session, own call | `docs/project/review-archive.md` |  | WP5.08 | An exported project can lose a result file of the same name, and keeps the run record's old paths | WP5.08 review (WP5.19) | fixed |
+| REV-207 | session, own call | `docs/project/review-archive.md` |  | WP5.15 | The frame writes the layout on every drag step, rereads the theme files, and keeps its dialogs | WP5.15 | fixed |
+| REV-208 | session, own call | `docs/project/review-archive.md` |  | WP5.15 | The palette finds commands by title only, has no active row, and lists commands that cannot run | WP5.15 | fixed |
+| REV-209 | session, own call | `docs/project/review-archive.md` |  | WP5.19 | The charge screen in the frame shows a link where none exists, and its map ignores the dark theme | WP5.19 | fixed |
+| REV-210 | session, own call | `docs/project/review-archive.md` |  | WP5.15 | The frame lacks icons, headings and some states in the render set | WP5.15 | fixed |
+| REV-211 | session, own call | `docs/project/review-archive.md` |  | WP5.15 | The palette opens as a full command list, not a bare input that suggests as you type | WP5.15 | fixed |
+| REV-212 | session, own call | `docs/project/review-archive.md` |  | WP5.15 | The settings need a searchable section list beside the panel, and which settings exist is undecided | WP5.15 | fixed |
+| REV-213 | session, own call | `docs/project/review-archive.md` |  | WP5.15 | The suites may need to separate those that build models from those that use them | WP5.15 | fixed |
+| REV-214 | session, own call | `docs/project/review-archive.md` |  | WP5.15 | The changed list is loosely spaced, and the project name reads as a menu | WP5.15 | fixed |
+| REV-215 | session, own call | `docs/project/review-archive.md` |  | WP5.19 | The charge screen needs its design and its function settled together | WP5.19 | fixed |
+| REV-216 | session, own call | `docs/project/review-archive.md` |  |  | The Phase 5 plan exceeds its word target again | CODE_REVIEW_034 | fixed |
+| REV-217 | session, own call | `docs/project/review-archive.md` |  | WP5.13 | Case reading, substitution and input-path discovery are split across five modules | WP5.13 | fixed |
+| REV-218 | session, own call | `docs/project/review-archive.md` |  | WP5.16 | Effective atom radii and atom-to-residue indexing are split across four subpackages | WP5.16 | fixed |
+| REV-219 | session, own call | `docs/project/review-archive.md` |  | WP5.13 | A model file's validated body is discarded and parsed again by the project | WP5.13 | fixed |
+| REV-220 | session, own call | `docs/project/review-archive.md` |  | WP5.14 | The upstream lookup and the forecast re-implement the walk's stage keying | WP5.14 | fixed |
+| REV-221 | session, own call | `docs/project/review-archive.md` |  | WP5.14 | Planning a sweep from a case drops the members it resolved | WP5.14 | fixed |
+| REV-222 | session, own call | `docs/project/review-archive.md` |  |  | The agentic instructions cite identifiers without their words and state two procedures in several places | CODE_REVIEW_038 | fixed |
+| REV-226 | session, own call | `docs/project/review-archive.md` |  | WP5.12 | Refusal messages in src/ cite the §5.3.1 NOTEs whose stage rules moved to §5.2 | WP5.12 | fixed |
+| REV-227 | author | `docs/project/review-archive.md` |  | WP5.12 | The source checklist: six findings that rest on the ESI or the COMSOL report | ruled by the author, 10 November 2026 (WP5.12) | fixed |
+| REV-228 | session, own call | `docs/project/review-archive.md` |  | WP5.27 | The site's links from the project registers to the plans and reviews lead nowhere | WP5.27 | fixed |
+| REV-231 | session, own call | `docs/project/review-archive.md` |  | WP5.16 | axis.py's comment sends the stage-1 margins to an index | WP5.16 | fixed |
+| REV-233 | session, own call | `docs/project/review-archive.md` |  | WP5.13 | Importing a case leaves a model without a value the study writes as an expression | WP5.13 | fixed |
+| REV-234 | session, own call | `docs/project/review-archive.md` |  | WP5.16 | The frame shows a tool's 3D view to the left of its settings | WP5.16 | fixed |
+| REV-239 | author | `docs/project/review-archive.md` |  | WP5.16 | The channel axis's two limits rest on 2WCD alone, and a ragged pore may be refused | ruled by the author, 11 November 2026 (WP5.16) | fixed |
+| REV-246 | author | `docs/project/review-archive.md` |  | WP5.19 | A saved outline's exclusion shell takes the default grid | §8.2.40 AP5; §8.2.42 AR6 (WP5.19) | fixed |
+| REV-247 | author | `docs/project/review-archive.md` |  | WP5.19 | The solid-share gate's reach against an outline in another frame is not measured | ruled by the author, 13 November 2026; §8.2.42 AR5 (WP5.19) | fixed |
+| REV-248 | author | `docs/project/review-archive.md` |  | WP5.17 | What the code review of the Continuum suite left open | ruled by the author, 13 November 2026 (WP5.17) | fixed |
+| REV-250 | author | `docs/project/review-archive.md` |  | WP5.18 | PHY-23's terms under a solid fraction and without the flow | ruled by the author, 16 November 2026 (WP5.18) | fixed |
+| REV-251 | session, own call | `docs/project/review-archive.md` |  | WP5.18 | A project whose first study deposits no charge opens with a failed walk | WP5.18; WP5.19 | fixed |
+| REV-252 | session, own call | `docs/project/review-archive.md` |  | WP5.19 | Where a value is exposed in the Molecular and Continuum suites | WP5.19 | fixed |
+| REV-253 | session, own call | `docs/project/review-archive.md` |  | WP5.21 | A plot's axes the user tunes | WP5.21 | fixed |
+| REV-256 | session, own call | `docs/project/review-archive.md` |  | WP5.19 | A field's message, its text size and a field of several boxes, in every suite | WP5.19 | fixed |
+| REV-259 | author | `docs/project/review-archive.md` |  | WP5.20 | A bridge suite between Molecular and Continuum | WP5.20, §8.2.42 AR8 and §8.2.43 AS1 (WP5.19) | fixed |
+| REV-260 | session, own call | `docs/project/review-archive.md` |  | WP5.21 | A recorded run's convergence, picked in Runs | WP5.21 | fixed |
+| REV-264 | author | `docs/project/review-archive.md` |  | WP5.21 | A reproduction of a record stopped at its solve compares no number of the solve | WP5.21, ruled by the author on 20 November 2026 (WP5.19) | fixed |
+| REV-271 | author | `docs/project/review-archive.md` |  | WP6.02 | The Phase 5 plan exceeds its word target a third time | WP6.02, ruled by the author on 22 November 2026 (§8.2.50 AZ14) | fixed |
+| REV-277 | session, own call | `docs/project/review-archive.md` |  | WP6.01 | The Windows test leg has not passed since 10 November | WP6.01 | fixed |
 | REV-35 | author | `docs/project/review-findings.md` |  |  | _second_crossings loops in Python | §8.2.9 I3 | post-1.0 |
-| REV-36 | session, own call | `docs/project/review-findings.md` |  | WP39 | The gmsh session stops a caller's logger | WP39 | fixed |
-| REV-37 | session, own call | `docs/project/review-findings.md` |  | WP39 | A broken gmsh wheel is not a refusal | WP39 | fixed |
-| REV-38 | session, own call | `docs/project/review-findings.md` |  | WP39 | gmsh.model.remove() can mask the error it follows | WP39 | fixed |
-| REV-39 | author | `docs/project/review-findings.md` |  | WP5.17 | A case supplying inputs.profile gets no contour editor | §8.2.18 T2; WP5.17 | fixed |
-| REV-40 | session, own call | `docs/project/review-findings.md` |  | WP46 | DensityMap.read accepts a file written in nm | WP46 | fixed |
 | REV-41 | author | `docs/project/review-findings.md` |  | WP6.15 | No prepare command, upto on reproduce, or region export | §8.2.18 T3; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4: WP6.15, the exports | deferred |
-| REV-42 | session, own call | `docs/project/review-findings.md` |  | WP42 | pnp carries inert flow keys | WP42 | fixed |
-| REV-43 | session, own call | `docs/project/review-findings.md` |  | WP46 | chain_characters duplicates the export's mapping | WP46 | fixed |
-| REV-44 | session, own call | `docs/project/review-findings.md` |  | WP42 | The Stern-layer test re-solves the drawn slab | WP42 | fixed |
 | REV-45 | author | `docs/project/review-findings.md` |  | WP6.15 | The derived χ field has no export | §8.2.18 T3; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4: WP6.15, the exports | deferred |
 | REV-46 | author | `docs/project/review-findings.md` |  |  | Example 07 is not run at default sizes or on the ensemble | §8.2.9 I3; §8.2.46 AV5; §8.2.49 AY2: Phase 11, the validation runs | deferred |
-| REV-47 | author | `docs/project/review-findings.md` |  | WP60 | The test-duration targets are missed | WP60; §8.2.9 I3 | fixed |
-| REV-48 | session, own call | `docs/project/review-findings.md` |  | WP42 | The 2WCD walk test copies its constants | WP42 | fixed |
-| REV-49 | session, own call | `docs/project/review-findings.md` |  | WP46 | AXISYMMETRIC is replaced repeatedly | WP46 | fixed |
-| REV-50 | session, own call | `docs/project/review-findings.md` |  | WP46 | _inner_wall_nm re-implements innermost_crossings | WP46 | fixed |
-| REV-51 | session, own call | `docs/project/review-findings.md` |  | WP46 | A redundant reopen and resolve in WP34's walk | WP46 | fixed |
-| REV-52 | author | `docs/project/review-findings.md` |  |  | deviations and SolveReporting are off the stage protocol | §8.2.18 T2 | fixed |
-| REV-53 | author | `docs/project/review-findings.md` |  |  | Some walk rules stay as case logic | §8.2.9 I3 | declined |
-| REV-54 | session, own call | `docs/project/review-findings.md` |  | WP38 | The MOD-12 check compared names, not modules | WP38 | fixed |
-| REV-55 | session, own call | `docs/project/review-findings.md` |  | WP46 | Per-stage mkdtemp fallbacks | WP46 | fixed |
-| REV-56 | author | `docs/project/review-findings.md` |  |  | The geometry editor's simplicity check runs on the Qt thread | §8.2.18 T1 | wontfix |
-| REV-57 | session, own call | `docs/project/review-findings.md` |  | WP46 | frame_times decodes every frame | WP46 | fixed |
 | REV-58 | author | `docs/project/review-findings.md` |  |  | The azimuthal reduction projects cells it then drops | §8.2.9 I3 | post-1.0 |
-| REV-59 | session, own call | `docs/project/review-findings.md` |  | WP46 | attribute_to_construction raises the wrong error on a lax comparison | WP46 | fixed |
 | REV-60 | author | `docs/project/review-findings.md` |  | WP6.17 | UMFPACK repeats its symbolic analysis every Newton step | §8.2.9 I3; §8.2.46 AV5; §8.2.49 AY3; §8.2.50 AZ6: WP6.17, the speed-up, its thresholds registered in its plan | deferred |
 | REV-61 | author | `docs/project/review-findings.md` |  |  | No B-spline fit or HOLE cross-check of the contour | §8.2.9 I3; §8.2.46 AV5; §8.2.49 AY2: Phase 11, the validation runs | deferred |
-| REV-62 | session, own call | `docs/project/review-findings.md` |  | WP5.05 | A mesh named by store key is refused | WP5.05 | fixed |
-| REV-63 | session, own call | `docs/project/review-findings.md` |  | WP38 | The protonation stage walked through meshing | WP38 | fixed |
 | REV-64 | author | `docs/project/review-findings.md` |  |  | A sweep's plan-time NUM-34 gate skips generated meshes | §8.2.9 I3; §8.2.46 AV5; §8.2.49 AY2: Phase 11, the validation runs | deferred |
-| REV-65 | author | `docs/project/review-findings.md` |  |  | The Windows bundle exposes no mesh command | §8.2.18 T1 | wontfix |
-| REV-66 | session, own call | `docs/project/review-findings.md` |  | WP42 | A model without flow is refused on its element pair before its flow switch | WP42 | fixed |
 | REV-67 | author | `docs/project/review-findings.md` |  |  | Public registration functions for backend registries (MOD-11) | §8.2.18 T3; §8.2.46 AV5; §8.2.49 AY2: Phase 8, the composer | deferred |
-| REV-68 | session, own call | `docs/project/review-findings.md` |  | WP40 | The spec still promises a refusal that D8 removed | WP40 | fixed |
-| REV-69 | session, own call | `docs/project/review-findings.md` |  | WP40 | VER-67 defers its refusal texts to a plan | WP40 | fixed |
-| REV-70 | session, own call | `docs/project/review-findings.md` |  | WP40 | WP40 D5 and D8 go beyond MOD-14's letter | WP40 | fixed |
-| REV-71 | session, own call | `docs/project/review-findings.md` |  | WP42 | Stage 10's cache key does not move when the solver's algorithm does | WP42 | fixed |
-| REV-72 | session, own call | `docs/project/review-findings.md` |  | WP42 | A supplied field's rule order travels beside its source as a second argument | WP42 | fixed |
-| REV-73 | session, own call | `docs/project/review-findings.md` |  | WP42 | Cross-leaf inertness is not checked | WP42 | fixed |
-| REV-74 | session, own call | `docs/project/review-findings.md` |  | WP42 | An untested raise in the force extension carries a coverage pragma | WP42 | fixed |
-| REV-75 | session, own call | `docs/project/review-findings.md` |  | WP42 | The two defaults modules duplicate the specs' defaults | WP42 | fixed |
-| REV-76 | session, own call | `docs/project/review-findings.md` |  | WP42 | `ModelDeclaration.unread` paths are not validated against the schema | WP42 | fixed |
-| REV-77 | session, own call | `docs/project/review-findings.md` |  | WP42 | Pinning every artefact schema at v0.5 removes the cache-bust a payload change needs | WP42 | fixed |
-| REV-78 | session, own call | `docs/project/review-findings.md` |  | WP42 | The threads flag re-lists the thread variables and writes the environment for good | WP42 | fixed |
-| REV-79 | session, own call | `docs/project/review-findings.md` |  | WP42 | The exclusion shell raises a bare ValueError for a NaN ring coordinate | WP42 | fixed |
-| REV-80 | session, own call | `docs/project/review-findings.md` |  | WP44 | A source change selects every process-starting test file, so the commit hook misses its 60 s budget | WP44 | fixed |
-| REV-81 | session, own call | `docs/project/review-findings.md` |  | WP44 | Most past commits would fall back to the development selection | WP44 | fixed |
-| REV-82 | session, own call | `docs/project/review-findings.md` |  | WP43 | The push gate takes over 9 minutes against its 5-minute budget | WP43 | fixed |
-| REV-83 | session, own call | `docs/project/review-findings.md` |  | WP43 | The longest-first test order is inert under xdist file scheduling | WP43 | fixed |
-| REV-84 | session, own call | `docs/project/review-findings.md` |  | WP43 | A Markdown file that a WP43 test reads is classed as prose, so its test does not run on a change to it | WP43 | fixed |
-| REV-85 | session, own call | `docs/project/review-findings.md` |  | WP43 | tests/impact.py uses os.path against the coding conventions | WP43 | fixed |
-| REV-86 | session, own call | `docs/project/review-findings.md` |  | WP43 | ci.yml repeats the steps of the platforms job in the full-matrix job | WP43 | fixed |
-| REV-87 | session, own call | `docs/project/review-findings.md` |  | WP44 | The plan word cap counts the Outcome that /wp-implement appends | WP44 | fixed |
-| REV-88 | session, own call | `docs/project/review-findings.md` |  | WP44 | No check remains that the public API carries its docstrings | WP44 | fixed |
-| REV-89 | session, own call | `docs/project/review-findings.md` |  | WP44 | The shard partition test ignores collection errors and recollects the tree on every commit | WP44 | fixed |
-| REV-90 | session, own call | `docs/project/review-findings.md` |  | WP44 | VER-72 (d) and the planned-xfail logic guard a marker the workflow no longer writes | WP44 | fixed |
 | REV-91 | author | `docs/project/review-findings.md` |  |  | About 400 tests name their requirement only in a comment | §8.2.11 L10; §8.2.46 AV5; §8.2.49 AY2: Phase 11, V&V in CI | deferred |
-| REV-92 | author | `docs/project/review-findings.md` |  |  | src prose share is 10.6 %, above the 10 % prediction | §8.2.11 L10 | declined |
-| REV-93 | session, own call | `docs/project/review-findings.md` |  | WP45 | VER-75 (a) says leading underscore; dunder methods count as public | WP45 | fixed |
-| REV-94 | session, own call | `docs/project/review-findings.md` |  | WP45 | 47 public functions and methods carry no docstring, and nothing checks them | WP45 | fixed |
-| REV-95 | session, own call | `docs/project/review-findings.md` |  | WP45 | VER-75 (a) states a check on derivations and history that no test makes | WP45 | fixed |
-| REV-96 | session, own call | `docs/project/review-findings.md` |  | WP45 | About 157 prose lines in src and tests still carry identifiers or plan history | WP45 | fixed |
-| REV-97 | session, own call | `docs/project/review-findings.md` |  | WP45 | A directive comment is defined twice, differently | WP45 | fixed |
-| REV-98 | session, own call | `docs/project/review-findings.md` |  | WP46 | The scratch directory is the workspace itself, where the specification says fresh per run | WP46 | fixed |
-| REV-99 | session, own call | `docs/project/review-findings.md` |  | WP46 | A put killed before the rename leaves a hidden staging directory nothing reclaims | WP46 | fixed |
-| REV-100 | session, own call | `docs/project/review-findings.md` |  | WP46 | A put copies and hashes a payload before learning the key is already stored | WP46 | fixed |
-| REV-101 | session, own call | `docs/project/review-findings.md` |  | WP46 | A pre-WP46 charge-grid npz in a store is served under an unchanged key | WP46 | fixed |
-| REV-102 | session, own call | `docs/project/review-findings.md` |  | WP46 | frame_times reads a private MDAnalysis attribute | WP46 | fixed |
-| REV-103 | session, own call | `docs/project/review-findings.md` |  | WP48 | A verified-only claim outside the test-evidence concepts is not yet classed as executable arithmetic or a source reading | WP48 | fixed |
-| REV-104 | session, own call | `docs/project/review-findings.md` |  | WP47 | A correction file keeps a dead citation to the removed flat knowledge file | WP47 | fixed |
-| REV-105 | session, own call | `docs/project/review-findings.md` |  | WP47 | SPECIFICATION G12 (7) says the navigation is generated from the index files; the build has one static entry | WP47 | fixed |
-| REV-106 | session, own call | `docs/project/review-findings.md` |  | WP47 | The heading-slug function differs from the table-of-contents slugger for emphasis, entities and images | WP47 | fixed |
-| REV-107 | session, own call | `docs/project/review-findings.md` |  | WP47 | About 40 log entries are fragments | WP47 | fixed |
-| REV-108 | session, own call | `docs/project/review-findings.md` |  | WP48 | WP48 omitted sourced arithmetic from its audit | WP48 plan amendment | fixed |
-| REV-109 | session, own call | `docs/project/review-findings.md` |  | WP48 | WP48 omitted version metadata coverage and refusal checks | WP48 plan amendment | fixed |
-| REV-110 | session, own call | `docs/project/review-findings.md` |  | WP48 | WP48 lacked an evidence route for historical numerical experiments | WP48 plan amendment | fixed |
-| REV-111 | author | `docs/project/review-findings.md` |  |  | The no-MPI-symbols claim is backed only by the lock file | §8.2.22 X7 | fixed |
-| REV-112 | session, own call | `docs/project/review-findings.md` |  | WP49 | Three suspected costs were never measured | WP49 plan | fixed |
-| REV-113 | session, own call | `docs/project/review-findings.md` |  | WP49 | The case schema has no JSON Schema export | WP49 plan | fixed |
-| REV-114 | author | `docs/project/review-findings.md` |  |  | The shell moves from Qt to a browser | §8.2.18 T5 | fixed |
-| REV-115 | author | `docs/project/review-findings.md` |  |  | The architecture review's already-met claims | §8.2.12 M1 | declined |
-| REV-116 | session, own call | `docs/project/review-findings.md` |  | WP60 | The cost record predates the harness fixes | WP60 | fixed |
-| REV-117 | session, own call | `docs/project/review-findings.md` |  |  | Tooling left without tests by the test scope | — | fixed |
-| REV-118 | author | `docs/project/review-findings.md` |  |  | Gate and mechanism tests the pruning removed | §8.2.13 N1 | fixed |
-| REV-119 | session, own call | `docs/project/review-findings.md` |  |  | The analyte benchmark meshes skip the quality gate | CODE_REVIEW_010 | declined |
-| REV-120 | author | `docs/project/review-findings.md` |  |  | The force-traction normal needs one material on the left along the whole surface | §8.2.22 X6 | fixed |
-| REV-121 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | Stage 1 checks no axis for a monomeric or hetero-oligomeric pore | WP5.16 | fixed |
-| REV-122 | author | `docs/project/review-findings.md` |  |  | A case cannot load a correction file from outside the installed package | §8.2.22 X6 | fixed |
-| REV-123 | author | `docs/project/review-findings.md` |  |  | The library has no plotting helpers or notebook display | §8.2.14 P6 | fixed |
-| REV-124 | session, own call | `docs/project/review-findings.md` |  |  | The specification's site navigation is listed by hand | CODE_REVIEW_013 | fixed |
-| REV-125 | session, own call | `docs/project/review-findings.md` |  | WP53 | The workflow files exceed the plan's word caps | WP53 | fixed |
-| REV-126 | author | `docs/project/review-findings.md` |  |  | Package numbers can collide between the two lanes | §8.2.17 S16 | fixed |
-| REV-127 | author | `docs/project/review-findings.md` |  |  | WP57 may restate the Qt shell's gating clauses before v0.5.0 | §8.2.17 S17 | fixed |
-| REV-128 | author | `docs/project/review-findings.md` |  |  | The renumbering list leaves out other identifier kinds and the ruling letters | §8.2.17 S18 | fixed |
-| REV-129 | author | `docs/project/review-findings.md` |  |  | WP58's tag and the place of a held changelog entry are undefined | §8.2.17 S19 | fixed |
-| REV-130 | author | `docs/project/review-findings.md` |  |  | Nothing checks that identifiers stay unique after both lanes merge | §8.2.17 S20 | fixed |
-| REV-131 | session, own call | `docs/project/review-findings.md` |  |  | The charge-level mutator has no library step or tier row | Phase 5 plan | fixed |
-| REV-132 | session, own call | `docs/project/review-findings.md` |  |  | The Phase 5 end-of-phase report names no source for its numbers | Phase 5 plan | fixed |
-| REV-133 | session, own call | `docs/project/review-findings.md` |  |  | The Phase 5 plan and the core exceed their word caps | CODE_REVIEW_015 | fixed |
-| REV-134 | session, own call | `docs/project/review-findings.md` |  | WP5.27 | The Qt shell's Result tab prints the stored float wrapper, not the number | WP5.27 | fixed |
-| REV-135 | session, own call | `docs/project/review-findings.md` |  | WP5.03 | The density does not see the protonation chosen at the charge stage | WP5.03 | fixed |
-| REV-136 | session, own call | `docs/project/review-findings.md` |  | WP5.21 | The organisation round's rulings need library capabilities v0.5 lacks | WP5.21 | fixed |
-| REV-137 | session, own call | `docs/project/review-findings.md` |  | WP5.02 | No renderer is chosen for the molecule in 3D or for the explorer's controls | WP5.02 | fixed |
-| REV-138 | session, own call | `docs/project/review-findings.md` |  | WP5.02 | The render check measures text contrast but not the contrast of controls and graphics | WP5.02 | fixed |
-| REV-139 | session, own call | `docs/project/review-findings.md` |  | WP5.07 | The sweep needs a design round: any value, user-defined variables, rebuilds detected | WP5.07 | fixed |
-| REV-140 | author | `docs/project/review-findings.md` |  |  | Two of the author's marks on the mockups ask what is not yet said | §8.2.18 T6, T7 | fixed |
-| REV-141 | session, own call | `docs/project/review-findings.md` |  | WP5.02 | CON-08 and CON-11 name a bundle and a desktop path the browser shell removes | WP5.02 | fixed |
-| REV-142 | author | `docs/project/review-findings.md` |  |  | FR-38 drops the charge and radius edits of the charge-level mutator | §8.2.19 U6 | fixed |
-| REV-143 | session, own call | `docs/project/review-findings.md` |  | WP5.02 | The light theme's control edge is under 3:1 on a selected row | WP5.02 | fixed |
-| REV-144 | author | `docs/project/review-findings.md` |  |  | Case.cylinder takes a charge field, not a uniform wall surface charge | §8.2.22 X3 | fixed |
-| REV-145 | author | `docs/project/review-findings.md` |  |  | No case builders by section before Phase 5 | §8.2.21 W7; §8.2.23 Y2 | fixed |
-| REV-146 | author | `docs/project/review-findings.md` |  |  | The cylinder's default wall size is coarser than NUM-30's first layer | §8.2.20 V9 | fixed |
-| REV-147 | author | `docs/project/review-findings.md` |  |  | The lumen window is fixed, not read from the region | §8.2.20 V16 | fixed |
-| REV-148 | author | `docs/project/review-findings.md` |  |  | A concentration panel's bulk is the case's salt for every species | §8.2.20 V16 | fixed |
 | REV-149 | author | `docs/project/review-findings.md` |  |  | Notebook 01 prepares a structure but does not change its residues | §8.2.20 V13; §8.2.46 AV5; §8.2.49 AY2: Phase 9, the structural mutator | deferred |
-| REV-150 | author | `docs/project/review-findings.md` |  |  | `wall_h_nm="debye"` is not capped at NUM-30's 0.05 nm ceiling | §8.2.20 V14 | fixed |
 | REV-151 | author | `docs/project/review-findings.md` |  |  | `orient_pore` centres laterally on the registration residues, not on the pore axis | §8.2.20 V15; §8.2.46 AV5; §8.2.49 AY6: Phase 9, the structure pipeline | deferred |
-| REV-152 | author | `docs/project/review-findings.md` |  |  | WP54 review items: cache key, restores, duplicated helpers, edge cases | §8.2.20 V17 | fixed |
-| REV-153 | author | `docs/project/review-findings.md` |  |  | Latent gaps the second WP54 review left: the bulk's source, the Debye length twice, two hand-kept lists | §8.2.22 X6 | fixed |
-| REV-154 | author | `docs/project/review-findings.md` |  |  | NUM-34's refusal names a setting that a supplied mesh ignores | §8.2.21 W5 | fixed |
-| REV-155 | author | `docs/project/review-findings.md` |  |  | WP55 review items the author rules on: the rectification claim's source, session 04's variation, a duplicated parser | §8.2.22 X6, X8 | fixed |
 | REV-156 | author | `docs/project/review-findings.md` |  | WP6.17 | A 16 562-element cylinder takes minutes to solve (UT-09) | §8.2.21 W8; §8.2.24 Z6; §8.2.46 AV5; §8.2.49 AY3; §8.2.50 AZ6: WP6.17, the speed-up, its thresholds registered in its plan | deferred |
-| REV-157 | author | `docs/project/review-findings.md` |  |  | WP56 review items left open: the last rung's time, two readers of a run directory, the manifest read twice | §8.2.22 X6 | fixed |
-| REV-158 | session, own call | `docs/project/review-findings.md` |  |  | A correction file named by path puts its absolute path in the stage-8 and stage-10 keys | CODE_REVIEW_021 | fixed |
-| REV-159 | session, own call | `docs/project/review-findings.md` |  |  | Three in-memory routes read a relative path against the working directory, not beside the case | CODE_REVIEW_021 | fixed |
-| REV-160 | session, own call | `docs/project/review-findings.md` |  |  | StageInputs.options is unreachable, so three QoI settings and their deviation are dead | CODE_REVIEW_021 | fixed |
-| REV-161 | session, own call | `docs/project/review-findings.md` |  |  | The manifest records a null hash for a correction file it cannot find | CODE_REVIEW_021 | fixed |
-| REV-162 | session, own call | `docs/project/review-findings.md` |  |  | The wall surface charge's sign is written at four sites; Grahame's sigma and the sigma scale twice each | CODE_REVIEW_021 | fixed |
-| REV-163 | session, own call | `docs/project/review-findings.md` |  |  | check_force_surface refuses a legitimate body straddling the lumen and reservoir seam | CODE_REVIEW_021 | fixed |
-| REV-164 | session, own call | `docs/project/review-findings.md` |  |  | default_ladder accepts a zeta-Dirichlet wall and a sigma_s wall together with no diagnostic | CODE_REVIEW_021 | fixed |
-| REV-165 | session, own call | `docs/project/review-findings.md` |  |  | The Gauss-balance test's own quadrature error is not bounded against the physics bound it resolves | CODE_REVIEW_021 | fixed |
 | REV-166 | author | `docs/project/review-findings.md` |  | WP6.03 | The Copilot hook probes are incomplete | §8.2.25 AA6; §8.2.46 AV6; §8.2.49 AY5; §8.2.50 AZ4: WP6.03, which retires the Copilot host | accepted |
 | REV-167 | author | `docs/project/review-findings.md` |  | WP6.03 | Six Copilot app behaviours the substitutes assume are unchecked | §8.2.25 AA6; §8.2.46 AV6; §8.2.49 AY5; §8.2.50 AZ4: WP6.03, which retires the Copilot host | accepted |
 | REV-168 | author | `docs/project/review-findings.md` |  | WP6.03 | The Copilot host has not been verified live | §8.2.25 AA6; §8.2.46 AV6; §8.2.49 AY5; §8.2.50 AZ4: WP6.03, which retires the Copilot host | accepted |
-| REV-169 | session, own call | `docs/project/review-findings.md` |  | WP59 | The Phase-1 reference sweep's base case writes its mesh path against the working directory | WP59 | fixed |
-| REV-170 | author | `docs/project/review-findings.md` |  | WP5.17 | Five callers pick the stage-5 region's kind | §8.2.28 AD4; §8.2.31 AG1; §8.2.36 AL22; WP5.17 | fixed |
 | REV-171 | author | `docs/project/review-findings.md` |  | WP6.17 | The architecture review's unmeasured costs | §8.2.27 AC4; §8.2.28 AD5; §8.2.46 AV5; §8.2.49 AY3; §8.2.50 AZ6: WP6.17, the speed-up, its thresholds registered in its plan | deferred |
-| REV-172 | session, own call | `docs/project/review-findings.md` |  |  | A non-finite trial residual at minimum damping is reported before the state gates name its location | CODE_REVIEW_025 | fixed |
-| REV-173 | session, own call | `docs/project/review-findings.md` |  |  | Plotting a run reads its record twice through the session | CODE_REVIEW_025 | fixed |
-| REV-174 | session, own call | `docs/project/review-findings.md` |  | WP5.02 | The command line names the workbench's server by string | WP5.02 | fixed |
-| REV-175 | session, own call | `docs/project/review-findings.md` |  | WP5.02 | pdb2pqr 3.8 is not read, and 3.7.1 pins docutils against the gui extra | WP5.02 | fixed |
-| REV-176 | session, own call | `docs/project/review-findings.md` |  | WP5.02 | The design mockups fail the non-text contrast measure | WP5.02 | fixed |
-| REV-177 | session, own call | `docs/project/review-findings.md` |  | WP5.02 | The workbench's link failures end the server at startup | WP5.02 | fixed |
-| REV-178 | session, own call | `docs/project/review-findings.md` |  | WP5.02 | The selected-fill measure does not read the strip's pressed item | WP5.02 | fixed |
-| REV-179 | session, own call | `docs/project/review-findings.md` |  | WP5.02 | `nanopnp gui` has no smoke test and takes no common flags | WP5.02 | fixed |
 | REV-180 | author | `docs/project/review-findings.md` |  |  | The protonated density is refused under the SWANSON and PEOEPB force fields | §8.2.19 U2; §8.2.46 AV5; §8.2.49 AY6: Phase 9, the structure pipeline | deferred |
 | REV-181 | author | `docs/project/review-findings.md` |  |  | Stage 2's header counts frame 0's atoms and reads an element from the first letter of a name | §8.2.46 AV5; §8.2.49 AY6: Phase 9, the structure pipeline | accepted |
 | REV-182 | author | `docs/project/review-findings.md` |  | WP6.14 | A polar hydrogen's kernel is narrower than the density grid's spacing | §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4: WP6.14, the tolerances argued | accepted |
 | REV-183 | author | `docs/project/review-findings.md` |  |  | Fractional protonation through a customised PDB2PQR | §8.2.31 AG9; FR-43; §8.2.46 AV5: FR-43's package | deferred |
-| REV-184 | session, own call | `docs/project/review-findings.md` |  | WP5.04 | Stage 4's probe-radius gate ignores a `charge.edits` radius scale | WP5.04 review | fixed |
-| REV-185 | session, own call | `docs/project/review-findings.md` |  | WP5.04 | A charge-only edit moves stage 2's key and rebuilds the mesh | WP5.04 review | fixed |
 | REV-186 | author | `docs/project/review-findings.md` |  |  | A stored mesh beside a `structure:` section is refused | §8.2.46 AV5; §8.2.49 AY6: Phase 9, the structure pipeline | accepted |
-| REV-187 | session, own call | `docs/project/review-findings.md` |  | WP5.05 | A study that drops a mixed block writes a study form it cannot read | WP5.05 review | fixed |
-| REV-188 | session, own call | `docs/project/review-findings.md` |  | WP5.05 | The COMSOL comparison keys a stored mesh without a store | WP5.05 review | fixed |
-| REV-189 | session, own call | `docs/project/review-findings.md` |  | WP5.05 | A relative model path reads beside the study in `with_`, and against the working directory in `plan_sweep` | WP5.05 review | fixed |
-| REV-190 | session, own call | `docs/project/review-findings.md` |  | WP5.05 | `CaseDocument` equality counts `models` and the model record | WP5.05 review | fixed |
-| REV-191 | session, own call | `docs/project/review-findings.md` |  | WP5.05 | A stored generated mesh skips the field-frame check | WP5.05 review | fixed |
-| REV-192 | session, own call | `docs/project/review-findings.md` |  | WP5.05 | A run on a stored mesh records the generating case's Debye sizing | WP5.05 review | fixed |
-| REV-193 | session, own call | `docs/project/review-findings.md` |  | WP5.06 | An output that needs nothing and extracts is skipped for a model with no transport | WP5.06 review | fixed |
-| REV-194 | session, own call | `docs/project/review-findings.md` |  | WP5.06 | A registered steric form or output enters the key by name only | WP5.06 review | fixed |
-| REV-195 | session, own call | `docs/project/review-findings.md` |  | WP5.06 | The manufactured source builds the Borukhov flux whatever steric model is named | WP5.06 review | fixed |
-| REV-196 | session, own call | `docs/project/review-findings.md` |  | WP5.06 | The case JSON Schema no longer lists the steric models and the outputs | WP5.06 review | fixed |
-| REV-197 | session, own call | `docs/project/review-findings.md` |  | WP5.07 | Rectification does not pair a bias set through a variable | WP5.07; WP5.19 | fixed |
-| REV-198 | session, own call | `docs/project/review-findings.md` |  | WP5.07 | A sweep plan is not tied to the variables as written | WP5.07 review | fixed |
-| REV-199 | session, own call | `docs/project/review-findings.md` |  | WP5.07 | The sweep forecast resolves every point again | WP5.07 review | fixed |
-| REV-200 | session, own call | `docs/project/review-findings.md` |  | WP5.07 | A second type repeats the variable resolution | WP5.07 review | fixed |
-| REV-201 | session, own call | `docs/project/review-findings.md` |  | WP5.07 | `sweep plan --json` drops the reason a forecast could not be made, and the case JSON Schema does not describe variables | WP5.07 review | fixed |
-| REV-202 | session, own call | `docs/project/review-findings.md` |  | WP5.21 | The problems list leads to a suite, not to the field, and the suites' tools are not built | WP5.21 | fixed |
-| REV-203 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The frame's accessibility and layout limits | WP5.15 | fixed |
-| REV-204 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The settings and the changed list lack some guards and units | WP5.15 | fixed |
-| REV-205 | session, own call | `docs/project/review-findings.md` |  | WP5.19 | The Study page shows fixture names, and the charge screen lacks a colour bar and axes | WP5.19 | fixed |
-| REV-206 | session, own call | `docs/project/review-findings.md` |  | WP5.08 | An exported project can lose a result file of the same name, and keeps the run record's old paths | WP5.08 review (WP5.19) | fixed |
-| REV-207 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The frame writes the layout on every drag step, rereads the theme files, and keeps its dialogs | WP5.15 | fixed |
-| REV-208 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The palette finds commands by title only, has no active row, and lists commands that cannot run | WP5.15 | fixed |
-| REV-209 | session, own call | `docs/project/review-findings.md` |  | WP5.19 | The charge screen in the frame shows a link where none exists, and its map ignores the dark theme | WP5.19 | fixed |
-| REV-210 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The frame lacks icons, headings and some states in the render set | WP5.15 | fixed |
-| REV-211 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The palette opens as a full command list, not a bare input that suggests as you type | WP5.15 | fixed |
-| REV-212 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The settings need a searchable section list beside the panel, and which settings exist is undecided | WP5.15 | fixed |
-| REV-213 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The suites may need to separate those that build models from those that use them | WP5.15 | fixed |
-| REV-214 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The changed list is loosely spaced, and the project name reads as a menu | WP5.15 | fixed |
-| REV-215 | session, own call | `docs/project/review-findings.md` |  | WP5.19 | The charge screen needs its design and its function settled together | WP5.19 | fixed |
-| REV-216 | session, own call | `docs/project/review-findings.md` |  |  | The Phase 5 plan exceeds its word target again | CODE_REVIEW_034 | fixed |
-| REV-217 | session, own call | `docs/project/review-findings.md` |  | WP5.13 | Case reading, substitution and input-path discovery are split across five modules | WP5.13 | fixed |
-| REV-218 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | Effective atom radii and atom-to-residue indexing are split across four subpackages | WP5.16 | fixed |
-| REV-219 | session, own call | `docs/project/review-findings.md` |  | WP5.13 | A model file's validated body is discarded and parsed again by the project | WP5.13 | fixed |
-| REV-220 | session, own call | `docs/project/review-findings.md` |  | WP5.14 | The upstream lookup and the forecast re-implement the walk's stage keying | WP5.14 | fixed |
-| REV-221 | session, own call | `docs/project/review-findings.md` |  | WP5.14 | Planning a sweep from a case drops the members it resolved | WP5.14 | fixed |
-| REV-222 | session, own call | `docs/project/review-findings.md` |  |  | The agentic instructions cite identifiers without their words and state two procedures in several places | CODE_REVIEW_038 | fixed |
 | REV-223 | author | `docs/project/review-findings.md` |  | WP6.13 | PHY-07's density continuity is not assembled | §8.2.37 AM2; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4: WP6.13, the model's open terms | accepted |
 | REV-224 | author | `docs/project/review-findings.md` |  | WP6.13 | NUM-28's fluid consistency term omits the pore charge's force | §8.2.37 AM2; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4: WP6.13, the model's open terms | accepted |
 | REV-225 | author | `docs/project/review-findings.md` |  | WP6.14 | Three numerics tolerances have no written derivation | §8.2.37 AM2; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4: WP6.14, the tolerances argued | accepted |
-| REV-226 | session, own call | `docs/project/review-findings.md` |  | WP5.12 | Refusal messages in src/ cite the §5.3.1 NOTEs whose stage rules moved to §5.2 | WP5.12 | fixed |
-| REV-227 | author | `docs/project/review-findings.md` |  | WP5.12 | The source checklist: six findings that rest on the ESI or the COMSOL report | ruled by the author, 10 November 2026 (WP5.12) | fixed |
-| REV-228 | session, own call | `docs/project/review-findings.md` |  | WP5.27 | The site's links from the project registers to the plans and reviews lead nowhere | WP5.27 | fixed |
 | REV-229 | author | `docs/project/review-findings.md` |  |  | Three checks the knowledge base proposed without a requirement | §8.2.37 AM14 | post-1.0 |
 | REV-230 | author | `docs/project/review-findings.md` |  | WP6.13 | The correction file's comments cite the wrong equation, count and cause | §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4: WP6.13, the model's open terms | accepted |
-| REV-231 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | axis.py's comment sends the stage-1 margins to an index | WP5.16 | fixed |
 | REV-232 | author | `docs/project/review-findings.md` |  | WP6.14 | Three statements the physics reviewer doubted at WP5.12 | §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4: WP6.14, the tolerances argued | accepted |
-| REV-233 | session, own call | `docs/project/review-findings.md` |  | WP5.13 | Importing a case leaves a model without a value the study writes as an expression | WP5.13 | fixed |
-| REV-234 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | The frame shows a tool's 3D view to the left of its settings | WP5.16 | fixed |
 | REV-235 | author | `docs/project/review-findings.md` |  |  | Design questions the frame's review leaves for the suites' prototype rounds | §8.2.46 AV2; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the polish pass | accepted |
 | REV-236 | author | `docs/project/review-findings.md` |  |  | Chords the operating system may claim, a command that cannot be unbound, and the glossary written twice | §8.2.46 AV2; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the polish pass | accepted |
 | REV-237 | author | `docs/project/review-findings.md` |  |  | The author's notes on the frame's digest for the suites' prototype rounds | §8.2.46 AV2; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the polish pass | accepted |
 | REV-238 | author | `docs/project/review-findings.md` |  |  | The Prepare tool's axis and membrane are not dragged by handles | §8.2.39 AO2; §8.2.46 AV5; §8.2.49 AY2: Phase 9, the structural mutator | deferred |
-| REV-239 | author | `docs/project/review-findings.md` |  | WP5.16 | The channel axis's two limits rest on 2WCD alone, and a ragged pore may be refused | ruled by the author, 11 November 2026 (WP5.16) | fixed |
 | REV-240 | author | `docs/project/review-findings.md` |  |  | The author's notes on the Molecular digest that ask for a discussion | §8.2.46 AV2, AV3; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the structure's layers, and the guided route and new models | accepted |
 | REV-241 | author | `docs/project/review-findings.md` |  |  | What the final review of the Molecular tools left open | §8.2.46 AV2; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the polish pass, and the guided route and new models | accepted |
 | REV-242 | author | `docs/project/review-findings.md` |  | WP6.04 | What the code review of the Molecular suite left open | §8.2.46 AV1, AV2; §8.2.47 AW1; §8.2.49 AY1; §8.2.50 AZ3: WP6.04, the error base, for its fourth point; Phase 7, the guided route and new models | accepted |
 | REV-243 | author | `docs/project/review-findings.md` |  |  | Prepare's view does not follow the typed orientation | §8.2.46 AV3; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the structure's layers | accepted |
 | REV-244 | author | `docs/project/review-findings.md` |  |  | The author's notes on the Continuum digest that ask for a discussion | §8.2.46 AV5; §8.2.49 AY2: Phase 10, the sketcher | deferred |
 | REV-245 | author | `docs/project/review-findings.md` |  |  | What the Continuum suite's final review left open | §8.2.46 AV2; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the polish pass | accepted |
-| REV-246 | author | `docs/project/review-findings.md` |  | WP5.19 | A saved outline's exclusion shell takes the default grid | §8.2.40 AP5; §8.2.42 AR6 (WP5.19) | fixed |
-| REV-247 | author | `docs/project/review-findings.md` |  | WP5.19 | The solid-share gate's reach against an outline in another frame is not measured | ruled by the author, 13 November 2026; §8.2.42 AR5 (WP5.19) | fixed |
-| REV-248 | author | `docs/project/review-findings.md` |  | WP5.17 | What the code review of the Continuum suite left open | ruled by the author, 13 November 2026 (WP5.17) | fixed |
 | REV-249 | author | `docs/project/review-findings.md` |  |  | A correction a physics model does not set reads none, and is not marked | §8.2.46 AV2; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the guided route and new models | accepted |
-| REV-250 | author | `docs/project/review-findings.md` |  | WP5.18 | PHY-23's terms under a solid fraction and without the flow | ruled by the author, 16 November 2026 (WP5.18) | fixed |
-| REV-251 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A project whose first study deposits no charge opens with a failed walk | WP5.18; WP5.19 | fixed |
-| REV-252 | session, own call | `docs/project/review-findings.md` |  | WP5.19 | Where a value is exposed in the Molecular and Continuum suites | WP5.19 | fixed |
-| REV-253 | session, own call | `docs/project/review-findings.md` |  | WP5.21 | A plot's axes the user tunes | WP5.21 | fixed |
 | REV-254 | author | `docs/project/review-findings.md` |  | WP6.04 | The stages' diagnostics and the other suites' words in ASD-STE100 | §8.2.46 AV1; §8.2.47 AW1; §8.2.49 AY1; §8.2.50 AZ3: WP6.04, the error base, and WP6.16, the refusals reworded; the suites' words Phase 7's polish pass | accepted |
 | REV-255 | author | `docs/project/review-findings.md` |  | WP6.13 | What the Physics suite's final review left open | §8.2.46 AV2, AV5; §8.2.47 AW1; §8.2.49 AY1, AY6: Phase 7, the polish pass; the equations WP6.13, the model's open terms (§8.2.50 AZ4) | accepted |
-| REV-256 | session, own call | `docs/project/review-findings.md` |  | WP5.19 | A field's message, its text size and a field of several boxes, in every suite | WP5.19 | fixed |
 | REV-257 | author | `docs/project/review-findings.md` |  | WP6.13 | The blend's nearest-solid jump carries no dielectric force | §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4: WP6.13, the model's open terms | accepted |
 | REV-258 | author | `docs/project/review-findings.md` |  |  | The 200 ms redraw, measured on a GPU, and the front end's share fixed | §8.2.42 AR7; §8.2.43 AS2; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the performance package | deferred |
-| REV-259 | author | `docs/project/review-findings.md` |  | WP5.20 | A bridge suite between Molecular and Continuum | WP5.20, §8.2.42 AR8 and §8.2.43 AS1 (WP5.19) | fixed |
-| REV-260 | session, own call | `docs/project/review-findings.md` |  | WP5.21 | A recorded run's convergence, picked in Runs | WP5.21 | fixed |
 | REV-261 | author | `docs/project/review-findings.md` |  |  | What the Study suite's final review left open | §8.2.46 AV2; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the polish pass | accepted |
 | REV-262 | author | `docs/project/review-findings.md` |  |  | An exposed value's first name, and Exposed values' list as Study setup draws it | §8.2.46 AV2; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the polish pass's round | accepted |
 | REV-263 | author | `docs/project/review-findings.md` |  |  | What code review 060 of the Study suite left open | ruled by the author, 18 November 2026; §8.2.46 AV2; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the polish pass | accepted |
-| REV-264 | author | `docs/project/review-findings.md` |  | WP5.21 | A reproduction of a record stopped at its solve compares no number of the solve | WP5.21, ruled by the author on 20 November 2026 (WP5.19) | fixed |
 | REV-265 | author | `docs/project/review-findings.md` |  |  | A free list of the structure's layers in Meso's Mol* view | §8.2.46 AV3; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the structure's layers | accepted |
 | REV-266 | author | `docs/project/review-findings.md` |  |  | What the Meso suite's round left open | §8.2.46 AV2; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the polish pass | accepted |
 | REV-267 | author | `docs/project/review-findings.md` |  |  | What the Analysis suite's first review left open | §8.2.46 AV2; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the polish pass | accepted |
 | REV-268 | author | `docs/project/review-findings.md` |  |  | Analysis as an editable tree of results, and the charts' library | WB-51; WB-54 to WB-63; §8.2.46 AV4; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the tree of results | accepted |
 | REV-269 | author | `docs/project/review-findings.md` |  |  | The workbench's wording | §8.2.46 AV2; §8.2.47 AW1; §8.2.49 AY1: Phase 7, the polish pass | accepted |
 | REV-270 | author | `docs/project/review-findings.md` |  | WP6.07 | A map reads its field linearly on each cell split in four | ruled by the author, 20 November 2026; §8.2.47 AW1; §8.2.49 AY1; §8.2.50 AZ2: WP6.07, the fields, for the read by the cell's own basis; Phase 7, the tree of re… | accepted |
-| REV-271 | author | `docs/project/review-findings.md` |  | WP6.02 | The Phase 5 plan exceeds its word target a third time | WP6.02, ruled by the author on 22 November 2026 (§8.2.50 AZ14) | fixed |
 | REV-272 | author | `docs/project/review-findings.md` |  | WP6.02 | Phase 5 closes early; Phase 6 opens with its scope, a cleanup and the foundations | ruled by the author, 21 November 2026; §8.2.47 AW1 to AW3; §8.2.49 AY1, AY3, AY6 to AY8: its proposals ruled; §8.2.50 AZ4: WP6.02 and WP6.03, the cleanup, and… | accepted |
 | REV-273 | author | `docs/project/review-findings.md` |  |  | The tree round's verdicts reopen where the settings stand, the views shown and the runs in Data | ruled by the author, 22 November 2026; §8.2.48 AX2; §8.2.49 AY1: Phase 7, the tree of results | accepted |
 | REV-274 | author | `docs/project/review-findings.md` |  |  | Five details the Qt panels show are carried to Phase 7 | §8.2.47 AW11; §8.2.49 AY1: Phase 7, the structure's layers and the polish pass | accepted |
 | REV-275 | author | `docs/project/review-findings.md` |  |  | What WP5.27's screen review left open | ruled by the author, 21 November 2026; §8.2.47 AW1, AW10; §8.2.49 AY1: Phase 7, its forms, the tree of results and the polish pass | accepted |
 | REV-276 | author | `docs/project/review-findings.md` |  |  | The radius set's notice names the removed bundle notice | ruled by the author, 21 November 2026: at the radius set's next change | accepted |
-| REV-277 | session, own call | `docs/project/review-findings.md` |  | WP6.01 | The Windows test leg has not passed since 10 November | WP6.01 | fixed |
 | REV-278 | author | `docs/project/review-findings.md` |  | WP6.03 | `/np-plan project` as written cannot hold the rescoping round | §8.2.50 AZ7; proposed by review 073: WP6.03, the cleanup's instructions | open |
 | REV-279 | author | `docs/project/review-findings.md` |  | WP6.01 | At a ragged rim the channel's axis can lock about 0.6° off, as rounding decides | ruled by the author, 22 November 2026 (WP6.01): the rescoping round after WP6.03 (§8.2.50 AZ7) | accepted |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
