@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.21 and WP5.27 merged (`v0.6.0-alpha.21`, `v0.6.0-alpha.27`); closing early (REV-272; §8.2.47): WP5.28, the close, is planned. The tree of results, the layers, the performance package, the refusals, the polish pass and the guided route are Phase 6's.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: delivered, 22 November 2026; closes at the merge and the `v0.6.0` tag. WP5.01 to WP5.21 and WP5.27 merged (`v0.6.0-alpha.21`, `v0.6.0-alpha.27`), and WP5.28, the close, delivered; closed early (REV-272; §8.2.47). The tree of results, the layers, the performance package, the refusals, the polish pass and the guided route are Phase 6's.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -20,8 +20,8 @@ in every state. This release has a short guide and no guided route, so a new use
 the trial with a colleague waits for the release candidate of version 1.
 
 **Your call.** Settled on 22 November 2026: the order of the later tool phases is set at the next phase's scope round,
-which plans the phases again. The Copilot app's checks are carried to the next phase unless you run them before the
-close merges.
+which plans the phases again. The Copilot app's checks were not run and are carried to the next phase; so is the
+Windows test run, which fails, as you ruled.
 
 ## Context
 
@@ -259,15 +259,22 @@ REV-228. No golden or stored key moves.
 
 Live constraints: REV-274's five details and QR-16's gaps are Phase 6's.
 
-### WP5.28 — The close (§8.2.47 AW1, AW2; §8.2.48 AX1, AX2)
+### WP5.28 — The close (§8.2.47 AW1, AW2; §8.2.48 AX1 to AX3)
 
-**Planned 22 November 2026** ([the plan](wp5.28-the-close.md)).
+**Delivered 22 November 2026** ([the plan](wp5.28-the-close.md)); its last commit takes `v0.6.0` alone after the
+merge (§8.4.1).
 
-It confirms Qt and the bundle are gone with the capability list covered, hands the tool phases' order to Phase 6's
-scope round (AX1), carries any Copilot check not yet run (REV-166 to REV-168; AV6), hands the six moved packages (AW1)
-and the open items' provisional Phase 6 packages (AV5) to that round (REV-272), marks each ruling a delivered package
-landed, and writes the report, the changelog and `CITATION.cff`. No row of the review register is `open` (AX2). QR-10
-is not observed (AW2). Its last commit takes `v0.6.0` alone (§8.4.1).
+The 49 rulings a delivered package landed hold their clause or read `spent`; T3, AC3 and AW1 keep what waits.
+REV-166 to REV-168 were not run and are carried to Phase 6's scope round (AV6); no review row is `open`, and each that
+waits names its owner (AX2). The [end-of-phase report](#end-of-phase-report), measured on the close's own tree, finds
+criteria 1 and 2 met on Linux and macOS, 3 met, 4 met in part (QR-16), 5 and 6 not this phase's. Run 837's Windows
+leg failed and met its limit, as `main`'s has since 10 November; the author released with the gap (§8.2.48 AX3;
+REV-277). `CHANGELOG.md`'s `[0.6.0]` gathers the 23 packages and each break since `v0.5.0` with its migration;
+`CITATION.cff`, the README, the site's banner and the install page name `v0.6.0` and the workbench; §8.1's Phase 5
+gate reads "Closed with v0.6.0".
+
+Live constraints: the six moved packages, REV-272's proposals, the tool phases' order and REV-277 are Phase 6's scope
+round's (AW1, AX1, AX3).
 
 ## Open decisions
 
