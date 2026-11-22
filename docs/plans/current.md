@@ -43,8 +43,8 @@ planning model.
 - **The Windows leg is first; every later gate asks the three platforms** (§8.2.49 AY4); **a pull request and a
   package's ship test Linux alone, the close the three** (§8.2.50 AZ8). **The Copilot host is
   retired at the cleanup** (AY5). **Fable 5.2 plans and ships, Opus 5.5 implements** (AY7).
-- **The reading limit counts project text in words; 6,500 for a fresh `/np-implement` window from WP6.03's merge; a
-  phase plan 2,500** (§8.2.50 AZ9 to AZ14); **nothing leaves the rulings' history; a closed item is archived**.
+- **The reading limit counts project text in words; 6,500 for an `/np-implement` session's first window from
+  WP6.03's merge; a phase plan 2,500** (§8.2.50 AZ9 to AZ17); **nothing leaves the rulings' history; a closed item is archived**.
 - **An open-minded rescoping follows WP6.03; no package from WP6.04 is planned before it** (§8.2.50 AZ7). Until it
   rules: the phases are library, workbench, composer, mutator, sketcher, validation (AY1, AY2); the speed-up closes
   Phase 6, with no fixed target (AY3; AZ6); the equations are brought to §4 there (AY6); §5.4.1's interface is Phase 8's

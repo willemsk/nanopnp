@@ -36,3 +36,14 @@ Open decision 2 read:
 The row of *What the author supplies* read:
 
 > | The reading limit; what leaves the history | WP6.02's plan | The cleanup proposes and waits; nothing is deleted |
+
+## Amended 22 November 2026 (§8.2.50 AZ15)
+
+At WP6.02's review the author ruled that the reading limit binds only the first window of an `/np-implement`
+session. The WP6.02 entry read:
+
+> *Delivered 22 November 2026.* [The plan](wp6.02-the-cleanup-measure-audit-records.md). Live: AZ13's limit from WP6.03's merge; its Outcome's outdated list.
+
+The end of open decision 2 read:
+
+> inside WP6.02 from the baseline: 6,500 words for a fresh `/np-implement` window, 2,500 for a phase plan (AZ13, AZ14) |

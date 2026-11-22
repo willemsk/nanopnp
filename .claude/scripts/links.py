@@ -3,12 +3,12 @@
 Reads ``git ls-files '*.md'``, less the attachments of ``docs/code_reviews/CODE_REVIEW_039/``,
 which copy links from other folders; writes a Markdown report to standard output: the count of
 relative links, then every broken one as ``file:line target``, then, with ``--anchors``, every
-anchor that names a heading the target file does not have. A link is relative when it has no
-scheme and does not start with ``#``. Code spans and fenced blocks are masked first, as
-``docs/scripts/generate.py`` masks them, so an ``a[i](x)`` in code is not a link. A link into
-``docs/_generated/`` resolves only after ``docs/scripts/generate.py`` has run, as CI runs it. The
-broken links of ``KNOWN`` are records and pass. The exit status is 1 when any other path is
-broken.
+anchor that names a heading the target file does not have, an in-page link's among them. A link is
+relative when it has no scheme and does not start with ``#``. Code spans and fenced blocks are
+masked first, as ``docs/scripts/generate.py`` masks them, so an ``a[i](x)`` in code is not a link.
+A link into ``docs/_generated/`` resolves only after ``docs/scripts/generate.py`` has run, as CI
+runs it. The broken links of ``KNOWN`` are records and pass. The exit status is 1 when any other
+path is broken.
 
 Run it as ``uv run .claude/scripts/links.py [--anchors]``.
 """
@@ -96,12 +96,14 @@ def main(argv: list[str] | None = None) -> int:
         masked = CODE.sub(lambda m: re.sub(r"[^\n]", " ", m.group(0)), text)
         for match in LINK.finditer(masked):
             target = match.group(2)
-            if SCHEME.match(target) or target.startswith("#"):
+            if SCHEME.match(target):
                 continue
-            total += 1
+            # An in-page link is no relative link, and its file is its own.
+            in_page = target.startswith("#")
+            total += not in_page
             line = masked.count("\n", 0, match.start()) + 1
             target_path, _, anchor = target.partition("#")
-            resolved = (path.parent / target_path).resolve()
+            resolved = path if in_page else (path.parent / target_path).resolve()
             if not resolved.exists():
                 if (name, target) in KNOWN:
                     known += 1

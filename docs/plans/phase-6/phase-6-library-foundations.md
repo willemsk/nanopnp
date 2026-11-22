@@ -26,7 +26,7 @@ starts from your view and not from the records.
 ## Context
 
 `SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 (AY1 to AY8) and §8.2.50 (AZ1
-to AZ14; AZ8 ruled at WP6.01's plan, AZ13 and AZ14 at WP6.02's item 5).
+to AZ17; AZ8 ruled at WP6.01's plan, AZ13 and AZ14 at WP6.02's item 5, AZ15 to AZ17 at its review).
 
 Phase 6 answers one question: **can the library be made one sound base, without moving a number, before the workbench
 is rebuilt and three tools are built on it?** Its gate is §8.1's. Only WP6.01 to WP6.03 are fixed (AZ7); the
@@ -77,9 +77,9 @@ and 8 touches (§8.3).
 
 *Delivered 22 November 2026.* [The plan](wp6.01-the-windows-leg.md). Live: AZ8's ship rule; REV-279 waits for the rescoping round.
 
-### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8; AZ9 to AZ14)
+### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8; AZ9 to AZ17)
 
-*Delivered 22 November 2026.* [The plan](wp6.02-the-cleanup-measure-audit-records.md). Live: AZ13's limit from WP6.03's merge; its Outcome's outdated list.
+*Delivered 22 November 2026.* [The plan](wp6.02-the-cleanup-measure-audit-records.md). Live: AZ13's limit, which binds a session's first window (AZ15), from WP6.03's merge; its Outcome's outdated list.
 
 ### WP6.03 — The cleanup: instructions, the Copilot host retired (AY5; REV-166 to REV-168, REV-278)
 
@@ -118,7 +118,7 @@ Each waits on the rescoping round; none is planned before it.
 | # | Decision | Owner and status |
 |---|---|---|
 | 1 | This round's seven rulings | **Settled by the author, 22 November 2026** (AZ1 to AZ7) |
-| 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 November 2026**: project text in words, six recent packages, nothing leaves, closed items archived (AZ9 to AZ12). The limit's number and the phase plan's word target: **settled by the author, 22 November 2026**, inside WP6.02 from the baseline: 6,500 words for a fresh `/np-implement` window, 2,500 for a phase plan (AZ13, AZ14) |
+| 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 November 2026**: project text in words, six recent packages, nothing leaves, closed items archived (AZ9 to AZ12). The limit's number and the phase plan's word target: **settled by the author, 22 November 2026**, inside WP6.02 from the baseline: 6,500 words, 2,500 for a phase plan (AZ13, AZ14). At WP6.02's review: the limit binds the first window of an `/np-implement` session (AZ15) |
 | 3 | The Copilot tag's name | **Author** confirms at WP6.03's plan (AY5) |
 | 4 | Whether a pull request's CI runs the Windows leg | **Settled by the author, 22 November 2026**: no; the three platforms at the close alone (AZ8) |
 | 5 | The project's scope, and WP6.04 to WP6.18 with it | **Author**, at the rescoping round (AZ7) |

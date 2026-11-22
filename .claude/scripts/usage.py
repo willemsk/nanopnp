@@ -27,8 +27,12 @@ Run it as ``uv run .claude/scripts/usage.py [--label <level>] [--since <time|com
 ``--reading`` measures instead what each window that an ``/np-`` command opens read before its first
 ``Edit``, ``Write`` or ``NotebookEdit`` (§8.2.50 AZ9): the words of project text (instructions,
 records and the tree's ``CLAUDE.md``), of code and of command output, the tokens at the window's
-start and at that edit, and the ten largest files of project text. A window is fresh when no
-message precedes it, or when its start holds under half the tokens of the message before it.
+start and at that edit, and the ten largest files of project text. A change made through a shell
+command does not end the count (AZ17). A file counts when a ``Read`` or a command that only prints
+files gives it: ``cat``, ``head``, ``tail`` or ``sed -n``, alone or piped through ``cut``, ``head``
+or ``tail``, with ``cd``, ``echo``, ``wc``, ``ls`` and ``pwd`` between; files of code printed with
+it make the result command output (AZ16). A session's first window is the one no message precedes;
+the reading limit binds it for ``/np-implement`` (AZ15).
 ``--transcript`` names a transcript; ``--pages`` reads instead the transcripts of agents that paged
 other sessions with the session service's ``list_events`` (AZ10), one session per paged id. A page
 holds no typed prompt and no skill text, so a paged session's windows open at its first message and
@@ -47,6 +51,7 @@ import shlex
 import subprocess
 from collections import Counter
 from datetime import datetime
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
@@ -57,11 +62,23 @@ SKILL_TEXT = "Base directory for this skill:"
 CONTINUED = "This session is being continued from a previous conversation"
 EDITS = ("Edit", "Write", "NotebookEdit")
 PRINTERS = ("cat", "head", "tail", "sed")
+# Commands whose output is a line or two, and filters that only shorten what a printer prints.
+QUIET = ("cd", "echo", "wc", "ls", "pwd")
+FILTERS = ("cut", "head", "tail")
+DISCARDS = ("2>/dev/null", "2>&1")
+PROJECT = {"instructions", "records"}
 LIST_EVENTS = "mcp__claude-code-remote__list_events"
 RECORD_DIRS = ("/docs/", "/specification/", "/knowledge/")
 RECORD_NAMES = ("SPECIFICATION.md", "CHANGELOG.md", "CONTRIBUTING.md", "README.md")
 CODE_DIRS = ("/src/", "/tests/", "/examples/", "/data/")
 LINE_NUMBER = re.compile(r"(?m)^\s*\d+\t")
+NUMBERED_CAT = re.compile(r"\bcat\s+-\w*n")
+COMMAND_NAME = re.compile(r"<command-name>\s*/?([\w:-]+)\s*</command-name>")
+# The command, not a path that holds its name, as `.claude/skills/np-plan/wp.md` does.
+NP_COMMAND = re.compile(r"(?<![\w.])/(np-[\w-]+)")
+RUNS_CLAUSE = re.compile(
+    r"\buv run (?:-\S+ )*\S*clause\.py\b|\bpython3? \S*clause\.py\b|\bjust clause\b"
+)
 
 
 def _transcript() -> Path | None:
@@ -184,12 +201,9 @@ def _text(content: object) -> str:
     return ""
 
 
-def _path_class(path: str) -> str:
-    """Return the class of a file read by its path: instructions, records, code or commands.
-
-    A path outside the tree, such as a saved tool result, is commands.
-    """
-    if path.startswith(("/", "~")) and not path.startswith(f"{ROOT}/"):
+def _path_class(path: str, root: str) -> str:
+    # A path outside the tree, such as a saved tool result, is commands.
+    if path.startswith(("/", "~")) and not path.startswith(f"{root}/"):
         return "commands"
     path = path if path.startswith("/") else f"/{path}"
     name = path.rsplit("/", 1)[-1]
@@ -204,13 +218,11 @@ def _path_class(path: str) -> str:
     return "commands"
 
 
-def _printed_files(command: str) -> list[str] | None:
-    """Return the files a command only prints (cat, head, tail, sed -n, with cd and echo)."""
+def _segments(command: str) -> list[list[str]] | None:
     try:
         words = shlex.split(command, comments=True)
     except ValueError:
         return None
-    files: list[str] = []
     segments: list[list[str]] = [[]]
     for word in words:
         if word in ("&&", ";"):
@@ -220,11 +232,23 @@ def _printed_files(command: str) -> list[str] | None:
             segments.append([])
         else:
             segments[-1].append(word)
-    for segment in filter(None, segments):
-        head, args = segment[0], segment[1:]
-        if head in ("cd", "echo"):
+    return [kept for segment in segments if (kept := [w for w in segment if w not in DISCARDS])]
+
+
+def _printed_files(command: str) -> list[str] | None:
+    # The files of a command that only prints them. Any other command, a pipe into anything but a
+    # shortening filter, or a redirection gives None.
+    files: list[str] = []
+    for segment in _segments(command) or []:
+        head, *args = segment
+        if head in QUIET:
             continue
-        if head not in PRINTERS or any(arg in ("|", ">", ">>", "<") for arg in args):
+        if "|" in args:
+            args, piped = args[: args.index("|")], args[args.index("|") :]
+            follows = [after for before, after in pairwise([*piped, ""]) if before == "|"]
+            if any(name not in FILTERS for name in follows):
+                return None
+        if head not in PRINTERS or any(arg in (">", ">>", "<") for arg in args):
             return None
         if head == "sed":
             if not args or args[0] != "-n" or len(args) < 3:
@@ -234,7 +258,8 @@ def _printed_files(command: str) -> list[str] | None:
         for arg in args:
             if skip:
                 skip = False
-            elif arg in ("-n", "-c"):
+            elif arg in ("-n", "-c") and head in ("head", "tail"):
+                # head's and tail's count; cat's -n numbers the lines and takes no value.
                 skip = True
             elif not arg.startswith("-"):
                 operands.append(arg)
@@ -244,27 +269,33 @@ def _printed_files(command: str) -> list[str] | None:
     return files or None
 
 
-def _classify(call: dict[str, Any]) -> tuple[str, str | None]:
-    """Return the class of a tool call's result, and the file it read where it read one."""
+def _classify(call: dict[str, Any], root: str) -> tuple[str, str | None]:
+    # One file has one name in a window's list, read by its full path or from the tree's root.
+    def shown(path: str) -> str:
+        return path.removeprefix(f"{root}/")
+
     name, given = call.get("name"), call.get("input") or {}
     if name == "Read" and given.get("file_path"):
-        return _path_class(str(given["file_path"])), str(given["file_path"])
+        return _path_class(str(given["file_path"]), root), shown(str(given["file_path"]))
     if name == "Grep" and given.get("path"):
-        return _path_class(str(given["path"])), str(given["path"])
+        return _path_class(str(given["path"]), root), shown(str(given["path"]))
     if name == "Bash":
         command = str(given.get("command", ""))
-        if "clause.py" in command:
+        # A run of the script prints records; a command that only names its file does not.
+        if RUNS_CLAUSE.search(command):
             return "records", "clause.py"
         files = _printed_files(command)
         if files:
-            classes = {_path_class(path) for path in files}
-            if len(classes) == 1:
-                return classes.pop(), " ".join(dict.fromkeys(files))
+            classes = {_path_class(path, root) for path in files}
+            # Instructions and records printed together are project text. The result does not say
+            # where one file ends, so the first file's class takes the words.
+            if len(classes) == 1 or classes <= PROJECT:
+                names = " ".join(dict.fromkeys(shown(path) for path in files))
+                return _path_class(files[0], root), names
     return "commands", None
 
 
 def _page_events(path: Path) -> dict[str, list[dict[str, Any]]]:
-    """Return the events that ``list_events`` pages hold, by the session paged, in local form."""
     calls: dict[str, str] = {}
     pages: list[tuple[str, str]] = []
     for event in _events(path):
@@ -311,9 +342,18 @@ def _page_events(path: Path) -> dict[str, list[dict[str, Any]]]:
     }
 
 
+def _np_command(text: str) -> re.Match[str] | None:
+    # A prompt that runs a command names it in a tag, and its arguments may name another: a
+    # /compact prompt that carries the next step holds `/np-` and opens no window.
+    named = COMMAND_NAME.search(text)
+    if named and not named.group(1).startswith("np-"):
+        return None
+    return NP_COMMAND.search(text)
+
+
 def _window_name(event: dict[str, Any]) -> str:
     text = _text((event.get("message") or {}).get("content"))
-    command = re.search(r"/(np-[\w-]+)", text)
+    command = _np_command(text)
     args = re.search(r"<command-args>(.*?)</command-args>", text, re.S)
     rest = args.group(1) if args else text[command.end() :] if command else ""
     return " ".join([command.group(1) if command else "np-", *rest.split()[:2]])
@@ -330,26 +370,31 @@ def _tokens(event: dict[str, Any]) -> int:
 def reading(events: list[dict[str, Any]], claude_md: int) -> list[dict[str, Any]]:
     """Return what each ``/np-`` window of one session's ``events`` read before its first edit."""
     if events and events[0].get("page"):
-        opens = [0] + [
+        continued = {
             index
             for index, event in enumerate(events)
             if event.get("type") == "user"
             and _text((event.get("message") or {}).get("content")).startswith(CONTINUED)
-        ]
+        }
+        opens = sorted({0} | continued)
     else:
         opens = [
             index
             for index, event in enumerate(events)
             if _typed(event)
-            and "/np-" in _text((event.get("message") or {}).get("content"))
+            and _np_command(_text((event.get("message") or {}).get("content")))
             and not _text((event.get("message") or {}).get("content"))
             .lstrip()
             .startswith(SKILL_TEXT)
         ]
+    # The session's own checkout, which a transcript measured from another one names in `cwd`.
+    root = next((str(event["cwd"]) for event in events if event.get("cwd")), str(ROOT))
     windows = []
     for number, first in enumerate(opens):
         last = opens[number + 1] if number + 1 < len(opens) else len(events)
-        before = [event for event in events[:first] if event.get("type") == "assistant"]
+        before = [
+            event for event in events[:first] if event.get("type") == "assistant" and _tokens(event)
+        ]
         words: Counter[str] = Counter()
         files: Counter[str] = Counter()
         calls: dict[str, dict[str, Any]] = {}
@@ -363,17 +408,19 @@ def reading(events: list[dict[str, Any]], claude_md: int) -> list[dict[str, Any]
                 edit_tokens = _tokens(event)
             text = _text((event.get("message") or {}).get("content"))
             if event.get("type") == "user" and text.lstrip().startswith(SKILL_TEXT):
-                base = text.split("\n", 1)[0]
-                words["instructions" if "/.claude/" in base else "commands"] += len(text.split())
+                # The project's own skill: the user's and a plug-in's also sit in a `.claude/`.
+                own = f"{root}/.claude/" in text.split("\n", 1)[0]
+                words["instructions" if own else "commands"] += len(text.split())
             for block in _blocks(event):
                 if block.get("type") == "tool_use":
                     calls[block.get("id", "")] = block
                     edited = edited or block.get("name") in EDITS
                 elif block.get("type") == "tool_result" and block.get("tool_use_id") in calls:
                     call = calls[block["tool_use_id"]]
-                    kind, path = _classify(call)
+                    kind, path = _classify(call, root)
                     result = _text(block.get("content"))
-                    if call.get("name") == "Read":
+                    command = str((call.get("input") or {}).get("command", ""))
+                    if call.get("name") == "Read" or (path and NUMBERED_CAT.search(command)):
                         result = LINE_NUMBER.sub("", result)
                     count = len(result.split())
                     words[kind] += count
@@ -381,7 +428,6 @@ def reading(events: list[dict[str, Any]], claude_md: int) -> list[dict[str, Any]
                         files[path] += count
             if edited:
                 break
-        previous = _tokens(before[-1]) if before else 0
         project = words["instructions"] + words["records"] + claude_md
         windows.append(
             {
@@ -391,7 +437,7 @@ def reading(events: list[dict[str, Any]], claude_md: int) -> list[dict[str, Any]
                     if events[first].get("page")
                     else _window_name(events[first])
                 ),
-                "fresh": not before or (start_tokens or 0) < previous / 2,
+                "first": start_tokens is not None and not before,
                 "edit": edited,
                 "project": project,
                 "instructions": words["instructions"],
@@ -413,7 +459,7 @@ def _reading_line(window: dict[str, Any]) -> str:
     edit = "the first edit" if window["edit"] else "the window's end (no edit)"
     return (
         f"Reading ({window['session']}, {window['window']}, "
-        f"{'fresh' if window['fresh'] else 'not fresh'}): "
+        f"{'first window' if window['first'] else 'later window'}): "
         f"{window['project']:,} words of project text before {edit} "
         f"(instructions {window['instructions']:,}; records {window['records']:,}; "
         f"CLAUDE.md {window['claude_md']:,}); code {window['code']:,}; "
@@ -443,6 +489,8 @@ def main() -> int:
     args = parser.parse_args()
     if (args.transcript or args.pages) and not args.reading:
         parser.error("--transcript and --pages need --reading")
+    if args.transcript and args.pages:
+        parser.error("--reading takes --transcript or --pages, not both")
     if args.reading:
         if args.since or args.all:
             parser.error("--reading takes no --since or --all")

@@ -12,7 +12,8 @@ The log of [the review register](review-items.md) (§8.2.8 H12): every item a wo
 implementation or review left open, until it is resolved. `/np-implement` and `/np-ship` add a row
 in the commit that leaves an item open, and the commit that resolves it sets the row `fixed`, its
 ruling linking the plan that fixed it. A phase's close moves each `fixed`, `declined` and `wontfix`
-row to [the archive](review-archive.md) (§8.2.50 AZ12).
+row to [the archive](review-archive.md) (§8.2.50 AZ12). A new item takes the number one above the
+highest of this log and the archive.
 
 **Status** is `open` until the author rules; then `accepted` (owned by a named later package),
 `fixed`, or `deferred`, `post-1.0`, `declined` or `wontfix` (the ruling names the §8.2 row; `wontfix`

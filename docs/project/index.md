@@ -15,7 +15,9 @@ against a written specification. It is pre-alpha and single-maintainer.
 | [Architecture](../_generated/project/architecture.md) | The modules, their layers and stages, generated from the tree this site was built from |
 | [Review register](../_generated/project/review-items.md) | Every item a work package's implementation or review left open, with what was measured and how it was resolved |
 | [Review findings](../_generated/project/review-findings.md) | The register's log: each `REV-nn`, its status and the ruling behind it |
-| [Decisions register](decisions.md) | Every decision the records hold, one row each, with where it holds now: generated from the tree |
+| [Review archive](../_generated/project/review-archive.md) | The register's closed items, each `fixed`, `declined` or `wontfix`, moved there at a phase's close |
+| [Decisions register](decisions.md) | The decisions that bind now, one row each, with where each holds: generated from the tree |
+| [Decisions register, closed](decisions-closed.md) | The decisions that bind nothing now: those of a delivered plan, and the fixed, spent, superseded, declined and closed ones |
 | [Workbench design](../design/workbench.md) | The design of the Phase 5 browser workbench, and the rulings behind it |
 | [Citing](citing.md) | How to cite the software and the paper it implements |
 | [Release notes](../_generated/project/changelog.md) | Every tagged version, and what each work package delivered |

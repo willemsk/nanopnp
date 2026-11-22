@@ -9,9 +9,11 @@
 words. The [audit](../sessions/instructions-audit.md) found no stale fact and three findings that matter (F1 to F3), its
 diff WP6.03's. The author set the limit at 6,500 words from WP6.03's merge (AZ13, against the recommended 5,500) and a
 phase plan at 2,500 (AZ14; REV-271 fixed). `clause.py` prints a spent ruling as one line (AZ11). `archive_items.py`
-moved 220 closed review items to the archive, and `decisions.py` writes the 1,079 closed decisions to a second page
-(AZ12): the register fell from 61,248 to 20,690 words, `decisions.md` from 75,431 to 25,751. Live: AZ13's limit; the
-Outcome's outdated list for WP6.03 and the rescoping round.
+moved 220 closed review items to the archive, and `decisions.py` writes the closed decisions to a second page
+(AZ12): the register fell from 61,248 to 20,690 words, `decisions.md` from 75,431 to 25,751. At the review the author
+ruled that the limit binds only a session's first window (AZ15, against the recommendation), that a combined
+command's print counts (AZ16) and that only an edit tool ends the count (AZ17). Live: AZ13's limit as AZ15 to AZ17
+count it; the Outcome's outdated list for WP6.03 and the rescoping round.
 
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.02 entry sets this scope; `SPECIFICATION.md` governs, and
 where it and this plan disagree this plan is wrong. Identifiers are pointers into it.
@@ -297,6 +299,19 @@ closed rows. `main` writes or checks both. The navigation gains `Decisions regis
 > 20,690, its archive 40,745; `decisions.md` 75,431 to 25,751, its closed page 49,886; the Phase 6 plan 2,005 to
 > 1,842; `CLAUDE.md` 2,330 to 2,349. The baseline's fresh windows read a median of 469 words of the register, so the
 > cut shortens what a search or a link lands on more than the measured reading; the limit is checked at WP6.03's merge.
+
+> **Outcome — the review ([code review 076](../../code_reviews/CODE_REVIEW_076.md)).** 26 findings; 23 fixed, 21 by
+> the review and two after it (a plan's status is read from its Status phrase, with WP42's stale line corrected; the
+> measure takes a session's checkout from its own events). The other three were the author's, on what the limit
+> counts: §8.2.50 AZ15 (only a session's first window is bound, so D1's "fresh" and its test of tokens are gone),
+> AZ16 (a file that a combined command prints counts) and AZ17 (only an edit tool ends the count). By the fuller
+> count this package's own first window read 21,611 words where the narrower rule gave 11,649; the baseline is not
+> counted again, and AZ13 lets the author rule the number again before WP6.03 measures. `links.py --anchors` now
+> checks in-page links, and `archive_items.py` refuses to run where it would drop a row.
+>
+> **Measured cost** beside the In brief's estimate (about six sessions, four to seven agent hours, twelve touches):
+> four sessions, 1.6 agent hours and 8 touches at this commit (`/np-implement` 3, 1.0 and 6; `/np-ship` so far 1,
+> 0.6 and 2). The plan's own sessions are not in the pull request's lines.
 
 ### Work items
 
