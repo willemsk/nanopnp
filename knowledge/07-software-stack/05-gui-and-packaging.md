@@ -458,6 +458,22 @@ solved fields for WP5.22's round:
 - Plotly's own mode bar measures 24 × 22 px a button, and its focus ring 1.29:1 on the workbench's dark theme,
   under WCAG 2.2's 24 px and 3:1; `config.displayModeBar: false` hides it.
 
+### On Windows the reloading server's supervisor must keep its input to itself, and end its worker **[verified][^wp601-runs]** {#on-windows-the-reloading-servers-supervisor-must-keep-its-input-to-itself-and-end-its-worker}
+
+`nanopnp gui --dev` runs uvicorn 0.54's reloading supervisor, which spawns its worker through `multiprocessing`.
+Two Windows behaviours held the screens test's server for three weeks:
+
+- A worker spawned while the supervisor's thread reads its standard input inherits the same pipe, and on Windows a
+  process that shares a pipe with a pending read blocks at its start: the worker never served, and no ready line
+  came. The supervisor reads a private duplicate of its input (`os.dup`, not inherited) and gives fd 0 the null
+  device before uvicorn spawns the worker.
+- On Windows uvicorn's supervisor shuts down by waiting for its worker, which a console's Ctrl+C ends alongside it;
+  a supervisor stopped any other way waits for ever. `os.kill(pid, SIGINT)` there is `TerminateProcess` with exit
+  code 2, which leaves the worker running. On closed input the supervisor terminates its worker
+  (`multiprocessing.active_children()`) and stops through `_thread.interrupt_main(SIGINT)`, which runs uvicorn's
+  handler in the main thread on every platform.
+
+[^wp601-runs]: `docs/plans/phase-6/wp6.01-the-windows-leg.md`, items 1 and 2's Outcomes (runs 851, 852 and 854 on `windows-latest`, Python 3.14.10).
 [^wp521-plan]: `docs/plans/phase-5/wp5.21-the-analysis-suite.md` (`webgui.js` 0.2.39's `setGuiSettings`, `loadSettings` and `getBackgroundColor`; `gui/render.py`'s host page).
 [^wp14-plan]: `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md` (PySide6 GL system-library requirement and Playwright Chromium GL shim).
 [^wp15-plan]: `docs/plans/phase-1/wp15-live-convergence-and-viewer.md` (`ngsolve_webgui_js` 0.2.39 npm metadata, `src/scene.ts`, and PyInstaller OCCT/OpenBLAS bundling).
