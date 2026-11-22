@@ -1,8 +1,17 @@
 # WP6.02 — The cleanup: the reading measured, the instructions audited, the records cut
 
-**Status: planned, not started.** Written 22 November 2026, grounded in the code at `eacad07`. Inherits §8.2.47 AW5,
+**Status: delivered, 22 November 2026.** Written 22 November 2026, grounded in the code at `eacad07`. Inherits §8.2.47 AW5,
 §8.2.49 AY5, AY7 and AY8, §8.2.50 AZ4, AZ7 and AZ9 to AZ12 (ruled at this plan), REV-271, REV-272 and the test scope
 (§8.2.13 N1, N3). It starts after WP6.01 merges; its last commit on `main` takes `v0.7.0-alpha.2` (§8.4.1).
+
+**Delivered.** `usage.py --reading` counts the project text a window reads before its first edit; the
+[baseline](../sessions/reading-baseline.md) of twelve sessions gives a fresh `/np-implement` window a median of 8,095
+words. The [audit](../sessions/instructions-audit.md) found no stale fact and three findings that matter (F1 to F3), its
+diff WP6.03's. The author set the limit at 6,500 words from WP6.03's merge (AZ13, against the recommended 5,500) and a
+phase plan at 2,500 (AZ14; REV-271 fixed). `clause.py` prints a spent ruling as one line (AZ11). `archive_items.py`
+moved 220 closed review items to the archive, and `decisions.py` writes the 1,079 closed decisions to a second page
+(AZ12): the register fell from 61,248 to 20,690 words, `decisions.md` from 75,431 to 25,751. Live: AZ13's limit; the
+Outcome's outdated list for WP6.03 and the rescoping round.
 
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.02 entry sets this scope; `SPECIFICATION.md` governs, and
 where it and this plan disagree this plan is wrong. Identifiers are pointers into it.
@@ -309,7 +318,7 @@ closed rows. `main` writes or checks both. The navigation gains `Decisions regis
 - [x] d3fd23d 8. `decisions.py`'s two pages (D6). Done when VER-79's tests and the strict documentation build pass.
   **Executor:** main
 - [x] 9. Compaction checkpoint. **Executor:** main
-- [ ] 10. The Outcome's outdated list (D7); REV-272's counts and `CHANGELOG.md` (D8). Done when the code and review
+- [x] e509ff0 10. The Outcome's outdated list (D7); REV-272's counts and `CHANGELOG.md` (D8). Done when the code and review
   say so. **Executor:** main
 
 ### Verification

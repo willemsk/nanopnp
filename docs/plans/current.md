@@ -5,20 +5,17 @@ Updated 22 November 2026. Navigation;
 
 ## In brief
 
-Version 0.6.0 is released and Phase 6 is under way. Its first package is built: the Windows test run, which had hung
-since 3 November, passes again on all three systems, and a test that hangs now fails within ten minutes and names
-itself. The developer server starts and stops on Windows, and two bundled libraries keep their bytes there. One known
-weakness of the pore-axis search, which rounding can trigger on any system, is recorded for the rescoping round, as
-you ruled. A push of plans or records now checks in seconds, and `main` keeps a linear history.
+Phase 6's first package is merged: the Windows test run passes again.
 
-The second package is planned: the cleanup measures how much of the project's own text a session reads before its
-first edit, audits the instruction files, and moves closed review items and closed decisions to archives. As you ruled,
-the limit counts project text in words, from a baseline of six recent packages, and nothing leaves the record of your
-rulings. The second cleanup package and the rescoping round follow. This cleanup package is about 6 sessions, 4 to 7
-hours of agent work and 12 times you act.
+The second package, the cleanup's first half, is built. A session can now report how much of the project's own text
+it read before its first edit, and six recent packages were measured: a fresh implementing session read about 8,100
+words. The instruction files were audited for the next package. Closed review items and decisions moved to archives,
+cutting each register to about a third; nothing left the record of your rulings. As you ruled, a fresh implementing session reads at most 6,500 words from the next package's
+merge, and a phase plan holds 2,500.
 
-**Your call.** None before the merge. Inside the cleanup, after its baseline: the limit's number, and how long a phase
-plan may be. *Next:* your approval of the cleanup's reviewed plan.
+**Your call.** None before the merge. Two findings of the audit wait for you at the next package: whether a review
+may run on the implementing session's model, and who owns the code. *Next:* the cleanup's review, `/np-ship`, on the
+planning model.
 
 ## Position
 
@@ -27,10 +24,9 @@ plan may be. *Next:* your approval of the cleanup's reviewed plan.
 - **Phase 6 is planned** ([the plan](phase-6/phase-6-library-foundations.md); §8.2.50), `v0.7`: WP6.01 to WP6.03,
   then the rescoping round at `/np-plan project`; WP6.04 to WP6.18 provisional until it rules. Phases 7 to 11:
   [the input note](sessions/phases-6-to-11.md).
-  **WP6.01 implemented** ([the plan](phase-6/wp6.01-the-windows-leg.md); run 854 green on the three platforms;
-  REV-279 for the rescoping round). **Next:** `/np-ship wp 6.01`. host: claude-code.
-  **WP6.02 planned** ([the plan](phase-6/wp6.02-the-cleanup-measure-audit-records.md); AZ9 to AZ12); it starts
-  after WP6.01 merges. **Next:** `/np-implement wp 6.02`; the plan is reviewed ([report](../code_reviews/CODE_REVIEW_075.md)).
+  **WP6.01 merged** ([the plan](phase-6/wp6.01-the-windows-leg.md)); its tag `v0.7.0-alpha.1`.
+  **WP6.02 implemented** ([the plan](phase-6/wp6.02-the-cleanup-measure-audit-records.md); AZ9 to AZ14).
+  **Next:** `/np-ship wp 6.02`, on Fable 5.2. host: claude-code.
 
 ## Not to be re-decided
 
@@ -47,8 +43,8 @@ plan may be. *Next:* your approval of the cleanup's reviewed plan.
 - **The Windows leg is first; every later gate asks the three platforms** (§8.2.49 AY4); **a pull request and a
   package's ship test Linux alone, the close the three** (§8.2.50 AZ8). **The Copilot host is
   retired at the cleanup** (AY5). **Fable 5.2 plans and ships, Opus 5.5 implements** (AY7).
-- **The reading limit counts project text in words** (§8.2.50 AZ9 to AZ12); **nothing leaves the rulings' history; a
-  closed item is archived**.
+- **The reading limit counts project text in words; 6,500 for a fresh `/np-implement` window from WP6.03's merge; a
+  phase plan 2,500** (§8.2.50 AZ9 to AZ14); **nothing leaves the rulings' history; a closed item is archived**.
 - **An open-minded rescoping follows WP6.03; no package from WP6.04 is planned before it** (§8.2.50 AZ7). Until it
   rules: the phases are library, workbench, composer, mutator, sketcher, validation (AY1, AY2); the speed-up closes
   Phase 6, with no fixed target (AY3; AZ6); the equations are brought to §4 there (AY6); §5.4.1's interface is Phase 8's
@@ -61,8 +57,8 @@ plan may be. *Next:* your approval of the cleanup's reviewed plan.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
 - **The 200 ms redraw**'s GPU run (REV-258); **verdicts at each design round** (AJ8).
 - **Rulings on a cycle (H6) or drift (I4)**.
-- **The reading limit's number and a phase plan's word target** (AY8; AW5), inside WP6.02; **the Copilot host's tag**
-  (AY5), at WP6.03; **what to keep, cut and add**, at the rescoping round (AZ7); **QR-10's observer** (AW2).
+- **Audit F2 and F3**, a ship on the implementer's model and who owns the code, at WP6.03 and the rescoping round;
+  **the Copilot host's tag** (AY5), at WP6.03; **what to keep, cut and add**, at the rescoping round (AZ7); **QR-10's observer** (AW2).
 
 ## On demand
 

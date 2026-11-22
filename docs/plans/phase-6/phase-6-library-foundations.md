@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the library's foundations): a library the workbench and the tools can build on
 
-**Status: in progress. Delivered: WP6.01. WP6.01 to WP6.03 as planned on 22 November 2026; then a rescoping round; WP6.04 to WP6.18 provisional until it rules (§8.2.50). Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02. WP6.01 to WP6.03 as planned on 22 November 2026; then a rescoping round; WP6.04 to WP6.18 provisional until it rules (§8.2.50). Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -77,14 +77,9 @@ and 8 touches (§8.3).
 
 *Delivered 22 November 2026.* [The plan](wp6.01-the-windows-leg.md). Live: AZ8's ship rule; REV-279 waits for the rescoping round.
 
-### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8; AZ9 to AZ12)
+### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8; AZ9 to AZ14)
 
-`usage.py` measures the project text a session reads before its first edit, in words (AZ9), and the baseline of six
-recent packages, read from the session service (AZ10); `prompt-audit` over `CLAUDE.md` and `.claude/`; the limit's
-number and the phase plan's word target, put to the author from the baseline. Nothing leaves the history (AZ11); closed
-review items and closed decisions move to archives beside their registers (AZ12). Its Outcome lists what it found
-outdated, for the rescoping round. Both cleanup packages run on Fable 5.2 (AY7).
-[The plan](wp6.02-the-cleanup-measure-audit-records.md).
+*Delivered 22 November 2026.* [The plan](wp6.02-the-cleanup-measure-audit-records.md). Live: AZ13's limit from WP6.03's merge; its Outcome's outdated list.
 
 ### WP6.03 — The cleanup: instructions, the Copilot host retired (AY5; REV-166 to REV-168, REV-278)
 
