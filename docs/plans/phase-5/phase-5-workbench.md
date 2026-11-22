@@ -282,7 +282,7 @@ v1.0's release candidate (AW2); decision 14 closed with neither xenon nor import
 |---|---|---|
 | A local Claude Code session | WP5.02 onward | Work continues headless, on renders |
 | Verdicts on the six findings against the ESI and the COMSOL report, asked in one round at WP5.12's item 11 (AL20; AM18; REV-227) | WP5.12 | A finding not yet checked stays `unchecked` in REV-227, carried to the close |
-| A session in the Copilot app on a WSL host (REV-166 to REV-168) | Before the close (§8.2.46 AV6) | The close carries the three checks to Phase 6; the gate is run by hand on Copilot meanwhile |
+| A session in the Copilot app on a WSL host (REV-166 to REV-168) | Before the close (§8.2.46 AV6) | Not run: the close carried the three checks to Phase 6's scope round (WP5.28); the gate is run by hand on Copilot meanwhile |
 | Merges; tags a session cannot push | Each package | The session prints the commands |
 
 ## Verification

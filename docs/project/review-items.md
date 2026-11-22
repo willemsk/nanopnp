@@ -2231,6 +2231,8 @@ record only tool names, argument types and sentinels.
 
 **Placed** (§8.2.46 AV6, 20 November 2026): owned by [the Copilot host's session plan](../plans/sessions/copilot-host.md), run by the author on a WSL host before the close; the close carries it to Phase 6 if not run.
 
+**Carried** (WP5.28, 22 November 2026): not run before Phase 5's close; carried to Phase 6, placed by its scope round (§8.2.48 AX1).
+
 ### REV-167: Six Copilot app behaviours the substitutes assume are unchecked
 
 Raised with REV-166 (§8.2.25 AA6). `.claude/workflow/hosts/copilot.md` gives a substitute for each Claude
@@ -2249,6 +2251,8 @@ Only the first can let an ungated tree through; the rest change how a substitute
 
 **Placed** (§8.2.46 AV6, 20 November 2026): with REV-166, in [the Copilot host's session plan](../plans/sessions/copilot-host.md).
 
+**Carried** (WP5.28, 22 November 2026): not run before Phase 5's close; carried to Phase 6, placed by its scope round (§8.2.48 AX1).
+
 ### REV-168: The Copilot host has not been verified live
 
 Raised with REV-166 (§8.2.25 AA6). The plan's *Verification* has a live part in the Copilot app (a
@@ -2263,6 +2267,8 @@ Recommendation: run it after REV-166, on a WSL host, and ship the Copilot host's
 Claude Code with `/np-ship`, as the plan says, which also covers the Claude Code regression.
 
 **Placed** (§8.2.46 AV6, 20 November 2026): with REV-166, in [the Copilot host's session plan](../plans/sessions/copilot-host.md).
+
+**Carried** (WP5.28, 22 November 2026): not run before Phase 5's close; carried to Phase 6, placed by its scope round (§8.2.48 AX1).
 
 ### REV-169: The Phase-1 reference sweep's base case writes its mesh path against the working directory
 

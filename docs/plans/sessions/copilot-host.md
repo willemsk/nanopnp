@@ -3,9 +3,10 @@
 Planning, not requirements: `SPECIFICATION.md` governs. Phase 6 below writes the specification change that
 this plan needs.
 
-This plan owns REV-166 to REV-168, the checks that need the Copilot app on a WSL host (§8.2.46 AV6). The author runs
-them before Phase 5's close, outside its package sequence; until then the gate is run by hand on Copilot
-(`.claude/workflow/hosts/copilot.md`). The close, WP5.28, carries any check not yet run to Phase 6.
+This plan owns REV-166 to REV-168, the checks that need the Copilot app on a WSL host (§8.2.46 AV6). They were not
+run before Phase 5's close: WP5.28 carried them to Phase 6, and the author runs them there, outside its package
+sequence, where its scope round places them. Until then the gate is run by hand on Copilot
+(`.claude/workflow/hosts/copilot.md`).
 
 ## In brief
 
