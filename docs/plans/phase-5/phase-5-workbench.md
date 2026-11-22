@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.21 and WP5.27 merged (`v0.6.0-alpha.21`; WP5.27's tag, `v0.6.0-alpha.27`, to be pushed); closing early (REV-272; §8.2.47): WP5.28, the close, is planned. The tree of results, the layers, the performance package, the refusals, the polish pass and the guided route are Phase 6's.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.21 and WP5.27 merged (`v0.6.0-alpha.21`, `v0.6.0-alpha.27`); closing early (REV-272; §8.2.47): WP5.28, the close, is planned. The tree of results, the layers, the performance package, the refusals, the polish pass and the guided route are Phase 6's.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -246,8 +246,7 @@ Phase 6's provisional packages, named by scope (AV5); its scope round numbers an
 
 ### WP5.27 — Qt's removal and the short guide (REV-134, REV-228; S13, S17; §8.2.47 AW1, AW3, AW9 to AW11)
 
-**Merged 22 November 2026** ([the plan](wp5.27-qts-removal-and-the-short-guide.md)); tag `v0.6.0-alpha.27`, to be
-pushed.
+**Merged 22 November 2026** ([the plan](wp5.27-qts-removal-and-the-short-guide.md)); tag `v0.6.0-alpha.27`.
 
 The capability check found every row Q01 to Q41 in the workbench: 31 present, Q16 as ruled, nine carried by REV-274,
 none missing ([the record](../../design/reviews/2026-11-21-qt-capabilities.md); AW7, AW11). Before it, a running run
