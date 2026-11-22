@@ -11,7 +11,14 @@ itself. The developer server starts and stops on Windows, and two bundled librar
 weakness of the pore-axis search, which rounding can trigger on any system, is recorded for the rescoping round, as
 you ruled. A push of plans or records now checks in seconds, and `main` keeps a linear history.
 
-**Your call.** None before the merge. *Next:* the package's review and ship.
+The second package is planned: the cleanup measures how much of the project's own text a session reads before its
+first edit, audits the instruction files, and moves closed review items and closed decisions to archives. As you ruled,
+the limit counts project text in words, from a baseline of six recent packages, and nothing leaves the record of your
+rulings. The second cleanup package and the rescoping round follow. This cleanup package is about 6 sessions, 4 to 7
+hours of agent work and 12 times you act.
+
+**Your call.** None before the merge. Inside the cleanup, after its baseline: the limit's number, and how long a phase
+plan may be. *Next:* the package's review and ship, then the review of the cleanup's plan.
 
 ## Position
 
@@ -22,6 +29,8 @@ you ruled. A push of plans or records now checks in seconds, and `main` keeps a 
   [the input note](sessions/phases-6-to-11.md).
   **WP6.01 implemented** ([the plan](phase-6/wp6.01-the-windows-leg.md); run 854 green on the three platforms;
   REV-279 for the rescoping round). **Next:** `/np-ship wp 6.01`. host: claude-code.
+  **WP6.02 planned** ([the plan](phase-6/wp6.02-the-cleanup-measure-audit-records.md); AZ9 to AZ12); it starts
+  after WP6.01 merges. **Next:** `/np-plan wp 6.02 review`, then `/np-implement wp 6.02`.
 
 ## Not to be re-decided
 
@@ -31,17 +40,15 @@ you ruled. A push of plans or records now checks in seconds, and `main` keeps a 
   ruling (G10, I4). **An open item is a `REV-nn` row** until resolved (H12).
 - **A `Case` is the case document; a `Session` runs it for every caller** (§8.2.23). **The front end is NiceGUI; Mol*
   draws the molecule** (AF4). **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4).
-- **The workbench's design rulings stand** (§8.2.31 to §8.2.46; WB-33 to WB-63): a study overrides any model value;
-  physics is a third model; layers read a model's declaration, never its name (VER-56); a callback is not an input
-  (VER-44); a generated mesh is read only through `deployed_mesh`; text follows the tested program (AM1, AM2); red
-  blocks, blue informs, refusals are ASD-STE100 (WB-42); Analysis is COMSOL's tree and Plotly draws every chart and
-  map (WB-54 to WB-63); every open item names a package (§8.2.46).
+- **The workbench's design rulings stand** (§8.2.31 to §8.2.46; WB-33 to WB-63; VER-44, VER-56); every open item
+  names a package (§8.2.46).
 - **QR-10's trial waits for v1.0's release candidate; QR-16's keyboard gaps and five Qt details are carried to
   Phase 7** (§8.2.47; REV-274).
 - **The Windows leg is first; every later gate asks the three platforms** (§8.2.49 AY4); **a pull request and a
   package's ship test Linux alone, the close the three** (§8.2.50 AZ8). **The Copilot host is
-  retired at the cleanup** (AY5), **which ends at a measured reading limit** (AY8). **Fable 5.2 plans and ships,
-  Opus 5.5 implements** (AY7).
+  retired at the cleanup** (AY5). **Fable 5.2 plans and ships, Opus 5.5 implements** (AY7).
+- **The reading limit counts project text in words; nothing leaves the rulings' history; a closed item is archived**
+  (§8.2.50 AZ9 to AZ12).
 - **An open-minded rescoping follows WP6.03; no package from WP6.04 is planned before it** (§8.2.50 AZ7). Until it
   rules: the phases are library, workbench, composer, mutator, sketcher, validation (AY1, AY2); the speed-up closes
   Phase 6, with no fixed target (AY3; AZ6); the equations are brought to §4 there (AY6); §5.4.1's interface is Phase 8's
@@ -54,8 +61,8 @@ you ruled. A push of plans or records now checks in seconds, and `main` keeps a 
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
 - **The 200 ms redraw**'s GPU run (REV-258); **verdicts at each design round** (AJ8).
 - **Rulings on a cycle (H6) or drift (I4)**.
-- **The reading limit and what leaves the history** (AY8), at WP6.02's plan; **the Copilot host's tag** (AY5), at
-  WP6.03; **what to keep, cut and add**, at the rescoping round (AZ7); **QR-10's observer** (AW2).
+- **The reading limit's number and a phase plan's word target** (AY8; AW5), inside WP6.02; **the Copilot host's tag**
+  (AY5), at WP6.03; **what to keep, cut and add**, at the rescoping round (AZ7); **QR-10's observer** (AW2).
 
 ## On demand
 
