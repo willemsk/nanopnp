@@ -1,6 +1,6 @@
 # Phases 6 to 11: the input to each phase's round
 
-**Status: input note, written 22 November 2026 at `/np-plan project` (§8.2.49); each `/np-plan phase <n>` reads its
+**Status: input note, written 22 November 2026 at `/np-plan project` (§8.2.49), Phase 6's section planned the same day (§8.2.50); each `/np-plan phase <n>` reads its
 section, numbers and orders its packages, may regroup them (§8.2.46 AV5) and estimates the phase again.**
 
 Planning, not requirements: `SPECIFICATION.md` governs. §8.1 holds each phase's deliverable, gate and estimate, §2.7
@@ -9,7 +9,9 @@ package below is provisional and named by its scope.
 
 ## Phase 6 — the cleanup and the library's foundations (`v0.7`)
 
-In the order the rulings fix; the rest is the round's.
+**Planned, 22 November 2026** ([the plan](../phase-6/phase-6-library-foundations.md); §8.2.50): 18 packages, WP6.01 to
+WP6.18, those from WP6.04 provisional until the open-minded rescoping round that follows the cleanup (AZ7). That round
+is `/np-plan project`; it may change this note's every section. The table below is the input as it was written.
 
 | Package | Its items |
 |---|---|
@@ -30,7 +32,7 @@ In the order the rulings fix; the rest is the round's.
 | Package | Its items |
 |---|---|
 | The workbench's foundations | The survey's workbench steps 1, 3 to 6 and 8 to 11: test probes, a state and link bus per browser client, view hosts with Plotly, one form, the workspace, the views moved suite by suite, the style in the shared parts; REV-275's forms |
-| The tree of results | FR-32's tree; WB-54 to WB-63; REV-268, REV-270, REV-273 (its four points at the design round; AX2), REV-275 |
+| The tree of results | FR-32's tree; WB-54 to WB-63; REV-268, REV-270's explorer rework (its read by the cell's own basis is WP6.07's; §8.2.50 AZ2), REV-273 (its four points at the design round; AX2), REV-275 |
 | The structure's layers | WB-49; REV-240's variation view, REV-243, REV-265, REV-274 |
 | The performance package | WB-23's 200 ms measure on the author's GPU; REV-258 |
 | The polish pass | QR-16's keyboard pass; WB-52; REV-235 to REV-237, REV-241, REV-245, REV-254's suite words, REV-255, REV-261 to REV-263, REV-266, REV-267, REV-269, REV-274, REV-275 |
@@ -44,7 +46,7 @@ Its round sets its gate and its estimate.
 
 | Phase | Its items |
 |---|---|
-| 8, the physics composer | FR-40; REV-67; MOD-11 |
+| 8, the physics composer | FR-40; REV-67; MOD-11; §5.4.1's backend interface and the size of `physics/models.py`, decided at its round (MOD-10, MOD-13; §8.2.50 AZ1) |
 | 9, the structural mutator | FR-41, with a dependency vetted at its round; REV-149, REV-238; the structure pipeline's loose ends (AY6): REV-151, REV-180, REV-181, REV-186 |
 | 10, the 2D sketcher | FR-42; REV-244 |
 
@@ -72,8 +74,9 @@ decision on NUM-07; Tier 4 (VAL-07 to VAL-10); the tutorials, the JOSS paper, th
 
 | Decision | Owner |
 |---|---|
-| Phase 6's packages, their numbers and order | `/np-plan phase 6` |
+| Phase 6's packages, their numbers and order | Settled, §8.2.50 AZ4; those from WP6.04 provisional (AZ7) |
 | Each tool phase's gate, estimate and dependencies | Its round |
-| Whether the library's refusals and REV-270's library part stay where this note puts them | `/np-plan phase 6` |
-| Whether §5.4.1's backend interface and the rest of MOD-13 (MOD-10; §8.2.8 H1, H3), deferred to "Phase 6" when that was validation, are decided with the library's shape | `/np-plan phase 6` |
+| Whether the library's refusals and REV-270's library part stay where this note puts them | Settled, §8.2.50 AZ2, AZ3 |
+| Whether §5.4.1's backend interface and the rest of MOD-13 (MOD-10; §8.2.8 H1, H3), deferred to "Phase 6" when that was validation, are decided with the library's shape | Settled, §8.2.50 AZ1: `/np-plan phase 8` |
+| The project's scope, open-minded: every requirement, tool and phase | The author, at `/np-plan project` after WP6.03 (§8.2.50 AZ7) |
 | v1.0's content and gate (OPN-08) | The author, at Phase 11's close at the latest |

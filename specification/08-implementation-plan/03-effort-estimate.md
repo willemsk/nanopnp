@@ -30,7 +30,7 @@ touches. Each phase's own round estimates it again:
 
 | Work | Sessions | Agent hours | Touches |
 |---|---|---|---|
-| Phase 6, the cleanup and the library's foundations: about 15 packages at the text and clean-up rate, the Windows leg, the cleanup, the restructure, the model's open terms, the tolerances, the exports, the refusals and the speed-up among them (§8.2.49 AY1, AY3, AY4, AY6) | 75 | 45 to 90 | 120 |
+| Phase 6, the cleanup and the library's foundations: 18 packages at the text and clean-up rate, the Windows leg, the cleanup in two, the restructure in nine, the model's open terms, the tolerances, the exports, the refusals, the speed-up and the close (§8.2.49 AY1, AY3, AY4, AY6; §8.2.50 AZ4). The 15 packages after the cleanup are provisional until the rescoping round rules, which itself takes about 2 sessions and 3 touches (§8.2.50 AZ7) | 90 | 54 to 108 | 144 |
 | Phase 7, the workbench rebuilt: about 14 packages at the shell rate, its foundations and the packages Phase 5's seventh amendment moved (§8.2.47 AW1), and the author's design rounds | 85 | 85 to 170 | 140 |
 | Phases 8 to 10, the composer, the structural mutator and the sketcher: not estimated; each round sets its own (§8.2.17 S7; §8.2.49 AY2) | — | — | — |
 | Phase 11, validation and release: about seven packages, and the machine time of its Tier 3 and Tier 4 runs (the datum below) | 40 | 35 to 70 | 70 |

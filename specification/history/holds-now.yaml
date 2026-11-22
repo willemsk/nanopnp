@@ -48,7 +48,7 @@ G11: §8.4.1
 G12: spent
 H1: spent
 H2: spent
-H3: QR-13, §5.4.1 NOTE, VER-65
+H3: 'QR-13, §5.4.1 NOTE, VER-65; its "Phase 6" amended by AZ1'
 H4: spent (deferred to Phase 5)
 H5: spent (post-1.0)
 H6: VER-61
@@ -146,7 +146,7 @@ S23: the WP5.01 plan
 S24: 'the design document''s *The areas*; its naming of QR-10''s observer by the close amended by AW2'
 T1: spent
 T2: 'REV-28, REV-30, REV-32, REV-39, REV-52, REV-62; MOD-13'
-T3: 'REV-41, REV-45, REV-67; open: FR-28 (v0.7) and the composer''s phase'
+T3: 'REV-41, REV-45, REV-67; open: WP6.15 (FR-28) and the composer''s phase'
 T4: §5.5
 T5: spent
 T6: FR-43
@@ -210,7 +210,7 @@ Z2: the Phase 4 plan
 Z3: §8.1's Phase 4 documentation increment
 Z4: the Phase 4 plan
 Z5: REV-121
-Z6: 'REV-156; placed by AY3; open: Phase 6''s speed-up'
+Z6: 'REV-156; placed by AY3; open: WP6.17'
 AA1: §8.4.4
 AA2: §8.4.4; `.claude/workflow/hosts.md`
 AA3: §8.4.4
@@ -223,7 +223,7 @@ AB1: §8.4.2
 AC1: IF-01's NOTE on the interface; the Phase 4 plan
 AC2: NUM-16's NOTE
 AC3: 'REV-170; placed by AD4'
-AC4: 'REV-171; amended by AD5; open: Phase 6''s speed-up (AY3)'
+AC4: 'REV-171; amended by AD5; open: WP6.17 (AY3; AZ6)'
 AC5: REV-169
 AC6: spent
 AD1: the Phase 5 plan; spent by AG1
@@ -312,7 +312,7 @@ AL27: 'knowledge/07-software-stack/25; neither tool adopted (AW6)'
 AL28: '§8.4.4, §8.4.5'
 AL29: superseded by AN8
 AM1: PHY-12, PHY-13, PHY-14, PHY-22, NUM-09, NUM-12, NUM-16, NUM-17, NUM-26, NUM-30
-AM2: 'NUM-04, NUM-28; open: Phase 6''s model''s open terms and tolerances argued (REV-223 to REV-225; AY6), and Phase 11 (the measurement)'
+AM2: 'NUM-04, NUM-28; open: WP6.13 and WP6.14 (REV-223 to REV-225; AY6), and Phase 11 (the measurement)'
 AM3: §7.6
 AM4: '§8.4.6, `/np-ship phase`'
 AM5: §2.2, §3, §8.3, Appendix B
@@ -369,17 +369,17 @@ AT4: 'AT2''s consequence; the Phase 5 plan''s WP5.20 entry; the design document'
 AU1: 'ADR-004''s NOTE on the front end; the design document''s renderer table; REV-253'
 AU2: 'WB-20; §2.6''s NOTE on the workbench; REV-240''s colour-map point'
 AU3: 'the design document''s Comparison row'
-AV1: 'FR-35''s NOTE; open: Phase 6''s refusals package (REV-254, REV-242; WP5.25 until AW1; AY1)'
+AV1: 'FR-35''s NOTE; open: WP6.04 and WP6.16 (REV-254, REV-242; WP5.25 until AW1; AY1; AZ3)'
 AV2: 'the Phase 5 plan''s WP5.27 entry; open: Phase 7''s polish pass and guided route (AW1; AY1)'
 AV3: 'open: Phase 7''s layers package (the design document''s View, Prepare and Meso rows; REV-265, REV-243, REV-240; WP5.23 until AW1; AY1)'
 AV4: the Phase 5 plan; spent
-AV5: 'the review register; its grouping amended by AY1 and AY6; open: /np-plan phase 6'
+AV5: 'the review register; its grouping amended by AY1, AY6 and AZ4'
 AV6: superseded by AY5
-AW1: '§2.7; FR-32''s and FR-36''s Release; §8.1''s Phase 5 row and GUI increments; §8.3; the Phase 5 plan; placed by AY1; open: /np-plan phase 6 and /np-plan phase 7'
+AW1: '§2.7; FR-32''s and FR-36''s Release; §8.1''s Phase 5 row and GUI increments; §8.3; the Phase 5 plan; placed by AY1 and AZ4; open: /np-plan phase 7'
 AW2: '§8.1''s Phase 5 gate and GUI row; §2.7''s v1.0 row; open: v1.0''s release candidate (OPN-08)'
 AW3: '§8.1''s documentation increment 5, docs/guide/workbench.md; open: Phase 7 (increment 7; AY1)'
 AW4: the Phase 5 plan; spent
-AW5: 'open: Phase 6''s cleanup (REV-271; §8.4.4; AY8)'
+AW5: 'open: WP6.02 (REV-271; §8.4.4; AY8)'
 AW6: 'pyproject.toml''s ruff selection; VER-61; spent'
 AW7: the design document's row Q16 to Q20
 AW8: 'QR-16''s NOTE; Appendix A''s QR-16 row; open: Phase 7''s polish pass (AY1)'
@@ -388,12 +388,19 @@ AW10: the design document's row Q05 to Q08
 AW11: '§8.1''s Phase 5 gate; REV-274; open: Phase 7''s layers and polish pass (AY1)'
 AX1: 'ruled by AY2: §8.1''s GUI row; §2.7; RSK-15; the design document''s *Later tools*'
 AX2: 'REV-273; open: Phase 7''s tree of results (AY1)'
-AX3: '§8.1''s Phase 5 gate; REV-277; its placement in V&V in CI amended by AY4; open: Phase 6''s first package'
-AY1: '§2.7; §8.1; §8.3; FR-32''s and FR-36''s Release; open: /np-plan phase 6'
+AX3: '§8.1''s Phase 5 gate; REV-277; its placement in V&V in CI amended by AY4; open: WP6.01'
+AY1: '§2.7; §8.1; §8.3; FR-32''s and FR-36''s Release; its packages numbered by AZ4'
 AY2: '§2.7; §8.1; RSK-15; QR-02, QR-15; the Release of FR-21, FR-22 and FR-40 to FR-42; VAL-16, VAL-17; open: each tool phase''s round'
-AY3: 'REV-156, REV-60, REV-171; open: Phase 6''s speed-up'
-AY4: '§8.1''s gates from Phase 6; REV-277; open: Phase 6''s first package'
-AY5: 'REV-166 to REV-168; docs/plans/sessions/copilot-host.md; open: Phase 6''s cleanup'
-AY6: 'the review register; FR-28''s Release; NUM-04''s NOTE; open: /np-plan phase 6'
+AY3: 'REV-156, REV-60, REV-171; open: WP6.17'
+AY4: '§8.1''s gates from Phase 6; REV-277; open: WP6.01'
+AY5: 'REV-166 to REV-168; docs/plans/sessions/copilot-host.md; open: WP6.03'
+AY6: 'the review register; FR-28''s Release; NUM-04''s NOTE; its packages numbered by AZ4'
 AY7: '§8.4.5; CLAUDE.md'
-AY8: 'open: Phase 6''s cleanup (REV-271, REV-272; §8.4.4)'
+AY8: 'open: WP6.02 and WP6.03 (REV-271, REV-272; §8.4.4)'
+AZ1: '§5.4.1 NOTE; Appendix A''s QR-13 row; MOD-10; open: /np-plan phase 8'
+AZ2: '§2.7; §8.1''s Phase 6 row and GUI increment 6; REV-270; open: WP6.07'
+AZ3: 'REV-254, REV-242; open: WP6.04 and WP6.16 (FR-35''s NOTE)'
+AZ4: '§8.1''s Phase 6 row; §8.3; the review register; MOD-08; the Phase 6 plan; its packages from WP6.04 provisional by AZ7'
+AZ5: '§2.7; open: WP6.05, WP6.07 and WP6.09 (§5.3.3, §5.3.5)'
+AZ6: '§8.1''s Phase 6 gate; REV-60, REV-156, REV-171; open: WP6.17'
+AZ7: '§8.1''s Phase 6 row; §8.3; §2.7; open: /np-plan project, after WP6.03'

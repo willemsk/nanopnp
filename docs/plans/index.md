@@ -6,6 +6,10 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 
 - [Current work](current.md): no status line
 
+## Phase 6
+
+- [Phase 6 (Cleanup and the library's foundations): a library the workbench and the tools can build on](phase-6/phase-6-library-foundations.md): planned, not started. WP6.01 to WP6.03 as planned on 22 November 2026; then a rescoping round; WP6.04 to WP6.18 provisional until it rules (§8.2.50). Release: v0.7 (`v0.7.0`).
+
 ## Phase 5
 
 - [Phase 5 plan: the record](phase-5/phase-5-record.md): a record of replaced text, last added to on 22 November 2026 (§8.2.48); it states nothing that holds now.
@@ -120,4 +124,4 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP54 Review and Specification: Notebooks and Scientific Plots](sessions/notebooks-review-for-wp54.md): no status line
 - [WP47 — converter, ledger and gate rules](sessions/okf-converter-rules.md): planned, 14 October 2026.
 - [The knowledge base as an Open Knowledge Format bundle — evaluation and decisions](sessions/okf-knowledge-bundle.md): decided, not planned.
-- [Phases 6 to 11: the input to each phase's round](sessions/phases-6-to-11.md): input note, written 22 November 2026 at `/np-plan project` (§8.2.49); each `/np-plan phase <n>` reads its section, numbers and orders its packages, may regroup them (§8.2.46 AV5) and estimates the phase again.
+- [Phases 6 to 11: the input to each phase's round](sessions/phases-6-to-11.md): input note, written 22 November 2026 at `/np-plan project` (§8.2.49), Phase 6's section planned the same day (§8.2.50); each `/np-plan phase <n>` reads its section, numbers and orders its packages, may regroup them (§8.…

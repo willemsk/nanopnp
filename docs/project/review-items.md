@@ -468,6 +468,8 @@ export stays with FR-28, v0.7.
 
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the exports.
 
+**Placed** (§8.2.50 AZ4, 22 November 2026): its region export is WP6.15's, the exports.
+
 ### REV-42 — pnp carries inert flow keys
 
 *Area:* interface. *Severity:* low. *Found:* PR #53 (WP26).
@@ -506,6 +508,8 @@ they do nothing.
 **Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the exports*, with FR-28.
 
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the exports.
+
+**Placed** (§8.2.50 AZ4, 22 November 2026): WP6.15, the exports.
 
 ### REV-46 — Example 07 is not run at default sizes or on the ensemble
 
@@ -664,6 +668,8 @@ saving from reusing it is unmeasured.
 **Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the speed-up*, after the assembly (REV-156).
 
 **Placed** (§8.2.49 AY3, 22 November 2026): Phase 6, the speed-up, its last package before the close.
+
+**Placed** (§8.2.50 AZ6, 22 November 2026): WP6.17, the speed-up, with no fixed target. Its plan registers each threshold before it measures, on the code as the restructure leaves it; a cost over its threshold is fixed or carried.
 
 ### REV-61 — No B-spline fit or HOLE cross-check of the contour
 
@@ -1942,6 +1948,8 @@ REV-60's factorisation reuse follows it. `/np-plan phase 6` reads this row.
 
 **Placed** (§8.2.49 AY3, 22 November 2026): Phase 6, the speed-up, its last package before the close.
 
+**Placed** (§8.2.50 AZ6, 22 November 2026): WP6.17, the speed-up, with no fixed target. Its plan registers each threshold before it measures, on the code as the restructure leaves it; a cost over its threshold is fixed or carried.
+
 ### REV-157: WP56 review items left open: the last rung's time, two readers of a run directory, the manifest read twice
 
 Left by the review of WP56 ([CODE_REVIEW_020](../code_reviews/CODE_REVIEW_020.md)). Each item needs a change that WP56
@@ -2259,6 +2267,8 @@ record only tool names, argument types and sentinels.
 commit so we can find it back." Phase 6's cleanup removes the host's files and rules, a git tag marks the last
 commit that holds them, and this row closes as `declined` in that commit. Nothing is run on Copilot until then.
 
+**Placed** (§8.2.50 AZ4, 22 November 2026): WP6.03, the instructions and the Copilot host's retirement.
+
 ### REV-167: Six Copilot app behaviours the substitutes assume are unchecked
 
 Raised with REV-166 (§8.2.25 AA6). `.claude/workflow/hosts/copilot.md` gives a substitute for each Claude
@@ -2283,6 +2293,8 @@ Only the first can let an ungated tree through; the rest change how a substitute
 commit so we can find it back." Phase 6's cleanup removes the host's files and rules, a git tag marks the last
 commit that holds them, and this row closes as `declined` in that commit. Nothing is run on Copilot until then.
 
+**Placed** (§8.2.50 AZ4, 22 November 2026): WP6.03, the instructions and the Copilot host's retirement.
+
 ### REV-168: The Copilot host has not been verified live
 
 Raised with REV-166 (§8.2.25 AA6). The plan's *Verification* has a live part in the Copilot app (a
@@ -2303,6 +2315,8 @@ Claude Code with `/np-ship`, as the plan says, which also covers the Claude Code
 **Ruled** (§8.2.49 AY5, 22 November 2026): the author retires the Copilot host: "Retire, but add a tag in the
 commit so we can find it back." Phase 6's cleanup removes the host's files and rules, a git tag marks the last
 commit that holds them, and this row closes as `declined` in that commit. Nothing is run on Copilot until then.
+
+**Placed** (§8.2.50 AZ4, 22 November 2026): WP6.03, the instructions and the Copilot host's retirement.
 
 ### REV-169: The Phase-1 reference sweep's base case writes its mesh path against the working directory
 
@@ -2389,6 +2403,8 @@ selected output. The cost items remain deferred to Phase 6.
 **Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the speed-up*.
 
 **Placed** (§8.2.49 AY3, 22 November 2026): Phase 6, the speed-up, its last package before the close.
+
+**Placed** (§8.2.50 AZ6, 22 November 2026): WP6.17, the speed-up, with no fixed target. Its plan registers each threshold before it measures, on the code as the restructure leaves it; a cost over its threshold is fixed or carried.
 
 ### REV-172: A non-finite trial residual at minimum damping is reported before the state gates name its location
 
@@ -2567,6 +2583,8 @@ before the protonated default is used outside the reference cases.
 **Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the tolerances argued*, which measures the polar hydrogens against a finer grid before the protonated default is used outside the reference cases.
 
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the tolerances argued.
+
+**Placed** (§8.2.50 AZ4, 22 November 2026): WP6.14, the tolerances argued.
 
 ### REV-183: Fractional protonation through a customised PDB2PQR
 
@@ -3014,6 +3032,8 @@ it moves one of them.
 
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the model's open terms.
 
+**Placed** (§8.2.50 AZ4, 22 November 2026): WP6.13, the model's open terms. The bound that stops its re-pin is put to the author at its plan, before any measurement.
+
 ### REV-224: NUM-28's fluid consistency term omits the pore charge's force
 
 NUM-28's consistency terms take `∇·T_M = ρ_ion E − ½|E|²∇ε` in the fluid. PHY-16 deposits `ρ_pore` on
@@ -3029,6 +3049,8 @@ of `w` excludes the deposit.
 
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the model's open terms.
 
+**Placed** (§8.2.50 AZ4, 22 November 2026): WP6.13, the model's open terms, with the step that shares the force terms with the weak form.
+
 ### REV-225: Three numerics tolerances have no written derivation
 
 Three §6 tolerances give no derivation and no pointer: the absolute residual floor 10⁻¹² of NUM-16,
@@ -3043,6 +3065,8 @@ sees, and write each number's derivation beside its clause.
 **Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the tolerances argued*.
 
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the tolerances argued.
+
+**Placed** (§8.2.50 AZ4, 22 November 2026): WP6.14, the tolerances argued.
 
 ### REV-226: Refusal messages in src/ cite the §5.3.1 NOTEs whose stage rules moved to §5.2
 
@@ -3127,6 +3151,8 @@ file for another reason; none is named yet.
 
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the model's open terms.
 
+**Placed** (§8.2.50 AZ4, 22 November 2026): WP6.13, the model's open terms, whose re-pin of VER-62 its comment edit rides.
+
 ### REV-231: axis.py's comment sends the stage-1 margins to an index
 
 `src/nanopnp/structure/axis.py`:15-16 reads "Thresholds: SPECIFICATION.md §5.2 NOTE on stage 1; margins:
@@ -3155,6 +3181,8 @@ WP5.12 did not change:
 **Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the tolerances argued*, which touches §6, VER-03 and `knowledge/06`.
 
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the tolerances argued.
+
+**Placed** (§8.2.50 AZ4, 22 November 2026): WP6.14, the tolerances argued.
 
 ### REV-233: Importing a case leaves a model without a value the study writes as an expression
 
@@ -3435,6 +3463,8 @@ the other three stay open as ruled above.
 **Moved** (§8.2.47 AW1, 21 November 2026): the first two points go with Phase 6's guided route and new models, the first part of WP5.27 until then; the fourth with its refusals package, WP5.25 until then.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 6, the library's refusals; Phase 7, the guided route and new models.
+
+**Placed** (§8.2.50 AZ3, 22 November 2026): the fourth point, a gate error that carries its case path, is WP6.04's, the error base.
 
 ### REV-243: Prepare's view does not follow the typed orientation
 
@@ -3738,6 +3768,8 @@ The pane's status line says which value to correct. The rest stays with WP5.26.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 6, the library's refusals; the suites' words Phase 7's polish pass.
 
+**Placed** (§8.2.50 AZ3, 22 November 2026): two steps. WP6.04 gives every library error one base that carries its case path and its file as fields, and moves the three readers of a refusal's sentence onto them. WP6.16 rewords the stages' diagnostics and the command line's messages after the restructure. The suites' own words stay Phase 7's polish pass.
+
 ### REV-255: What the Physics suite's final review left open
 
 WP5.18's final render (306 shots; no contrast, non-text or target finding; two shots failed under load and drew clean
@@ -3829,6 +3861,8 @@ the view's package.
 
 **Placed** (§8.2.49 AY1, AY6, 22 November 2026): Phase 7, the polish pass; the equations Phase 6's model's open terms.
 
+**Placed** (§8.2.50 AZ4, 22 November 2026): its equations are WP6.13's, the model's open terms.
+
 ### REV-256: A field's message, its text size and a field of several boxes, in every suite
 
 At WP5.18's round 2 ([the record](../design/reviews/2026-11-16-physics-2.md)) the author, on the in-tube Conditions
@@ -3869,6 +3903,8 @@ blend `ε_p` smoothly. With the next package that changes PHY-23's terms.
 **Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the model's open terms*, which changes PHY-23's terms.
 
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the model's open terms.
+
+**Placed** (§8.2.50 AZ4, 22 November 2026): WP6.13, the model's open terms.
 
 ### REV-258: The 200 ms redraw, measured on a GPU, and the front end's share fixed
 
@@ -4312,6 +4348,8 @@ to be compared near the pore wall before that package ships.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the tree of results.
 
+**Moved** (§8.2.50 AZ2, 22 November 2026): the read by the cell's own basis is WP6.07's, Phase 6's fields package, which rebuilds the reader and writes the fields file that WP6.15 exports; values read between nodes change at v0.7. Phase 7's tree of results keeps the explorer's own rework.
+
 ### REV-271: The Phase 5 plan exceeds its word target a third time
 
 The Phase 5 plan held 8,206 words by `wc -w` after the sixth amendment (§8.2.46), against `np-plan`'s 1,500-word target
@@ -4332,6 +4370,8 @@ is recorded here.
 
 **Placed** (§8.2.49 AY8, 22 November 2026): the cleanup sets the reading limit from a measured baseline, and the
 limit restates the phase plan's word target.
+
+**Placed** (§8.2.50 AZ4, 22 November 2026): WP6.02, the cleanup's measure, audit and records, where the reading limit restates the phase plan's word target.
 
 ### REV-272: Phase 5 closes early; Phase 6 opens with its scope, a cleanup and the foundations
 
@@ -4405,6 +4445,8 @@ workbench's, and the style is built into Phase 7's shared parts (AY1); 4, the sp
 REV-257 join the equations package there (AY3, AY6); 5, Fable 5.2 runs the ruling rounds, the cleanup and each package's
 plan and ship, and Opus 5.5 implements (AY7). This row stays `accepted` until Phase 6's cleanup and the two phases'
 foundations land.
+
+**Placed** (§8.2.50 AZ4, 22 November 2026): the cleanup is WP6.02 and WP6.03; the library's foundations are WP6.04 to WP6.12. Phase 6 is 18 packages, the restructure before the equations.
 
 ### REV-273: The tree round's verdicts reopen where the settings stand, the views shown and the runs in Data
 
@@ -4520,3 +4562,5 @@ fixes it, placed by its scope round.
 **Placed** (§8.2.49 AY4, 22 November 2026): the fix is Phase 6's first package, not V&V in CI's, which AY2 puts in
 Phase 11. Every phase from Phase 6 closes with Tiers 1 and 2 passing on the three platforms, and `/np-ship` stops
 while a platform leg of the last full run is red.
+
+**Placed** (§8.2.50 AZ4, 22 November 2026): WP6.01, the Windows leg, Phase 6's first package.
