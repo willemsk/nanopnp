@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import hmac
 import json
+import multiprocessing
 import os
 import re
 import secrets
@@ -234,8 +235,11 @@ def _watch_input(server: uvicorn.Server | None, source: int | None = None) -> No
     if server is not None:
         server.should_exit = True
     else:
-        # The reloading supervisor stops on SIGINT in its main thread. On Windows, os.kill with
-        # SIGINT would terminate this process outright and orphan the worker it spawned.
+        # The reloading supervisor ends its worker, then stops on SIGINT in its main thread. On
+        # Windows uvicorn's supervisor only waits for the worker, which a console's Ctrl+C would
+        # end, and os.kill with SIGINT would terminate the supervisor and orphan the worker.
+        for worker in multiprocessing.active_children():
+            worker.terminate()
         _thread.interrupt_main(signal.SIGINT)
 
 
