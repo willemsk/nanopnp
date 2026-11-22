@@ -24,6 +24,25 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.7.0-alpha.1]
+
+WP6.01: the Windows leg, Phase 6's first package; tag `v0.7.0-alpha.1` once merged (§8.2.49 AY4; §8.2.50 AZ8;
+REV-277, REV-279). The Windows test leg had not finished since 3 November 2026: it now names each failure and passes,
+and each failure is fixed where it arose. A pull request's CI stays on Linux; the three platforms are checked at a
+phase's close. No golden moves and no stored key moves. The [plan](docs/plans/phase-6/wp6.01-the-windows-leg.md)
+records the work.
+
+- **Fixed**:
+  - `nanopnp gui --dev` starts and stops on Windows: its worker no longer shares the input pipe its supervisor
+    watches, and closing that input stops the supervisor and its worker instead of terminating the supervisor alone
+    (VER-78).
+  - The vendored KaTeX and uPlot keep their bytes on a Windows checkout, so their recorded hashes match (CON-09).
+- **Changed** (development):
+  - Each test is bounded at 600 s, a `nightly` or `slow` one at 7,200 s, so a hang fails naming its test (§7.6); CI
+    prints the 20 slowest tests, and a nightly leg cancelled at its limit opens the nightly issue.
+  - The push gate checks a prose-only change since its last pass in seconds, and `main` keeps a linear history.
+  - The channel axis gate test tilts a wall without a ragged rim; the method's rim weakness is REV-279.
+
 ## [0.6.0] - 2026-11-22
 
 **Phase 5, the graphical interface.** The browser workbench is nanopnp's one graphical interface: a project folder of

@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the library's foundations): a library the workbench and the tools can build on
 
-**Status: planned, not started. WP6.01 to WP6.03 as planned on 22 November 2026; then a rescoping round; WP6.04 to WP6.18 provisional until it rules (§8.2.50). Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01. WP6.01 to WP6.03 as planned on 22 November 2026; then a rescoping round; WP6.04 to WP6.18 provisional until it rules (§8.2.50). Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -78,6 +78,13 @@ and 8 touches (§8.3).
 Name the failing tests and the stall with a per-test timeout; fix each at its cause. A pull request's CI stays on Linux;
 this package's own dispatch of `ci.yml` on its branch shows the three legs green, and from it only `/np-ship phase`
 dispatches the three platforms and stops on a red leg (AZ8). [The plan](wp6.01-the-windows-leg.md).
+
+*Delivered 22 November 2026.* Each test is bounded (600 s; 7,200 s for `nightly` and `slow`), so a hang fails naming
+its test (§7.6). Run 851 named the stall and three failures; run 854 passed on ubuntu, macOS and Windows with the
+self-test, Windows in 13 min 32 s. Fixed at their causes: the reloading server reads a private copy of its input and
+ends its worker (VER-78); KaTeX and uPlot keep their bytes (CON-09). The channel axis's rim trap is REV-279, placed by
+the rescoping round; its test's wall has no ragged rim (D9). REV-277 is fixed. At the author's request the push gate
+checks prose since its last pass in seconds, and `main` keeps a linear history. Live: AZ8's ship rule.
 
 ### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8)
 
