@@ -7,7 +7,7 @@ an equation.
 
 The guide describes v0.5's features and the case file. It has a short page on the v0.6 workbench
 (`nanopnp gui`); projects and model files are in the generated references. The full workbench guide
-follows in v0.7.
+follows in v0.8.
 
 | Page | What it covers |
 |---|---|

@@ -56,7 +56,7 @@ or built from a PDB structure by the geometry pipeline (Phase 2). Fixed charge i
 field, or protonated with PDB2PQR and PROPKA and deposited on the mesh by the charge pipeline
 (Phase 3, v0.4). The Python interface, built on a case and the session that runs it, and the
 figures and notebooks belong to v0.5 (Phase 4), released as `v0.5.0`. The browser workbench belongs to v0.6 (Phase 5), released as `v0.6.0`;
-v0.7 (Phase 6, the validated release) is next. Nothing is a validated release yet. The comparison against the paper's published results gates v0.7.
+v0.7 (Phase 6, the cleanup and the library's foundations) is next. Nothing is a validated release yet. The comparison against the paper's published results gates v0.12, the validated release.
 The case schema and the Python API may still change until the stable v1.0 (`SPECIFICATION.md` §8.2.6 F4).
 
 | Release | Phase | Scope | State |
@@ -67,7 +67,10 @@ The case schema and the Python API may still change until the stable v1.0 (`SPEC
 | v0.4 | 3 | Charge pipeline: PDB2PQR charges, smeared fixed charge and dielectric; the paper's pipeline end to end | **released**, [`v0.4.0`](CHANGELOG.md#040---2026-10-04) |
 | v0.5 | 4 | Polish and user testing: the architecture's modularity explored, then the physics, numerics, API and CLI tested by a user | **released**, [`v0.5.0`](CHANGELOG.md#050---2026-11-02) |
 | v0.6 | 5 | Graphical interface: a design and requirements document with mockups, then the browser workbench, which replaced the Qt shell | **released**, [`v0.6.0`](CHANGELOG.md#060---2026-11-22) |
-| v0.7 | 6 | Validated release: the published results reproduced, V&V suite in CI, tutorials, JOSS submission, DOI archive | next |
+| v0.7 | 6 | The cleanup and the library's foundations: the results side and the registries restructured, the model's open terms, the exports, the speed-up | next |
+| v0.8 | 7 | The workbench rebuilt: the tree of results, the guided route, the full guide | planned |
+| v0.9 to v0.11 | 8 to 10 | The workbench's tools, each a library capability first: the physics composer, the structural mutator, the 2D sketcher | planned |
+| v0.12 | 11 | Validated release: the published results reproduced, V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |
 | v1.0 | — | Stable release: the API stability promise; its content is the author's to define | planned |
 
 Each merged work package is tagged `vX.Y.Z-alpha.N` toward its phase's release, and the package
@@ -76,7 +79,7 @@ release plan is in [`SPECIFICATION.md`](SPECIFICATION.md) §2.7 and §8.
 
 ## Installation
 
-`nanopnp` is not on PyPI yet; that comes with v0.7. Install it from source with
+`nanopnp` is not on PyPI yet; that comes with the validated release, v0.12. Install it from source with
 [uv](https://docs.astral.sh/uv/):
 
 ```bash

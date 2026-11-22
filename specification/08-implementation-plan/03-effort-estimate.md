@@ -22,19 +22,21 @@ transcript (§8.4.5; AM11), never from a developer's days. Measured from the fir
 last on `main`, waits for the author included, Phase 5's library steps WP5.03 to WP5.06 took 1 to 3
 hours each, and WP5.07, WP5.08 and WP5.10, which add a mechanism, a screen or the rules, 7 to 11.
 
-Estimate to the validated release (v0.7, Phase 6; §8.2.5 E2, §8.2.6 F1), from 9 November 2026
-(AM12), the shell's row counting the meso suite (§8.2.43 AS1), and the moved packages' row the tree of results, the
-layers, the performance package, the refusals, the polish pass and the guided route (§8.2.43 AS2; WB-51; §8.2.46 AV1
-to AV3; §8.2.47 AW1):
+Estimate to the validated release (v0.12, Phase 11; §8.2.5 E2, §8.2.6 F1; §8.2.49 AY1, AY2), from 22 November
+2026, after Phase 5's release. Phase 5's last thirteen packages were estimated on 9 November at about 74 sessions,
+66 to 132 agent hours and 122 touches (AM12), and its measured packages give the rates: a text or clean-up package
+about 5 sessions, 3 to 6 agent hours and 8 touches, and a shell package about 6 sessions, 6 to 12 agent hours and 10
+touches. Each phase's own round estimates it again:
 
 | Work | Sessions | Agent hours | Touches |
 |---|---|---|---|
-| Phase 5's text and clean-up packages, WP5.11 to WP5.14: about 5 sessions, 3 to 6 agent hours and 8 touches each | 20 | 12 to 24 | 32 |
-| Phase 5's shell and close, WP5.15 to WP5.21, WP5.27 and WP5.28: about 6 sessions, 6 to 12 agent hours and 10 touches each, and the author's design rounds | 54 | 54 to 108 | 90 |
-| The packages Phase 5's seventh amendment moved to Phase 6, WP5.22 to WP5.26, five at Phase 5's shell rate; the guided route and new models stay counted in WP5.27's six sessions above, until Phase 6's scope round estimates all six again (§8.2.47 AW1) | 30 | 30 to 60 | 50 |
-| Phase 6, not yet in packages: about ten, as Phase 5's, and the machine time of its Tier 3 and Tier 4 runs (the datum below) | 50 to 60 | 50 to 100 | 100 |
+| Phase 6, the cleanup and the library's foundations: about 15 packages at the text and clean-up rate, the Windows leg, the cleanup, the restructure, the model's open terms, the tolerances, the exports, the refusals and the speed-up among them (§8.2.49 AY1, AY3, AY4, AY6) | 75 | 45 to 90 | 120 |
+| Phase 7, the workbench rebuilt: about 14 packages at the shell rate, its foundations and the packages Phase 5's seventh amendment moved (§8.2.47 AW1), and the author's design rounds | 85 | 85 to 170 | 140 |
+| Phases 8 to 10, the composer, the structural mutator and the sketcher: not estimated; each round sets its own (§8.2.17 S7; §8.2.49 AY2) | — | — | — |
+| Phase 11, validation and release: about seven packages, and the machine time of its Tier 3 and Tier 4 runs (the datum below) | 40 | 35 to 70 | 70 |
 
-Neither phase counts the workbench's tool phases (§8.2.17 S7), whose estimates their own plans set.
+A ruling round, a plan and a ship session on Fable 5.2 cost about a quarter to a half more in model spend than on
+Opus 5.5 (§8.2.49 AY7); the units above do not change.
 
 Factors making the work more tractable:
 

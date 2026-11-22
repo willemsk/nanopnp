@@ -751,7 +751,7 @@ def _check_generation(document: CaseDocument) -> None:
     if geometry is not None and geometry.analyte is not None:
         raise UnsupportedCaseSection(
             f"geometry.analyte is a {geometry.analyte.shape}. An analyte in a generated region "
-            "is FR-21, v0.7. The benchmark geometries embed one (PHY-11). "
+            "is FR-21, v0.12. The benchmark geometries embed one (PHY-11). "
             "Remove geometry.analyte."
         )
     membrane = geometry.membrane if geometry is not None else Membrane()

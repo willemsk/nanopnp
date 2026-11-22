@@ -153,10 +153,14 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 
 #### 8.4.5 Agents and models
 
-* The implementing session runs on Opus at high effort. A scoped item, one that a sub-agent takes whole
-  with its checks, runs on Sonnet at high effort. Haiku takes only mechanical, repetitive work that is
-  fully specified and whose expected context stays under 100,000 tokens. An item a sub-agent fails goes
-  to a new worker once, then to the next model. (§8.2.11 L6; §8.2.38 AN8)
+* The model follows the session's kind. Each level of `/np-plan` with its review, `/np-ship`, and the
+  cleanup package of Phase 6 whole run on Fable 5.2 at high effort. `/np-implement` runs on Opus 5.5 at
+  high effort, set explicitly, because its default is medium. The author picks the model when a session
+  starts; a plan names it, and a pause's prompt names the next step's. A scoped item, one that a
+  sub-agent takes whole with its checks, runs on Sonnet 5.5 at high effort. Haiku 5.5 takes only
+  mechanical, repetitive work that is fully specified and whose expected context stays under 100,000
+  tokens. An item a sub-agent fails goes to a new worker once, then to the next model. (§8.2.11 L6;
+  §8.2.38 AN8; §8.2.49 AY7)
 * The tiers are the same Claude models on either host; `.claude/workflow/hosts/copilot.md` gives
   each tier's Copilot id and each agent's effort, passed at each sub-agent call. (§8.2.25 AA7)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only and on Opus at high

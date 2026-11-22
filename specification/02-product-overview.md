@@ -80,7 +80,7 @@ ClyA's C₁₂ symmetry.
 | NiceGUI, FastAPI | MIT, BSD-3 | The workbench's front end and server, the `gui` extra (ADR-004) |
 
 NOTE (§2.6, the workbench, v0.6). The `gui` extra takes Matplotlib (its own permissive licence), whose
-registered colour maps the workbench offers by name (§8.2.45 AU2). From the tree of results' package (WP5.22, moved to Phase 6 by §8.2.47 AW1) the front end draws every
+registered colour maps the workbench offers by name (§8.2.45 AU2). From the tree of results' package (WP5.22 before §8.2.47 AW1; Phase 7's since §8.2.49 AY1) the front end draws every
 chart and every (r, z) view with Plotly (plotly.js, MIT) as NiceGUI ships it, unmodified, which adds no
 dependency, and uPlot and NGSolve's `webgui` leave it (WB-57, restating §8.2.45 AU1; CON-09). Until then it
 vendors uPlot 1.6.32 (MIT) unmodified as separate files for its charts.
@@ -96,22 +96,26 @@ reference-solution generation; MD trajectories are supplied as input.
 | v0.1 | 0 | Spike. Analytic cylindrical/conical pore, coupled steady axisymmetric ePNP-NS, continuation ladder, analytic benchmarks, one COMSOL comparison. No structure pipeline, no GUI. |
 | v0.2 | 1 | Solver core on an externally supplied mesh and material/charge fields; full QoI extraction; pluggable correction models; a versioned case-file schema; the Python API (stable from v1.0, IF-01); CLI; sweep runner. |
 | v0.3 | 2 | Geometry pipeline: structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh. |
-| v0.4 | 3 | Charge pipeline: PDB2PQR to smeared ρ_fixed and dielectric field; the physics-model interface (FR-20). Runs the paper's pipeline end to end, from structure to current; the reproduction of the published results is measured at v0.7 (VAL-16, VAL-17; §8.2.4 D6). |
+| v0.4 | 3 | Charge pipeline: PDB2PQR to smeared ρ_fixed and dielectric field; the physics-model interface (FR-20). Runs the paper's pipeline end to end, from structure to current; the reproduction of the published results is measured at v0.12 (VAL-16, VAL-17; §8.2.4 D6; §8.2.49 AY2). |
 | v0.5 | 4 | Polish and user testing (§8.2.6 F3): an exploration of the modularity of the implementation architecture, then a user-testing pass over the physics, the numerics, the Python API and the command line. No GUI increment. |
 | v0.6 | 5 | Graphical interface (§8.2.6 F5): a design and requirements document with mockups, a visual-feedback workflow, then the browser workbench its plan sets (FR-31 to FR-35, FR-37 to FR-39): six suites over a project folder and a run queue, replacing the Qt shell. |
-| v0.7 | 6 | Validated release: V&V suite in CI, the published current–voltage relationships and in-pore averages reproduced (VAL-16, VAL-17), documentation, tutorials, JOSS submission, DOI-archived. It also takes the workbench packages Phase 5's early close moved, the tree of results (FR-32) and the guided route (FR-36) among them, after the restructure of the shell and of the results side (§8.2.47 AW1; REV-272). Released before v1.0. |
+| v0.7 | 6 | The cleanup and the library's foundations (§8.2.49 AY1): the records and instructions cleaned up; the library's results side, registries and error base restructured, with the numbers the shell computed; the model's open terms, the tolerances argued, the exports (FR-28) and the speed-up (AY3, AY6). It changes no number a user sees but those the equations package re-pins. |
+| v0.8 | 7 | The workbench rebuilt on its foundations, with the packages Phase 5's early close moved: the tree of results (FR-32), the structure's layers, the polish pass and the guided route (FR-36), and the full guide (§8.2.47 AW1; §8.2.49 AY1; REV-272). |
+| v0.9 | 8 | The physics composer (FR-40), library first (§8.2.17 S3; §8.2.49 AY2). |
+| v0.10 | 9 | The structural mutator (FR-41), library first, with the structure pipeline's loose ends (§8.2.17 S4; §8.2.49 AY2, AY6). |
+| v0.11 | 10 | The 2D sketcher of the (r, z) domain (FR-42), library first (§8.2.17 S5; §8.2.49 AY2). |
+| v0.12 | 11 | Validated release: V&V suite in CI, the analyte forces (FR-21, FR-22), the published current–voltage relationships and in-pore averages reproduced (VAL-16, VAL-17), documentation, tutorials, JOSS submission, DOI-archived (§8.2.49 AY2). Released before v1.0. |
 | v1.0 | — | Stable release: the API stability promise of IF-01. Its content and gate are the author's to define (OPN-08); QR-10 is observed on its release candidate (§8.2.47 AW2). |
 | post-1.0 | — | Backlog: installers for all three platforms and in-application tutorials; 3D; transient; ion-specific rather than mean-concentration-driven property models; MD-fitting toolkit for corrections; solid-state pores; charge regulation; multi-species electrolytes beyond binary; non-axisymmetric analytes. |
 
-A requirement's release in §3 is a release of the table above, or one of the tool phases of §8.1
-(composer, structural mutator, sketcher, or "a later phase"), which takes a number at Phase 6's scope round
-(§8.2.48 AX1).
+A requirement's release in §3 is a release of the table above, or "a later phase", which takes a number when a
+round places it (§8.2.48 AX1; §8.2.49 AY2).
 
 NOTE (Versioning; §8.2.4 D1): the
 releases above are git tags `vX.Y.Z`, one minor version per phase, on the commit that merges the
 phase's end-of-phase report (§8.1): `v0.1.0` for Phase 0, `v0.2.0` for Phase 1, `v0.3.0` for
-Phase 2, `v0.4.0` for Phase 3, `v0.5.0` for Phase 4, `v0.6.0` for Phase 5 and `v0.7.0` for Phase 6
-(§8.2.5 E2, §8.2.6 F1 and F2). Each merged work package is tagged
+Phase 2, `v0.4.0` for Phase 3, `v0.5.0` for Phase 4, `v0.6.0` for Phase 5, `v0.7.0` for Phase 6 and so on to `v0.12.0` for Phase 11
+(§8.2.5 E2, §8.2.6 F1 and F2; §8.2.49 AY1, AY2). Each merged work package is tagged
 `vX.Y.Z-alpha.N` on its last commit on `main`, where N counts the phase's work packages toward
 that release; from Phase 5, N is the package's number within its phase (`WP5.02` takes
 `v0.6.0-alpha.2`), and a package merged before its previous phase's release takes no tag (§8.4.1;
@@ -122,7 +126,8 @@ tags installs as a development version naming that commit, and the provenance ma
 key: the environment is recorded beside an artefact, never hashed into it (§5.3.2). `CHANGELOG.md`
 records every tag, and a milestone tag publishes a GitHub Release with its section as the notes. A tag name is never moved to another commit once published and never reused for
 another phase. A manifest that records a version from before the renumbering of 30 September 2026 is
-decoded in `CHANGELOG.md`'s head. A milestone tag's
+decoded in `CHANGELOG.md`'s head; `v0.9.0-alpha.1` to `v0.9.0-alpha.9` were Phase 2's names then and are Phase 8's
+now, told apart by the manifest's `created_at` (§8.2.49 AY2). A milestone tag's
 release workflow enforces that `CITATION.cff` names its version only for the highest milestone
 tag, the release that *Cite this repository* shows; an older milestone's citation metadata is
 fixed in its commit and a re-release cannot change it.

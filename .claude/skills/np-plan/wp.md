@@ -25,8 +25,8 @@ matters. The plan is a commit under `docs/plans/`, not a chat message.
 
 ## Grounding the plan
 
-The plan is for an implementer on Opus who has not seen this session. An item marked for a sub-agent
-is for the Sonnet or Haiku model that executes it (§8.2.16 R11; §8.2.38 AN8). When the decisions are drafted, and before you
+The plan is written on Fable 5.2 for an implementer on Opus 5.5 who has not seen this session. An item marked for a
+sub-agent is for the Sonnet or Haiku model that executes it (§8.2.16 R11; §8.2.38 AN8; §8.2.49 AY7). When the decisions are drafted, and before you
 commit, read yourself the code that each decision and work item changes or relies on. Settle each point
 the implementer would otherwise guess (§8.2.15 Q1). For each, ask:
 

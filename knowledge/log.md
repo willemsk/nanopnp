@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-22
+* **Update**: The comparison against the published results gates v0.12, the Phase 11 release, after the re-plan of 22 November 2026 (`SPECIFICATION.md` §8.2.49 AY2); it gated v0.7 before. ([Tier 3 — COMSOL differential tests (hours, nightly)](08-validation-benchmarks/03-tier-3-comsol-differential-tests-hours.md))
+
 ## 2026-11-21
 * **Update**: The Qt shell and its PyInstaller bundle are removed (WP5.27); the workbench is installed by `uv` and `nanopnp gui --selftest` checks its compiled payloads. The PySide6, `QWebEngineView` and PyInstaller measurements are kept as history for an installer after 1.0. ([5. GUI and packaging](07-software-stack/05-gui-and-packaging.md))
 * **Update**: UMFPACK's GPL-2+ obligation is an installation's, stated in `src/nanopnp/THIRD-PARTY-LICENSES.md` and by `nanopnp --env`. ([6. Licence summary](07-software-stack/06-licence-summary.md))
