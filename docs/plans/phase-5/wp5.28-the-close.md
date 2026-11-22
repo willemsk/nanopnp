@@ -48,6 +48,7 @@ Opus, high effort**; item 1 goes to a Sonnet sub-agent. The only API named is th
 | **D4 Each v0.6 requirement checked** | For FR-31 to FR-35, FR-37 to FR-39, IF-09, CON-09, CON-11 and QR-16, a script resolves every test file and test name of the requirement's Appendix A row in `tests/`, and item 3 names the record of each part "verified at review". FR-32 is checked less its tree (v0.7); QR-16 is reported met in part (AW8). A stale name is corrected in Appendix A; a requirement with no check is a `REV-nn` row for the author | Criterion 4; N3; §8.2.47 AW1, AW8; decided by the plan |
 | **D5 The release text** | `CHANGELOG.md` gains `## [0.6.0] - <date>` below `[Unreleased]`, which stays empty: a summary, the 22 packages with their tags, *Breaks and their migration* gathering each break since `v0.5.0`, and this package's own changes. `CITATION.cff` names `0.6.0` and the date. README and `docs/overrides/main.html` say `v0.6.0` is released and v0.7 is next; the banner and `docs/getting-started.md` say the browser workbench where they say the desktop shell. §8.1's Phase 5 gate ends "Closed with v0.6.0". The phase plan reads **delivered**; `current.md` points at Phase 6 | The phase plan's WP5.28 entry; `CONTRIBUTING.md`, *Versions and releases*; `release.yml` checks `CITATION.cff`; decided by the plan |
 | **D6 The hand-over** | The report lists what Phase 6's scope round receives: the six moved packages (AW1), each open item under its Phase 6 package (AV5), REV-272's five proposals, the tool phases' order (AX1) and the Copilot checks. `current.md` names `/np-plan project` as the next step | REV-272; ruled by the author, §8.2.48 AX1 |
+| **D7 The Windows leg** | Run 837's Windows leg failed one test and met its 40-minute limit, as `main`'s has since 10 November. v0.6.0 is released with the gap: the report gives criterion 1 met on Linux and macOS, REV-277 carries the leg to Phase 6's V&V in CI, and `[0.6.0]` says so | Ruled by the author at this package's item 3, §8.2.48 AX3 |
 
 ### Grounding
 
@@ -212,7 +213,7 @@ Phase 6's scope round. The phase plan's status: **delivered, <date>; closes at t
 
 - [x] 3b79cc6 1. `specification/history/holds-now.yaml`, `docs/project/decisions.md` (D2); done when the item's checks pass
   and main has read the diff. **Executor:** `general-purpose` on Sonnet, high effort; main for the three mixed lines
-- [ ] 2. REV-166 to REV-168 in `docs/project/review-findings.md` and `review-items.md`,
+- [x] 13f72c3 2. REV-166 to REV-168 in `docs/project/review-findings.md` and `review-items.md`,
   `docs/plans/sessions/copilot-host.md`, the Phase 5 plan's supply row (D1); done when the owner script prints
   nothing. **Executor:** main
 - [ ] 3. The *End-of-phase report*, its verdicts and the hand-over in the Phase 5 plan; Appendix A if a name is stale

@@ -319,7 +319,8 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 
 **The phase is complete when:**
 
-1. **Tiers 1 and 2 pass**, per push and nightly. No waiver.
+1. **Tiers 1 and 2 pass**, per push and nightly. No waiver but one: the Windows leg's failure is carried to Phase 6
+   (§8.2.48 AX3; REV-277).
 2. **The restated gating clauses and VER-78 pass** on every fixture state. A miss is fixed; a
    re-argued clause is a spec amendment.
 3. **Every Qt shell capability is in the browser shell**, checked against WP5.01's list before Qt
@@ -332,8 +333,125 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 
 ## End-of-phase report
 
-The close reports: the Qt capability list against the browser shell; VER-78's screen and state counts; the time from
-a click to a redrawn view on the reference charged case, headless (the GPU measure is Phase 6's, REV-258), re-run by
-`.claude/scripts/gui/redraw.cjs`, which replaced WP5.02's script; the built wheel's install into a fresh environment,
-its time and size, with the self-test's; the tool phases' order handed to Phase 6's scope round (AX1); and the packages
-and open items it hands to that round.
+Measured on WP5.28's own tree, 22 November 2026: `13f72c3` for the push gate and the dispatched CI run,
+[run 837](https://github.com/willemsk/nanopnp/actions/runs/45000286438), whose `src/`, `tests/` and `data/` are those of
+the final tree. Nothing is copied from an Outcome. Every number names its command or its run.
+
+- **The Qt shell's capabilities** (`grep -o "| \(present\|carried\)[^|]*|"` over
+  [the capability record](../../design/reviews/2026-11-21-qt-capabilities.md)). 41 rows, Q01 to Q41: 31 `present`,
+  1 `present as ruled (AW7)` (Q16, the typed vertex move), 9 `carried` by REV-274 (points 1 to 4 one each, point 5
+  five), none missing. Qt is gone: `git grep -il "pyside6\|pyinstaller"` outside `docs/`, `specification/`,
+  `knowledge/` and `CHANGELOG.md` prints `.gitignore` (the Python template's comment) and
+  `tests/tier1/test_gui_viewmodels.py` (VER-43's guard), nothing else.
+- **The screens** (VER-78). `SCREENS` holds 32 screens and `STATES` 4 (`empty`, `charged-tube`, `uncharged`,
+  `refused`); `tests/tier1/test_gui_screens.py` collects 149 tests, 128 of them the screen-by-state grid. All 149
+  passed in Chromium on Linux with `NANOPNP_REQUIRE_BROWSER=1` (`pytest tests/tier1/test_gui_screens.py -n auto`,
+  468 s on four CPUs), as they do in the push gate, which requires the browser. Run 837's legs install no Chromium and
+  skip 142 of them, the only skips in those legs: VER-78 runs on Linux alone (Appendix A's CON-13 row). The pull
+  request's `tests (tier1)` job is read at `/np-ship`.
+- **Number stability** (VER-62; run 837, mode `main`). The per-push selection walks examples 01 and 02 (ePNP-NS), and
+  each leg prints the largest relative drift:
+
+  | Platform | Mode | Example 01 | Example 02, ePNP-NS | Tests |
+  |---|---|---|---|---|
+  | linux-x86_64/X86_V3 | same mesh, against 10⁻⁸ | 7.2 × 10⁻¹⁴ (`eof_m3_s`) | 1.1 × 10⁻¹⁶ (`currents_A[Cl-]`) | 1,812 passed, 142 skipped, 492 s |
+  | darwin-arm64/ASIMDDP | mesh moved, against ≤ 10⁻³ | 1.5 × 10⁻¹³ (`eof_m3_s`) | 1.1 × 10⁻¹⁵ (`eof_m3_s`) | 1,812 passed, 142 skipped, 611 s |
+  | win32-AMD64 | — | not reached | not reached | 1 failed, then stalled at 99 %; cancelled at its 40-minute limit |
+
+  Prediction: zero drift beyond round-off. Met. Each leg's `nanopnp gui --selftest` exercised NGSolve and Netgen
+  6.2.2606, `ngsolve.webgui`'s renderer (779,484 bytes), MDAnalysis, gemmi, scikit-image, Shapely, Gmsh 4.15.2 and
+  PDB2PQR 3.8.0 with PROPKA 3.5.1, and found the licence notice (VER-43, VER-44, VER-55, VER-60; CON-11).
+  The Windows leg failed one test and did not finish (REV-277); it has met its limit on every push and nightly run
+  with tests since 10 November (run 733), unseen because a pull request's CI tests on Linux alone. The author ruled
+  to release and carry it (§8.2.48 AX3).
+- **The suite** (`uv run pytest --collect-only -q`). 2,068 tests in all; 1,954 collected by default, 114 deselected
+  as `nightly` or `slow`. `-m tier1` selects 1,758, `-m tier2` 220. The push gate passed (`gate.sh run`, 539 s on
+  `13f72c3`, four CPUs).
+- **The redraw, headless** (`node .claude/scripts/gui/redraw.cjs <address> --json` on the 2WCD project that
+  `render_shell.py --only 2wcd` caches, continuum `2wcd-charged`, 20 picks after 3 warm-up, 1440 × 900; the page got
+  SwiftShader's software Vulkan). Median and p95 in ms:
+
+  | Measure | Median | p95 |
+  |---|---|---|
+  | The markers' paint | 314.6 | 513.8 |
+  | — the server's handling (release to `nano.plane`) | 188.2 | 381.0 |
+  | — the drawing's fetch | 64.6 | 83.6 |
+  | — the canvas's paint | 58.4 | 67.8 |
+  | The whole repaint (Mol*'s second frame) | 1,285.6 | 1,517.5 |
+  | — Mol*'s own share | 946.5 | 1,047.8 |
+
+  Both miss the 200 ms line, as predicted: WP5.19 measured the markers' paint at 297 / 380 ms on the same software GL.
+  The server's handling is the largest part of the markers' paint, and Mol* without a GPU most of the whole repaint.
+  Not fixed: the GPU measure is Phase 6's performance package (AW1; REV-258).
+- **The fresh install** (`uv build --wheel`; `uv venv --python 3.14`; `uv pip install "<wheel>[structure,gui]"`). The
+  wheel is 3.1 MB (3,115,574 bytes). The install took 5.3 s cold (`--no-cache`) and 3.9 s warm, into fresh
+  environments of 763 MB each (`du -sh`). The installed `nanopnp gui --selftest` exits 0 in 6.2 s; Gmsh, not in those
+  extras, is skipped as the optional mesher (CON-10).
+- **The requirements** (D4's script over Appendix A). The rows of FR-31 to FR-35, FR-37 to FR-39, IF-09, CON-09,
+  CON-11 and QR-16 name 17 test files and 13 test names; every one resolves under `tests/`. IF-09 and CON-09 name
+  VER-43, VER-44, VER-55, VER-60 and VER-78, each with its tests in `tests/tier1/` (VER-55 and VER-60 also in
+  `tests/tier2/`). No name is stale; Appendix A is unchanged. The parts verified at review and their records:
+  FR-31's place of a value or a problem, WP5.20's ([the Meso round](../../design/reviews/2026-11-19-meso.md));
+  FR-33's Continuum picks, WP5.17's final render ([the Continuum round](../../design/reviews/2026-11-12-continuum.md)
+  and the package's Outcome), its residue picks, WP5.19's ([the Study round, 2](../../design/reviews/2026-11-18-study-2.md)),
+  and its edit's residues, WP5.20's (the Meso round); FR-37's Prepare tool and FR-38's Charge edit tool, WP5.16's
+  ([the Molecular round, 2](../../design/reviews/2026-11-12-molecular.md)); FR-39's study values and sweep modes,
+  WP5.19's (the Study round, 2); QR-16, each workbench package's render review against the shipped themes, with the
+  keyboard gaps of its NOTE (REV-236, REV-245, REV-266). FR-32 is checked less its tree (v0.7).
+- **The registers.** `docs/project/review-findings.md`: 276 rows, none `open`: `fixed` 207, `accepted` 38,
+  `deferred` 17, `declined` 7, `wontfix` 4, `post-1.0` 3; REV-277, raised by this report, makes 277 and 39 `accepted`. Every `accepted` or `deferred` row names its owner (item 2's
+  owner script prints nothing). REV-166 to REV-168 were not run and are carried (D1). `holds-now.yaml`: the 49 rulings
+  a delivered package landed keep their clause or read `spent`; T3, AC3 and AW1 keep what waits; 22 lines hold
+  `open:` (`grep -c`): the 19 that name Phase 6, v1.0 or the Copilot session, T3, AW1 and the header's comment. AX3, ruled at
+  this package, adds a 23rd.
+- **The development loop** (`<git dir>/nanopnp-gate.log`; run 837's job timings). The commit hook took 162 s on item
+  1's commit (a YAML file, the full hook) and under 1 s on item 2's (prose alone); the push gate 539 s, against 243 s
+  at Phase 4's close: VER-78's 149 Chromium tests take 468 s alone on four CPUs. Run 837's critical path, Windows aside: 10 min 58 s
+  (first job start 07:53:52 to macOS's end 08:04:50); the Windows leg ran to its 40-minute limit.
+
+### Verdicts
+
+| # | Verdict | Evidence |
+|---|---|---|
+| 1 | **Met on Linux and macOS; carried on Windows** | The push gate passed (539 s); run 837 passed on Linux and macOS; its Windows leg failed one test and stalled, as on `main` since 10 November; the author ruled the waiver (§8.2.48 AX3; REV-277) |
+| 2 | **Met on Linux and macOS** | VER-43, VER-44, VER-55 and VER-60 passed in run 837's Linux and macOS legs with the self-test; VER-78's 149 tests passed in Chromium on Linux, in every state |
+| 3 | **Met** | 41 of 41 capability rows: 31 present, Q16 as ruled (AW7), nine carried by REV-274 (AW11); no Qt module, bundle or probe is left |
+| 4 | **Met in part** | Every v0.6 requirement has its test or its review record, and every named test resolves; QR-16 ships with the keyboard gaps of its NOTE (AW8) |
+| 5 | **Not this phase's** | QR-10's trial waits for v1.0's release candidate (AW2) |
+| 6 | **Not this phase's** | Measured headless: 314.6 ms median for the markers' paint against 200 ms; the GPU measure is Phase 6's (AW1; REV-258) |
+
+### Handed to Phase 6's scope round
+
+The round orders the later tool phases (AX1), then Phase 6's packages after its cleanup and foundations (REV-272). It
+receives:
+
+- **The six moved packages** (AW1; *Moved to Phase 6* above): the tree of results, the structure's layers, the
+  performance package, the library's refusals, the polish pass, and the guided route and new models.
+- **REV-272's five proposals**: measure the cleanup, start it with an audit, order the foundations, reorder Phase 6's
+  existing packages (Z6's speed-up first revisited), and models by session type.
+- **The Copilot app's checks**, REV-166 to REV-168 (AV6), carried by this package.
+- **The Windows test leg** (REV-277; AX3), failing since 10 November.
+- **The open items** (`accepted` and `deferred` rows), by the package their ruling names (AV5):
+
+  | Package | Rows |
+  |---|---|
+  | The tree of results | REV-268, REV-270, REV-273, REV-275 |
+  | The structure's layers | REV-240, REV-243, REV-265, REV-274 |
+  | The performance package | REV-258 |
+  | The library's refusals | REV-242, REV-254 |
+  | The polish pass | REV-235 to REV-237, REV-241, REV-245, REV-255, REV-261 to REV-263, REV-266, REV-267, REV-269, REV-274, REV-275 |
+  | The guided route and new models | REV-240, REV-241, REV-242, REV-249 |
+  | The cleanup | REV-271 |
+  | The scope round | REV-272 |
+  | The exports | REV-41, REV-45 |
+  | The validation runs | REV-46, REV-61, REV-64 |
+  | The speed-up | REV-60, REV-156, REV-171 |
+  | V&V in CI | REV-91, REV-277 |
+  | The structure pipeline | REV-151, REV-180, REV-181, REV-186 |
+  | The tolerances argued | REV-182, REV-225, REV-232 |
+  | The model's open terms | REV-223, REV-224, REV-230, REV-255, REV-257 |
+  | The forms | REV-275 |
+  | The Copilot host's session | REV-166 to REV-168 |
+  | A tool's phase | REV-67 (the composer), REV-149 and REV-238 (the structural mutator), REV-244 (the sketcher) |
+  | FR-43's package | REV-183 |
+  | The radius set's next change | REV-276 |
