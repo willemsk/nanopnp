@@ -174,8 +174,10 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   decisions register and with `--check` compares it, `index_records.py` writes the indexes of the
   plans and reviews (§8.4.4), `links.py` checks every relative link of the tracked Markdown
   (§7.6), and `usage.py` measures a session in §8.3's units, with its tokens by model, from its
-  Claude Code transcript. (§8.2.11 L6, L9; §8.2.16 R6; §8.2.17 S22; §8.2.36 AL3, AL4, AL28; §8.2.37
-  AM11)
+  Claude Code transcript; with `--reading` it gives, for each window an `/np-` command opens, the
+  words of project text read before the first edit, and with `--pages` it reads them from the
+  session service's pages of past sessions. (§8.2.11 L6, L9; §8.2.16 R6; §8.2.17 S22; §8.2.36 AL3,
+  AL4, AL28; §8.2.37 AM11; §8.2.50 AZ9, AZ10)
 * Each level of `/np-plan`, `/np-implement` and `/np-ship` ends its report with `usage.py`'s line for
   the level. The pull request's **Measured** section keeps one line per level, and `/np-ship` sums
   them into the plan's Outcome beside its estimate. A host without a Claude Code transcript records
