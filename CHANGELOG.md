@@ -22,6 +22,123 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-22
+
+**Phase 5, the graphical interface.** The browser workbench is nanopnp's one graphical interface: a project folder of
+plain files, opened with `nanopnp gui`, holds molecular, continuum and physics models and the studies that pair them,
+across six suites from the structure to the comparison of two runs. The Qt desktop shell is removed, after each of its
+41 capabilities was checked in the workbench: 31 present, one as the author ruled, nine carried to Phase 6 and none
+missing. The case file's schema is `nanopnp/case/v0.6`; a structure's density is smeared from its protonated atoms; a
+case can name its models, set variables and override a model's values; outputs and steric models are registries. The
+workbench's 32 screens load in four states in Chromium, and the installed `nanopnp gui --selftest` checks each
+compiled payload on three platforms. The suite holds 2,068 tests (Tier 1 1,758, Tier 2 220). A pick's redraw without
+a graphics card takes 314.6 ms (median) against the 200 ms line, reported for Phase 6's measure on a graphics card. A
+fresh install with the `structure` and `gui` extras takes 5.3 s and 763 MB. The review register holds 277 rows, none
+`open`; each that waits names its owner in Phase 6. No computed number moved beyond the bounds the number-stability
+golden records (VER-62) on Linux and macOS. **Windows is untested in this release:** its test leg has failed one test
+and then met its 40-minute limit on every run since 10 November 2026 (run 733); the author released with the gap
+and carried it to Phase 6's tests in CI (§8.2.48 AX3; REV-277). The end-of-phase report, every number measured on the
+close's own tree, is in [docs/plans/phase-5/phase-5-workbench.md](docs/plans/phase-5/phase-5-workbench.md#end-of-phase-report).
+
+The release gathers 23 work packages. Package WP5.N is `v0.6.0-alpha.N`; the close is described here and tagged
+`v0.6.0` alone (§8.4.1):
+
+- WP5.01, the workbench design study, merged before `v0.5.0` and untagged (its entry is under `[0.6.0-alpha.2]`);
+- WP5.02, the framework spike and the visual-feedback workflow (`alpha.2`);
+- WP5.03, protonation before the density (`alpha.3`);
+- WP5.04, the charge mutator's library step (`alpha.4`);
+- WP5.05, named models and study overrides in the case (`alpha.5`);
+- WP5.06, outputs and steric models as registries (`alpha.6`);
+- WP5.07, variables and the rebuild forecast (`alpha.7`);
+- WP5.08, the frame and the project folder (`alpha.8`);
+- WP5.09, the physics model (`alpha.9`);
+- WP5.10, the written knowledge's tools and rules (`alpha.10`);
+- WP5.11, the specification's text and the agent instructions (`alpha.11`);
+- WP5.12, the knowledge base and the guide (`alpha.12`);
+- WP5.13, case and model files (`alpha.13`);
+- WP5.14, sweep planning and the walk's keying (`alpha.14`);
+- WP5.15, the frame on Quasar's components (`alpha.15`);
+- WP5.16, the Molecular suite (`alpha.16`);
+- WP5.17, the Continuum suite (`alpha.17`);
+- WP5.18, the Physics suite (`alpha.18`);
+- WP5.19, the Study suite (`alpha.19`);
+- WP5.20, the Meso suite (`alpha.20`);
+- WP5.21, the Analysis suite (`alpha.21`);
+- WP5.27, Qt's removal and the short guide (`alpha.27`);
+- WP5.28, the close, described here and tagged `v0.6.0` alone.
+
+WP5.22 to WP5.26 are retired numbers: their scope moved to Phase 6, and no tag `alpha.22` to `alpha.26` exists
+(§8.2.47 AW1, AW4).
+
+### Added
+
+- **The end-of-phase report** (WP5.28; §8.4.6), its six verdicts and what Phase 6's scope round receives: the six
+  moved packages, each open item under its Phase 6 package, REV-272's five proposals, the tool phases' order (§8.2.48
+  AX1), the Copilot host's checks and the Windows leg.
+- **REV-277**: the Windows test leg, failing since 10 November 2026, accepted for Phase 6's tests in CI (§8.2.48 AX3).
+
+### Changed
+
+- **§8.1's Phase 5 gate** reads that Tiers 1 and 2 pass on Linux and macOS, the Windows leg's failure carried to Phase 6
+  (§8.2.48 AX3), and ends "Closed with v0.6.0".
+- The ruling index: the 49 rulings that a delivered Phase 5 package landed hold their clause or read `spent`; T3, AC3
+  and AW1 keep the parts that still wait (§8.2.48 AX2).
+- REV-166 to REV-168, the Copilot host's checks, were not run before the close and are carried to Phase 6's scope
+  round; no row of the review register is `open`, and each that waits names its owner (§8.2.46 AV6).
+- `README.md`, the site's banner and the install page name the browser workbench where they named the desktop shell;
+  `CITATION.cff` names `0.6.0`.
+
+### Breaks and their migration
+
+Each break of `v0.6.0-alpha.2` to `alpha.27` for what `v0.5.0` wrote or ran: what broke, the migration, and the
+pre-release that broke it. A case file written for `v0.5.0` first takes the schema change at the head of the list.
+
+**The case file**
+
+- **The schema identifier.** `nanopnp/case/v0.5` is refused, naming the migration. Write
+  `schema: nanopnp/case/v0.6`; a case with `structure:` that keeps `v0.5.0`'s density adds
+  `geometry.density.atoms: as_loaded` (`alpha.3`).
+- **`symmetry.axis: z` on a C1 pore** is checked against the channel's axis found from its cavity, within 0.015 nm;
+  `v0.5.0` took it unchecked. A file whose z axis strays further is refused, naming the displacement. Write
+  `symmetry.axis: auto`, or orient the file (`alpha.16`).
+
+**The numbers and the stored results**
+
+- **A structure's density is smeared from its protonated atoms**, hydrogens included, by default
+  (`geometry.density.atoms: protonated`), so a structure case's density, contour and mesh move, and its stage-2 key
+  with them: a result stored by `v0.5.0` is built again. Example 07's walk moved from 0.9734 nS to 0.9598 nS
+  (−1.40 %), its transport number from 0.5428 to 0.5421. Set `as_loaded` to keep `v0.5.0`'s numbers and keys
+  (`alpha.3`). `nanopnp store prune` lists the entries an older release wrote, and `--remove` drops them (`alpha.8`).
+- **`nanopnp reproduce` of a run `v0.5.0` recorded** is refused, its case naming the retired schema. Reproduce it
+  under `v0.5.0`, or migrate its case and run it again (`alpha.3`).
+- **A positive charge is drawn blue and a negative one red**, in the 3D view, the charge map and the charge and
+  potential figures; before, positive was red. A figure made earlier reads inverted beside a new one; no number
+  changes (`alpha.16`).
+- **The manifest's environment** records `nicegui` and `fastapi`, and no longer `PySide6` (`alpha.27`).
+
+**The command line and the installation**
+
+- **`nanopnp gui` takes a project folder**, not a case. Turn a case into a project with
+  `nanopnp project import <case> <folder>`, then run `nanopnp gui <folder>` (`alpha.8`).
+- **`nanopnp-gui` and `nanopnp-probe`** are gone with the Qt shell, its PyInstaller bundle, the `packaging/` directory
+  and the `packaging` dependency group. Start the workbench with `nanopnp gui [<project>]` (`alpha.27`).
+- **The `gui` extra** installs NiceGUI, FastAPI, Uvicorn and Matplotlib, not PySide6; the `structure` extra asks for
+  PDB2PQR 3.8 or later (`alpha.2`, `alpha.27`). Install the extras again.
+
+**Internal modules** (IF-01: an internal path is not API; no old path is kept; `nanopnp.PUBLIC` only gains `Project`)
+
+- **Moved in `alpha.3`:** `charge.protonation.ProtonationTable` and `PAYLOAD_NAME`, and `charge.pqr.parent_residue`
+  and `PARENT_RESIDUE`, to `structure.protonated`.
+- **Moved or removed in `alpha.6`:** `post.stage.extension_shell`, `EXTENSION_INNER`, `EXTENSION_OUTER` and
+  `SelectionError` to `post.outputs`; `QoIArtefact` takes `output_parameters` in place of `extension_shell_nm`;
+  `io.case.OUTPUTS` and `STERIC_MODELS` are removed: use `registered_outputs()` and `registered_steric_models()`.
+- **Moved in `alpha.8`:** `cli.build_parser` to `cli.parser`.
+- **Moved or removed in `alpha.13`:** `io.case.read_case` and `read_case_text` to `io.models`;
+  `io.case_paths.correction_paths` is removed: `input_paths` returns every input file, the correction files among them.
+- **Removed in `alpha.17`:** `mesh.primitives.CylindricalPoreGeometry`; the cylinder is `geometry.pore.CylinderPore`.
+- **Moved or removed in `alpha.21`:** `plot.data.field_values`, `subdivided` and `FIELD_ALIASES` to `post.fields`;
+  `plot.data.field_triangulation` is removed, its split being `post.fields.field_split`.
+
 ## [0.6.0-alpha.27]
 
 WP5.27: Qt's removal and the short guide, Phase 5's twenty-seventh package; tag `v0.6.0-alpha.27` once merged
