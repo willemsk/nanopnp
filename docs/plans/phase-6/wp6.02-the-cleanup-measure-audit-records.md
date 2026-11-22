@@ -208,6 +208,12 @@ sums of the two messages the script names, and the words it gives one whole-file
 > 18 fresh `/np-implement` windows, a median of 8,095 words of project text (5,478 to 12,464), 78 % of it in files
 > this cleanup can shorten.
 
+> **Outcome — the audit finds three things that matter and no stale fact.** [The report](../sessions/instructions-audit.md)
+> checked every path, recipe, flag and heading the 31 files name and found none stale, and no pressure language.
+> Its findings: `CLAUDE.md`'s *Models* omits AY7's cleanup exception, so this package's implementing session started
+> on Opus 5.5 (F1); a ship in the implementing session runs on the implementer's model (F2, the author's); and the
+> instructions say nothing on who owns the code while the Phase 6 plan records repeated code (F3, the author's).
+
 **Item 5 (D4).** Two questions, as `.claude/workflow/author.md` says, each with the baseline's median and range.
 
 - The limit: 50 %, 65 % and 80 % of the median project text of the fresh `/np-implement` windows, rounded to 500
@@ -252,7 +258,7 @@ closed rows. `main` writes or checks both. The navigation gains `Decisions regis
 
 - [x] 2120ab9 1. `.claude/scripts/usage.py`, the reading measure (D1); §8.4.5's and `CLAUDE.md`'s lines for the script (D8).
   Done when the code and review say so and the self-check holds. **Executor:** main
-- [ ] 2. The baseline, `docs/plans/sessions/reading-baseline.md` (D2). Done when its table holds each window, or
+- [x] c0c5d4c 2. The baseline, `docs/plans/sessions/reading-baseline.md` (D2). Done when its table holds each window, or
   names the session not served. **Executor:** main; the paging by `general-purpose` sub-agents on Sonnet, high effort
 - [ ] 3. The audit, `docs/plans/sessions/instructions-audit.md` (D3). Done when the report gives each finding its six
   fields, and the proposed diff. **Executor:** main
