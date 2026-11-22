@@ -178,7 +178,7 @@ item-2 fix a user meets; and *Changed* (development): each test bounded at 600 s
   > - KaTeX's and uPlot's hashes: a Windows checkout rewrote their line endings; `.gitattributes` marks both `-text`.
   > - The channel axis test: the rim trap of D9 and REV-279; the test's wall has no ragged rim.
 - [x] 3. Compaction checkpoint. **Executor:** main
-- [ ] 4. `.claude/skills/np-ship/phase.md`, `.claude/skills/steward/SKILL.md`, `docs/project/review-findings.md`,
+- [x] 4. 870d63e `.claude/skills/np-ship/phase.md`, `.claude/skills/steward/SKILL.md`, `docs/project/review-findings.md`,
   `review-items.md`, `CHANGELOG.md`, `docs/plans/current.md` (D6, D7); done when the strict documentation build and
   `decisions.py --check` pass and the review says so. **Executor:** main
 - [x] 5. 174b238 `.claude/hooks/gate.sh`, `.github/scripts/prose-only.sh`, `.claude/scripts/decisions.py`,
