@@ -157,7 +157,7 @@ item-2 fix a user meets; and *Changed* (development): each test bounded at 600 s
 - [ ] 4. `.claude/skills/np-ship/phase.md`, `.claude/skills/steward/SKILL.md`, `docs/project/review-findings.md`,
   `review-items.md`, `CHANGELOG.md`, `docs/plans/current.md` (D6, D7); done when the strict documentation build and
   `decisions.py --check` pass and the review says so. **Executor:** main
-- [ ] 5. `.claude/hooks/gate.sh`, `.github/scripts/prose-only.sh`, `.claude/scripts/decisions.py`,
+- [x] 5. 05a4ee3 `.claude/hooks/gate.sh`, `.github/scripts/prose-only.sh`, `.claude/scripts/decisions.py`,
   `tests/tier1/test_written_architecture.py`, `CLAUDE.md` (D8), done first, at the author's request; done when a
   push of prose after a passing `run` skips the lock check, the types and pytest. **Executor:** main
 
