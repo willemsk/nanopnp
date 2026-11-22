@@ -1,6 +1,6 @@
 # WP6.01 — The Windows leg: the stall named and bounded, the failures fixed
 
-**Status: in progress.** Written 22 November 2026, grounded in the code at `2b1a468` (the Phase 6 plan's
+**Status: delivered, 22 November 2026.** Written 22 November 2026, grounded in the code at `2b1a468` (the Phase 6 plan's
 merge). Inherits §8.2.49 AY4 and §8.2.50 AZ4, AZ7 and AZ8 (ruled at this plan), REV-277 and the test scope (§8.2.13
 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.1` (§8.4.1).
 

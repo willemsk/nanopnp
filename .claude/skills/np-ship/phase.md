@@ -18,6 +18,10 @@
    - `CHANGELOG.md` has the `[X.Y.0]` section, and `CITATION.cff` has its `version` and
      `date-released` (`CONTRIBUTING.md`, *Versions and releases*).
    - `docs/plans/current.md` points at the next phase.
+   - The three platforms pass on this tree (§8.2.50 AZ8): dispatch `ci.yml` on the close's branch
+     with no inputs (`mcp__github__actions_run_trigger`, `run_workflow`), confirm the run's head
+     SHA, and stop while a `platforms` leg or its self-test is not `success`. A red leg is fixed at
+     its cause in this package, as the steward's rules say; never by a skip or a raised bound.
 4. **Run `wp.md`** §4 to §6, or §5 and §6 if `wp.md` §0.3 sent you to §5.
 5. **The tag.** The close takes the tag that `CONTRIBUTING.md`, *Versions and releases* gives. After
    the author merges, `/np-ship phase <n>` runs `wp.md` §7 with this tag.

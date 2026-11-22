@@ -5,15 +5,13 @@ Updated 22 November 2026. Navigation;
 
 ## In brief
 
-Version 0.6.0 is released and the next phase is under way. Its first package is planned: the Windows test run, which
-has hung since 3 November, gets a time limit per test so the hang names itself, then each failing test is fixed at
-its cause. Two faults a Windows user would meet are fixed with it. As you ruled today, pull requests stay tested on
-Linux alone, and the three systems are checked on a branch only at a phase's close.
+Version 0.6.0 is released and Phase 6 is under way. Its first package is built: the Windows test run, which had hung
+since 3 November, passes again on all three systems, and a test that hangs now fails within ten minutes and names
+itself. The developer server starts and stops on Windows, and two bundled libraries keep their bytes there. One known
+weakness of the pore-axis search, which rounding can trigger on any system, is recorded for the rescoping round, as
+you ruled. A push of plans or records now checks in seconds, and `main` keeps a linear history.
 
-The cleanup and the rescoping round you asked for follow. The package is about 5 sessions, 3 to 6 hours of
-agent work and 8 times you act.
-
-**Your call.** None before the merge. *Next:* its implementation; you waived the plan's review.
+**Your call.** None before the merge. *Next:* the package's review and ship.
 
 ## Position
 
@@ -22,8 +20,8 @@ agent work and 8 times you act.
 - **Phase 6 is planned** ([the plan](phase-6/phase-6-library-foundations.md); §8.2.50), `v0.7`: WP6.01 to WP6.03,
   then the rescoping round at `/np-plan project`; WP6.04 to WP6.18 provisional until it rules. Phases 7 to 11:
   [the input note](sessions/phases-6-to-11.md).
-  **WP6.01 planned** ([the plan](phase-6/wp6.01-the-windows-leg.md); AZ8: the three platforms at the close alone).
-  **Next:** `/np-implement wp 6.01`; the plan's review waived by the author. host: claude-code.
+  **WP6.01 implemented** ([the plan](phase-6/wp6.01-the-windows-leg.md); run 854 green on the three platforms;
+  REV-279 for the rescoping round). **Next:** `/np-ship wp 6.01`. host: claude-code.
 
 ## Not to be re-decided
 

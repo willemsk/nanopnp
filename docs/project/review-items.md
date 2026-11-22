@@ -4565,6 +4565,24 @@ while a platform leg of the last full run is red.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): WP6.01, the Windows leg, Phase 6's first package.
 
+**Fixed** ([WP6.01](../plans/phase-6/wp6.01-the-windows-leg.md), 22 November 2026). The leg had not passed since run
+621 (`f1e54f0`, 3 November), the first push after `tests/tier1/test_gui_screens.py` arrived, not since 10 November.
+With each test bounded at 600 s, [run 851](https://github.com/willemsk/nanopnp/actions/runs/45035649973) named the
+stall and three failures:
+
+- `test_ver78_the_reloading_server_prints_its_line_and_stops_with_its_input`: the reloading supervisor read its input
+  while uvicorn spawned the worker, which inherited the pipe and on Windows blocked at its start; and uvicorn's
+  Windows shutdown waited for a worker only a console's Ctrl+C ends. The supervisor reads a private copy of its input
+  and ends its worker itself.
+- `test_con09_the_vendored_libraries_are_unmodified[katex]` and `[uplot]`: a Windows checkout rewrote their line
+  endings; `.gitattributes` marks both `-text`.
+- `test_ver48_the_channel_axis_gates_fire`: the channel axis's rim trap, which rounding reaches on any platform; the
+  test's wall has no ragged rim, and the method's weakness is REV-279.
+
+[Run 854](https://github.com/willemsk/nanopnp/actions/runs/45043154991) passed on ubuntu, macOS and Windows with
+their self-tests, Windows in 13 min 32 s. A pull request and a package's ship read no platform leg; `/np-ship phase`
+dispatches the three (§8.2.50 AZ8).
+
 ### REV-278: `/np-plan project` as written cannot hold the rescoping round
 
 Found by [review 073](../code_reviews/CODE_REVIEW_073.md) of the Phase 6 plan. §8.2.50 AZ7 holds the rescoping round

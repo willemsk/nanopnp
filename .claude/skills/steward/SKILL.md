@@ -73,9 +73,12 @@ The jobs:
   runs on **every** push, prose-only ones included, because a prose edit is what breaks a link or
   anchor. Reproduce it with
   `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict`.
-- **`platforms`** runs after a merge. It runs the per-push selection on ubuntu, macOS and Windows,
-  3.14, then `nanopnp gui --selftest`. A platform-only failure shows up here, on `main`.
-  Fix it forward in a new PR.
+- **`platforms`** runs after a merge, every night, and on a dispatch without `full`. It runs the
+  per-push selection on ubuntu, macOS and Windows, 3.14, then `nanopnp gui --selftest`. Each test
+  is bounded (600 s; 7,200 s for `nightly` and `slow`), so a hang fails naming its test (§7.6). A
+  pull request and a package's `/np-ship` read no platform leg; `/np-ship phase` dispatches
+  `ci.yml` on the close's head and stops while a leg is not `success` (§8.2.50 AZ8). A
+  platform-only failure shows up on `main`, at night or at the close. Fix it forward in a new PR.
 - **`full-matrix`** runs when `full: true` (a dispatch, or `release.yml` before it builds a tag). It
   covers the three platforms × 3.11 to 3.14, with `--nightly`: the whole of Tiers 1 and 2 (QR-09,
   CON-13).
