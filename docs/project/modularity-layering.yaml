@@ -7,7 +7,8 @@
 # `string` (a string constant naming the module, as the stage registry, PUBLIC and
 # the exit-code table of core/errors.py do). `finding` names the MOD-nn of
 # docs/project/modularity-findings.md or the REV-nn of
-# docs/project/review-findings.md that bears on the edge, or is null.
+# docs/project/review-findings.md, or of its archive review-archive.md, that bears
+# on the edge, or is null.
 # tests/tier1/test_layering.py asserts that this list equals the relation
 # nanopnp.validation.modularity measures, in both directions: a commit that adds or
 # removes an edge edits this file in the same commit (docs/project/contributing.md).

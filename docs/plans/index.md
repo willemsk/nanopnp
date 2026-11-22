@@ -52,7 +52,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP39 — The backend registries](phase-4/wp39-backend-registries.md): delivered, 6 October 2026.
 - [WP40 — The stale refusals](phase-4/wp40-stale-refusals.md): delivered, 7 October 2026.
 - [WP41 — The accuracy fixes](phase-4/wp41-accuracy-fixes.md): delivered, 8 October 2026.
-- [WP42 — The verification checks](phase-4/wp42-verification-checks.md): in progress (extension).
+- [WP42 — The verification checks](phase-4/wp42-verification-checks.md): delivered, with its extension.
 - [WP43 — The development loop](phase-4/wp43-development-loop.md): implemented, in review.
 - [WP44 — Simplify the loop](phase-4/wp44-simplify-the-loop.md): delivered, 13 October 2026.
 - [WP45 — The prose strip](phase-4/wp45-prose-strip.md): delivered, 14 October 2026.

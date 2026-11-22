@@ -68,6 +68,8 @@ CLAUSE_ID = re.compile(
 )
 # A plan whose head says it was delivered, merged, implemented or closed is no longer in flight.
 PLAN_DONE = re.compile(r"\b(?:delivered|merged|implemented|closed)\b", re.I)
+# The status is the head's bold Status phrase: the sentences after it name other plans' states.
+PLAN_STATUS = re.compile(r"\*\*Status:?\s*(.*?)\*\*", re.S)
 # A plan's decisions date from when it was written, which its head names after its status.
 PLAN_WRITTEN = re.compile(
     rf"\b(?:planned|written)(?: on)? ((?:\d{{1,2}} )?(?:{MONTHS}) \d{{4}})", re.I
@@ -285,7 +287,9 @@ def plans() -> list[Decision]:
         written = PLAN_WRITTEN.search(head)
         plan_date = _iso(written.group(1) if written else head)
         package = _package_of(path)
-        status = "delivered plan" if PLAN_DONE.search(head) else "plan in flight"
+        stated = PLAN_STATUS.search(head)
+        done = PLAN_DONE.search(stated.group(1) if stated else head)
+        status = "delivered plan" if done else "plan in flight"
         your_call = re.search(r"\*\*Your call\.?\*\*(.*?)(?:\n\n|\Z)", text, re.S)
         put_to_author = (
             set(re.findall(r"\bD\d+[a-z]?\b", your_call.group(1))) if your_call else set()
@@ -516,7 +520,6 @@ def render() -> dict[Path, str]:
 
 
 def _differs(path: Path, page: str) -> bool:
-    """Print where ``path`` differs from ``page``, and return whether it does."""
     expected = page.splitlines()
     written = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
     for number, (want, have) in enumerate(zip(expected, written, strict=False), 1):
@@ -535,9 +538,9 @@ def _differs(path: Path, page: str) -> bool:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Write the page, or with ``--check`` compare it, and return the exit status."""
+    """Write both pages, or with ``--check`` compare them, and return the exit status."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--check", action="store_true", help="compare the page, write nothing")
+    parser.add_argument("--check", action="store_true", help="compare the pages, write nothing")
     arguments = parser.parse_args(argv)
     if problems := holds_now_problems():
         print("\n".join(problems))

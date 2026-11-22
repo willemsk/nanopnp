@@ -2,7 +2,7 @@
 
 PR: [#91](https://github.com/willemsk/nanopnp/pull/91), branch feat/wp42-verification-checks
 
-**Status: in progress (extension).** Items 1–9 delivered 10 October 2026 as `v0.5.0-alpha.8`. Extended 11 October 2026 with Items 10–13 (parameter and identifier centralisation). Written 9 October 2026 at `c306256`, after WP41 was delivered as
+**Status: delivered, with its extension.** Items 1–9 delivered 10 October 2026 as `v0.5.0-alpha.8`. Extended 11 October 2026 with Items 10–13 (parameter and identifier centralisation). Written 9 October 2026 at `c306256`, after WP41 was delivered as
 `v0.5.0-alpha.7`. It inherits everything the [current brief](../current.md) lists as not to be
 re-decided, and in particular: VER-62's golden at 10⁻⁸ (no number moves in this package); WP40's
 rule that a refusal names its requirement (VER-67); WP38's split (`pipeline/checks.py` refuses at

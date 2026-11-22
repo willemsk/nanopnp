@@ -160,11 +160,11 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * No ruling leaves the history: a spent or superseded ruling stays in its dated record.
   `clause.py` prints one that only names the identifier asked for as one line, its `holds-now.yaml`
   entry and its first bold phrase, and `--all` prints it in full. (§8.2.50 AZ11)
-* From WP6.03's merge, a fresh `/np-implement` window reads at most 6,500 words of project text before
-  its first edit: the instruction files, the records and `CLAUDE.md`, as `usage.py --reading` counts
-  them (§8.4.5). A window is fresh when no message precedes it, or its start holds under half the
-  tokens of the message before it. A window after a compaction and the plan and ship windows are
-  reported beside it, not limited. (§8.2.49 AY8; §8.2.50 AZ9, AZ13)
+* From WP6.03's merge, the first window of an `/np-implement` session reads at most 6,500 words of
+  project text before its first edit: the instruction files, the records and `CLAUDE.md`, as
+  `usage.py --reading` counts them (§8.4.5). A session's first window is the one no message precedes.
+  A later window, after a compaction or not, and the plan and ship windows are reported beside it,
+  not limited. (§8.2.49 AY8; §8.2.50 AZ9, AZ13, AZ15)
 
 #### 8.4.5 Agents and models
 
@@ -188,8 +188,11 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   `usage.py` measures a session in §8.3's units, with its tokens by model, from its Claude Code
   transcript; with `--reading` it gives, for each window an `/np-` command opens, the
   words of project text read before the first edit, and with `--pages` it reads them from the
-  session service's pages of past sessions. (§8.2.11 L6, L9; §8.2.16 R6; §8.2.17 S22; §8.2.36 AL3,
-  AL4, AL28; §8.2.37 AM11; §8.2.50 AZ9, AZ10, AZ12)
+  session service's pages of past sessions. A file counts when it is read, or printed by a command
+  that only prints files. Only a call of an edit tool ends the count; a change a shell command makes
+  does not, so a session measured against the limit makes its first change with an edit tool.
+  (§8.2.11 L6, L9; §8.2.16 R6; §8.2.17 S22; §8.2.36 AL3, AL4, AL28; §8.2.37 AM11; §8.2.50 AZ9,
+  AZ10, AZ12, AZ16, AZ17)
 * Each level of `/np-plan`, `/np-implement` and `/np-ship` ends its report with `usage.py`'s line for
   the level. The pull request's **Measured** section keeps one line per level, and `/np-ship` sums
   them into the plan's Outcome beside its estimate. A host without a Claude Code transcript records

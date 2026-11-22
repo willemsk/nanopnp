@@ -101,7 +101,10 @@ def _existence_probes() -> dict[str, tuple[str, Verdict]]:
     decisions = _plan_decisions()
     tags = _tags()
     reports = {p.stem for p in (ROOT / "docs" / "code_reviews").glob("CODE_REVIEW_*.md")}
-    rev = _register(ROOT / "docs/project/review-findings.md", "REV")
+    rev = {
+        **_register(ROOT / "docs/project/review-findings.md", "REV"),
+        **_register(ROOT / "docs/project/review-archive.md", "REV"),
+    }
     mod = _register(ROOT / "docs/project/modularity-findings.md", "MOD")
     opn = _register(ROOT / "specification/10-open-items.md", "OPN")
     requirements = _requirements()

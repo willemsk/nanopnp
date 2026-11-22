@@ -2,11 +2,11 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,574. By source: history ruling 411; plan decision row 772; REV row 279; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 8.
+Rows: 1,577. By source: history ruling 414; plan decision row 772; REV row 279; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 8.
 
-By decider: author 708; open 5; session, own call 858; session, put to the author 3.
+By decider: author 711; open 5; session, own call 858; session, put to the author 3.
 
-This page lists the 487 that bind now. The 1,087 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
+This page lists the 490 that bind now. The 1,087 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -358,8 +358,11 @@ This page lists the 487 that bind now. The 1,087 of a delivered plan, fixed, spe
 | §8.2.50 AZ9 | author | `specification/history/50-phase-5-exit-and-phase-6-decisions.md` | 2026-11-22 | WP6.02 | Added 22 November 2026, at WP6.02's plan.* **The reading limit counts the project's own text, in words.** AY8 asks for a limit taken from a baseline and does not say what is measured. The planning session opened with ab… | §8.4.4, §8.4.5; usage.py; the Phase 6 plan; its number set by AZ13 | in force |
 | §8.2.50 AZ11 | author | `specification/history/50-phase-5-exit-and-phase-6-decisions.md` | 2026-11-22 | WP6.02 | Added 22 November 2026, at WP6.02's plan.* **Nothing leaves the rulings' history.** AY8 put to the author what may be deleted from it. It held 405 rulings in 51 records and 63,646 words; the 80 that are spent or superse… | §8.4.4; clause.py | in force |
 | §8.2.50 AZ12 | author | `specification/history/50-phase-5-exit-and-phase-6-decisions.md` | 2026-11-22 | WP6.02 | Added 22 November 2026, at WP6.02's plan.* **A closed item moves to an archive beside its register.** The review register held 278 items in 53,252 words of sections, 218 of them `fixed`, `declined` or `wontfix`. The dec… | §8.4.5, §8.4.6; archive_items.py; decisions.py; np-ship/phase.md | in force |
-| §8.2.50 AZ13 | author | `specification/history/50-phase-5-exit-and-phase-6-decisions.md` | 2026-11-22 | WP6.02 | Added 22 November 2026, at WP6.02's item 5.* **A fresh `/np-implement` window reads at most 6,500 words of project text before its first edit.** AZ9 left the number to the baseline. The 18 fresh `/np-implement` windows… | §8.4.4; the Phase 6 plan; open: WP6.03 | in force |
+| §8.2.50 AZ13 | author | `specification/history/50-phase-5-exit-and-phase-6-decisions.md` | 2026-11-22 | WP6.02 | Added 22 November 2026, at WP6.02's item 5. Its bound window is narrowed by AZ15.* **A fresh `/np-implement` window reads at most 6,500 words of project text before its first edit.** AZ9 left the number to the baseline.… | §8.4.4; the Phase 6 plan; its window set by AZ15; open: WP6.03 | in force |
 | §8.2.50 AZ14 | author | `specification/history/50-phase-5-exit-and-phase-6-decisions.md` | 2026-11-22 | WP6.02 | Added 22 November 2026, at WP6.02's item 5.* **A phase plan holds 2,500 words without its report, and a delivered package's entry is one line.** `np-plan/phase.md` gave 1,500 words and §8.4.4 no number; the Phase 5 plan… | §8.4.4; np-plan/phase.md; np-implement/wp.md; REV-271 | in force |
+| §8.2.50 AZ15 | author | `specification/history/50-phase-5-exit-and-phase-6-decisions.md` | 2026-11-22 | WP6.02 | Added 22 November 2026, at WP6.02's review.* **The reading limit binds only the first window of an `/np-implement` session.** AZ13 bound a fresh window, one no message precedes or one whose start holds under half the to… | §8.4.4; usage.py | in force |
+| §8.2.50 AZ16 | author | `specification/history/50-phase-5-exit-and-phase-6-decisions.md` | 2026-11-22 | WP6.02 | Added 22 November 2026, at WP6.02's review.* **Project text that a combined command prints counts.** The measure of WP6.02's item 1 counted a file only when one `cat`, `head`, `tail` or `sed -n` printed files of one cla… | §8.4.5; usage.py | in force |
+| §8.2.50 AZ17 | author | `specification/history/50-phase-5-exit-and-phase-6-decisions.md` | 2026-11-22 | WP6.02 | Added 22 November 2026, at WP6.02's review.* **Only a call of an edit tool ends the count.** A session also changes files by shell commands, which the measure does not see. In this package's first window a shell command… | §8.4.5; usage.py | in force |
 | REV-35 | author | `docs/project/review-findings.md` |  |  | _second_crossings loops in Python | §8.2.9 I3 | post-1.0 |
 | REV-41 | author | `docs/project/review-findings.md` |  | WP6.15 | No prepare command, upto on reproduce, or region export | §8.2.18 T3; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4: WP6.15, the exports | deferred |
 | REV-45 | author | `docs/project/review-findings.md` |  | WP6.15 | The derived χ field has no export | §8.2.18 T3; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4: WP6.15, the exports | deferred |
@@ -495,5 +498,5 @@ This page lists the 487 that bind now. The 1,087 of a delivered plan, fixed, spe
 | current.md bullet | author | `docs/plans/current.md` |  |  | The workbench's design rulings stand** (§8.2.31 to §8.2.46; WB-33 to WB-63; VER-44, VER-56); every open item | §8.2.31, §8.2.46, WB-33, WB-63, VER-44, VER-56 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | QR-10's trial waits for v1.0's release candidate; QR-16's keyboard gaps and five Qt details are carried to | QR-10, QR-16 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | The Windows leg is first; every later gate asks the three platforms** (§8.2.49 AY4); **a pull request and a | §8.2.49 AY4 | in force (cache) |
-| current.md bullet | author | `docs/plans/current.md` |  |  | The reading limit counts project text in words; 6,500 for a fresh `/np-implement` window from WP6.03's merge; a | unstated | in force (cache) |
+| current.md bullet | author | `docs/plans/current.md` |  |  | The reading limit counts project text in words; 6,500 for an `/np-implement` session's first window from | unstated | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | An open-minded rescoping follows WP6.03; no package from WP6.04 is planned before it** (§8.2.50 AZ7). Until it | §8.2.50 AZ7 | in force (cache) |

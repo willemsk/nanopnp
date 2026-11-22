@@ -17,6 +17,9 @@ session's machine, and this record holds only numbers (AZ10).
   100 to 300) are not counted. A window with no level file and no session kind to fall back on is "not known".
 - **Fresh** means that no message precedes the window, or that its start holds under half the tokens of the message
   before it (D1). Every window below the start of a session is a compaction's, and all but one are fresh.
+- **Ruled after this baseline, at the package's review:** the limit binds only a session's first window, the rows
+  marked `start` (§8.2.50 AZ15), and the measure also counts a file that a combined command prints (AZ16). The
+  numbers below were counted before both. They are not counted again: the pages are gone.
 - **Not counted at all:** the 715 words of the two path-scoped rules, which arrive as attachments, and the tokens the
   app and its plug-ins load before the first message, which make up most of the 92,000 to 98,000 tokens at a
   session's start.
