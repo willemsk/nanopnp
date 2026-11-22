@@ -274,7 +274,7 @@ closed rows. `main` writes or checks both. The navigation gains `Decisions regis
 - [x] 0fd7ff5 6. `.claude/scripts/clause.py`, the stale owners of `holds-now.yaml`, §8.4.4 (D5). Done when `clause.py AY5`
   prints AA6 and AV6 as a label and one line each, `--all` prints them in full, and VER-79's tests pass. **Executor:** main; the
   survey by a `general-purpose` sub-agent on Sonnet, high effort
-- [ ] 7. `.claude/scripts/archive_items.py`, `docs/project/review-archive.md`, the readers and the links (D6). Done
+- [x] 4cb13f0 7. `.claude/scripts/archive_items.py`, `docs/project/review-archive.md`, the readers and the links (D6). Done
   when the tests of VER-61 and VER-79 pass, `duplicates.py` passes, and `links.py --anchors` names neither register
   file. **Executor:** main
 - [ ] 8. `decisions.py`'s two pages (D6). Done when VER-79's tests and the strict documentation build pass.

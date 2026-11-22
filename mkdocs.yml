@@ -401,6 +401,7 @@ nav:
       - Review findings: _generated/project/review-findings.md
       - Review archive: _generated/project/review-archive.md
       - Decisions register: project/decisions.md
+      - Decisions register, closed: project/decisions-closed.md
       - Workbench design: design/workbench.md
       - Citing: project/citing.md
       - Release notes: _generated/project/changelog.md
