@@ -216,9 +216,11 @@ Phase 6's scope round. The phase plan's status: **delivered, <date>; closes at t
 - [x] 13f72c3 2. REV-166 to REV-168 in `docs/project/review-findings.md` and `review-items.md`,
   `docs/plans/sessions/copilot-host.md`, the Phase 5 plan's supply row (D1); done when the owner script prints
   nothing. **Executor:** main
-- [ ] 3. The *End-of-phase report*, its verdicts and the hand-over in the Phase 5 plan; Appendix A if a name is stale
+- [x] d55dbb5 3. The *End-of-phase report*, its verdicts and the hand-over in the Phase 5 plan; Appendix A if a name is stale
   (D3, D4, D6); done when every number names its command or run. **Executor:** main
-- [ ] 4. Compaction checkpoint. **Executor:** main
+  > **Outcome — run 837's Windows leg failed and stalled, as main's has since 10 November; the author ruled to release
+  > and carry it (D7; §8.2.48 AX3; REV-277).** The report is in [the Phase 5 plan](phase-5-workbench.md#end-of-phase-report).
+- [x] 4. Compaction checkpoint. **Executor:** main
 - [ ] 5. `CHANGELOG.md`, `CITATION.cff` (D5); done when the strict documentation build passes. **Executor:** main
 - [ ] 6. `README.md`, `docs/overrides/main.html` (its version and its desktop shell), `docs/getting-started.md`,
   §8.1's Phase 5 gate, the Phase 5 plan's status and WP5.28 entry, `docs/plans/current.md` (D5, D6); done when the
