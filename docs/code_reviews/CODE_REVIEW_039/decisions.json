@@ -6770,7 +6770,7 @@
   "where": "docs/project/review-findings.md:25",
   "date": "",
   "package": "WP37",
-  "decided": "[TOL_NM's home loaded pydantic and yaml](review-items.md#rev-01-tol_nms-home-loaded-pydantic-and-yaml)",
+  "decided": "[TOL_NM's home loaded pydantic and yaml](review-archive.md#rev-01-tol_nms-home-loaded-pydantic-and-yaml)",
   "holds_now": "[WP37](../plans/wp37-cycle-cuts-exit-codes-backend-guard.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6781,7 +6781,7 @@
   "where": "docs/project/review-findings.md:26",
   "date": "",
   "package": "WP37",
-  "decided": "[cli/errors.py was a re-export nothing imported](review-items.md#rev-02-clierrorspy-was-a-re-export-nothing-imported)",
+  "decided": "[cli/errors.py was a re-export nothing imported](review-archive.md#rev-02-clierrorspy-was-a-re-export-nothing-imported)",
   "holds_now": "[WP37](../plans/wp37-cycle-cuts-exit-codes-backend-guard.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6792,7 +6792,7 @@
   "where": "docs/project/review-findings.md:27",
   "date": "",
   "package": "WP38",
-  "decided": "[The solution-field names lived in two layers](review-items.md#rev-03-the-solution-field-names-lived-in-two-layers)",
+  "decided": "[The solution-field names lived in two layers](review-archive.md#rev-03-the-solution-field-names-lived-in-two-layers)",
   "holds_now": "[WP38](../plans/wp38-io-split.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6803,7 +6803,7 @@
   "where": "docs/project/review-findings.md:28",
   "date": "",
   "package": "WP37",
-  "decided": "[VER-61's ratchet did not see an import moved into a function](review-items.md#rev-04-ver-61s-ratchet-did-not-see-an-import-moved-into-a-function)",
+  "decided": "[VER-61's ratchet did not see an import moved into a function](review-archive.md#rev-04-ver-61s-ratchet-did-not-see-an-import-moved-into-a-function)",
   "holds_now": "[WP37](../plans/wp37-cycle-cuts-exit-codes-backend-guard.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6814,7 +6814,7 @@
   "where": "docs/project/review-findings.md:29",
   "date": "",
   "package": "WP39",
-  "decided": "[The shells read the nanopnp facade](review-items.md#rev-05-the-shells-read-the-nanopnp-facade)",
+  "decided": "[The shells read the nanopnp facade](review-archive.md#rev-05-the-shells-read-the-nanopnp-facade)",
   "holds_now": "[WP39](../plans/wp39-backend-registries.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6825,7 +6825,7 @@
   "where": "docs/project/review-findings.md:30",
   "date": "",
   "package": "WP41",
-  "decided": "[A supplied charge or permittivity field has no stated frame beside a moved structure](review-items.md#rev-06-a-supplied-charge-or-permittivity-field-has-no-stated-frame-beside-a-moved-structure)",
+  "decided": "[A supplied charge or permittivity field has no stated frame beside a moved structure](review-archive.md#rev-06-a-supplied-charge-or-permittivity-field-has-no-stated-frame-beside-a-moved-structure)",
   "holds_now": "[WP41](../plans/wp41-accuracy-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6836,7 +6836,7 @@
   "where": "docs/project/review-findings.md:31",
   "date": "",
   "package": "WP41",
-  "decided": "[The conservation gate and the Poisson source integrate an areal charge differently](review-items.md#rev-07-the-conservation-gate-and-the-poisson-source-integrate-an-areal-charge-differently)",
+  "decided": "[The conservation gate and the Poisson source integrate an areal charge differently](review-archive.md#rev-07-the-conservation-gate-and-the-poisson-source-integrate-an-areal-charge-differently)",
   "holds_now": "[WP41](../plans/wp41-accuracy-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6847,7 +6847,7 @@
   "where": "docs/project/review-findings.md:32",
   "date": "",
   "package": "WP41",
-  "decided": "[Newton's update test takes one norm over every field](review-items.md#rev-08-newtons-update-test-takes-one-norm-over-every-field)",
+  "decided": "[Newton's update test takes one norm over every field](review-archive.md#rev-08-newtons-update-test-takes-one-norm-over-every-field)",
   "holds_now": "[WP41](../plans/wp41-accuracy-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6858,7 +6858,7 @@
   "where": "docs/project/review-findings.md:33",
   "date": "",
   "package": "WP41",
-  "decided": "[A driver clamp under the ionic-strength driver is never logged](review-items.md#rev-09-a-driver-clamp-under-the-ionic-strength-driver-is-never-logged)",
+  "decided": "[A driver clamp under the ionic-strength driver is never logged](review-archive.md#rev-09-a-driver-clamp-under-the-ionic-strength-driver-is-never-logged)",
   "holds_now": "[WP41](../plans/wp41-accuracy-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6869,7 +6869,7 @@
   "where": "docs/project/review-findings.md:34",
   "date": "",
   "package": "WP37",
-  "decided": "[The prose rule let a ruling or a report heading change without VER-63](review-items.md#rev-10-the-prose-rule-let-a-ruling-or-a-report-heading-change-without-ver-63)",
+  "decided": "[The prose rule let a ruling or a report heading change without VER-63](review-archive.md#rev-10-the-prose-rule-let-a-ruling-or-a-report-heading-change-without-ver-63)",
   "holds_now": "[WP37](../plans/wp37-cycle-cuts-exit-codes-backend-guard.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6880,7 +6880,7 @@
   "where": "docs/project/review-findings.md:35",
   "date": "",
   "package": "WP42",
-  "decided": "[No check catches a NaN-permissive gate comparison](review-items.md#rev-11-no-check-catches-a-nan-permissive-gate-comparison)",
+  "decided": "[No check catches a NaN-permissive gate comparison](review-archive.md#rev-11-no-check-catches-a-nan-permissive-gate-comparison)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6891,7 +6891,7 @@
   "where": "docs/project/review-findings.md:36",
   "date": "",
   "package": "WP42",
-  "decided": "[No test shows every case leaf changes the forms or is provenance-only](review-items.md#rev-12-no-test-shows-every-case-leaf-changes-the-forms-or-is-provenance-only)",
+  "decided": "[No test shows every case leaf changes the forms or is provenance-only](review-archive.md#rev-12-no-test-shows-every-case-leaf-changes-the-forms-or-is-provenance-only)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6902,7 +6902,7 @@
   "where": "docs/project/review-findings.md:37",
   "date": "",
   "package": "WP42",
-  "decided": "[Example 06's key test cannot see a stage-7 key change](review-items.md#rev-13-example-06s-key-test-cannot-see-a-stage-7-key-change)",
+  "decided": "[Example 06's key test cannot see a stage-7 key change](review-archive.md#rev-13-example-06s-key-test-cannot-see-a-stage-7-key-change)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6913,7 +6913,7 @@
   "where": "docs/project/review-findings.md:38",
   "date": "",
   "package": "WP46",
-  "decided": "[A radial grid's .npz does not round-trip its spacing exactly](review-items.md#rev-14-a-radial-grids-npz-does-not-round-trip-its-spacing-exactly)",
+  "decided": "[A radial grid's .npz does not round-trip its spacing exactly](review-archive.md#rev-14-a-radial-grids-npz-does-not-round-trip-its-spacing-exactly)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6924,7 +6924,7 @@
   "where": "docs/project/review-findings.md:39",
   "date": "",
   "package": "WP46",
-  "decided": "[Example 05 quotes #SBATCH directives as shell words](review-items.md#rev-15-example-05-quotes-sbatch-directives-as-shell-words)",
+  "decided": "[Example 05 quotes #SBATCH directives as shell words](review-archive.md#rev-15-example-05-quotes-sbatch-directives-as-shell-words)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6935,7 +6935,7 @@
   "where": "docs/project/review-findings.md:40",
   "date": "",
   "package": "WP46",
-  "decided": "[A salt sweep regenerates an identical mesh at each concentration](review-items.md#rev-16-a-salt-sweep-regenerates-an-identical-mesh-at-each-concentration)",
+  "decided": "[A salt sweep regenerates an identical mesh at each concentration](review-archive.md#rev-16-a-salt-sweep-regenerates-an-identical-mesh-at-each-concentration)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6946,7 +6946,7 @@
   "where": "docs/project/review-findings.md:41",
   "date": "",
   "package": "WP41",
-  "decided": "[A warm start is gated on free prose in the stabilisation provenance](review-items.md#rev-17-a-warm-start-is-gated-on-free-prose-in-the-stabilisation-provenance)",
+  "decided": "[A warm start is gated on free prose in the stabilisation provenance](review-archive.md#rev-17-a-warm-start-is-gated-on-free-prose-in-the-stabilisation-provenance)",
   "holds_now": "[WP41](../plans/wp41-accuracy-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6957,7 +6957,7 @@
   "where": "docs/project/review-findings.md:42",
   "date": "",
   "package": "WP46",
-  "decided": "[Concurrent sweep members may write the same store key](review-items.md#rev-18-concurrent-sweep-members-may-write-the-same-store-key)",
+  "decided": "[Concurrent sweep members may write the same store key](review-archive.md#rev-18-concurrent-sweep-members-may-write-the-same-store-key)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6968,7 +6968,7 @@
   "where": "docs/project/review-findings.md:43",
   "date": "",
   "package": "WP46",
-  "decided": "[A zero-frame trajectory raises a bare IndexError](review-items.md#rev-19-a-zero-frame-trajectory-raises-a-bare-indexerror)",
+  "decided": "[A zero-frame trajectory raises a bare IndexError](review-archive.md#rev-19-a-zero-frame-trajectory-raises-a-bare-indexerror)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -6979,7 +6979,7 @@
   "where": "docs/project/review-findings.md:44",
   "date": "",
   "package": "",
-  "decided": "[The desktop shell has no multiprocessing.freeze_support](review-items.md#rev-20-the-desktop-shell-has-no-multiprocessingfreeze_support)",
+  "decided": "[The desktop shell has no multiprocessing.freeze_support](review-archive.md#rev-20-the-desktop-shell-has-no-multiprocessingfreeze_support)",
   "holds_now": "§8.2.18 T1",
   "status": "wontfix",
   "kind": "REV row"
@@ -6990,7 +6990,7 @@
   "where": "docs/project/review-findings.md:45",
   "date": "",
   "package": "",
-  "decided": "[numerics/linear.py imports scipy inside its functions](review-items.md#rev-21-numericslinearpy-imports-scipy-inside-its-functions)",
+  "decided": "[numerics/linear.py imports scipy inside its functions](review-archive.md#rev-21-numericslinearpy-imports-scipy-inside-its-functions)",
   "holds_now": "§8.2.8 H12",
   "status": "declined",
   "kind": "REV row"
@@ -7001,7 +7001,7 @@
   "where": "docs/project/review-findings.md:46",
   "date": "",
   "package": "",
-  "decided": "[write_dx formats with %](review-items.md#rev-22-write_dx-formats-with)",
+  "decided": "[write_dx formats with %](review-archive.md#rev-22-write_dx-formats-with)",
   "holds_now": "§8.2.8 H12",
   "status": "declined",
   "kind": "REV row"
@@ -7012,7 +7012,7 @@
   "where": "docs/project/review-findings.md:47",
   "date": "",
   "package": "WP42",
-  "decided": "[The corrections test bounds both ions by one range](review-items.md#rev-23-the-corrections-test-bounds-both-ions-by-one-range)",
+  "decided": "[The corrections test bounds both ions by one range](review-archive.md#rev-23-the-corrections-test-bounds-both-ions-by-one-range)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7023,7 +7023,7 @@
   "where": "docs/project/review-findings.md:48",
   "date": "",
   "package": "WP46",
-  "decided": "[Sampler construction may still be duplicated](review-items.md#rev-24-sampler-construction-may-still-be-duplicated)",
+  "decided": "[Sampler construction may still be duplicated](review-archive.md#rev-24-sampler-construction-may-still-be-duplicated)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7034,7 +7034,7 @@
   "where": "docs/project/review-findings.md:49",
   "date": "",
   "package": "WP46",
-  "decided": "[A post stage run without a solve writes scratch to the default store](review-items.md#rev-25-a-post-stage-run-without-a-solve-writes-scratch-to-the-default-store)",
+  "decided": "[A post stage run without a solve writes scratch to the default store](review-archive.md#rev-25-a-post-stage-run-without-a-solve-writes-scratch-to-the-default-store)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7045,7 +7045,7 @@
   "where": "docs/project/review-findings.md:50",
   "date": "",
   "package": "WP41",
-  "decided": "[stabilisation_parameters returns an empty mapping off the coupled model](review-items.md#rev-26-stabilisation_parameters-returns-an-empty-mapping-off-the-coupled-model)",
+  "decided": "[stabilisation_parameters returns an empty mapping off the coupled model](review-archive.md#rev-26-stabilisation_parameters-returns-an-empty-mapping-off-the-coupled-model)",
   "holds_now": "[WP41](../plans/wp41-accuracy-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7056,7 +7056,7 @@
   "where": "docs/project/review-findings.md:51",
   "date": "",
   "package": "WP38",
-  "decided": "[The inf-sup check ran at resolve, not at validation](review-items.md#rev-27-the-inf-sup-check-ran-at-resolve-not-at-validation)",
+  "decided": "[The inf-sup check ran at resolve, not at validation](review-archive.md#rev-27-the-inf-sup-check-ran-at-resolve-not-at-validation)",
   "holds_now": "[WP38](../plans/wp38-io-split.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7067,7 +7067,7 @@
   "where": "docs/project/review-findings.md:52",
   "date": "",
   "package": "",
-  "decided": "[The viewer renders every finished run eagerly](review-items.md#rev-28-the-viewer-renders-every-finished-run-eagerly)",
+  "decided": "[The viewer renders every finished run eagerly](review-archive.md#rev-28-the-viewer-renders-every-finished-run-eagerly)",
   "holds_now": "§8.2.18 T2",
   "status": "deferred",
   "kind": "REV row"
@@ -7078,7 +7078,7 @@
   "where": "docs/project/review-findings.md:53",
   "date": "",
   "package": "WP42",
-  "decided": "[The cylindrical-pore fixture is copied into four test modules](review-items.md#rev-29-the-cylindrical-pore-fixture-is-copied-into-four-test-modules)",
+  "decided": "[The cylindrical-pore fixture is copied into four test modules](review-archive.md#rev-29-the-cylindrical-pore-fixture-is-copied-into-four-test-modules)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7089,7 +7089,7 @@
   "where": "docs/project/review-findings.md:54",
   "date": "",
   "package": "",
-  "decided": "[The viewer's scene is written twice](review-items.md#rev-30-the-viewers-scene-is-written-twice)",
+  "decided": "[The viewer's scene is written twice](review-archive.md#rev-30-the-viewers-scene-is-written-twice)",
   "holds_now": "§8.2.18 T2",
   "status": "deferred",
   "kind": "REV row"
@@ -7100,7 +7100,7 @@
   "where": "docs/project/review-findings.md:55",
   "date": "",
   "package": "",
-  "decided": "[The bundle's size is not recorded](review-items.md#rev-31-the-bundles-size-is-not-recorded)",
+  "decided": "[The bundle's size is not recorded](review-archive.md#rev-31-the-bundles-size-is-not-recorded)",
   "holds_now": "§8.2.18 T1",
   "status": "wontfix",
   "kind": "REV row"
@@ -7111,7 +7111,7 @@
   "where": "docs/project/review-findings.md:56",
   "date": "",
   "package": "",
-  "decided": "[Old store entries are neither migrated nor removed](review-items.md#rev-32-old-store-entries-are-neither-migrated-nor-removed)",
+  "decided": "[Old store entries are neither migrated nor removed](review-archive.md#rev-32-old-store-entries-are-neither-migrated-nor-removed)",
   "holds_now": "§8.2.18 T2",
   "status": "fixed",
   "kind": "REV row"
@@ -7122,7 +7122,7 @@
   "where": "docs/project/review-findings.md:57",
   "date": "",
   "package": "",
-  "decided": "[writable_formats assumes the extra's floor](review-items.md#rev-33-writable_formats-assumes-the-extras-floor)",
+  "decided": "[writable_formats assumes the extra's floor](review-archive.md#rev-33-writable_formats-assumes-the-extras-floor)",
   "holds_now": "§8.2.9 I3",
   "status": "declined",
   "kind": "REV row"
@@ -7133,7 +7133,7 @@
   "where": "docs/project/review-findings.md:58",
   "date": "",
   "package": "WP42",
-  "decided": "[Two reference tests duplicate the frozen case](review-items.md#rev-34-two-reference-tests-duplicate-the-frozen-case)",
+  "decided": "[Two reference tests duplicate the frozen case](review-archive.md#rev-34-two-reference-tests-duplicate-the-frozen-case)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7155,7 +7155,7 @@
   "where": "docs/project/review-findings.md:60",
   "date": "",
   "package": "WP39",
-  "decided": "[The gmsh session stops a caller's logger](review-items.md#rev-36-the-gmsh-session-stops-a-callers-logger)",
+  "decided": "[The gmsh session stops a caller's logger](review-archive.md#rev-36-the-gmsh-session-stops-a-callers-logger)",
   "holds_now": "[WP39](../plans/wp39-backend-registries.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7166,7 +7166,7 @@
   "where": "docs/project/review-findings.md:61",
   "date": "",
   "package": "WP39",
-  "decided": "[A broken gmsh wheel is not a refusal](review-items.md#rev-37-a-broken-gmsh-wheel-is-not-a-refusal)",
+  "decided": "[A broken gmsh wheel is not a refusal](review-archive.md#rev-37-a-broken-gmsh-wheel-is-not-a-refusal)",
   "holds_now": "[WP39](../plans/wp39-backend-registries.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7177,7 +7177,7 @@
   "where": "docs/project/review-findings.md:62",
   "date": "",
   "package": "WP39",
-  "decided": "[gmsh.model.remove() can mask the error it follows](review-items.md#rev-38-gmshmodelremove-can-mask-the-error-it-follows)",
+  "decided": "[gmsh.model.remove() can mask the error it follows](review-archive.md#rev-38-gmshmodelremove-can-mask-the-error-it-follows)",
   "holds_now": "[WP39](../plans/wp39-backend-registries.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7188,7 +7188,7 @@
   "where": "docs/project/review-findings.md:63",
   "date": "",
   "package": "",
-  "decided": "[A case supplying inputs.profile gets no contour editor](review-items.md#rev-39-a-case-supplying-inputsprofile-gets-no-contour-editor)",
+  "decided": "[A case supplying inputs.profile gets no contour editor](review-archive.md#rev-39-a-case-supplying-inputsprofile-gets-no-contour-editor)",
   "holds_now": "§8.2.18 T2",
   "status": "deferred",
   "kind": "REV row"
@@ -7199,7 +7199,7 @@
   "where": "docs/project/review-findings.md:64",
   "date": "",
   "package": "WP46",
-  "decided": "[DensityMap.read accepts a file written in nm](review-items.md#rev-40-densitymapread-accepts-a-file-written-in-nm)",
+  "decided": "[DensityMap.read accepts a file written in nm](review-archive.md#rev-40-densitymapread-accepts-a-file-written-in-nm)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7221,7 +7221,7 @@
   "where": "docs/project/review-findings.md:66",
   "date": "",
   "package": "WP42",
-  "decided": "[pnp carries inert flow keys](review-items.md#rev-42-pnp-carries-inert-flow-keys)",
+  "decided": "[pnp carries inert flow keys](review-archive.md#rev-42-pnp-carries-inert-flow-keys)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7232,7 +7232,7 @@
   "where": "docs/project/review-findings.md:67",
   "date": "",
   "package": "WP46",
-  "decided": "[chain_characters duplicates the export's mapping](review-items.md#rev-43-chain_characters-duplicates-the-exports-mapping)",
+  "decided": "[chain_characters duplicates the export's mapping](review-archive.md#rev-43-chain_characters-duplicates-the-exports-mapping)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7243,7 +7243,7 @@
   "where": "docs/project/review-findings.md:68",
   "date": "",
   "package": "WP42",
-  "decided": "[The Stern-layer test re-solves the drawn slab](review-items.md#rev-44-the-stern-layer-test-re-solves-the-drawn-slab)",
+  "decided": "[The Stern-layer test re-solves the drawn slab](review-archive.md#rev-44-the-stern-layer-test-re-solves-the-drawn-slab)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7276,7 +7276,7 @@
   "where": "docs/project/review-findings.md:71",
   "date": "",
   "package": "WP60",
-  "decided": "[The test-duration targets are missed](review-items.md#rev-47-the-test-duration-targets-are-missed)",
+  "decided": "[The test-duration targets are missed](review-archive.md#rev-47-the-test-duration-targets-are-missed)",
   "holds_now": "[WP60](../plans/wp60-phase-4-close.md); §8.2.9 I3",
   "status": "fixed",
   "kind": "REV row"
@@ -7287,7 +7287,7 @@
   "where": "docs/project/review-findings.md:72",
   "date": "",
   "package": "WP42",
-  "decided": "[The 2WCD walk test copies its constants](review-items.md#rev-48-the-2wcd-walk-test-copies-its-constants)",
+  "decided": "[The 2WCD walk test copies its constants](review-archive.md#rev-48-the-2wcd-walk-test-copies-its-constants)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7298,7 +7298,7 @@
   "where": "docs/project/review-findings.md:73",
   "date": "",
   "package": "WP46",
-  "decided": "[AXISYMMETRIC is replaced repeatedly](review-items.md#rev-49-axisymmetric-is-replaced-repeatedly)",
+  "decided": "[AXISYMMETRIC is replaced repeatedly](review-archive.md#rev-49-axisymmetric-is-replaced-repeatedly)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7309,7 +7309,7 @@
   "where": "docs/project/review-findings.md:74",
   "date": "",
   "package": "WP46",
-  "decided": "[_inner_wall_nm re-implements innermost_crossings](review-items.md#rev-50-_inner_wall_nm-re-implements-innermost_crossings)",
+  "decided": "[_inner_wall_nm re-implements innermost_crossings](review-archive.md#rev-50-_inner_wall_nm-re-implements-innermost_crossings)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7320,7 +7320,7 @@
   "where": "docs/project/review-findings.md:75",
   "date": "",
   "package": "WP46",
-  "decided": "[A redundant reopen and resolve in WP34's walk](review-items.md#rev-51-a-redundant-reopen-and-resolve-in-wp34s-walk)",
+  "decided": "[A redundant reopen and resolve in WP34's walk](review-archive.md#rev-51-a-redundant-reopen-and-resolve-in-wp34s-walk)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7331,7 +7331,7 @@
   "where": "docs/project/review-findings.md:76",
   "date": "",
   "package": "",
-  "decided": "[deviations and SolveReporting are off the stage protocol](review-items.md#rev-52-deviations-and-solvereporting-are-off-the-stage-protocol)",
+  "decided": "[deviations and SolveReporting are off the stage protocol](review-archive.md#rev-52-deviations-and-solvereporting-are-off-the-stage-protocol)",
   "holds_now": "§8.2.18 T2",
   "status": "fixed",
   "kind": "REV row"
@@ -7342,7 +7342,7 @@
   "where": "docs/project/review-findings.md:77",
   "date": "",
   "package": "",
-  "decided": "[Some walk rules stay as case logic](review-items.md#rev-53-some-walk-rules-stay-as-case-logic)",
+  "decided": "[Some walk rules stay as case logic](review-archive.md#rev-53-some-walk-rules-stay-as-case-logic)",
   "holds_now": "§8.2.9 I3",
   "status": "declined",
   "kind": "REV row"
@@ -7353,7 +7353,7 @@
   "where": "docs/project/review-findings.md:78",
   "date": "",
   "package": "WP38",
-  "decided": "[The MOD-12 check compared names, not modules](review-items.md#rev-54-the-mod-12-check-compared-names-not-modules)",
+  "decided": "[The MOD-12 check compared names, not modules](review-archive.md#rev-54-the-mod-12-check-compared-names-not-modules)",
   "holds_now": "[WP38](../plans/wp38-io-split.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7364,7 +7364,7 @@
   "where": "docs/project/review-findings.md:79",
   "date": "",
   "package": "WP46",
-  "decided": "[Per-stage mkdtemp fallbacks](review-items.md#rev-55-per-stage-mkdtemp-fallbacks)",
+  "decided": "[Per-stage mkdtemp fallbacks](review-archive.md#rev-55-per-stage-mkdtemp-fallbacks)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7375,7 +7375,7 @@
   "where": "docs/project/review-findings.md:80",
   "date": "",
   "package": "",
-  "decided": "[The geometry editor's simplicity check runs on the Qt thread](review-items.md#rev-56-the-geometry-editors-simplicity-check-runs-on-the-qt-thread)",
+  "decided": "[The geometry editor's simplicity check runs on the Qt thread](review-archive.md#rev-56-the-geometry-editors-simplicity-check-runs-on-the-qt-thread)",
   "holds_now": "§8.2.18 T1",
   "status": "wontfix",
   "kind": "REV row"
@@ -7386,7 +7386,7 @@
   "where": "docs/project/review-findings.md:81",
   "date": "",
   "package": "WP46",
-  "decided": "[frame_times decodes every frame](review-items.md#rev-57-frame_times-decodes-every-frame)",
+  "decided": "[frame_times decodes every frame](review-archive.md#rev-57-frame_times-decodes-every-frame)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7408,7 +7408,7 @@
   "where": "docs/project/review-findings.md:83",
   "date": "",
   "package": "WP46",
-  "decided": "[attribute_to_construction raises the wrong error on a lax comparison](review-items.md#rev-59-attribute_to_construction-raises-the-wrong-error-on-a-lax-comparison)",
+  "decided": "[attribute_to_construction raises the wrong error on a lax comparison](review-archive.md#rev-59-attribute_to_construction-raises-the-wrong-error-on-a-lax-comparison)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7441,7 +7441,7 @@
   "where": "docs/project/review-findings.md:86",
   "date": "",
   "package": "WP5.05",
-  "decided": "[A mesh named by store key is refused](review-items.md#rev-62-a-mesh-named-by-store-key-is-refused)",
+  "decided": "[A mesh named by store key is refused](review-archive.md#rev-62-a-mesh-named-by-store-key-is-refused)",
   "holds_now": "[WP5.05](../plans/wp5.05-named-models-and-study-overrides.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7452,7 +7452,7 @@
   "where": "docs/project/review-findings.md:87",
   "date": "",
   "package": "WP38",
-  "decided": "[The protonation stage walked through meshing](review-items.md#rev-63-the-protonation-stage-walked-through-meshing)",
+  "decided": "[The protonation stage walked through meshing](review-archive.md#rev-63-the-protonation-stage-walked-through-meshing)",
   "holds_now": "[WP38](../plans/wp38-io-split.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7474,7 +7474,7 @@
   "where": "docs/project/review-findings.md:89",
   "date": "",
   "package": "",
-  "decided": "[The Windows bundle exposes no mesh command](review-items.md#rev-65-the-windows-bundle-exposes-no-mesh-command)",
+  "decided": "[The Windows bundle exposes no mesh command](review-archive.md#rev-65-the-windows-bundle-exposes-no-mesh-command)",
   "holds_now": "§8.2.18 T1",
   "status": "wontfix",
   "kind": "REV row"
@@ -7485,7 +7485,7 @@
   "where": "docs/project/review-findings.md:90",
   "date": "",
   "package": "WP42",
-  "decided": "[A model without flow is refused on its element pair before its flow switch](review-items.md#rev-66-a-model-without-flow-is-refused-on-its-element-pair-before-its-flow-switch)",
+  "decided": "[A model without flow is refused on its element pair before its flow switch](review-archive.md#rev-66-a-model-without-flow-is-refused-on-its-element-pair-before-its-flow-switch)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7507,7 +7507,7 @@
   "where": "docs/project/review-findings.md:92",
   "date": "",
   "package": "WP40",
-  "decided": "[The spec still promises a refusal that D8 removed](review-items.md#rev-68-the-spec-still-promises-a-refusal-that-d8-removed)",
+  "decided": "[The spec still promises a refusal that D8 removed](review-archive.md#rev-68-the-spec-still-promises-a-refusal-that-d8-removed)",
   "holds_now": "[WP40](../plans/wp40-stale-refusals.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7518,7 +7518,7 @@
   "where": "docs/project/review-findings.md:93",
   "date": "",
   "package": "WP40",
-  "decided": "[VER-67 defers its refusal texts to a plan](review-items.md#rev-69-ver-67-defers-its-refusal-texts-to-a-plan)",
+  "decided": "[VER-67 defers its refusal texts to a plan](review-archive.md#rev-69-ver-67-defers-its-refusal-texts-to-a-plan)",
   "holds_now": "[WP40](../plans/wp40-stale-refusals.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7529,7 +7529,7 @@
   "where": "docs/project/review-findings.md:94",
   "date": "",
   "package": "WP40",
-  "decided": "[WP40 D5 and D8 go beyond MOD-14's letter](review-items.md#rev-70-wp40-d5-and-d8-go-beyond-mod-14s-letter)",
+  "decided": "[WP40 D5 and D8 go beyond MOD-14's letter](review-archive.md#rev-70-wp40-d5-and-d8-go-beyond-mod-14s-letter)",
   "holds_now": "[WP40](../plans/wp40-stale-refusals.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7540,7 +7540,7 @@
   "where": "docs/project/review-findings.md:95",
   "date": "",
   "package": "WP42",
-  "decided": "[Stage 10's cache key does not move when the solver's algorithm does](review-items.md#rev-71-stage-10s-cache-key-does-not-move-when-the-solvers-algorithm-does)",
+  "decided": "[Stage 10's cache key does not move when the solver's algorithm does](review-archive.md#rev-71-stage-10s-cache-key-does-not-move-when-the-solvers-algorithm-does)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7551,7 +7551,7 @@
   "where": "docs/project/review-findings.md:96",
   "date": "",
   "package": "WP42",
-  "decided": "[A supplied field's rule order travels beside its source as a second argument](review-items.md#rev-72-a-supplied-fields-rule-order-travels-beside-its-source-as-a-second-argument)",
+  "decided": "[A supplied field's rule order travels beside its source as a second argument](review-archive.md#rev-72-a-supplied-fields-rule-order-travels-beside-its-source-as-a-second-argument)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7562,7 +7562,7 @@
   "where": "docs/project/review-findings.md:97",
   "date": "",
   "package": "WP42",
-  "decided": "[Cross-leaf inertness is not checked](review-items.md#rev-73-cross-leaf-inertness-is-not-checked)",
+  "decided": "[Cross-leaf inertness is not checked](review-archive.md#rev-73-cross-leaf-inertness-is-not-checked)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7573,7 +7573,7 @@
   "where": "docs/project/review-findings.md:98",
   "date": "",
   "package": "WP42",
-  "decided": "[An untested raise in the force extension carries a coverage pragma](review-items.md#rev-74-an-untested-raise-in-the-force-extension-carries-a-coverage-pragma)",
+  "decided": "[An untested raise in the force extension carries a coverage pragma](review-archive.md#rev-74-an-untested-raise-in-the-force-extension-carries-a-coverage-pragma)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7584,7 +7584,7 @@
   "where": "docs/project/review-findings.md:99",
   "date": "",
   "package": "WP42",
-  "decided": "[The two defaults modules duplicate the specs' defaults](review-items.md#rev-75-the-two-defaults-modules-duplicate-the-specs-defaults)",
+  "decided": "[The two defaults modules duplicate the specs' defaults](review-archive.md#rev-75-the-two-defaults-modules-duplicate-the-specs-defaults)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7595,7 +7595,7 @@
   "where": "docs/project/review-findings.md:100",
   "date": "",
   "package": "WP42",
-  "decided": "[`ModelDeclaration.unread` paths are not validated against the schema](review-items.md#rev-76-modeldeclarationunread-paths-are-not-validated-against-the-schema)",
+  "decided": "[`ModelDeclaration.unread` paths are not validated against the schema](review-archive.md#rev-76-modeldeclarationunread-paths-are-not-validated-against-the-schema)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7606,7 +7606,7 @@
   "where": "docs/project/review-findings.md:101",
   "date": "",
   "package": "WP42",
-  "decided": "[Pinning every artefact schema at v0.5 removes the cache-bust a payload change needs](review-items.md#rev-77-pinning-every-artefact-schema-at-v05-removes-the-cache-bust-a-payload-change-needs)",
+  "decided": "[Pinning every artefact schema at v0.5 removes the cache-bust a payload change needs](review-archive.md#rev-77-pinning-every-artefact-schema-at-v05-removes-the-cache-bust-a-payload-change-needs)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7617,7 +7617,7 @@
   "where": "docs/project/review-findings.md:102",
   "date": "",
   "package": "WP42",
-  "decided": "[The threads flag re-lists the thread variables and writes the environment for good](review-items.md#rev-78-the-threads-flag-re-lists-the-thread-variables-and-writes-the-environment-for-good)",
+  "decided": "[The threads flag re-lists the thread variables and writes the environment for good](review-archive.md#rev-78-the-threads-flag-re-lists-the-thread-variables-and-writes-the-environment-for-good)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7628,7 +7628,7 @@
   "where": "docs/project/review-findings.md:103",
   "date": "",
   "package": "WP42",
-  "decided": "[The exclusion shell raises a bare ValueError for a NaN ring coordinate](review-items.md#rev-79-the-exclusion-shell-raises-a-bare-valueerror-for-a-nan-ring-coordinate)",
+  "decided": "[The exclusion shell raises a bare ValueError for a NaN ring coordinate](review-archive.md#rev-79-the-exclusion-shell-raises-a-bare-valueerror-for-a-nan-ring-coordinate)",
   "holds_now": "[WP42](../plans/wp42-verification-checks.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7639,7 +7639,7 @@
   "where": "docs/project/review-findings.md:104",
   "date": "",
   "package": "WP44",
-  "decided": "[A source change selects every process-starting test file, so the commit hook misses its 60 s budget](review-items.md#rev-80-a-source-change-selects-every-process-starting-test-file-so-the-commit-hook-misses-its-60-s-bu…",
+  "decided": "[A source change selects every process-starting test file, so the commit hook misses its 60 s budget](review-archive.md#rev-80-a-source-change-selects-every-process-starting-test-file-so-the-commit-hook-misses-its-60-s-bu…",
   "holds_now": "[WP44](../plans/wp44-simplify-the-loop.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7650,7 +7650,7 @@
   "where": "docs/project/review-findings.md:105",
   "date": "",
   "package": "WP44",
-  "decided": "[Most past commits would fall back to the development selection](review-items.md#rev-81-most-past-commits-would-fall-back-to-the-development-selection)",
+  "decided": "[Most past commits would fall back to the development selection](review-archive.md#rev-81-most-past-commits-would-fall-back-to-the-development-selection)",
   "holds_now": "[WP44](../plans/wp44-simplify-the-loop.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7661,7 +7661,7 @@
   "where": "docs/project/review-findings.md:106",
   "date": "",
   "package": "WP43",
-  "decided": "[The push gate takes over 9 minutes against its 5-minute budget](review-items.md#rev-82-the-push-gate-takes-over-9-minutes-against-its-5-minute-budget)",
+  "decided": "[The push gate takes over 9 minutes against its 5-minute budget](review-archive.md#rev-82-the-push-gate-takes-over-9-minutes-against-its-5-minute-budget)",
   "holds_now": "[WP43](../plans/wp43-development-loop.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7672,7 +7672,7 @@
   "where": "docs/project/review-findings.md:107",
   "date": "",
   "package": "WP43",
-  "decided": "[The longest-first test order is inert under xdist file scheduling](review-items.md#rev-83-the-longest-first-test-order-is-inert-under-xdist-file-scheduling)",
+  "decided": "[The longest-first test order is inert under xdist file scheduling](review-archive.md#rev-83-the-longest-first-test-order-is-inert-under-xdist-file-scheduling)",
   "holds_now": "[WP43](../plans/wp43-development-loop.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7683,7 +7683,7 @@
   "where": "docs/project/review-findings.md:108",
   "date": "",
   "package": "WP43",
-  "decided": "[A Markdown file that a WP43 test reads is classed as prose, so its test does not run on a change to it](review-items.md#rev-84-a-markdown-file-that-a-wp43-test-reads-is-classed-as-prose-so-its-test-does-not-run-on-a-ch…",
+  "decided": "[A Markdown file that a WP43 test reads is classed as prose, so its test does not run on a change to it](review-archive.md#rev-84-a-markdown-file-that-a-wp43-test-reads-is-classed-as-prose-so-its-test-does-not-run-on-a-ch…",
   "holds_now": "[WP43](../plans/wp43-development-loop.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7694,7 +7694,7 @@
   "where": "docs/project/review-findings.md:109",
   "date": "",
   "package": "WP43",
-  "decided": "[tests/impact.py uses os.path against the coding conventions](review-items.md#rev-85-testsimpactpy-uses-ospath-against-the-coding-conventions)",
+  "decided": "[tests/impact.py uses os.path against the coding conventions](review-archive.md#rev-85-testsimpactpy-uses-ospath-against-the-coding-conventions)",
   "holds_now": "[WP43](../plans/wp43-development-loop.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7705,7 +7705,7 @@
   "where": "docs/project/review-findings.md:110",
   "date": "",
   "package": "WP43",
-  "decided": "[ci.yml repeats the steps of the platforms job in the full-matrix job](review-items.md#rev-86-ciyml-repeats-the-steps-of-the-platforms-job-in-the-full-matrix-job)",
+  "decided": "[ci.yml repeats the steps of the platforms job in the full-matrix job](review-archive.md#rev-86-ciyml-repeats-the-steps-of-the-platforms-job-in-the-full-matrix-job)",
   "holds_now": "[WP43](../plans/wp43-development-loop.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7716,7 +7716,7 @@
   "where": "docs/project/review-findings.md:111",
   "date": "",
   "package": "WP44",
-  "decided": "[The plan word cap counts the Outcome that /wp-implement appends](review-items.md#rev-87-the-plan-word-cap-counts-the-outcome-that-wp-implement-appends)",
+  "decided": "[The plan word cap counts the Outcome that /wp-implement appends](review-archive.md#rev-87-the-plan-word-cap-counts-the-outcome-that-wp-implement-appends)",
   "holds_now": "[WP44](../plans/wp44-simplify-the-loop.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7727,7 +7727,7 @@
   "where": "docs/project/review-findings.md:112",
   "date": "",
   "package": "WP44",
-  "decided": "[No check remains that the public API carries its docstrings](review-items.md#rev-88-no-check-remains-that-the-public-api-carries-its-docstrings)",
+  "decided": "[No check remains that the public API carries its docstrings](review-archive.md#rev-88-no-check-remains-that-the-public-api-carries-its-docstrings)",
   "holds_now": "[WP44](../plans/wp44-simplify-the-loop.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7738,7 +7738,7 @@
   "where": "docs/project/review-findings.md:113",
   "date": "",
   "package": "WP44",
-  "decided": "[The shard partition test ignores collection errors and recollects the tree on every commit](review-items.md#rev-89-the-shard-partition-test-ignores-collection-errors-and-recollects-the-tree-on-every-commit)",
+  "decided": "[The shard partition test ignores collection errors and recollects the tree on every commit](review-archive.md#rev-89-the-shard-partition-test-ignores-collection-errors-and-recollects-the-tree-on-every-commit)",
   "holds_now": "[WP44](../plans/wp44-simplify-the-loop.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7749,7 +7749,7 @@
   "where": "docs/project/review-findings.md:114",
   "date": "",
   "package": "WP44",
-  "decided": "[VER-72 (d) and the planned-xfail logic guard a marker the workflow no longer writes](review-items.md#rev-90-ver-72-d-and-the-planned-xfail-logic-guard-a-marker-the-workflow-no-longer-writes)",
+  "decided": "[VER-72 (d) and the planned-xfail logic guard a marker the workflow no longer writes](review-archive.md#rev-90-ver-72-d-and-the-planned-xfail-logic-guard-a-marker-the-workflow-no-longer-writes)",
   "holds_now": "[WP44](../plans/wp44-simplify-the-loop.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7771,7 +7771,7 @@
   "where": "docs/project/review-findings.md:116",
   "date": "",
   "package": "",
-  "decided": "[src prose share is 10.6 %, above the 10 % prediction](review-items.md#rev-92-src-prose-share-is-106-above-the-10-prediction)",
+  "decided": "[src prose share is 10.6 %, above the 10 % prediction](review-archive.md#rev-92-src-prose-share-is-106-above-the-10-prediction)",
   "holds_now": "§8.2.11 L10",
   "status": "declined",
   "kind": "REV row"
@@ -7782,7 +7782,7 @@
   "where": "docs/project/review-findings.md:117",
   "date": "",
   "package": "WP45",
-  "decided": "[VER-75 (a) says leading underscore; dunder methods count as public](review-items.md#rev-93-ver-75-a-says-leading-underscore-dunder-methods-count-as-public)",
+  "decided": "[VER-75 (a) says leading underscore; dunder methods count as public](review-archive.md#rev-93-ver-75-a-says-leading-underscore-dunder-methods-count-as-public)",
   "holds_now": "[WP45](../plans/wp45-prose-strip.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7793,7 +7793,7 @@
   "where": "docs/project/review-findings.md:118",
   "date": "",
   "package": "WP45",
-  "decided": "[47 public functions and methods carry no docstring, and nothing checks them](review-items.md#rev-94-47-public-functions-and-methods-carry-no-docstring-and-nothing-checks-them)",
+  "decided": "[47 public functions and methods carry no docstring, and nothing checks them](review-archive.md#rev-94-47-public-functions-and-methods-carry-no-docstring-and-nothing-checks-them)",
   "holds_now": "[WP45](../plans/wp45-prose-strip.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7804,7 +7804,7 @@
   "where": "docs/project/review-findings.md:119",
   "date": "",
   "package": "WP45",
-  "decided": "[VER-75 (a) states a check on derivations and history that no test makes](review-items.md#rev-95-ver-75-a-states-a-check-on-derivations-and-history-that-no-test-makes)",
+  "decided": "[VER-75 (a) states a check on derivations and history that no test makes](review-archive.md#rev-95-ver-75-a-states-a-check-on-derivations-and-history-that-no-test-makes)",
   "holds_now": "[WP45](../plans/wp45-prose-strip.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7815,7 +7815,7 @@
   "where": "docs/project/review-findings.md:120",
   "date": "",
   "package": "WP45",
-  "decided": "[About 157 prose lines in src and tests still carry identifiers or plan history](review-items.md#rev-96-about-157-prose-lines-in-src-and-tests-still-carry-identifiers-or-plan-history)",
+  "decided": "[About 157 prose lines in src and tests still carry identifiers or plan history](review-archive.md#rev-96-about-157-prose-lines-in-src-and-tests-still-carry-identifiers-or-plan-history)",
   "holds_now": "[WP45](../plans/wp45-prose-strip.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7826,7 +7826,7 @@
   "where": "docs/project/review-findings.md:121",
   "date": "",
   "package": "WP45",
-  "decided": "[A directive comment is defined twice, differently](review-items.md#rev-97-a-directive-comment-is-defined-twice-differently)",
+  "decided": "[A directive comment is defined twice, differently](review-archive.md#rev-97-a-directive-comment-is-defined-twice-differently)",
   "holds_now": "[WP45](../plans/wp45-prose-strip.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7837,7 +7837,7 @@
   "where": "docs/project/review-findings.md:122",
   "date": "",
   "package": "WP46",
-  "decided": "[The scratch directory is the workspace itself, where the specification says fresh per run](review-items.md#rev-98-the-scratch-directory-is-the-workspace-itself-where-the-specification-says-fresh-per-run)",
+  "decided": "[The scratch directory is the workspace itself, where the specification says fresh per run](review-archive.md#rev-98-the-scratch-directory-is-the-workspace-itself-where-the-specification-says-fresh-per-run)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7848,7 +7848,7 @@
   "where": "docs/project/review-findings.md:123",
   "date": "",
   "package": "WP46",
-  "decided": "[A put killed before the rename leaves a hidden staging directory nothing reclaims](review-items.md#rev-99-a-put-killed-before-the-rename-leaves-a-hidden-staging-directory-nothing-reclaims)",
+  "decided": "[A put killed before the rename leaves a hidden staging directory nothing reclaims](review-archive.md#rev-99-a-put-killed-before-the-rename-leaves-a-hidden-staging-directory-nothing-reclaims)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7859,7 +7859,7 @@
   "where": "docs/project/review-findings.md:124",
   "date": "",
   "package": "WP46",
-  "decided": "[A put copies and hashes a payload before learning the key is already stored](review-items.md#rev-100-a-put-copies-and-hashes-a-payload-before-learning-the-key-is-already-stored)",
+  "decided": "[A put copies and hashes a payload before learning the key is already stored](review-archive.md#rev-100-a-put-copies-and-hashes-a-payload-before-learning-the-key-is-already-stored)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7870,7 +7870,7 @@
   "where": "docs/project/review-findings.md:125",
   "date": "",
   "package": "WP46",
-  "decided": "[A pre-WP46 charge-grid npz in a store is served under an unchanged key](review-items.md#rev-101-a-pre-wp46-charge-grid-npz-in-a-store-is-served-under-an-unchanged-key)",
+  "decided": "[A pre-WP46 charge-grid npz in a store is served under an unchanged key](review-archive.md#rev-101-a-pre-wp46-charge-grid-npz-in-a-store-is-served-under-an-unchanged-key)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7881,7 +7881,7 @@
   "where": "docs/project/review-findings.md:126",
   "date": "",
   "package": "WP46",
-  "decided": "[frame_times reads a private MDAnalysis attribute](review-items.md#rev-102-frame_times-reads-a-private-mdanalysis-attribute)",
+  "decided": "[frame_times reads a private MDAnalysis attribute](review-archive.md#rev-102-frame_times-reads-a-private-mdanalysis-attribute)",
   "holds_now": "[WP46](../plans/wp46-small-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7892,7 +7892,7 @@
   "where": "docs/project/review-findings.md:127",
   "date": "",
   "package": "WP48",
-  "decided": "[A verified-only claim outside the test-evidence concepts is not yet classed as executable arithmetic or a source reading](review-items.md#rev-103-a-verified-only-claim-outside-the-test-evidence-concepts-is-not-yet-clas…",
+  "decided": "[A verified-only claim outside the test-evidence concepts is not yet classed as executable arithmetic or a source reading](review-archive.md#rev-103-a-verified-only-claim-outside-the-test-evidence-concepts-is-not-yet-clas…",
   "holds_now": "[WP48](../plans/wp48-okf-backfill.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7903,7 +7903,7 @@
   "where": "docs/project/review-findings.md:128",
   "date": "",
   "package": "WP47",
-  "decided": "[A correction file keeps a dead citation to the removed flat knowledge file](review-items.md#rev-104-a-correction-file-keeps-a-dead-citation-to-the-removed-flat-knowledge-file)",
+  "decided": "[A correction file keeps a dead citation to the removed flat knowledge file](review-archive.md#rev-104-a-correction-file-keeps-a-dead-citation-to-the-removed-flat-knowledge-file)",
   "holds_now": "[WP47](../plans/wp47-okf-bundle.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7914,7 +7914,7 @@
   "where": "docs/project/review-findings.md:129",
   "date": "",
   "package": "WP47",
-  "decided": "[SPECIFICATION G12 (7) says the navigation is generated from the index files; the build has one static entry](review-items.md#rev-105-specification-g12-7-says-the-navigation-is-generated-from-the-index-files-the-build-h…",
+  "decided": "[SPECIFICATION G12 (7) says the navigation is generated from the index files; the build has one static entry](review-archive.md#rev-105-specification-g12-7-says-the-navigation-is-generated-from-the-index-files-the-build-h…",
   "holds_now": "[WP47](../plans/wp47-okf-bundle.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7925,7 +7925,7 @@
   "where": "docs/project/review-findings.md:130",
   "date": "",
   "package": "WP47",
-  "decided": "[The heading-slug function differs from the table-of-contents slugger for emphasis, entities and images](review-items.md#rev-106-the-heading-slug-function-differs-from-the-table-of-contents-slugger-for-emphasis-entities…",
+  "decided": "[The heading-slug function differs from the table-of-contents slugger for emphasis, entities and images](review-archive.md#rev-106-the-heading-slug-function-differs-from-the-table-of-contents-slugger-for-emphasis-entities…",
   "holds_now": "[WP47](../plans/wp47-okf-bundle.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7936,7 +7936,7 @@
   "where": "docs/project/review-findings.md:131",
   "date": "",
   "package": "WP47",
-  "decided": "[About 40 log entries are fragments](review-items.md#rev-107-about-40-log-entries-are-fragments)",
+  "decided": "[About 40 log entries are fragments](review-archive.md#rev-107-about-40-log-entries-are-fragments)",
   "holds_now": "[WP47](../plans/wp47-okf-bundle.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7947,7 +7947,7 @@
   "where": "docs/project/review-findings.md:132",
   "date": "",
   "package": "WP48",
-  "decided": "[WP48 omitted sourced arithmetic from its audit](review-items.md#rev-108-wp48-omitted-sourced-arithmetic-from-its-audit)",
+  "decided": "[WP48 omitted sourced arithmetic from its audit](review-archive.md#rev-108-wp48-omitted-sourced-arithmetic-from-its-audit)",
   "holds_now": "[WP48 plan amendment](../plans/wp48-okf-backfill.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7958,7 +7958,7 @@
   "where": "docs/project/review-findings.md:133",
   "date": "",
   "package": "WP48",
-  "decided": "[WP48 omitted version metadata coverage and refusal checks](review-items.md#rev-109-wp48-omitted-version-metadata-coverage-and-refusal-checks)",
+  "decided": "[WP48 omitted version metadata coverage and refusal checks](review-archive.md#rev-109-wp48-omitted-version-metadata-coverage-and-refusal-checks)",
   "holds_now": "[WP48 plan amendment](../plans/wp48-okf-backfill.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7969,7 +7969,7 @@
   "where": "docs/project/review-findings.md:134",
   "date": "",
   "package": "WP48",
-  "decided": "[WP48 lacked an evidence route for historical numerical experiments](review-items.md#rev-110-wp48-lacked-an-evidence-route-for-historical-numerical-experiments)",
+  "decided": "[WP48 lacked an evidence route for historical numerical experiments](review-archive.md#rev-110-wp48-lacked-an-evidence-route-for-historical-numerical-experiments)",
   "holds_now": "[WP48 plan amendment](../plans/wp48-okf-backfill.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -7980,7 +7980,7 @@
   "where": "docs/project/review-findings.md:135",
   "date": "",
   "package": "",
-  "decided": "[The no-MPI-symbols claim is backed only by the lock file](review-items.md#rev-111-the-no-mpi-symbols-claim-is-backed-only-by-the-lock-file)",
+  "decided": "[The no-MPI-symbols claim is backed only by the lock file](review-archive.md#rev-111-the-no-mpi-symbols-claim-is-backed-only-by-the-lock-file)",
   "holds_now": "§8.2.22 X7",
   "status": "fixed",
   "kind": "REV row"
@@ -7991,7 +7991,7 @@
   "where": "docs/project/review-findings.md:136",
   "date": "",
   "package": "WP49",
-  "decided": "[Three suspected costs were never measured](review-items.md#rev-112-three-suspected-costs-were-never-measured)",
+  "decided": "[Three suspected costs were never measured](review-archive.md#rev-112-three-suspected-costs-were-never-measured)",
   "holds_now": "[WP49 plan](../plans/wp49-cost-study.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8002,7 +8002,7 @@
   "where": "docs/project/review-findings.md:137",
   "date": "",
   "package": "WP49",
-  "decided": "[The case schema has no JSON Schema export](review-items.md#rev-113-the-case-schema-has-no-json-schema-export)",
+  "decided": "[The case schema has no JSON Schema export](review-archive.md#rev-113-the-case-schema-has-no-json-schema-export)",
   "holds_now": "[WP49 plan](../plans/wp49-cost-study.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8013,7 +8013,7 @@
   "where": "docs/project/review-findings.md:138",
   "date": "",
   "package": "",
-  "decided": "[The shell moves from Qt to a browser](review-items.md#rev-114-the-shell-moves-from-qt-to-a-browser)",
+  "decided": "[The shell moves from Qt to a browser](review-archive.md#rev-114-the-shell-moves-from-qt-to-a-browser)",
   "holds_now": "§8.2.18 T5",
   "status": "fixed",
   "kind": "REV row"
@@ -8024,7 +8024,7 @@
   "where": "docs/project/review-findings.md:139",
   "date": "",
   "package": "",
-  "decided": "[The architecture review's already-met claims](review-items.md#rev-115-the-architecture-reviews-already-met-claims)",
+  "decided": "[The architecture review's already-met claims](review-archive.md#rev-115-the-architecture-reviews-already-met-claims)",
   "holds_now": "§8.2.12 M1",
   "status": "declined",
   "kind": "REV row"
@@ -8035,7 +8035,7 @@
   "where": "docs/project/review-findings.md:140",
   "date": "",
   "package": "WP60",
-  "decided": "[The cost record predates the harness fixes](review-items.md#rev-116-the-cost-record-predates-the-harness-fixes)",
+  "decided": "[The cost record predates the harness fixes](review-archive.md#rev-116-the-cost-record-predates-the-harness-fixes)",
   "holds_now": "[WP60](../plans/wp60-phase-4-close.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8046,7 +8046,7 @@
   "where": "docs/project/review-findings.md:141",
   "date": "",
   "package": "",
-  "decided": "[Tooling left without tests by the test scope](review-items.md#rev-117-tooling-left-without-tests-by-the-test-scope)",
+  "decided": "[Tooling left without tests by the test scope](review-archive.md#rev-117-tooling-left-without-tests-by-the-test-scope)",
   "holds_now": "—",
   "status": "fixed",
   "kind": "REV row"
@@ -8057,7 +8057,7 @@
   "where": "docs/project/review-findings.md:142",
   "date": "",
   "package": "",
-  "decided": "[Gate and mechanism tests the pruning removed](review-items.md#rev-118-gate-and-mechanism-tests-the-pruning-removed)",
+  "decided": "[Gate and mechanism tests the pruning removed](review-archive.md#rev-118-gate-and-mechanism-tests-the-pruning-removed)",
   "holds_now": "§8.2.13 N1",
   "status": "fixed",
   "kind": "REV row"
@@ -8068,7 +8068,7 @@
   "where": "docs/project/review-findings.md:143",
   "date": "",
   "package": "",
-  "decided": "[The analyte benchmark meshes skip the quality gate](review-items.md#rev-119-the-analyte-benchmark-meshes-skip-the-quality-gate)",
+  "decided": "[The analyte benchmark meshes skip the quality gate](review-archive.md#rev-119-the-analyte-benchmark-meshes-skip-the-quality-gate)",
   "holds_now": "[CODE_REVIEW_010](../code_reviews/CODE_REVIEW_010.md)",
   "status": "declined",
   "kind": "REV row"
@@ -8079,7 +8079,7 @@
   "where": "docs/project/review-findings.md:144",
   "date": "",
   "package": "",
-  "decided": "[The force-traction normal needs one material on the left along the whole surface](review-items.md#rev-120-the-force-traction-normal-needs-one-material-on-the-left-along-the-whole-surface)",
+  "decided": "[The force-traction normal needs one material on the left along the whole surface](review-archive.md#rev-120-the-force-traction-normal-needs-one-material-on-the-left-along-the-whole-surface)",
   "holds_now": "§8.2.22 X6",
   "status": "fixed",
   "kind": "REV row"
@@ -8090,7 +8090,7 @@
   "where": "docs/project/review-findings.md:145",
   "date": "",
   "package": "",
-  "decided": "[Stage 1 checks no axis for a monomeric or hetero-oligomeric pore](review-items.md#rev-121-stage-1-checks-no-axis-for-a-monomeric-or-hetero-oligomeric-pore)",
+  "decided": "[Stage 1 checks no axis for a monomeric or hetero-oligomeric pore](review-archive.md#rev-121-stage-1-checks-no-axis-for-a-monomeric-or-hetero-oligomeric-pore)",
   "holds_now": "§8.2.24 Z5",
   "status": "deferred",
   "kind": "REV row"
@@ -8101,7 +8101,7 @@
   "where": "docs/project/review-findings.md:146",
   "date": "",
   "package": "",
-  "decided": "[A case cannot load a correction file from outside the installed package](review-items.md#rev-122-a-case-cannot-load-a-correction-file-from-outside-the-installed-package)",
+  "decided": "[A case cannot load a correction file from outside the installed package](review-archive.md#rev-122-a-case-cannot-load-a-correction-file-from-outside-the-installed-package)",
   "holds_now": "§8.2.22 X6",
   "status": "fixed",
   "kind": "REV row"
@@ -8112,7 +8112,7 @@
   "where": "docs/project/review-findings.md:147",
   "date": "",
   "package": "",
-  "decided": "[The library has no plotting helpers or notebook display](review-items.md#rev-123-the-library-has-no-plotting-helpers-or-notebook-display)",
+  "decided": "[The library has no plotting helpers or notebook display](review-archive.md#rev-123-the-library-has-no-plotting-helpers-or-notebook-display)",
   "holds_now": "§8.2.14 P6",
   "status": "fixed",
   "kind": "REV row"
@@ -8123,7 +8123,7 @@
   "where": "docs/project/review-findings.md:148",
   "date": "",
   "package": "",
-  "decided": "[The specification's site navigation is listed by hand](review-items.md#rev-124-the-specifications-site-navigation-is-listed-by-hand)",
+  "decided": "[The specification's site navigation is listed by hand](review-archive.md#rev-124-the-specifications-site-navigation-is-listed-by-hand)",
   "holds_now": "[CODE_REVIEW_013](../code_reviews/CODE_REVIEW_013.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8134,7 +8134,7 @@
   "where": "docs/project/review-findings.md:149",
   "date": "",
   "package": "WP53",
-  "decided": "[The workflow files exceed the plan's word caps](review-items.md#rev-125-the-workflow-files-exceed-the-plans-word-caps)",
+  "decided": "[The workflow files exceed the plan's word caps](review-archive.md#rev-125-the-workflow-files-exceed-the-plans-word-caps)",
   "holds_now": "[WP53](../plans/wp53-workflow-commands.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8145,7 +8145,7 @@
   "where": "docs/project/review-findings.md:150",
   "date": "",
   "package": "",
-  "decided": "[Package numbers can collide between the two lanes](review-items.md#rev-126-package-numbers-can-collide-between-the-two-lanes)",
+  "decided": "[Package numbers can collide between the two lanes](review-archive.md#rev-126-package-numbers-can-collide-between-the-two-lanes)",
   "holds_now": "§8.2.17 S16",
   "status": "fixed",
   "kind": "REV row"
@@ -8156,7 +8156,7 @@
   "where": "docs/project/review-findings.md:151",
   "date": "",
   "package": "",
-  "decided": "[WP57 may restate the Qt shell's gating clauses before v0.5.0](review-items.md#rev-127-wp57-may-restate-the-qt-shells-gating-clauses-before-v050)",
+  "decided": "[WP57 may restate the Qt shell's gating clauses before v0.5.0](review-archive.md#rev-127-wp57-may-restate-the-qt-shells-gating-clauses-before-v050)",
   "holds_now": "§8.2.17 S17",
   "status": "fixed",
   "kind": "REV row"
@@ -8167,7 +8167,7 @@
   "where": "docs/project/review-findings.md:152",
   "date": "",
   "package": "",
-  "decided": "[The renumbering list leaves out other identifier kinds and the ruling letters](review-items.md#rev-128-the-renumbering-list-leaves-out-other-identifier-kinds-and-the-ruling-letters)",
+  "decided": "[The renumbering list leaves out other identifier kinds and the ruling letters](review-archive.md#rev-128-the-renumbering-list-leaves-out-other-identifier-kinds-and-the-ruling-letters)",
   "holds_now": "§8.2.17 S18",
   "status": "fixed",
   "kind": "REV row"
@@ -8178,7 +8178,7 @@
   "where": "docs/project/review-findings.md:153",
   "date": "",
   "package": "",
-  "decided": "[WP58's tag and the place of a held changelog entry are undefined](review-items.md#rev-129-wp58s-tag-and-the-place-of-a-held-changelog-entry-are-undefined)",
+  "decided": "[WP58's tag and the place of a held changelog entry are undefined](review-archive.md#rev-129-wp58s-tag-and-the-place-of-a-held-changelog-entry-are-undefined)",
   "holds_now": "§8.2.17 S19",
   "status": "fixed",
   "kind": "REV row"
@@ -8189,7 +8189,7 @@
   "where": "docs/project/review-findings.md:154",
   "date": "",
   "package": "",
-  "decided": "[Nothing checks that identifiers stay unique after both lanes merge](review-items.md#rev-130-nothing-checks-that-identifiers-stay-unique-after-both-lanes-merge)",
+  "decided": "[Nothing checks that identifiers stay unique after both lanes merge](review-archive.md#rev-130-nothing-checks-that-identifiers-stay-unique-after-both-lanes-merge)",
   "holds_now": "§8.2.17 S20",
   "status": "fixed",
   "kind": "REV row"
@@ -8200,7 +8200,7 @@
   "where": "docs/project/review-findings.md:155",
   "date": "",
   "package": "",
-  "decided": "[The charge-level mutator has no library step or tier row](review-items.md#rev-131-the-charge-level-mutator-has-no-library-step-or-tier-row)",
+  "decided": "[The charge-level mutator has no library step or tier row](review-archive.md#rev-131-the-charge-level-mutator-has-no-library-step-or-tier-row)",
   "holds_now": "[Phase 5 plan](../plans/phase-5-workbench.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8211,7 +8211,7 @@
   "where": "docs/project/review-findings.md:156",
   "date": "",
   "package": "",
-  "decided": "[The Phase 5 end-of-phase report names no source for its numbers](review-items.md#rev-132-the-phase-5-end-of-phase-report-names-no-source-for-its-numbers)",
+  "decided": "[The Phase 5 end-of-phase report names no source for its numbers](review-archive.md#rev-132-the-phase-5-end-of-phase-report-names-no-source-for-its-numbers)",
   "holds_now": "[Phase 5 plan](../plans/phase-5-workbench.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8222,7 +8222,7 @@
   "where": "docs/project/review-findings.md:157",
   "date": "",
   "package": "",
-  "decided": "[The Phase 5 plan and the core exceed their word caps](review-items.md#rev-133-the-phase-5-plan-and-the-core-exceed-their-word-caps)",
+  "decided": "[The Phase 5 plan and the core exceed their word caps](review-archive.md#rev-133-the-phase-5-plan-and-the-core-exceed-their-word-caps)",
   "holds_now": "[CODE_REVIEW_015](../code_reviews/CODE_REVIEW_015.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8233,7 +8233,7 @@
   "where": "docs/project/review-findings.md:158",
   "date": "",
   "package": "",
-  "decided": "[The Qt shell's Result tab prints the stored float wrapper, not the number](review-items.md#rev-134-the-qt-shells-result-tab-prints-the-stored-float-wrapper-not-the-number)",
+  "decided": "[The Qt shell's Result tab prints the stored float wrapper, not the number](review-archive.md#rev-134-the-qt-shells-result-tab-prints-the-stored-float-wrapper-not-the-number)",
   "holds_now": "§8.2.19 U1",
   "status": "deferred",
   "kind": "REV row"
@@ -8244,7 +8244,7 @@
   "where": "docs/project/review-findings.md:159",
   "date": "",
   "package": "WP5.03",
-  "decided": "[The density does not see the protonation chosen at the charge stage](review-items.md#rev-135-the-density-does-not-see-the-protonation-chosen-at-the-charge-stage)",
+  "decided": "[The density does not see the protonation chosen at the charge stage](review-archive.md#rev-135-the-density-does-not-see-the-protonation-chosen-at-the-charge-stage)",
   "holds_now": "[WP5.03](../plans/wp5.03-protonation-before-the-density.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8255,7 +8255,7 @@
   "where": "docs/project/review-findings.md:160",
   "date": "",
   "package": "",
-  "decided": "[The organisation round's rulings need library capabilities v0.5 lacks](review-items.md#rev-136-the-organisation-rounds-rulings-need-library-capabilities-v05-lacks)",
+  "decided": "[The organisation round's rulings need library capabilities v0.5 lacks](review-archive.md#rev-136-the-organisation-rounds-rulings-need-library-capabilities-v05-lacks)",
   "holds_now": "§8.2.19 U3; §8.2.31 AG6",
   "status": "accepted",
   "kind": "REV row"
@@ -8266,7 +8266,7 @@
   "where": "docs/project/review-findings.md:161",
   "date": "",
   "package": "WP5.02",
-  "decided": "[No renderer is chosen for the molecule in 3D or for the explorer's controls](review-items.md#rev-137-no-renderer-is-chosen-for-the-molecule-in-3d-or-for-the-explorers-controls)",
+  "decided": "[No renderer is chosen for the molecule in 3D or for the explorer's controls](review-archive.md#rev-137-no-renderer-is-chosen-for-the-molecule-in-3d-or-for-the-explorers-controls)",
   "holds_now": "[WP5.02](../plans/wp5.02-framework-spike.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8277,7 +8277,7 @@
   "where": "docs/project/review-findings.md:162",
   "date": "",
   "package": "WP5.02",
-  "decided": "[The render check measures text contrast but not the contrast of controls and graphics](review-items.md#rev-138-the-render-check-measures-text-contrast-but-not-the-contrast-of-controls-and-graphics)",
+  "decided": "[The render check measures text contrast but not the contrast of controls and graphics](review-archive.md#rev-138-the-render-check-measures-text-contrast-but-not-the-contrast-of-controls-and-graphics)",
   "holds_now": "[WP5.02](../plans/wp5.02-framework-spike.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8288,7 +8288,7 @@
   "where": "docs/project/review-findings.md:163",
   "date": "",
   "package": "WP5.07",
-  "decided": "[The sweep needs a design round: any value, user-defined variables, rebuilds detected](review-items.md#rev-139-the-sweep-needs-a-design-round-any-value-user-defined-variables-rebuilds-detected)",
+  "decided": "[The sweep needs a design round: any value, user-defined variables, rebuilds detected](review-archive.md#rev-139-the-sweep-needs-a-design-round-any-value-user-defined-variables-rebuilds-detected)",
   "holds_now": "[WP5.07](../plans/wp5.07-variables-and-the-rebuild-forecast.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8299,7 +8299,7 @@
   "where": "docs/project/review-findings.md:164",
   "date": "",
   "package": "",
-  "decided": "[Two of the author's marks on the mockups ask what is not yet said](review-items.md#rev-140-two-of-the-authors-marks-on-the-mockups-ask-what-is-not-yet-said)",
+  "decided": "[Two of the author's marks on the mockups ask what is not yet said](review-archive.md#rev-140-two-of-the-authors-marks-on-the-mockups-ask-what-is-not-yet-said)",
   "holds_now": "§8.2.18 T6, T7",
   "status": "fixed",
   "kind": "REV row"
@@ -8310,7 +8310,7 @@
   "where": "docs/project/review-findings.md:165",
   "date": "",
   "package": "WP5.02",
-  "decided": "[CON-08 and CON-11 name a bundle and a desktop path the browser shell removes](review-items.md#rev-141-con-08-and-con-11-name-a-bundle-and-a-desktop-path-the-browser-shell-removes)",
+  "decided": "[CON-08 and CON-11 name a bundle and a desktop path the browser shell removes](review-archive.md#rev-141-con-08-and-con-11-name-a-bundle-and-a-desktop-path-the-browser-shell-removes)",
   "holds_now": "[WP5.02](../plans/wp5.02-framework-spike.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8321,7 +8321,7 @@
   "where": "docs/project/review-findings.md:166",
   "date": "",
   "package": "",
-  "decided": "[FR-38 drops the charge and radius edits of the charge-level mutator](review-items.md#rev-142-fr-38-drops-the-charge-and-radius-edits-of-the-charge-level-mutator)",
+  "decided": "[FR-38 drops the charge and radius edits of the charge-level mutator](review-archive.md#rev-142-fr-38-drops-the-charge-and-radius-edits-of-the-charge-level-mutator)",
   "holds_now": "§8.2.19 U6",
   "status": "fixed",
   "kind": "REV row"
@@ -8332,7 +8332,7 @@
   "where": "docs/project/review-findings.md:167",
   "date": "",
   "package": "WP5.02",
-  "decided": "[The light theme's control edge is under 3:1 on a selected row](review-items.md#rev-143-the-light-themes-control-edge-is-under-31-on-a-selected-row)",
+  "decided": "[The light theme's control edge is under 3:1 on a selected row](review-archive.md#rev-143-the-light-themes-control-edge-is-under-31-on-a-selected-row)",
   "holds_now": "[WP5.02](../plans/wp5.02-framework-spike.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8343,7 +8343,7 @@
   "where": "docs/project/review-findings.md:168",
   "date": "",
   "package": "",
-  "decided": "[Case.cylinder takes a charge field, not a uniform wall surface charge](review-items.md#rev-144-casecylinder-takes-a-charge-field-not-a-uniform-wall-surface-charge)",
+  "decided": "[Case.cylinder takes a charge field, not a uniform wall surface charge](review-archive.md#rev-144-casecylinder-takes-a-charge-field-not-a-uniform-wall-surface-charge)",
   "holds_now": "§8.2.22 X3",
   "status": "fixed",
   "kind": "REV row"
@@ -8354,7 +8354,7 @@
   "where": "docs/project/review-findings.md:169",
   "date": "",
   "package": "",
-  "decided": "[No case builders by section before Phase 5](review-items.md#rev-145-no-case-builders-by-section-before-phase-5)",
+  "decided": "[No case builders by section before Phase 5](review-archive.md#rev-145-no-case-builders-by-section-before-phase-5)",
   "holds_now": "§8.2.21 W7; §8.2.23 Y2",
   "status": "fixed",
   "kind": "REV row"
@@ -8365,7 +8365,7 @@
   "where": "docs/project/review-findings.md:170",
   "date": "",
   "package": "",
-  "decided": "[The cylinder's default wall size is coarser than NUM-30's first layer](review-items.md#rev-146-the-cylinders-default-wall-size-is-coarser-than-num-30s-first-layer)",
+  "decided": "[The cylinder's default wall size is coarser than NUM-30's first layer](review-archive.md#rev-146-the-cylinders-default-wall-size-is-coarser-than-num-30s-first-layer)",
   "holds_now": "§8.2.20 V9",
   "status": "fixed",
   "kind": "REV row"
@@ -8376,7 +8376,7 @@
   "where": "docs/project/review-findings.md:171",
   "date": "",
   "package": "",
-  "decided": "[The lumen window is fixed, not read from the region](review-items.md#rev-147-the-lumen-window-is-fixed-not-read-from-the-region)",
+  "decided": "[The lumen window is fixed, not read from the region](review-archive.md#rev-147-the-lumen-window-is-fixed-not-read-from-the-region)",
   "holds_now": "§8.2.20 V16",
   "status": "fixed",
   "kind": "REV row"
@@ -8387,7 +8387,7 @@
   "where": "docs/project/review-findings.md:172",
   "date": "",
   "package": "",
-  "decided": "[A concentration panel's bulk is the case's salt for every species](review-items.md#rev-148-a-concentration-panels-bulk-is-the-cases-salt-for-every-species)",
+  "decided": "[A concentration panel's bulk is the case's salt for every species](review-archive.md#rev-148-a-concentration-panels-bulk-is-the-cases-salt-for-every-species)",
   "holds_now": "§8.2.20 V16",
   "status": "fixed",
   "kind": "REV row"
@@ -8409,7 +8409,7 @@
   "where": "docs/project/review-findings.md:174",
   "date": "",
   "package": "",
-  "decided": "[`wall_h_nm=\"debye\"` is not capped at NUM-30's 0.05 nm ceiling](review-items.md#rev-150-wall_h_nmdebye-is-not-capped-at-num-30s-005-nm-ceiling)",
+  "decided": "[`wall_h_nm=\"debye\"` is not capped at NUM-30's 0.05 nm ceiling](review-archive.md#rev-150-wall_h_nmdebye-is-not-capped-at-num-30s-005-nm-ceiling)",
   "holds_now": "§8.2.20 V14",
   "status": "fixed",
   "kind": "REV row"
@@ -8431,7 +8431,7 @@
   "where": "docs/project/review-findings.md:176",
   "date": "",
   "package": "",
-  "decided": "[WP54 review items: cache key, restores, duplicated helpers, edge cases](review-items.md#rev-152-wp54-review-items-cache-key-restores-duplicated-helpers-edge-cases)",
+  "decided": "[WP54 review items: cache key, restores, duplicated helpers, edge cases](review-archive.md#rev-152-wp54-review-items-cache-key-restores-duplicated-helpers-edge-cases)",
   "holds_now": "§8.2.20 V17",
   "status": "fixed",
   "kind": "REV row"
@@ -8442,7 +8442,7 @@
   "where": "docs/project/review-findings.md:177",
   "date": "",
   "package": "",
-  "decided": "[Latent gaps the second WP54 review left: the bulk's source, the Debye length twice, two hand-kept lists](review-items.md#rev-153-latent-gaps-the-second-wp54-review-left-the-bulks-source-the-debye-length-twice-two-hand-…",
+  "decided": "[Latent gaps the second WP54 review left: the bulk's source, the Debye length twice, two hand-kept lists](review-archive.md#rev-153-latent-gaps-the-second-wp54-review-left-the-bulks-source-the-debye-length-twice-two-hand-…",
   "holds_now": "§8.2.22 X6",
   "status": "fixed",
   "kind": "REV row"
@@ -8453,7 +8453,7 @@
   "where": "docs/project/review-findings.md:178",
   "date": "",
   "package": "",
-  "decided": "[NUM-34's refusal names a setting that a supplied mesh ignores](review-items.md#rev-154-num-34s-refusal-names-a-setting-that-a-supplied-mesh-ignores)",
+  "decided": "[NUM-34's refusal names a setting that a supplied mesh ignores](review-archive.md#rev-154-num-34s-refusal-names-a-setting-that-a-supplied-mesh-ignores)",
   "holds_now": "§8.2.21 W5",
   "status": "fixed",
   "kind": "REV row"
@@ -8464,7 +8464,7 @@
   "where": "docs/project/review-findings.md:179",
   "date": "",
   "package": "",
-  "decided": "[WP55 review items the author rules on: the rectification claim's source, session 04's variation, a duplicated parser](review-items.md#rev-155-wp55-review-items-the-author-rules-on-the-rectification-claims-source-sessio…",
+  "decided": "[WP55 review items the author rules on: the rectification claim's source, session 04's variation, a duplicated parser](review-archive.md#rev-155-wp55-review-items-the-author-rules-on-the-rectification-claims-source-sessio…",
   "holds_now": "§8.2.22 X6, X8",
   "status": "fixed",
   "kind": "REV row"
@@ -8486,7 +8486,7 @@
   "where": "docs/project/review-findings.md:181",
   "date": "",
   "package": "",
-  "decided": "[WP56 review items left open: the last rung's time, two readers of a run directory, the manifest read twice](review-items.md#rev-157-wp56-review-items-left-open-the-last-rungs-time-two-readers-of-a-run-directory-the-man…",
+  "decided": "[WP56 review items left open: the last rung's time, two readers of a run directory, the manifest read twice](review-archive.md#rev-157-wp56-review-items-left-open-the-last-rungs-time-two-readers-of-a-run-directory-the-man…",
   "holds_now": "§8.2.22 X6",
   "status": "fixed",
   "kind": "REV row"
@@ -8497,7 +8497,7 @@
   "where": "docs/project/review-findings.md:182",
   "date": "",
   "package": "",
-  "decided": "[A correction file named by path puts its absolute path in the stage-8 and stage-10 keys](review-items.md#rev-158-a-correction-file-named-by-path-puts-its-absolute-path-in-the-stage-8-and-stage-10-keys)",
+  "decided": "[A correction file named by path puts its absolute path in the stage-8 and stage-10 keys](review-archive.md#rev-158-a-correction-file-named-by-path-puts-its-absolute-path-in-the-stage-8-and-stage-10-keys)",
   "holds_now": "[CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8508,7 +8508,7 @@
   "where": "docs/project/review-findings.md:183",
   "date": "",
   "package": "",
-  "decided": "[Three in-memory routes read a relative path against the working directory, not beside the case](review-items.md#rev-159-three-in-memory-routes-read-a-relative-path-against-the-working-directory-not-beside-the-case)",
+  "decided": "[Three in-memory routes read a relative path against the working directory, not beside the case](review-archive.md#rev-159-three-in-memory-routes-read-a-relative-path-against-the-working-directory-not-beside-the-case)",
   "holds_now": "[CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8519,7 +8519,7 @@
   "where": "docs/project/review-findings.md:184",
   "date": "",
   "package": "",
-  "decided": "[StageInputs.options is unreachable, so three QoI settings and their deviation are dead](review-items.md#rev-160-stageinputsoptions-is-unreachable-so-three-qoi-settings-and-their-deviation-are-dead)",
+  "decided": "[StageInputs.options is unreachable, so three QoI settings and their deviation are dead](review-archive.md#rev-160-stageinputsoptions-is-unreachable-so-three-qoi-settings-and-their-deviation-are-dead)",
   "holds_now": "[CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8530,7 +8530,7 @@
   "where": "docs/project/review-findings.md:185",
   "date": "",
   "package": "",
-  "decided": "[The manifest records a null hash for a correction file it cannot find](review-items.md#rev-161-the-manifest-records-a-null-hash-for-a-correction-file-it-cannot-find)",
+  "decided": "[The manifest records a null hash for a correction file it cannot find](review-archive.md#rev-161-the-manifest-records-a-null-hash-for-a-correction-file-it-cannot-find)",
   "holds_now": "[CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8541,7 +8541,7 @@
   "where": "docs/project/review-findings.md:186",
   "date": "",
   "package": "",
-  "decided": "[The wall surface charge's sign is written at four sites; Grahame's sigma and the sigma scale twice each](review-items.md#rev-162-the-wall-surface-charges-sign-is-written-at-four-sites-grahames-sigma-and-the-sigma-scale…",
+  "decided": "[The wall surface charge's sign is written at four sites; Grahame's sigma and the sigma scale twice each](review-archive.md#rev-162-the-wall-surface-charges-sign-is-written-at-four-sites-grahames-sigma-and-the-sigma-scale…",
   "holds_now": "[CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8552,7 +8552,7 @@
   "where": "docs/project/review-findings.md:187",
   "date": "",
   "package": "",
-  "decided": "[check_force_surface refuses a legitimate body straddling the lumen and reservoir seam](review-items.md#rev-163-check_force_surface-refuses-a-legitimate-body-straddling-the-lumen-and-reservoir-seam)",
+  "decided": "[check_force_surface refuses a legitimate body straddling the lumen and reservoir seam](review-archive.md#rev-163-check_force_surface-refuses-a-legitimate-body-straddling-the-lumen-and-reservoir-seam)",
   "holds_now": "[CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8563,7 +8563,7 @@
   "where": "docs/project/review-findings.md:188",
   "date": "",
   "package": "",
-  "decided": "[default_ladder accepts a zeta-Dirichlet wall and a sigma_s wall together with no diagnostic](review-items.md#rev-164-default_ladder-accepts-a-zeta-dirichlet-wall-and-a-sigma_s-wall-together-with-no-diagnostic)",
+  "decided": "[default_ladder accepts a zeta-Dirichlet wall and a sigma_s wall together with no diagnostic](review-archive.md#rev-164-default_ladder-accepts-a-zeta-dirichlet-wall-and-a-sigma_s-wall-together-with-no-diagnostic)",
   "holds_now": "[CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8574,7 +8574,7 @@
   "where": "docs/project/review-findings.md:189",
   "date": "",
   "package": "",
-  "decided": "[The Gauss-balance test's own quadrature error is not bounded against the physics bound it resolves](review-items.md#rev-165-the-gauss-balance-tests-own-quadrature-error-is-not-bounded-against-the-physics-bound-it-resol…",
+  "decided": "[The Gauss-balance test's own quadrature error is not bounded against the physics bound it resolves](review-archive.md#rev-165-the-gauss-balance-tests-own-quadrature-error-is-not-bounded-against-the-physics-bound-it-resol…",
   "holds_now": "[CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8618,7 +8618,7 @@
   "where": "docs/project/review-findings.md:193",
   "date": "",
   "package": "WP59",
-  "decided": "[The Phase-1 reference sweep's base case writes its mesh path against the working directory](review-items.md#rev-169-the-phase-1-reference-sweeps-base-case-writes-its-mesh-path-against-the-working-directory)",
+  "decided": "[The Phase-1 reference sweep's base case writes its mesh path against the working directory](review-archive.md#rev-169-the-phase-1-reference-sweeps-base-case-writes-its-mesh-path-against-the-working-directory)",
   "holds_now": "[WP59](../plans/wp59-architecture-review-fixes.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8629,7 +8629,7 @@
   "where": "docs/project/review-findings.md:194",
   "date": "",
   "package": "",
-  "decided": "[Five callers pick the stage-5 region's kind](review-items.md#rev-170-five-callers-pick-the-stage-5-regions-kind)",
+  "decided": "[Five callers pick the stage-5 region's kind](review-archive.md#rev-170-five-callers-pick-the-stage-5-regions-kind)",
   "holds_now": "§8.2.28 AD4; §8.2.31 AG1",
   "status": "accepted",
   "kind": "REV row"
@@ -8651,7 +8651,7 @@
   "where": "docs/project/review-findings.md:196",
   "date": "",
   "package": "",
-  "decided": "[A non-finite trial residual at minimum damping is reported before the state gates name its location](review-items.md#rev-172-a-non-finite-trial-residual-at-minimum-damping-is-reported-before-the-state-gates-name-its-lo…",
+  "decided": "[A non-finite trial residual at minimum damping is reported before the state gates name its location](review-archive.md#rev-172-a-non-finite-trial-residual-at-minimum-damping-is-reported-before-the-state-gates-name-its-lo…",
   "holds_now": "[CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8662,7 +8662,7 @@
   "where": "docs/project/review-findings.md:197",
   "date": "",
   "package": "",
-  "decided": "[Plotting a run reads its record twice through the session](review-items.md#rev-173-plotting-a-run-reads-its-record-twice-through-the-session)",
+  "decided": "[Plotting a run reads its record twice through the session](review-archive.md#rev-173-plotting-a-run-reads-its-record-twice-through-the-session)",
   "holds_now": "[CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8673,7 +8673,7 @@
   "where": "docs/project/review-findings.md:198",
   "date": "",
   "package": "WP5.02",
-  "decided": "[The command line names the workbench's server by string](review-items.md#rev-174-the-command-line-names-the-workbenchs-server-by-string)",
+  "decided": "[The command line names the workbench's server by string](review-archive.md#rev-174-the-command-line-names-the-workbenchs-server-by-string)",
   "holds_now": "[WP5.02](../plans/wp5.02-framework-spike.md)",
   "status": "fixed",
   "kind": "REV row"
@@ -8684,7 +8684,7 @@
   "where": "docs/project/review-findings.md:199",
   "date": "",
   "package": "WP5.02",
-  "decided": "[pdb2pqr 3.8 is not read, and 3.7.1 pins docutils against the gui extra](review-items.md#rev-175-pdb2pqr-38-is-not-read-and-371-pins-docutils-against-the-gui-extra)",
+  "decided": "[pdb2pqr 3.8 is not read, and 3.7.1 pins docutils against the gui extra](review-archive.md#rev-175-pdb2pqr-38-is-not-read-and-371-pins-docutils-against-the-gui-extra)",
   "holds_now": "WP5.02",
   "status": "fixed",
   "kind": "REV row"
@@ -8695,7 +8695,7 @@
   "where": "docs/project/review-findings.md:200",
   "date": "",
   "package": "WP5.02",
-  "decided": "[The design mockups fail the non-text contrast measure](review-items.md#rev-176-the-design-mockups-fail-the-non-text-contrast-measure)",
+  "decided": "[The design mockups fail the non-text contrast measure](review-archive.md#rev-176-the-design-mockups-fail-the-non-text-contrast-measure)",
   "holds_now": "WP5.02",
   "status": "fixed",
   "kind": "REV row"
@@ -8706,7 +8706,7 @@
   "where": "docs/project/review-findings.md:201",
   "date": "",
   "package": "WP5.02",
-  "decided": "[The workbench's link failures end the server at startup](review-items.md#rev-177-the-workbenchs-link-failures-end-the-server-at-startup)",
+  "decided": "[The workbench's link failures end the server at startup](review-archive.md#rev-177-the-workbenchs-link-failures-end-the-server-at-startup)",
   "holds_now": "WP5.02",
   "status": "fixed",
   "kind": "REV row"
@@ -8717,7 +8717,7 @@
   "where": "docs/project/review-findings.md:202",
   "date": "",
   "package": "WP5.02",
-  "decided": "[The selected-fill measure does not read the strip's pressed item](review-items.md#rev-178-the-selected-fill-measure-does-not-read-the-strips-pressed-item)",
+  "decided": "[The selected-fill measure does not read the strip's pressed item](review-archive.md#rev-178-the-selected-fill-measure-does-not-read-the-strips-pressed-item)",
   "holds_now": "WP5.02",
   "status": "fixed",
   "kind": "REV row"
@@ -8728,7 +8728,7 @@
   "where": "docs/project/review-findings.md:203",
   "date": "",
   "package": "WP5.02",
-  "decided": "[`nanopnp gui` has no smoke test and takes no common flags](review-items.md#rev-179-nanopnp-gui-has-no-smoke-test-and-takes-no-common-flags)",
+  "decided": "[`nanopnp gui` has no smoke test and takes no common flags](review-archive.md#rev-179-nanopnp-gui-has-no-smoke-test-and-takes-no-common-flags)",
   "holds_now": "WP5.02",
   "status": "fixed",
   "kind": "REV row"
@@ -8783,7 +8783,7 @@
   "where": "docs/project/review-findings.md:208",
   "date": "",
   "package": "WP5.04",
-  "decided": "[Stage 4's probe-radius gate ignores a `charge.edits` radius scale](review-items.md#rev-184-stage-4s-probe-radius-gate-ignores-a-chargeedits-radius-scale)",
+  "decided": "[Stage 4's probe-radius gate ignores a `charge.edits` radius scale](review-archive.md#rev-184-stage-4s-probe-radius-gate-ignores-a-chargeedits-radius-scale)",
   "holds_now": "WP5.04 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8794,7 +8794,7 @@
   "where": "docs/project/review-findings.md:209",
   "date": "",
   "package": "WP5.04",
-  "decided": "[A charge-only edit moves stage 2's key and rebuilds the mesh](review-items.md#rev-185-a-charge-only-edit-moves-stage-2s-key-and-rebuilds-the-mesh)",
+  "decided": "[A charge-only edit moves stage 2's key and rebuilds the mesh](review-archive.md#rev-185-a-charge-only-edit-moves-stage-2s-key-and-rebuilds-the-mesh)",
   "holds_now": "WP5.04 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8816,7 +8816,7 @@
   "where": "docs/project/review-findings.md:211",
   "date": "",
   "package": "WP5.05",
-  "decided": "[A study that drops a mixed block writes a study form it cannot read](review-items.md#rev-187-a-study-that-drops-a-mixed-block-writes-a-study-form-it-cannot-read)",
+  "decided": "[A study that drops a mixed block writes a study form it cannot read](review-archive.md#rev-187-a-study-that-drops-a-mixed-block-writes-a-study-form-it-cannot-read)",
   "holds_now": "WP5.05 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8827,7 +8827,7 @@
   "where": "docs/project/review-findings.md:212",
   "date": "",
   "package": "WP5.05",
-  "decided": "[The COMSOL comparison keys a stored mesh without a store](review-items.md#rev-188-the-comsol-comparison-keys-a-stored-mesh-without-a-store)",
+  "decided": "[The COMSOL comparison keys a stored mesh without a store](review-archive.md#rev-188-the-comsol-comparison-keys-a-stored-mesh-without-a-store)",
   "holds_now": "WP5.05 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8838,7 +8838,7 @@
   "where": "docs/project/review-findings.md:213",
   "date": "",
   "package": "WP5.05",
-  "decided": "[A relative model path reads beside the study in `with_`, and against the working directory in `plan_sweep`](review-items.md#rev-189-a-relative-model-path-reads-beside-the-study-in-with_-and-against-the-working-director…",
+  "decided": "[A relative model path reads beside the study in `with_`, and against the working directory in `plan_sweep`](review-archive.md#rev-189-a-relative-model-path-reads-beside-the-study-in-with_-and-against-the-working-director…",
   "holds_now": "WP5.05 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8849,7 +8849,7 @@
   "where": "docs/project/review-findings.md:214",
   "date": "",
   "package": "WP5.05",
-  "decided": "[`CaseDocument` equality counts `models` and the model record](review-items.md#rev-190-casedocument-equality-counts-models-and-the-model-record)",
+  "decided": "[`CaseDocument` equality counts `models` and the model record](review-archive.md#rev-190-casedocument-equality-counts-models-and-the-model-record)",
   "holds_now": "WP5.05 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8860,7 +8860,7 @@
   "where": "docs/project/review-findings.md:215",
   "date": "",
   "package": "WP5.05",
-  "decided": "[A stored generated mesh skips the field-frame check](review-items.md#rev-191-a-stored-generated-mesh-skips-the-field-frame-check)",
+  "decided": "[A stored generated mesh skips the field-frame check](review-archive.md#rev-191-a-stored-generated-mesh-skips-the-field-frame-check)",
   "holds_now": "WP5.05 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8871,7 +8871,7 @@
   "where": "docs/project/review-findings.md:216",
   "date": "",
   "package": "WP5.05",
-  "decided": "[A run on a stored mesh records the generating case's Debye sizing](review-items.md#rev-192-a-run-on-a-stored-mesh-records-the-generating-cases-debye-sizing)",
+  "decided": "[A run on a stored mesh records the generating case's Debye sizing](review-archive.md#rev-192-a-run-on-a-stored-mesh-records-the-generating-cases-debye-sizing)",
   "holds_now": "WP5.05 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8882,7 +8882,7 @@
   "where": "docs/project/review-findings.md:217",
   "date": "",
   "package": "WP5.06",
-  "decided": "[An output that needs nothing and extracts is skipped for a model with no transport](review-items.md#rev-193-an-output-that-needs-nothing-and-extracts-is-skipped-for-a-model-with-no-transport)",
+  "decided": "[An output that needs nothing and extracts is skipped for a model with no transport](review-archive.md#rev-193-an-output-that-needs-nothing-and-extracts-is-skipped-for-a-model-with-no-transport)",
   "holds_now": "WP5.06 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8893,7 +8893,7 @@
   "where": "docs/project/review-findings.md:218",
   "date": "",
   "package": "WP5.06",
-  "decided": "[A registered steric form or output enters the key by name only](review-items.md#rev-194-a-registered-steric-form-or-output-enters-the-key-by-name-only)",
+  "decided": "[A registered steric form or output enters the key by name only](review-archive.md#rev-194-a-registered-steric-form-or-output-enters-the-key-by-name-only)",
   "holds_now": "WP5.06 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8904,7 +8904,7 @@
   "where": "docs/project/review-findings.md:219",
   "date": "",
   "package": "WP5.06",
-  "decided": "[The manufactured source builds the Borukhov flux whatever steric model is named](review-items.md#rev-195-the-manufactured-source-builds-the-borukhov-flux-whatever-steric-model-is-named)",
+  "decided": "[The manufactured source builds the Borukhov flux whatever steric model is named](review-archive.md#rev-195-the-manufactured-source-builds-the-borukhov-flux-whatever-steric-model-is-named)",
   "holds_now": "WP5.06 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8915,7 +8915,7 @@
   "where": "docs/project/review-findings.md:220",
   "date": "",
   "package": "WP5.06",
-  "decided": "[The case JSON Schema no longer lists the steric models and the outputs](review-items.md#rev-196-the-case-json-schema-no-longer-lists-the-steric-models-and-the-outputs)",
+  "decided": "[The case JSON Schema no longer lists the steric models and the outputs](review-archive.md#rev-196-the-case-json-schema-no-longer-lists-the-steric-models-and-the-outputs)",
   "holds_now": "WP5.06 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8926,7 +8926,7 @@
   "where": "docs/project/review-findings.md:221",
   "date": "",
   "package": "WP5.07",
-  "decided": "[Rectification does not pair a bias set through a variable](review-items.md#rev-197-rectification-does-not-pair-a-bias-set-through-a-variable)",
+  "decided": "[Rectification does not pair a bias set through a variable](review-archive.md#rev-197-rectification-does-not-pair-a-bias-set-through-a-variable)",
   "holds_now": "WP5.07; WP5.19",
   "status": "accepted",
   "kind": "REV row"
@@ -8937,7 +8937,7 @@
   "where": "docs/project/review-findings.md:222",
   "date": "",
   "package": "WP5.07",
-  "decided": "[A sweep plan is not tied to the variables as written](review-items.md#rev-198-a-sweep-plan-is-not-tied-to-the-variables-as-written)",
+  "decided": "[A sweep plan is not tied to the variables as written](review-archive.md#rev-198-a-sweep-plan-is-not-tied-to-the-variables-as-written)",
   "holds_now": "WP5.07 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8948,7 +8948,7 @@
   "where": "docs/project/review-findings.md:223",
   "date": "",
   "package": "WP5.07",
-  "decided": "[The sweep forecast resolves every point again](review-items.md#rev-199-the-sweep-forecast-resolves-every-point-again)",
+  "decided": "[The sweep forecast resolves every point again](review-archive.md#rev-199-the-sweep-forecast-resolves-every-point-again)",
   "holds_now": "WP5.07 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8959,7 +8959,7 @@
   "where": "docs/project/review-findings.md:224",
   "date": "",
   "package": "WP5.07",
-  "decided": "[A second type repeats the variable resolution](review-items.md#rev-200-a-second-type-repeats-the-variable-resolution)",
+  "decided": "[A second type repeats the variable resolution](review-archive.md#rev-200-a-second-type-repeats-the-variable-resolution)",
   "holds_now": "WP5.07 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8970,7 +8970,7 @@
   "where": "docs/project/review-findings.md:225",
   "date": "",
   "package": "WP5.07",
-  "decided": "[`sweep plan --json` drops the reason a forecast could not be made, and the case JSON Schema does not describe variables](review-items.md#rev-201-sweep-plan-json-drops-the-reason-a-forecast-could-not-be-made-and-the-cas…",
+  "decided": "[`sweep plan --json` drops the reason a forecast could not be made, and the case JSON Schema does not describe variables](review-archive.md#rev-201-sweep-plan-json-drops-the-reason-a-forecast-could-not-be-made-and-the-cas…",
   "holds_now": "WP5.07 review",
   "status": "fixed",
   "kind": "REV row"
@@ -8981,7 +8981,7 @@
   "where": "docs/project/review-findings.md:226",
   "date": "",
   "package": "WP5.08",
-  "decided": "[The problems list leads to a suite, not to the field, and the suites' tools are not built](review-items.md#rev-202-the-problems-list-leads-to-a-suite-not-to-the-field-and-the-suites-tools-are-not-built)",
+  "decided": "[The problems list leads to a suite, not to the field, and the suites' tools are not built](review-archive.md#rev-202-the-problems-list-leads-to-a-suite-not-to-the-field-and-the-suites-tools-are-not-built)",
   "holds_now": "WP5.08 review",
   "status": "deferred",
   "kind": "REV row"
@@ -8992,7 +8992,7 @@
   "where": "docs/project/review-findings.md:227",
   "date": "",
   "package": "WP5.08",
-  "decided": "[The frame's accessibility and layout limits](review-items.md#rev-203-the-frames-accessibility-and-layout-limits)",
+  "decided": "[The frame's accessibility and layout limits](review-archive.md#rev-203-the-frames-accessibility-and-layout-limits)",
   "holds_now": "WP5.08 review",
   "status": "deferred",
   "kind": "REV row"
@@ -9003,7 +9003,7 @@
   "where": "docs/project/review-findings.md:228",
   "date": "",
   "package": "WP5.08",
-  "decided": "[The settings and the changed list lack some guards and units](review-items.md#rev-204-the-settings-and-the-changed-list-lack-some-guards-and-units)",
+  "decided": "[The settings and the changed list lack some guards and units](review-archive.md#rev-204-the-settings-and-the-changed-list-lack-some-guards-and-units)",
   "holds_now": "WP5.08 review",
   "status": "deferred",
   "kind": "REV row"
@@ -9014,7 +9014,7 @@
   "where": "docs/project/review-findings.md:229",
   "date": "",
   "package": "WP5.08",
-  "decided": "[The Study page shows fixture names, and the charge screen lacks a colour bar and axes](review-items.md#rev-205-the-study-page-shows-fixture-names-and-the-charge-screen-lacks-a-colour-bar-and-axes)",
+  "decided": "[The Study page shows fixture names, and the charge screen lacks a colour bar and axes](review-archive.md#rev-205-the-study-page-shows-fixture-names-and-the-charge-screen-lacks-a-colour-bar-and-axes)",
   "holds_now": "WP5.08 review",
   "status": "deferred",
   "kind": "REV row"
@@ -9025,7 +9025,7 @@
   "where": "docs/project/review-findings.md:230",
   "date": "",
   "package": "WP5.08",
-  "decided": "[An exported project can lose a result file of the same name, and keeps the run record's old paths](review-items.md#rev-206-an-exported-project-can-lose-a-result-file-of-the-same-name-and-keeps-the-run-records-old-paths)",
+  "decided": "[An exported project can lose a result file of the same name, and keeps the run record's old paths](review-archive.md#rev-206-an-exported-project-can-lose-a-result-file-of-the-same-name-and-keeps-the-run-records-old-paths)",
   "holds_now": "WP5.08 review",
   "status": "deferred",
   "kind": "REV row"
@@ -9036,7 +9036,7 @@
   "where": "docs/project/review-findings.md:231",
   "date": "",
   "package": "WP5.08",
-  "decided": "[The frame writes the layout on every drag step, rereads the theme files, and keeps its dialogs](review-items.md#rev-207-the-frame-writes-the-layout-on-every-drag-step-rereads-the-theme-files-and-keeps-its-dialogs)",
+  "decided": "[The frame writes the layout on every drag step, rereads the theme files, and keeps its dialogs](review-archive.md#rev-207-the-frame-writes-the-layout-on-every-drag-step-rereads-the-theme-files-and-keeps-its-dialogs)",
   "holds_now": "WP5.08 review",
   "status": "deferred",
   "kind": "REV row"
@@ -9047,7 +9047,7 @@
   "where": "docs/project/review-findings.md:232",
   "date": "",
   "package": "WP5.08",
-  "decided": "[The palette finds commands by title only, has no active row, and lists commands that cannot run](review-items.md#rev-208-the-palette-finds-commands-by-title-only-has-no-active-row-and-lists-commands-that-cannot-run)",
+  "decided": "[The palette finds commands by title only, has no active row, and lists commands that cannot run](review-archive.md#rev-208-the-palette-finds-commands-by-title-only-has-no-active-row-and-lists-commands-that-cannot-run)",
   "holds_now": "WP5.08 review",
   "status": "deferred",
   "kind": "REV row"
@@ -9058,7 +9058,7 @@
   "where": "docs/project/review-findings.md:233",
   "date": "",
   "package": "WP5.08",
-  "decided": "[The charge screen in the frame shows a link where none exists, and its map ignores the dark theme](review-items.md#rev-209-the-charge-screen-in-the-frame-shows-a-link-where-none-exists-and-its-map-ignores-the-dark-them…",
+  "decided": "[The charge screen in the frame shows a link where none exists, and its map ignores the dark theme](review-archive.md#rev-209-the-charge-screen-in-the-frame-shows-a-link-where-none-exists-and-its-map-ignores-the-dark-them…",
   "holds_now": "WP5.08 review",
   "status": "deferred",
   "kind": "REV row"
@@ -9069,7 +9069,7 @@
   "where": "docs/project/review-findings.md:234",
   "date": "",
   "package": "WP5.08",
-  "decided": "[The frame lacks icons, headings and some states in the render set](review-items.md#rev-210-the-frame-lacks-icons-headings-and-some-states-in-the-render-set)",
+  "decided": "[The frame lacks icons, headings and some states in the render set](review-archive.md#rev-210-the-frame-lacks-icons-headings-and-some-states-in-the-render-set)",
   "holds_now": "WP5.08 review",
   "status": "deferred",
   "kind": "REV row"
@@ -9080,7 +9080,7 @@
   "where": "docs/project/review-findings.md:235",
   "date": "",
   "package": "WP5.08",
-  "decided": "[The palette opens as a full command list, not a bare input that suggests as you type](review-items.md#rev-211-the-palette-opens-as-a-full-command-list-not-a-bare-input-that-suggests-as-you-type)",
+  "decided": "[The palette opens as a full command list, not a bare input that suggests as you type](review-archive.md#rev-211-the-palette-opens-as-a-full-command-list-not-a-bare-input-that-suggests-as-you-type)",
   "holds_now": "WP5.08 verdicts",
   "status": "deferred",
   "kind": "REV row"
@@ -9091,7 +9091,7 @@
   "where": "docs/project/review-findings.md:236",
   "date": "",
   "package": "WP5.08",
-  "decided": "[The settings need a searchable section list beside the panel, and which settings exist is undecided](review-items.md#rev-212-the-settings-need-a-searchable-section-list-beside-the-panel-and-which-settings-exist-is-unde…",
+  "decided": "[The settings need a searchable section list beside the panel, and which settings exist is undecided](review-archive.md#rev-212-the-settings-need-a-searchable-section-list-beside-the-panel-and-which-settings-exist-is-unde…",
   "holds_now": "WP5.08 verdicts",
   "status": "deferred",
   "kind": "REV row"
@@ -9102,7 +9102,7 @@
   "where": "docs/project/review-findings.md:237",
   "date": "",
   "package": "WP5.08",
-  "decided": "[The suites may need to separate those that build models from those that use them](review-items.md#rev-213-the-suites-may-need-to-separate-those-that-build-models-from-those-that-use-them)",
+  "decided": "[The suites may need to separate those that build models from those that use them](review-archive.md#rev-213-the-suites-may-need-to-separate-those-that-build-models-from-those-that-use-them)",
   "holds_now": "WP5.08 verdicts",
   "status": "deferred",
   "kind": "REV row"
@@ -9113,7 +9113,7 @@
   "where": "docs/project/review-findings.md:238",
   "date": "",
   "package": "WP5.08",
-  "decided": "[The changed list is loosely spaced, and the project name reads as a menu](review-items.md#rev-214-the-changed-list-is-loosely-spaced-and-the-project-name-reads-as-a-menu)",
+  "decided": "[The changed list is loosely spaced, and the project name reads as a menu](review-archive.md#rev-214-the-changed-list-is-loosely-spaced-and-the-project-name-reads-as-a-menu)",
   "holds_now": "WP5.08 verdicts",
   "status": "deferred",
   "kind": "REV row"
@@ -9124,7 +9124,7 @@
   "where": "docs/project/review-findings.md:239",
   "date": "",
   "package": "WP5.08",
-  "decided": "[The charge screen needs its design and its function settled together](review-items.md#rev-215-the-charge-screen-needs-its-design-and-its-function-settled-together)",
+  "decided": "[The charge screen needs its design and its function settled together](review-archive.md#rev-215-the-charge-screen-needs-its-design-and-its-function-settled-together)",
   "holds_now": "WP5.08 verdicts",
   "status": "deferred",
   "kind": "REV row"
@@ -9135,7 +9135,7 @@
   "where": "docs/project/review-findings.md:240",
   "date": "",
   "package": "",
-  "decided": "[The Phase 5 plan exceeds its word target again](review-items.md#rev-216-the-phase-5-plan-exceeds-its-word-target-again)",
+  "decided": "[The Phase 5 plan exceeds its word target again](review-archive.md#rev-216-the-phase-5-plan-exceeds-its-word-target-again)",
   "holds_now": "[CODE_REVIEW_034](../code_reviews/CODE_REVIEW_034.md)",
   "status": "open",
   "kind": "REV row"
@@ -9146,7 +9146,7 @@
   "where": "docs/project/review-findings.md:241",
   "date": "",
   "package": "",
-  "decided": "[Case reading, substitution and input-path discovery are split across five modules](review-items.md#rev-217-case-reading-substitution-and-input-path-discovery-are-split-across-five-modules)",
+  "decided": "[Case reading, substitution and input-path discovery are split across five modules](review-archive.md#rev-217-case-reading-substitution-and-input-path-discovery-are-split-across-five-modules)",
   "holds_now": "[CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md)",
   "status": "open",
   "kind": "REV row"
@@ -9157,7 +9157,7 @@
   "where": "docs/project/review-findings.md:242",
   "date": "",
   "package": "",
-  "decided": "[Effective atom radii and atom-to-residue indexing are split across four subpackages](review-items.md#rev-218-effective-atom-radii-and-atom-to-residue-indexing-are-split-across-four-subpackages)",
+  "decided": "[Effective atom radii and atom-to-residue indexing are split across four subpackages](review-archive.md#rev-218-effective-atom-radii-and-atom-to-residue-indexing-are-split-across-four-subpackages)",
   "holds_now": "[CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md)",
   "status": "open",
   "kind": "REV row"
@@ -9168,7 +9168,7 @@
   "where": "docs/project/review-findings.md:243",
   "date": "",
   "package": "",
-  "decided": "[A model file's validated body is discarded and parsed again by the project](review-items.md#rev-219-a-model-files-validated-body-is-discarded-and-parsed-again-by-the-project)",
+  "decided": "[A model file's validated body is discarded and parsed again by the project](review-archive.md#rev-219-a-model-files-validated-body-is-discarded-and-parsed-again-by-the-project)",
   "holds_now": "[CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md)",
   "status": "open",
   "kind": "REV row"
@@ -9179,7 +9179,7 @@
   "where": "docs/project/review-findings.md:244",
   "date": "",
   "package": "",
-  "decided": "[The upstream lookup and the forecast re-implement the walk's stage keying](review-items.md#rev-220-the-upstream-lookup-and-the-forecast-re-implement-the-walks-stage-keying)",
+  "decided": "[The upstream lookup and the forecast re-implement the walk's stage keying](review-archive.md#rev-220-the-upstream-lookup-and-the-forecast-re-implement-the-walks-stage-keying)",
   "holds_now": "[CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md)",
   "status": "open",
   "kind": "REV row"
@@ -9190,7 +9190,7 @@
   "where": "docs/project/review-findings.md:245",
   "date": "",
   "package": "",
-  "decided": "[Planning a sweep from a case drops the members it resolved](review-items.md#rev-221-planning-a-sweep-from-a-case-drops-the-members-it-resolved)",
+  "decided": "[Planning a sweep from a case drops the members it resolved](review-archive.md#rev-221-planning-a-sweep-from-a-case-drops-the-members-it-resolved)",
   "holds_now": "[CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md)",
   "status": "open",
   "kind": "REV row"
@@ -9201,7 +9201,7 @@
   "where": "docs/project/review-findings.md:246",
   "date": "",
   "package": "",
-  "decided": "[The agentic instructions cite identifiers without their words and state two procedures in several places](review-items.md#rev-222-the-agentic-instructions-cite-identifiers-without-their-words-and-state-two-procedures-i…",
+  "decided": "[The agentic instructions cite identifiers without their words and state two procedures in several places](review-archive.md#rev-222-the-agentic-instructions-cite-identifiers-without-their-words-and-state-two-procedures-i…",
   "holds_now": "[CODE_REVIEW_038](../code_reviews/CODE_REVIEW_038.md)",
   "status": "open",
   "kind": "REV row"

@@ -170,14 +170,14 @@ a design round (§8.4.4).
 `/np-implement` runs on Opus 5.5 at high effort, set explicitly. A scoped item goes to a Sonnet 5.5
 sub-agent at high effort. Haiku 5.5 takes only mechanical, repetitive work that is fully specified and
 needs under 100k tokens of context (§8.2.38 AN8; §8.2.49 AY7). The kept helpers are the `physics-reviewer`,
-`gui-reviewer` and `ci-log-classifier` sub-agents and seven scripts in `.claude/scripts/`:
+`gui-reviewer` and `ci-log-classifier` sub-agents and eight scripts in `.claude/scripts/`:
 `clause.py` prints a clause, `duplicates.py` names a number that two items of one register share,
 `same_tree.py` checks that changed Python files differ only in prose (§8.2.11 L5),
 `decisions.py` writes the decisions register, `index_records.py` writes the indexes of the plans
-and reviews, `links.py` checks every relative link, and `usage.py` measures a session's cost in
-sessions, agent hours, touches and tokens from its transcript, and with `--reading` the project
-text a window read before its first edit (§8.4.5). The
-caps on a WP plan, and its executors, are in `.claude/skills/np-plan/wp.md` (§8.4.4; §8.2.15 Q1;
+and reviews, `links.py` checks every relative link, `archive_items.py` moves the closed review
+items to `docs/project/review-archive.md` at a phase's close, and `usage.py` measures a session's
+cost in sessions, agent hours, touches and tokens from its transcript, and with `--reading` the
+project text a window read before its first edit (§8.4.5). The caps on a WP plan, and its executors, are in `.claude/skills/np-plan/wp.md` (§8.4.4; §8.2.15 Q1;
 §8.2.16 R11).
 
 **Code review reports** go to `docs/code_reviews/CODE_REVIEW_NNN.md`, with NNN one above the highest
@@ -185,7 +185,8 @@ present. The skill that runs the review gives that path in the brief after `--`.
 
 **Open items** are a finding not fixed, a deferral, or a question for the author. Each is a `REV-nn`
 row in `docs/project/review-findings.md` with a section in `review-items.md`. It stays until the
-commit that resolves it sets it `fixed` (§8.4.6; §8.2.8 H12). A PR body is never its only record.
+commit that resolves it sets it `fixed`; the phase's close moves it to `review-archive.md` (§8.4.6;
+§8.2.8 H12). A PR body is never its only record.
 
 ## Other hosts
 

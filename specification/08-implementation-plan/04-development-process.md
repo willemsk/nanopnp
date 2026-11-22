@@ -179,16 +179,17 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * The tiers are the same Claude models on either host; `.claude/workflow/hosts/copilot.md` gives
   each tier's Copilot id and each agent's effort, passed at each sub-agent call. (§8.2.25 AA7)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only and on Opus at high
-  effort (§8.2.38 AN9), and the CI-log classifier. Seven scripts are kept in `.claude/scripts/`: `clause.py` prints a clause by identifier,
+  effort (§8.2.38 AN9), and the CI-log classifier. Eight scripts are kept in `.claude/scripts/`: `clause.py` prints a clause by identifier,
   `duplicates.py` names a number that two items of one register share (§8.4.4), `same_tree.py`
   checks that changed Python files differ only in prose (§8.2.11 L5), `decisions.py` writes the
   decisions register and with `--check` compares it, `index_records.py` writes the indexes of the
   plans and reviews (§8.4.4), `links.py` checks every relative link of the tracked Markdown
-  (§7.6), and `usage.py` measures a session in §8.3's units, with its tokens by model, from its
-  Claude Code transcript; with `--reading` it gives, for each window an `/np-` command opens, the
+  (§7.6), `archive_items.py` moves the closed review items to their archive (§8.4.6), and
+  `usage.py` measures a session in §8.3's units, with its tokens by model, from its Claude Code
+  transcript; with `--reading` it gives, for each window an `/np-` command opens, the
   words of project text read before the first edit, and with `--pages` it reads them from the
   session service's pages of past sessions. (§8.2.11 L6, L9; §8.2.16 R6; §8.2.17 S22; §8.2.36 AL3,
-  AL4, AL28; §8.2.37 AM11; §8.2.50 AZ9, AZ10)
+  AL4, AL28; §8.2.37 AM11; §8.2.50 AZ9, AZ10, AZ12)
 * Each level of `/np-plan`, `/np-implement` and `/np-ship` ends its report with `usage.py`'s line for
   the level. The pull request's **Measured** section keeps one line per level, and `/np-ship` sums
   them into the plan's Outcome beside its estimate. A host without a Claude Code transcript records
@@ -205,6 +206,10 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   for the author, is a `REV-nn` row in `docs/project/review-findings.md` with a section in
   `docs/project/review-items.md`, added in the commit that leaves it open. The commit that resolves it
   sets it `fixed`. A pull request body is never its only record. (§8.2.8 H12)
+* A `fixed`, `declined` or `wontfix` row moves, with its section, to `docs/project/review-archive.md`
+  at the close of the phase that closed it: `/np-ship phase` runs `.claude/scripts/archive_items.py`,
+  which rewrites every link to it. The register keeps the rows that are open or owned by a later
+  package, and no `REV` number is reused. (§8.2.50 AZ12)
 * A phase closes when each row it owns is `fixed`, or ruled `accepted` with its later package,
   `deferred`, `post-1.0`, `declined` or `wontfix`. A phase's own findings log then closes;
   `docs/project/review-findings.md` stays open. `/np-ship phase` checks it. (§8.2.37 AM4)

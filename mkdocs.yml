@@ -25,6 +25,7 @@ exclude_docs: |
   plans/
   project/review-findings.md
   project/review-items.md
+  project/review-archive.md
   project/modularity.md
   project/modularity-findings.md
   user-testing/
@@ -398,6 +399,7 @@ nav:
       - Architecture: _generated/project/architecture.md
       - Review register: _generated/project/review-items.md
       - Review findings: _generated/project/review-findings.md
+      - Review archive: _generated/project/review-archive.md
       - Decisions register: project/decisions.md
       - Workbench design: design/workbench.md
       - Citing: project/citing.md

@@ -2,9 +2,9 @@
 
 Reads every ruling row of ``specification/history/*.md``, with where it holds now from
 ``specification/history/holds-now.yaml``; every ``Dn`` row of a plan under ``docs/plans/``; every
-``REV`` and ``MOD`` row of ``docs/project/review-findings.md`` and ``modularity-findings.md``;
-every ``OPN`` row of ``specification/10-open-items.md``; every ``WB`` row of
-``docs/design/workbench.md``; the knowledge base's rulings of
+``REV`` and ``MOD`` row of ``docs/project/review-findings.md``, ``review-archive.md`` and
+``modularity-findings.md``; every ``OPN`` row of ``specification/10-open-items.md``; every ``WB``
+row of ``docs/design/workbench.md``; the knowledge base's rulings of
 ``knowledge/00-orientation/05-*.md``; and the *Not to be re-decided* bullets of
 ``docs/plans/current.md``. Writes one row per decision in eight columns (source; decided by; where;
 date; package; what was decided; where it holds now; status), ordered by date, undated last, then
@@ -310,7 +310,7 @@ def plans() -> list[Decision]:
 def registers() -> list[Decision]:
     """Return the ruling and status of every REV and MOD row."""
     rows: list[Decision] = []
-    for name in ("review-findings.md", "modularity-findings.md"):
+    for name in ("review-findings.md", "review-archive.md", "modularity-findings.md"):
         path = ROOT / "docs/project" / name
         header: list[str] = []
         for line in path.read_text(encoding="utf-8").splitlines():
