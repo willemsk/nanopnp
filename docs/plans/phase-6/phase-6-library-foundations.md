@@ -15,12 +15,12 @@ version 0.6 then opens without its finished runs.
 **Cost.** The three packages: about 15 sessions, 9 to 18 hours of agent work and 24 times you act. The rescoping round:
 about 2 sessions and 3. The fifteen drafted packages, if confirmed: 75 sessions, 45 to 90 hours and 120.
 
-**What could go wrong.** The cleanup could delete a ruling that still binds: nothing leaves the history without your
-word. The rescoping could be read from stale records: it waits for the cleanup. A drafted package could be started
+**What could go wrong.** The cleanup could delete a ruling that still binds: you ruled that nothing leaves the
+history. The rescoping could be read from stale records: it waits for the cleanup. A drafted package could be started
 before the round: none has a plan until the round rules.
 
-**Your call.** Settled on 22 November 2026. Still yours: the reading limit and what may leave the history, at the
-cleanup's plan; and the rescoping itself. *Recommendation:* bring to the round what you would keep, cut and add, so it
+**Your call.** Settled on 22 November 2026. Still yours: the reading limit's number, inside the cleanup, once its
+baseline is measured; and the rescoping itself. *Recommendation:* bring to the round what you would keep, cut and add, so it
 starts from your view and not from the records.
 
 ## Context
@@ -86,12 +86,14 @@ ends its worker (VER-78); KaTeX and uPlot keep their bytes (CON-09). The channel
 the rescoping round; its test's wall has no ragged rim (D9). REV-277 is fixed. At the author's request the push gate
 checks prose since its last pass in seconds, and `main` keeps a linear history. Live: AZ8's ship rule.
 
-### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8)
+### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8; AZ9 to AZ12)
 
-`usage.py` extended to measure what a session reads before its first edit, and its baseline; `prompt-audit` over
-`CLAUDE.md` and `.claude/`; the reading limit and what leaves the history, put to the author; then the decisions
-register, the review register, the history and a plan's length. Its Outcome lists what it found outdated, for the
-rescoping round. Both cleanup packages run on Fable 5.2 (AY7).
+`usage.py` measures the project text a session reads before its first edit, in words (AZ9), and the baseline of six
+recent packages, read from the session service (AZ10); `prompt-audit` over `CLAUDE.md` and `.claude/`; the limit's
+number and the phase plan's word target, put to the author from the baseline. Nothing leaves the history (AZ11); closed
+review items and closed decisions move to archives beside their registers (AZ12). Its Outcome lists what it found
+outdated, for the rescoping round. Both cleanup packages run on Fable 5.2 (AY7).
+[The plan](wp6.02-the-cleanup-measure-audit-records.md).
 
 ### WP6.03 — The cleanup: instructions, the Copilot host retired (AY5; REV-166 to REV-168, REV-278)
 
@@ -130,7 +132,7 @@ Each waits on the rescoping round; none is planned before it.
 | # | Decision | Owner and status |
 |---|---|---|
 | 1 | This round's seven rulings | **Settled by the author, 22 November 2026** (AZ1 to AZ7) |
-| 2 | The reading limit; what may leave the history; the baseline's transcripts | **Author**, at WP6.02's plan (AY8) |
+| 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 November 2026**: project text in words, six recent packages, nothing leaves, closed items archived (AZ9 to AZ12). The limit's number and the phase plan's word target: **author**, inside WP6.02, from the baseline (AY8; AW5) |
 | 3 | The Copilot tag's name | **Author** confirms at WP6.03's plan (AY5) |
 | 4 | Whether a pull request's CI runs the Windows leg | **Settled by the author, 22 November 2026**: no; the three platforms at the close alone (AZ8) |
 | 5 | The project's scope, and WP6.04 to WP6.18 with it | **Author**, at the rescoping round (AZ7) |
@@ -141,7 +143,7 @@ Each waits on the rescoping round; none is planned before it.
 
 | Item | Needed by | If it does not arrive |
 |---|---|---|
-| The reading limit; what leaves the history | WP6.02's plan | The cleanup proposes and waits; nothing is deleted |
+| The reading limit's number; the phase plan's word target | WP6.02, after its baseline | The package stops at its item 5 and waits |
 | The tag on the last commit that holds the Copilot host | WP6.03 | The session prints the command and the hash |
 | What to keep, cut and add | The rescoping round | The round proposes from the records |
 | Merges; tags a session cannot push | Each package | The session dispatches `tag.yml` and prints the commands |
