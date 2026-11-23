@@ -108,7 +108,8 @@ list is valid), and the findings it could not assess or fix. Compare it with the
 Then record the pass under **Verification**: what you invoked, how many findings came back and how many
 survived step 1, the reviewed base and head SHAs, and the fix commits. Keep the independently reviewed
 revision apart from the fixes decided here. Give the user each finding that is architectural or that
-would make the package wider: scope is the author's decision.
+would make the package wider: scope is the author's decision. A restructure of code the package works
+with, which changes no behaviour, is not wider (§8.4.4).
 
 ## 5. Drive to green
 

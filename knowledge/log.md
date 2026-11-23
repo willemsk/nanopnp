@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-23
+* **Update**: The comparison against the published results gates v0.13, the Phase 12 release, after the rescoping round of 23 November 2026 (`SPECIFICATION.md` §8.2.51 BA5); the analyte forces are Phase 11 and v0.12. ([Tier 3 — COMSOL differential tests (hours, nightly)](08-validation-benchmarks/03-tier-3-comsol-differential-tests-hours.md))
 * **Update**: The survey script of code review 039, `.claude/scripts/audit/survey.sh`, is removed with its folder (WP6.03); the git tag `copilot-host` marks the last commit that holds it. ([25. xenon and import-linter beside ruff's C901 and VER-61](07-software-stack/25-complexity-and-import-contract-tools.md))
 
 ## 2026-11-22

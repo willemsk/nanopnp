@@ -63,10 +63,10 @@ needed.
 | FR-40 | None yet; Phase 8, the composer (§8.2.49 AY2) |
 | FR-41 | None yet; Phase 9, the structural mutator (§8.2.49 AY2) |
 | FR-42 | None yet; Phase 10, the sketcher (§8.2.49 AY2) |
-| FR-43 | None yet; a later phase, its library package writing its physics first (§8.2.18 T6) |
+| FR-43 | None yet; Phase 9, its library package writing its physics first (§8.2.18 T6; §8.2.51 BA9) |
 | FR-44 | `test_fr44_plot_draws_each_figure_of_the_run_from_its_directory` (example 01, per push); the refusals before any stage runs are verified at review (§7.1, the test scope) |
 | QR-01 | VER-12 to VER-22, in particular VER-17 and VER-18 |
-| QR-02 | VAL-16, VAL-17 (gating v0.12); VAL-01, VAL-02 (kept, not required) |
+| QR-02 | VAL-16, VAL-17 (gating v0.13); VAL-01, VAL-02 (kept, not required) |
 | QR-03 | VER-01, VER-29, VER-58, VAL-15 |
 | QR-04 | VER-11, VER-40 (the route disagreement as a resolution gate), VER-42 (the identity under a stabilisation mode) |
 | QR-05 | VAL-07, VAL-08, VAL-09 |
@@ -79,7 +79,7 @@ needed.
 | QR-12 | VER-10, VER-32, VER-40, VER-41, VER-48 (the stage-1 input and symmetry gates), VER-49 (the radius refusal and the density bounds gate), VER-51 (each contour gate criterion names its value, threshold and (r, z)), VER-52 (each stage-5 criterion likewise), VER-53 (the wall-size gate names the segment), VER-54 (the region graph's refusals name the edge's midpoint), VER-57 (each protonation gate names its frame), VER-59 (the shell's refusals name the z interval or the edge, and the derived `chi`'s gates name the material), VER-70 (no gate comparison passes a NaN) |
 | QR-13 | VER-65 (the subpackages reaching NGSolve or Netgen equal a recorded set, in both directions). The §5.4.1 interface is absent (`MOD-10`), deferred by §8.2.8 H3 and handed to Phase 8's round by §8.2.50 AZ1; H3 restated QR-13 as the single statement of the weak forms plus this guard |
 | QR-14 | VER-03 (a correction is a data file), VER-56 (a physics model is one class), VER-66 (a backend registry is one registration) |
-| QR-15 | VER-45, VER-46 — the documentation part only, delivered incrementally by the §8.1 documentation track; the JOSS submission and the DOI-archived release remain unverified until v0.12 |
+| QR-15 | VER-45, VER-46 — the documentation part only, delivered incrementally by the §8.1 documentation track; the JOSS submission and the DOI-archived release remain unverified until v0.13 |
 | QR-16 | None yet as a test of its own. `/np-gui render shell` and `mockups` measure text contrast, non-text contrast (WCAG 2.2 1.4.11) and target size over the shipped themes, and VER-78 loads every screen in every state and drives the shortcuts; a user's theme is not measured (§8.2.33 AI1); each workbench package reviews its screens against it. v0.6 ships with the keyboard gaps of QR-16's NOTE (§8.2.47 AW8) |
 | CON-01 | None yet |
 | CON-02 | VER-20, VER-22 |
