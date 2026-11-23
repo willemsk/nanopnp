@@ -35,7 +35,7 @@ Confirm these:
   package that takes a tag has the heading `tag.yml` greps (`grep -qF '## [X.Y.Z-alpha.N]' CHANGELOG.md`).
 
 If the branch is `main` or equals `origin/main`, stop and ask. If it is behind `main`, rebase it on
-`main` (the core's *Gate and push*, step 6) and renumber as the core's *Two lanes* says. Then run
+`main` (the core's *Gate and push*, step 7) and renumber as the core's *Two lanes* says. Then run
 `uv run .claude/scripts/duplicates.py` and renumber until it passes.
 
 ## 2. Push
@@ -141,7 +141,7 @@ and stop.
 1. Fetch `main`: a hosted clone is shallow. The merge sha is the `merge_commit_sha` of the merged PR.
 2. If `git ls-remote --tags origin <tag>` lists the tag, report it and stop.
 3. Dispatch `.github/workflows/tag.yml` on `main` with `tag` and `sha` (`actions_run_trigger`, or
-   `gh workflow run tag.yml --ref main -f tag=<tag> -f sha=<merge sha>` on another host). It checks the
+   `gh workflow run tag.yml --ref main -f tag=<tag> -f sha=<merge sha>` where `gh` is installed). It checks the
    tag, the commit and its changelog section, pushes the annotated tag and starts `release.yml` with the
    full matrix (§8.2.33 AI8). Wait for its run, as the steward's *Bounded wakes* say, and read its
    result. A cloud session never pushes a tag itself: its git credentials push only its own branch, and

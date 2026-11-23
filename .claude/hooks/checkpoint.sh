@@ -26,10 +26,8 @@ cd "$root" 2>/dev/null || exit 0
 dir=$(git rev-parse --path-format=absolute --git-path nanopnp-checkpoint 2>/dev/null) || exit 0
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 
-# Only Claude Code runs the three hooks (.claude/workflow/hosts/copilot.md), so another host's switch
-# is off whatever the environment says. Hook mode needs jq: without it the switch is off too.
+# Hook mode needs jq: without it the switch is off.
 switch_on() {
-    [ -z "${COPILOT_CLI:-}" ] || return 1
     command -v jq >/dev/null 2>&1 || return 1
     case $1 in
         implement) [ "${NANOPNP_AUTO_CHECKPOINT:-}" = 1 ] ;;

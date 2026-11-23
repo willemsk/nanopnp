@@ -16,9 +16,8 @@ the plan, fixes what the review finds, gates and pushes again, and ends with the
    Skill(skill="code-review", args="medium --fix --max-findings all <head branch> -- Write the report to docs/code_reviews/CODE_REVIEW_NNN.md, NNN one above the highest present. Review of a plan commit. Check each claim the plan makes about the code against the code at this head, each decision against SPECIFICATION.md and the author's rulings, each verification row for how its test gets the object it checks, and the plan against its level's caps and sections in .claude/skills/np-plan/. Run no tests and no gate.sh: the review turn gates afterwards.")
    ```
 
-   On Copilot, call the built-in `code-review` agent as `hosts/copilot.md`'s *Code review* says. If the
-   review wrote no report, write `docs/code_reviews/CODE_REVIEW_NNN.md` in the shape of the latest one,
-   with NNN one above the highest present.
+   If the review wrote no report, write `docs/code_reviews/CODE_REVIEW_NNN.md` in the shape of the
+   latest one, with NNN one above the highest present.
 3. **The fixes.**
    - A fix keeps every ruling of the author. A finding that would change one goes to the author as
      *Putting a choice to the author* in `.claude/workflow/author.md` says, before the commit; the ruling is recorded as

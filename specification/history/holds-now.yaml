@@ -211,14 +211,14 @@ Z3: §8.1's Phase 4 documentation increment
 Z4: the Phase 4 plan
 Z5: REV-121
 Z6: 'REV-156; placed by AY3; open: WP6.17'
-AA1: §8.4.4
-AA2: §8.4.4; `.claude/workflow/hosts.md`
-AA3: §8.4.4
-AA4: §8.4.4
+AA1: superseded by AY5
+AA2: superseded by AY5
+AA3: superseded by AY5
+AA4: superseded by AY5
 AA5: §8.4.2; amended by AB1
 AA6: superseded by AY5
-AA7: §8.4.5
-AA8: the Copilot host plan; `.claude/workflow/hosts.md`
+AA7: superseded by AY5
+AA8: superseded by AY5
 AB1: §8.4.2
 AC1: IF-01's NOTE on the interface; the Phase 4 plan
 AC2: NUM-16's NOTE
@@ -393,7 +393,7 @@ AY1: '§2.7; §8.1; §8.3; FR-32''s and FR-36''s Release; its packages numbered 
 AY2: '§2.7; §8.1; RSK-15; QR-02, QR-15; the Release of FR-21, FR-22 and FR-40 to FR-42; VAL-16, VAL-17; open: each tool phase''s round'
 AY3: 'REV-156, REV-60, REV-171; open: WP6.17'
 AY4: '§8.1''s gates from Phase 6; §7.6; REV-277, fixed by WP6.01; its /np-ship rule narrowed by AZ8'
-AY5: 'REV-166 to REV-168; docs/plans/sessions/copilot-host.md; open: WP6.03'
+AY5: §8.4.4; the git tag copilot-host
 AY6: 'the review register; FR-28''s Release; NUM-04''s NOTE; its packages numbered by AZ4'
 AY7: '§8.4.5; its implementing and shipping models set by AZ20 and AZ21'
 AY8: '§8.4.4; its limit set by AZ13 and AZ14; open: WP6.03 (REV-272)'
@@ -415,6 +415,6 @@ AZ15: '§8.4.4; usage.py'
 AZ16: '§8.4.5; usage.py'
 AZ17: '§8.4.5; usage.py'
 AZ18: '§8.4.4; open: WP6.03, the measurement'
-AZ19: 'the Phase 6 plan; open: WP6.03, and the author''s push after its merge'
+AZ19: 'the git tag copilot-host; open: the author''s push after WP6.03''s merge'
 AZ20: '§8.4.4, §8.4.5; open: WP6.03 (CLAUDE.md, the core, np-plan/wp.md)'
 AZ21: '§8.4.4, §8.4.5; open: WP6.03 (the np-plan, np-implement and np-ship skills)'

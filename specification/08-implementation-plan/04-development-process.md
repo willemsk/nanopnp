@@ -36,7 +36,7 @@ here once.
   the background and waits for it in the same turn, and the push guard refuses a tree it has not
   passed. A pass of the commit hook never stands in for it. (§7.6; §8.2.11 L2, L3)
 * The gate refuses with its reason on standard error and one JSON object carrying the deny
-  top-level and as `hookSpecificOutput`, exit 0 on both hosts; failing to print it exits 2. Once a
+  top-level and as `hookSpecificOutput`, exit 0; failing to print it exits 2. Once a
   clone sets `core.hooksPath .githooks`, git's `pre-push` (`gate.sh check-push`) also refuses a push
   whose tree has no `push` stamp. (§8.2.25 AA5; §8.2.26 AB1)
 * The session-start hook fetches `origin/main` into the primary checkout and fast-forwards a clean
@@ -81,12 +81,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   its critique a second opinion beside the GUI reviewer's, its quality floor read before a screen is
   built; the design document and the tokens stay the authority, and the author's rulings win over its
   rules. (§8.2.17 S21, S22; §8.2.30 AF4; §8.2.34 AJ6, AJ8; `.claude/skills/np-gui/`)
-* The workflow runs on Claude Code and on the GitHub Copilot app, either for any step on either lane;
-  Copilot runs as a WSL host on Windows. `.claude/` is the single source.
-  `.claude/workflow/hosts.md` indexes, for each host other than Claude Code, the map from each Claude
-  Code tool the workflow names to its substitute. On Copilot, `/np-ship` pushes, checkpoints and
-  stops at CI, and agent merge stays off. One host drives a branch at a time and the hosts never share
-  a working tree; the fresh-session rule below is per session. (§8.2.25 AA1 to AA4)
+* The workflow runs on Claude Code alone, and `.claude/` is its single source. (§8.2.49 AY5)
 * From Phase 5, a work package is named `WP<phase>.<nn>`, numbered from 01 within its phase
   (`WP5.01`): its plan is `docs/plans/phase-5/wp5.01-<slug>.md`, its pull request `feat: WP5.01 — …`,
   and the commands take `wp 5.01`. Phase 4 keeps its flat numbers to its close. (§8.2.17 S16)
@@ -185,8 +180,6 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   effort. Haiku 5.5 takes only mechanical, repetitive work that is fully specified and whose expected
   context stays under 100,000 tokens. An item a sub-agent fails goes to a new worker once, then to the
   next model. (§8.2.11 L6; §8.2.38 AN8; §8.2.49 AY7; §8.2.50 AZ20, AZ21)
-* The tiers are the same Claude models on either host; `.claude/workflow/hosts/copilot.md` gives
-  each tier's Copilot id and each agent's effort, passed at each sub-agent call. (§8.2.25 AA7)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only and on Opus at high
   effort (§8.2.38 AN9), and the CI-log classifier. Eight scripts are kept in `.claude/scripts/`: `clause.py` prints a clause by identifier,
   `duplicates.py` names a number that two items of one register share (§8.4.4), `same_tree.py`
@@ -204,8 +197,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   AZ10, AZ12, AZ16, AZ17)
 * Each level of `/np-plan`, `/np-implement` and `/np-ship` ends its report with `usage.py`'s line for
   the level. The pull request's **Measured** section keeps one line per level, and `/np-ship` sums
-  them into the plan's Outcome beside its estimate. A host without a Claude Code transcript records
-  "not measured". (§8.2.37 AM11)
+  them into the plan's Outcome beside its estimate. (§8.2.37 AM11)
 * A batch of independent, mechanical items, such as a sweep over many files, a rename or a per-module
   pass, goes item by item to a new sub-agent, on Sonnet or, as the first bullet allows, Haiku, given the item
   and the clauses it cites.

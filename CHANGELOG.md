@@ -704,7 +704,8 @@ number or case written inline changes (VER-62). The [plan](docs/plans/phase-5/wp
   Appendix A rows of FR-32 and FR-39.
 
 Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
-[plan](docs/plans/sessions/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
+the plan, `docs/plans/sessions/copilot-host.md` at the git tag `copilot-host`). No `src/`, `tests/`,
+schema or public API changes.
 
 - **Added**: `.claude/workflow/hosts.md` and `hosts/copilot.md` (each Claude Code tool's Copilot
   substitute), `.github/copilot-instructions.md`, `.github/hooks/nanopnp.json`, `.githooks/pre-push`

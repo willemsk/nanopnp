@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-23
+* **Update**: The survey script of code review 039, `.claude/scripts/audit/survey.sh`, is removed with its folder (WP6.03); the git tag `copilot-host` marks the last commit that holds it. ([25. xenon and import-linter beside ruff's C901 and VER-61](07-software-stack/25-complexity-and-import-contract-tools.md))
+
 ## 2026-11-22
 * **Record**: On Windows the reloading server's supervisor must read a private copy of its input, and its worker must stop itself: a worker reopening the supervisor's input behind a pending read never starts, uvicorn's Windows shutdown waits for a worker only a console's Ctrl+C ends, and terminating the worker skips the shutdown that cancels its solves (WP6.01; VER-78). ([GUI and packaging](07-software-stack/05-gui-and-packaging.md))
 * **Record**: At a ragged rim, rounding of 1e-14 decides whether the channel's axis iteration holds the true line or one up to 0.6° off; Windows reads the tilted test wall at 11.38° (WP6.01; REV-279). ([The channel's axis of 2WCD against its ring axis](04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md))

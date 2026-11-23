@@ -49,7 +49,7 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 Code makes (`--no-verify` skips it). It runs the lock check, lint, format, the decisions page's check,
 types and the Tier 1 tests without `slow` and without `nightly`. Do not run these checks by hand before a commit: a manual run
 writes no stamp, so the hook runs them all again. Run the hook itself by hand only to reproduce a
-refusal, or on a host where it does not fire (`.claude/workflow/hosts.md`):
+refusal:
 `echo '{"tool_input":{"command":"git commit"}}' | .claude/hooks/gate.sh`.
 
 **The gate before a push:** `.claude/hooks/gate.sh run`. It runs lint, format, the decisions page's
@@ -187,12 +187,6 @@ present. The skill that runs the review gives that path in the brief after `--`.
 row in `docs/project/review-findings.md` with a section in `review-items.md`. It stays until the
 commit that resolves it sets it `fixed`; the phase's close moves it to `review-archive.md` (§8.4.6;
 §8.2.8 H12). A PR body is never its only record.
-
-## Other hosts
-
-The workflow also runs on the GitHub Copilot app, as a WSL host (§8.4.4; §8.2.25). `.claude/` stays
-the single source. Another host reads its map through `.claude/workflow/hosts.md`. One host drives a
-branch at a time.
 
 ## Git
 

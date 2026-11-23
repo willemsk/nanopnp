@@ -62,7 +62,7 @@ clause id:
 gate log=(env("TMPDIR", "/tmp") / "nanopnp-gate.log"):
     status=0; .claude/hooks/gate.sh run > "$1" 2>&1 || status=$?; echo "exit $status" >> "$1"; exit $status
 
-# The commit gate by hand, to reproduce a refusal or on a host where the hook does not fire
+# The commit gate by hand, to reproduce a refusal
 commit-gate:
     echo '{"tool_input":{"command":"git commit"}}' | .claude/hooks/gate.sh
 

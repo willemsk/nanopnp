@@ -15,7 +15,7 @@
 3. Read the `SPECIFICATION.md` sections and Appendix A rows that the plan cites (`clause.py`, the core).
 
 **The task list** is the one the app shows: Claude Code's `TaskCreate`, `TaskUpdate` and `TaskList`,
-loaded with `ToolSearch` where they are deferred; on another host, its own task tool if it has one.
+loaded with `ToolSearch` where they are deferred.
 
 1. Call `TaskList`. If the list does not match the plan, delete the stale tasks and create one task per
    work item, checkpoints included, with the subject `Item <k>: <what it delivers>`. A ticked item is
