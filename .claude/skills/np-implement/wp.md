@@ -2,7 +2,8 @@
 
 `/np-implement [wp <n>]` is step 2 of the implementation workflow. It executes the plan under
 `docs/plans/`, records what the execution taught, and opens the PR. It chains into `/np-ship` only
-when the author sets `NANOPNP_AUTO_SHIP=1` (`finish.md`, *Finishing*).
+when the author sets `NANOPNP_AUTO_SHIP=1` and the plan names one model for both (`finish.md`,
+*Finishing*).
 
 ## Load the brief
 

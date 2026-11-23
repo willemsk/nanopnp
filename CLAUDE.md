@@ -8,7 +8,7 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 
 - **Read `knowledge/index.md`.** It is the verified knowledge base.
 - **`SPECIFICATION.md` is normative** (`FR-`, `QR-`, `CON-`, `PHY-`, `NUM-`, `VER-`, `VAL-`). It is the
-  entry point and the map; the text is in `specification/`, the dated rulings in
+  map; the text is in `specification/`, the dated rulings in
   `specification/history/`, read on demand. `uv run .claude/scripts/clause.py <ID>` prints a
   clause. Cite the identifier when you implement or test one. A change to specified behaviour changes
   the specification in the same commit.
@@ -107,7 +107,7 @@ the validated default**. A result whose manifest cannot reconstruct the run is n
 ## Implementation workflow
 
 One work package per PR, green on tiers 1–2 before the next one in its lane (at most two lanes,
-§8.4.4). A plan's brief never overrides a normative requirement.
+§8.4.4).
 
 - `/np-plan <project | phase n | amend n | wp n>` puts the decisions to the author and commits the
   plan; with `review` after the level it reviews the plan and summarises it for approval.
@@ -119,10 +119,10 @@ Each command reads `.claude/workflow/core.md`, then its level's file. §8.4.4 ho
 rules, its pauses and their two switches; §8.4.5 the agents, the models and the kept scripts. A
 choice put to the author follows `.claude/workflow/author.md`.
 
-**Models:** `/np-plan` at each level, its review and `/np-ship` run on Fable 5.2 at high effort;
-`/np-implement` runs on Opus 5.5 at high effort, set explicitly. A scoped item goes to a Sonnet 5.5
-sub-agent at high effort. Haiku 5.5 takes only mechanical, repetitive work that is fully specified and
-needs under 100k tokens of context (§8.4.5).
+**Models:** `/np-plan` and its review run on Fable 5.2. A work package's plan names the models that
+implement and ship it, as the author ruled them: Opus 5.5 and Fable 5.2 by default. Each session runs
+at high effort, set explicitly. A scoped item goes to a Sonnet 5.5 sub-agent; Haiku 5.5 takes only
+mechanical, repetitive work that is fully specified and needs under 100k tokens of context (§8.4.5).
 
 **Code review reports** go to `docs/code_reviews/CODE_REVIEW_NNN.md`, with NNN one above the highest
 present.

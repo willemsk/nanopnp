@@ -47,9 +47,10 @@ the plans and §8.2.
 
 ## Models and executors
 
-`CLAUDE.md` sets the models (*Models*; §8.2.49 AY7). The author picks a session's model, so each
-pause's prompt names the model of the next step. A survey goes to Sonnet, or to Haiku where *Models*
-allows; read what it returns before you use it. Physics and numerics decisions stay in this session.
+Fable 5.2 plans; a package's plan names the models that implement and ship it (`CLAUDE.md`,
+*Models*; §8.4.5). The author picks a session's model, so each pause's prompt names the
+model of the next step. A survey goes to Sonnet, or to Haiku where *Models* allows; read what it
+returns before you use it. Physics and numerics decisions stay in this session.
 
 ## Records
 
