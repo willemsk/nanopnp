@@ -1,9 +1,20 @@
 # WP6.03 — The cleanup: the instructions cut, the Copilot host retired
 
-**Status: in progress, items 1 to 7 of 9 done.** Written 23 November 2026, grounded in the code at `939009b`. Inherits §8.2.49 AY5,
+**Status: delivered, 23 November 2026.** Written 23 November 2026, grounded in the code at `939009b`. Inherits §8.2.49 AY5,
 AY7 and AY8, §8.2.50 AZ7, AZ9 and AZ13 to AZ17, the rulings of this plan (AZ18 to AZ21), WP6.02's
 [audit](../sessions/instructions-audit.md) and [baseline](../sessions/reading-baseline.md), REV-166 to REV-168,
 REV-278 and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.3` (§8.4.1).
+
+**Delivered.** What an `/np-implement` session reads first holds 3,246 words, from 5,789: `CLAUDE.md` 1,505, the
+core 899, `np-implement/wp.md` 739; the finishing rules are in `.claude/workflow/finish.md` and
+`np-implement/finish.md`, read when they apply. A new session on the cut read 7,186 words before its first edit,
+under the 8,000 of AZ18, which now stands in §8.4.4 without a start date
+([the Outcome](#implementation-details)). The Copilot host and `.claude/scripts/audit/` are removed and the
+workflow runs on Claude Code alone (AY5); REV-166 to REV-168 are `declined`. A work-package plan proposes its
+implementing and shipping model and the author rules them (AZ20, AZ21). `/np-plan project` holds a rescoping round
+(AZ7; REV-278 `fixed`). REV-272's section holds the word counts. Live for later packages: the limit binds every
+`/np-implement` session's first window; the measuring session starts on the package's branch; the tag
+`copilot-host` waits for the author's push after the merge (AZ19).
 
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.03 entry sets this scope; `SPECIFICATION.md` governs, and
 where it and this plan disagree this plan is wrong. Identifiers are pointers into it.
@@ -257,7 +268,7 @@ any requirement, tool or phase, and the rulings that ruling names. It changes th
 - [x] 7. Checkpoint for a new session (D8). **Executor:** main
 - [x] 20bb8b4 8. The measurement: its Outcome, §8.4.4, `holds-now.yaml` (D1, D8). Done when Verification's row 5 passes.
   **Executor:** main
-- [ ] 9. `CHANGELOG.md`'s `## [0.7.0-alpha.3]`; REV-272's section gains the instructions' word counts, before and
+- [x] 42f5e50 9. `CHANGELOG.md`'s `## [0.7.0-alpha.3]`; REV-272's section gains the instructions' word counts, before and
   after. Done when the code and review say so. **Executor:** main
 
 ### Verification

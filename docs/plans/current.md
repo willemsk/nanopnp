@@ -5,18 +5,18 @@ Updated 23 November 2026. Navigation;
 
 ## In brief
 
-Phase 6's first two packages are merged.
+Phase 6's first two packages are merged and tagged.
 
-The third package, the cleanup's second half, is planned. It cuts the instructions every session reads first by almost
-half, removes the setup for the Copilot app and keeps it findable by a tag, and teaches the project-planning command
-to hold the rescoping round that follows. You ruled four things at its plan. A fresh implementing session may read
-8,000 words before its first edit, plan included. The tag is named copilot-host. Each plan proposes
-which model implements and which reviews, and you decide. For this package Fable 5.2 implements and Opus 5.5
-reviews.
+The third package, the cleanup's second half, is implemented and waits for its review. The instructions a session
+reads first are cut by almost half, from about 5,800 words to about 3,200. The setup for the Copilot app is removed,
+and a tag will keep it findable. Each plan now proposes which model implements and which reviews, and you decide. The
+project-planning command can hold the rescoping round that follows. A new session that started on the cut
+instructions read 7,186 words before its first change, under the limit of 8,000 you set, so the limit now binds every
+implementing session.
 
-**Your call.** Approve the plan, or name the decision to change. The second package's tag is not yet published. Who owns the code
-waits for the rescoping round. *Next:*
-the implementation, on Fable 5.2.
+**Your call.** Start the review on Opus 5.5, in a new session or after a compaction. After the merge, push the tag
+named copilot-host as the review's report prints it. Who owns the code waits for the rescoping round. *Next:* the
+review of the third package.
 
 ## Position
 
@@ -25,9 +25,9 @@ the implementation, on Fable 5.2.
 - **Phase 6 is planned** ([the plan](phase-6/phase-6-library-foundations.md); §8.2.50), `v0.7`: WP6.01 to WP6.03,
   then the rescoping round at `/np-plan project`; WP6.04 to WP6.18 provisional until it rules. Phases 7 to 11:
   [the input note](sessions/phases-6-to-11.md).
-  **WP6.01 and WP6.02 merged**; `v0.7.0-alpha.2` is not yet published.
-  **WP6.03 planned and reviewed** ([the plan](phase-6/wp6.03-the-cleanup-instructions-copilot-host.md); AZ18 to AZ21).
-  **Next:** `/np-implement wp 6.03` on Fable 5.2; its ship on Opus 5.5.
+  **WP6.01 and WP6.02 merged**, `v0.7.0-alpha.2` published.
+  **WP6.03 implemented**, PR #209 ([the plan](phase-6/wp6.03-the-cleanup-instructions-copilot-host.md); AZ18 to AZ21).
+  **Next:** `/np-ship wp 6.03` on Opus 5.5.
 
 ## Not to be re-decided
 
@@ -44,8 +44,8 @@ the implementation, on Fable 5.2.
   package's ship test Linux alone, the close the three** (§8.2.50 AZ8). **The Copilot host is
   retired, findable by the tag `copilot-host`** (AY5; AZ19). **Fable 5.2 plans; each plan proposes its implementing
   and shipping model, and the author rules them** (AY7; AZ20, AZ21).
-- **The reading limit counts project text in words; 8,000 for an `/np-implement` session's first window from
-  WP6.03's merge; a phase plan 2,500** (§8.2.50 AZ9 to AZ18); **nothing leaves the rulings' history; a closed item is archived**.
+- **The reading limit counts project text in words; 8,000 for an `/np-implement` session's
+  first window; a phase plan 2,500** (§8.2.50 AZ9 to AZ18); **nothing leaves the rulings' history; a closed item is archived**.
 - **An open-minded rescoping follows WP6.03; no package from WP6.04 is planned before it** (§8.2.50 AZ7). Until it
   rules: the phases are library, workbench, composer, mutator, sketcher, validation (AY1, AY2); the speed-up closes
   Phase 6, with no fixed target (AY3; AZ6); the equations are brought to §4 there (AY6); §5.4.1's interface is Phase 8's
@@ -59,7 +59,7 @@ the implementation, on Fable 5.2.
 - **The 200 ms redraw**'s GPU run (REV-258); **verdicts at each design round** (AJ8).
 - **Rulings on a cycle (H6) or drift (I4)**.
 - **Who owns the code** (audit F3) and **what to keep, cut and add**, at the rescoping round (AZ7); **the tag
-  `copilot-host`**, pushed after WP6.03's merge; **one new session** for its measurement; **QR-10's observer** (AW2).
+  `copilot-host`**, pushed after WP6.03's merge; **QR-10's observer** (AW2).
 
 ## On demand
 
