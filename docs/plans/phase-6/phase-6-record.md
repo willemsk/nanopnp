@@ -47,3 +47,23 @@ session. The WP6.02 entry read:
 The end of open decision 2 read:
 
 > inside WP6.02 from the baseline: 6,500 words for a fresh `/np-implement` window, 2,500 for a phase plan (AZ13, AZ14) |
+
+## Amended 23 November 2026 (§8.2.50 AZ18 to AZ21)
+
+At WP6.03's plan the author ruled the limit's number again, confirmed the Copilot host's tag, and put the implementing
+and the shipping model to each plan's proposal. The WP6.03 entry read:
+
+> The audit's changes to the instructions; the host's files and rules removed, findable by the author's tag. Done when a
+> fresh package session starts under the limit, which then stands in §8.4.4.
+
+The end of open decision 2 read:
+
+> At WP6.02's review: the limit binds the first window of an `/np-implement` session (AZ15) |
+
+Open decision 3 read:
+
+> | 3 | The Copilot tag's name | **Author** confirms at WP6.03's plan (AY5) |
+
+The first row of *What the author supplies* read:
+
+> | The tag on the last commit that holds the Copilot host | WP6.03 | The session prints the command and the hash |

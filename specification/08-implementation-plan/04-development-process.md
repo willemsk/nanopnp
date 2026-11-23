@@ -132,8 +132,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   word or decision cap, and keeps its compaction checkpoints (§8.2.23 Y11). WP5.08's plan holds the
   words its seven decisions need (§8.2.33 AI11).
 * Each work item names its executor: the main session, or a sub-agent by type and model. The plan
-  names the implementing session's model and effort. One commit per work item, ticked
-  `[x] <short sha>`. (§8.2.11 L7; §8.2.16 R11)
+  names the model and effort of its implementing session and of its ship, as the author ruled them
+  on the plan's proposal (§8.4.5). One commit per work item, ticked
+  `[x] <short sha>`. (§8.2.11 L7; §8.2.16 R11; §8.2.50 AZ20, AZ21)
 * Each level of `/np-plan` pushes its plan, opens its pull request, reports and pauses for a
   compaction. `/np-plan <level> [n] review` then reviews the plan with `/code-review medium --fix`, fixes
   or records each finding, gates and pushes again, and ends with a summary for the person who approves
@@ -148,7 +149,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   prompt that names the next item and the values it needs, and ends its turn. When the author sets
   `NANOPNP_AUTO_CHECKPOINT=1`, the session goes on instead, and the hooks give the prompt to the
   compaction that comes when the context fills; `NANOPNP_AUTO_SHIP=1` does the same for the pause
-  before `/np-ship`. (§8.2.11 L7; §8.2.16 R11; the WP5.10 plan, D10)
+  before `/np-ship`, where the plan names one model for both. Where the two differ, the session
+  pauses and its prompt names the model to switch to. (§8.2.11 L7; §8.2.16 R11; §8.2.50 AZ21; the
+  WP5.10 plan, D10)
 * A phase plan states each package's current scope. The text of each amendment goes to the phase's
   record, read on demand. (§8.2.16 R4)
 * A phase plan holds 2,500 words, up to 10% over, without its end-of-phase report; review checks it.
@@ -160,22 +163,28 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * No ruling leaves the history: a spent or superseded ruling stays in its dated record.
   `clause.py` prints one that only names the identifier asked for as one line, its `holds-now.yaml`
   entry and its first bold phrase, and `--all` prints it in full. (§8.2.50 AZ11)
-* From WP6.03's merge, the first window of an `/np-implement` session reads at most 6,500 words of
+* From WP6.03's merge, the first window of an `/np-implement` session reads at most 8,000 words of
   project text before its first edit: the instruction files, the records and `CLAUDE.md`, as
-  `usage.py --reading` counts them (§8.4.5). A session's first window is the one no message precedes.
+  `usage.py --reading` counts them (§8.4.5). The number holds the standing instructions, the largest
+  plan this section allows, which the session reads whole, and room for the clauses the plan cites.
+  A session's first window is the one no message precedes.
   A later window, after a compaction or not, and the plan and ship windows are reported beside it,
-  not limited. (§8.2.49 AY8; §8.2.50 AZ9, AZ13, AZ15)
+  not limited. (§8.2.49 AY8; §8.2.50 AZ9, AZ13, AZ15, AZ18)
 
 #### 8.4.5 Agents and models
 
-* The model follows the session's kind. Each level of `/np-plan` with its review, `/np-ship`, and the
-  cleanup packages of Phase 6, WP6.02 and WP6.03, whole run on Fable 5.2 at high effort (§8.2.50 AZ4).
-  `/np-implement` runs on Opus 5.5 at high effort, set explicitly, because its default is medium. The
+* The model follows the session's kind. Each level of `/np-plan` with its review runs on Fable 5.2 at
+  high effort. A work-package plan proposes the model of its implementing session and of its ship.
+  Opus 5.5 implements by default, Sonnet 5.5 a package that is very mechanical, and Fable 5.2 one
+  that needs subtle, long-horizon work; Fable 5.2 ships by default. `/np-plan wp` puts both proposals
+  to the author with the plan's other decisions, and the plan is then written for the models ruled:
+  its executors, and how much its *Implementation details* spell out. Each session runs at high
+  effort, set explicitly, because Opus 5.5's default is medium. The
   author picks the model when a session starts; a plan names it, and a pause's prompt names the next
   step's. A scoped item, one that a sub-agent takes whole with its checks, runs on Sonnet 5.5 at high
   effort. Haiku 5.5 takes only mechanical, repetitive work that is fully specified and whose expected
   context stays under 100,000 tokens. An item a sub-agent fails goes to a new worker once, then to the
-  next model. (§8.2.11 L6; §8.2.38 AN8; §8.2.49 AY7)
+  next model. (§8.2.11 L6; §8.2.38 AN8; §8.2.49 AY7; §8.2.50 AZ20, AZ21)
 * The tiers are the same Claude models on either host; `.claude/workflow/hosts/copilot.md` gives
   each tier's Copilot id and each agent's effort, passed at each sub-agent call. (§8.2.25 AA7)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only and on Opus at high

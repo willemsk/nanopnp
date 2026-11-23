@@ -26,7 +26,8 @@ starts from your view and not from the records.
 ## Context
 
 `SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 (AY1 to AY8) and §8.2.50 (AZ1
-to AZ17; AZ8 ruled at WP6.01's plan, AZ13 and AZ14 at WP6.02's item 5, AZ15 to AZ17 at its review).
+to AZ21; AZ8 ruled at WP6.01's plan, AZ13 and AZ14 at WP6.02's item 5, AZ15 to AZ17 at its review, AZ18 to AZ21 at
+WP6.03's plan).
 
 Phase 6 answers one question: **can the library be made one sound base, without moving a number, before the workbench
 is rebuilt and three tools are built on it?** Its gate is §8.1's. Only WP6.01 to WP6.03 are fixed (AZ7); the
@@ -81,10 +82,12 @@ and 8 touches (§8.3).
 
 *Delivered 22 November 2026.* [The plan](wp6.02-the-cleanup-measure-audit-records.md). Live: AZ13's limit, which binds a session's first window (AZ15), from WP6.03's merge; its Outcome's outdated list.
 
-### WP6.03 — The cleanup: instructions, the Copilot host retired (AY5; REV-166 to REV-168, REV-278)
+### WP6.03 — The cleanup: instructions, the Copilot host retired (AY5; AZ18 to AZ21; REV-166 to REV-168, REV-278)
 
-The audit's changes to the instructions; the host's files and rules removed, findable by the author's tag. Done when a
-fresh package session starts under the limit, which then stands in §8.4.4.
+*Planned 23 November 2026.* [The plan](wp6.03-the-cleanup-instructions-copilot-host.md). The instructions a session
+reads first are cut; the host's files and rules are removed, findable by the tag `copilot-host` (AZ19); each plan
+proposes its implementing and shipping model (AZ20, AZ21). Done when a new session's first window reads at most 8,000
+words (AZ18), which then stands in §8.4.4. Fable 5.2 implements it and Opus 5.5 ships it.
 
 ### The rescoping round (AZ7)
 
@@ -118,8 +121,8 @@ Each waits on the rescoping round; none is planned before it.
 | # | Decision | Owner and status |
 |---|---|---|
 | 1 | This round's seven rulings | **Settled by the author, 22 November 2026** (AZ1 to AZ7) |
-| 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 November 2026**: project text in words, six recent packages, nothing leaves, closed items archived (AZ9 to AZ12). The limit's number and the phase plan's word target: **settled by the author, 22 November 2026**, inside WP6.02 from the baseline: 6,500 words, 2,500 for a phase plan (AZ13, AZ14). At WP6.02's review: the limit binds the first window of an `/np-implement` session (AZ15) |
-| 3 | The Copilot tag's name | **Author** confirms at WP6.03's plan (AY5) |
+| 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 November 2026**: project text in words, six recent packages, nothing leaves, closed items archived (AZ9 to AZ12). The limit's number and the phase plan's word target: **settled by the author, 22 November 2026**, inside WP6.02 from the baseline: 6,500 words, 2,500 for a phase plan (AZ13, AZ14). At WP6.02's review: the limit binds the first window of an `/np-implement` session (AZ15). At WP6.03's plan, 23 November 2026: 8,000 words, the plan read whole (AZ18) |
+| 3 | The Copilot tag's name | **Settled by the author, 23 November 2026**: the git tag `copilot-host` (AZ19) |
 | 4 | Whether a pull request's CI runs the Windows leg | **Settled by the author, 22 November 2026**: no; the three platforms at the close alone (AZ8) |
 | 5 | The project's scope, and WP6.04 to WP6.18 with it | **Author**, at the rescoping round (AZ7) |
 | 6 | What AM2's "moves one of them" means, and the drift that stops the re-pin | **Author**, at WP6.13's plan, before any measurement |
@@ -129,7 +132,7 @@ Each waits on the rescoping round; none is planned before it.
 
 | Item | Needed by | If it does not arrive |
 |---|---|---|
-| The tag on the last commit that holds the Copilot host | WP6.03 | The session prints the command and the hash |
+| The tag `copilot-host`, pushed after WP6.03's merge; one new session for WP6.03's measurement | WP6.03 | The session prints the commands and the hash; the measurement waits |
 | What to keep, cut and add | The rescoping round | The round proposes from the records |
 | Merges; tags a session cannot push | Each package | The session dispatches `tag.yml` and prints the commands |
 

@@ -1,21 +1,22 @@
 # Current work
 
-Updated 22 November 2026. Navigation;
+Updated 23 November 2026. Navigation;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-Phase 6's first package is merged: the Windows test run passes again.
+Phase 6's first two packages are merged.
 
-The second package, the cleanup's first half, is built. A session can now report how much of the project's own text
-it read before its first edit, and six recent packages were measured: a fresh implementing session read about 8,100
-words. The instruction files were audited for the next package. Closed review items and decisions moved to archives,
-cutting each register to about a third; nothing left the record of your rulings. As you ruled, a fresh implementing session reads at most 6,500 words from the next package's
-merge, and a phase plan holds 2,500.
+The third package, the cleanup's second half, is planned. It cuts the instructions every session reads first by almost
+half, removes the setup for the Copilot app and keeps it findable by a tag, and teaches the project-planning command
+to hold the rescoping round that follows. You ruled four things at its plan. A fresh implementing session may read
+8,000 words before its first edit, and reads its plan whole. The tag is named copilot-host. Each plan now proposes
+which model implements and which one reviews, and you decide. For this package Fable 5.2 implements and Opus 5.5
+reviews.
 
-**Your call.** None before the merge. Two findings of the audit wait for you at the next package: whether a review
-may run on the implementing session's model, and who owns the code. *Next:* the cleanup's review, `/np-ship`, on the
-planning model.
+**Your call.** Nothing before the plan's review. The second package's tag is not yet published. Who owns the code
+waits for the rescoping round. *Next:*
+the plan's review, on the planning model.
 
 ## Position
 
@@ -24,9 +25,10 @@ planning model.
 - **Phase 6 is planned** ([the plan](phase-6/phase-6-library-foundations.md); §8.2.50), `v0.7`: WP6.01 to WP6.03,
   then the rescoping round at `/np-plan project`; WP6.04 to WP6.18 provisional until it rules. Phases 7 to 11:
   [the input note](sessions/phases-6-to-11.md).
-  **WP6.01 merged** ([the plan](phase-6/wp6.01-the-windows-leg.md)); its tag `v0.7.0-alpha.1`.
-  **WP6.02 implemented** ([the plan](phase-6/wp6.02-the-cleanup-measure-audit-records.md); AZ9 to AZ14).
-  **Next:** `/np-ship wp 6.02`, on Fable 5.2. host: claude-code.
+  **WP6.01 and WP6.02 merged**; `v0.7.0-alpha.2` is not yet published.
+  **WP6.03 planned** ([the plan](phase-6/wp6.03-the-cleanup-instructions-copilot-host.md); AZ18 to AZ21).
+  **Next:** `/np-plan wp 6.03 review`, on Fable 5.2; then `/np-implement wp 6.03` on Fable 5.2, its ship on
+  Opus 5.5.
 
 ## Not to be re-decided
 
@@ -38,13 +40,13 @@ planning model.
   draws the molecule** (AF4). **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4).
 - **The workbench's design rulings stand** (§8.2.31 to §8.2.46; WB-33 to WB-63; VER-44, VER-56); every open item
   names a package (§8.2.46).
-- **QR-10's trial waits for v1.0's release candidate; QR-16's keyboard gaps and five Qt details are carried to
-  Phase 7** (§8.2.47; REV-274).
+- **QR-10's trial waits for v1.0's release candidate; QR-16's gaps are carried to Phase 7** (§8.2.47; REV-274).
 - **The Windows leg is first; every later gate asks the three platforms** (§8.2.49 AY4); **a pull request and a
   package's ship test Linux alone, the close the three** (§8.2.50 AZ8). **The Copilot host is
-  retired at the cleanup** (AY5). **Fable 5.2 plans and ships, Opus 5.5 implements** (AY7).
-- **The reading limit counts project text in words; 6,500 for an `/np-implement` session's first window from
-  WP6.03's merge; a phase plan 2,500** (§8.2.50 AZ9 to AZ17); **nothing leaves the rulings' history; a closed item is archived**.
+  retired, findable by the tag `copilot-host`** (AY5; AZ19). **Fable 5.2 plans; each plan proposes its implementing
+  and shipping model, and the author rules them** (AY7; AZ20, AZ21).
+- **The reading limit counts project text in words; 8,000 for an `/np-implement` session's first window from
+  WP6.03's merge; a phase plan 2,500** (§8.2.50 AZ9 to AZ18); **nothing leaves the rulings' history; a closed item is archived**.
 - **An open-minded rescoping follows WP6.03; no package from WP6.04 is planned before it** (§8.2.50 AZ7). Until it
   rules: the phases are library, workbench, composer, mutator, sketcher, validation (AY1, AY2); the speed-up closes
   Phase 6, with no fixed target (AY3; AZ6); the equations are brought to §4 there (AY6); §5.4.1's interface is Phase 8's
@@ -57,8 +59,8 @@ planning model.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
 - **The 200 ms redraw**'s GPU run (REV-258); **verdicts at each design round** (AJ8).
 - **Rulings on a cycle (H6) or drift (I4)**.
-- **Audit F2 and F3**, a ship on the implementer's model and who owns the code, at WP6.03 and the rescoping round;
-  **the Copilot host's tag** (AY5), at WP6.03; **what to keep, cut and add**, at the rescoping round (AZ7); **QR-10's observer** (AW2).
+- **Who owns the code** (audit F3) and **what to keep, cut and add**, at the rescoping round (AZ7); **the tag
+  `copilot-host`**, pushed after WP6.03's merge; **one new session** for its measurement; **QR-10's observer** (AW2).
 
 ## On demand
 
