@@ -255,7 +255,7 @@ any requirement, tool or phase, and the rulings that ruling names. It changes th
 - [x] 541526b 6. The models: the `np-plan`, `np-implement` and `np-ship` skills, `CLAUDE.md`, the core, `holds-now.yaml`
   (D5). Done when the code and review say so and row 4 still passes. **Executor:** main
 - [x] 7. Checkpoint for a new session (D8). **Executor:** main
-- [ ] 8. The measurement: its Outcome, §8.4.4, `holds-now.yaml` (D1, D8). Done when Verification's row 5 passes.
+- [x] 20bb8b4 8. The measurement: its Outcome, §8.4.4, `holds-now.yaml` (D1, D8). Done when Verification's row 5 passes.
   **Executor:** main
 - [ ] 9. `CHANGELOG.md`'s `## [0.7.0-alpha.3]`; REV-272's section gains the instructions' word counts, before and
   after. Done when the code and review say so. **Executor:** main
