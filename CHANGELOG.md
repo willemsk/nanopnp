@@ -24,6 +24,30 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.7.0-alpha.3]
+
+WP6.03: the cleanup's second half, the instructions cut and the Copilot host retired; tag `v0.7.0-alpha.3` once
+merged (§8.2.49 AY5, AY7, AY8; §8.2.50 AZ7, AZ18 to AZ21; REV-166 to REV-168, REV-272, REV-278). A user of the
+program sees no change. The [plan](docs/plans/phase-6/wp6.03-the-cleanup-instructions-copilot-host.md) records the
+work.
+
+- **Changed**:
+  - The instructions an implementing session reads first hold 3,246 words, from 5,789: `CLAUDE.md` 1,505 from
+    2,349, the workflow core 899 from 1,366, `np-implement/wp.md` 739 from 1,276, and `current.md` is opened only
+    to update it. A rule stated twice is kept once; the finishing rules moved to `.claude/workflow/finish.md` and
+    `np-implement/finish.md`, read when a session finishes (AY8).
+  - The first window of an `/np-implement` session reads at most 8,000 words of project text before its first edit,
+    its plan read whole (AZ18). A new session on the cut read 7,186.
+  - A work-package plan proposes its implementing and its shipping model, and the author rules them; Opus 5.5
+    implements and Fable 5.2 ships by default. The ship chains only where one model does both (AZ20, AZ21).
+  - `/np-plan project` holds a rescoping round when a ruling opens the project's scope (AZ7; REV-278 fixed).
+- **Removed**:
+  - The setup for the Copilot app and the Antigravity adapter: `.claude/workflow/hosts.md`, `.github/hooks/`,
+    `.github/copilot-instructions.md`, `.agents/` and the hooks' branches for them. The workflow runs on Claude Code
+    alone. The git tag `copilot-host` finds the last commit that holds them (AY5; AZ19); REV-166 to REV-168 are
+    declined.
+  - `.claude/scripts/audit/`, the scripts of code review 039's audit, found at the same tag.
+
 ## [0.7.0-alpha.2]
 
 WP6.02: the cleanup's first half, the reading measured, the instructions audited, the records cut; tag
