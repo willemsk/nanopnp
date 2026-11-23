@@ -73,9 +73,9 @@ Run the review from this session. Call the skill directly, never inside an `Agen
 Skill(skill="code-review", args="xhigh --fix --max-findings all <pr-number> -- Write the report to docs/code_reviews/CODE_REVIEW_NNN.md, NNN one above the highest present. Static review. A finding is never fixed by adding an off-category test (§8.2.13 N1). Run no benchmark, sweep, cost study, gate.sh or pytest --nightly; /np-ship gates the fixes afterwards. Run a command in the foreground only if it ends within 240 s. Start any longer command in the background and poll it with waits of at most 240 s each, re-issuing a wait that ends.")
 ```
 
-Observed 2026-11: inside an `Agent` the skill returned no findings. Called directly, it starts its
-own review agent. Keep the review without gaps. The commit hook, `gate.sh run` and full test runs stay
-in this session, never in the reviewer. The gate in step 3 below, not the reviewer, verifies the fixes.
+Inside an `Agent` the skill returns no findings; called directly, it starts its own review agent.
+The commit hook, `gate.sh run` and full test runs stay in this session, never in the reviewer. The
+gate in step 3 below, not the reviewer, verifies the fixes.
 
 **The pass must give evidence that it completed, not that it edited files.** Wait for the review
 skill's final report. It must give the reviewed revision, the completed status, the findings (an empty

@@ -181,7 +181,8 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   context stays under 100,000 tokens. An item a sub-agent fails goes to a new worker once, then to the
   next model. (§8.2.11 L6; §8.2.38 AN8; §8.2.49 AY7; §8.2.50 AZ20, AZ21)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only and on Opus at high
-  effort (§8.2.38 AN9), and the CI-log classifier. Eight scripts are kept in `.claude/scripts/`: `clause.py` prints a clause by identifier,
+  effort (§8.2.38 AN9), and the CI-log classifier. Eight scripts are kept in `.claude/scripts/`,
+  beside `/np-gui`'s own in `.claude/scripts/gui/`: `clause.py` prints a clause by identifier,
   `duplicates.py` names a number that two items of one register share (§8.4.4), `same_tree.py`
   checks that changed Python files differ only in prose (§8.2.11 L5), `decisions.py` writes the
   decisions register and with `--check` compares it, `index_records.py` writes the indexes of the
