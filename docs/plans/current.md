@@ -4,7 +4,7 @@ Updated 23 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-Phase 6's next package, the ground-up review, is planned.
+Phase 6's next package, the ground-up review, is planned, and its plan is reviewed.
 
 The review asks how the program would be built if we started over, and takes only the paper's physics as given. It
 changes no code and hands you a report on the project's pages: what the program should become, the design it would
@@ -18,8 +18,8 @@ report and Opus checks it.
 The review: about 10 sessions, 7 to 13 agent hours and 13 times you act. Phase 6 ahead: about 66 sessions, 54 to 107
 agent hours and 102 times you act, if the review changes nothing.
 
-**Your call.** Do you approve the review's plan, once its own review has read it? *Recommendation:* approve, so the
-review can start. Yours later: three answers at its start, then the rulings on its proposals.
+**Your call.** Do you approve the review's plan, which its own review has now read and corrected? *Recommendation:*
+approve, so the review can start. Yours later: three answers at its start, then the rulings on its proposals.
 
 ## Position
 
@@ -28,12 +28,12 @@ review can start. Yours later: three answers at its start, then the rulings on i
   merged**, `v0.7.0-alpha.3` published, the tag `copilot-host` pushed.
 - **The project is rescoped** ([§8.2.51](../../specification/history/51-the-project-rescoped.md)). Phases 7 to 12:
   [the input note](sessions/phases-6-to-11.md).
-- **WP6.04, the ground-up review, is planned**
+- **WP6.04, the ground-up review, is planned and its plan reviewed**
   ([its plan](phase-6/wp6.04-the-ground-up-review.md);
   [§8.2.52](../../specification/history/52-phase-6-amended-the-ground-up-review-planned.md)); WP6.05 follows the
   rulings on it; the rest is provisional.
-- **Next:** `/np-plan wp 6.04 review` on Fable 5.2; then `/np-implement wp 6.04` on Fable 5.2 and `/np-ship wp 6.04`
-  on Opus 5.5, in a new session. After WP6.04: `/np-plan project`, `/np-plan amend 6`, `/np-plan wp 6.05`.
+- **Next:** `/np-implement wp 6.04` on Fable 5.2, then `/np-ship wp 6.04` on Opus 5.5 in a new session. After WP6.04:
+  `/np-plan project`, `/np-plan amend 6`, `/np-plan wp 6.05`.
 
 ## Not to be re-decided
 
