@@ -49,7 +49,7 @@ two differ, so the ship never chains: the pause's prompt names Opus 5.5.
 | **D5 The models** | A work-package plan proposes its implementing and its shipping model, `/np-plan wp` puts both to the author, and the plan is written for the models ruled. Opus 5.5 implements and Fable 5.2 ships by default. `NANOPNP_AUTO_SHIP` chains only where the plan names one model for both | Ruled by the author, §8.2.50 AZ20, AZ21 |
 | **D6 The audit's rest** | Hunk 3 (F4) is applied; hunks 1 and 2 (F1) are replaced by D5. The glob of F8 goes. `.claude/scripts/audit/` is deleted, found again at D4's tag; §8.4.5 names `.claude/scripts/gui/` as `/np-gui`'s scripts. F3 stays the rescoping round's | The audit; WP6.02's outdated list; decided by the plan |
 | **D7 The rescoping round** | `np-plan/project.md` says what a round reads and may open when a ruling opens the project's scope, and names `/np-plan amend <n>` for the phase in flight. REV-278 is `fixed` | AZ7; REV-278's recommendation; decided by the plan |
-| **D8 The measurement** | After the cut is pushed, the author starts a new session, and its first window is measured with `usage.py --reading`. At most 8,000 words passes. A miss is recorded, the largest standing file is cut again, and another new session measures. The number is not ruled again | AY8; AZ13 and AZ18 ("re-ruled only before a measurement"); decided by the plan |
+| **D8 The measurement** | After the cut is pushed, the author starts a new session on the package's branch, so that it loads the cut `CLAUDE.md` and skills, and its first window is measured with `usage.py --reading`. At most 8,000 words passes. A miss is recorded, the largest standing file is cut again, and another new session measures. A session that starts on another tree measures that tree: it is recorded and is no miss. The number is not ruled again | AY8; AZ13 and AZ18 ("re-ruled only before a measurement"); decided by the plan; the branch added at item 8 |
 
 ### Grounding
 
@@ -130,6 +130,10 @@ two differ, so the ship never chains: the pause's prompt names Opus 5.5.
 - `usage.py --reading` prints one line per window of the session, marked `first window` or `later window`, with the
   words of project text by part and the ten largest files. It reads `$CLAUDE_CODE_SESSION_ID`'s transcript.
 - The count ends at the first `Edit`, `Write` or `NotebookEdit` (AZ17). A resumed session's window is a later one.
+- A new cloud session checks out a branch made from `main`. Until the package merges, the `CLAUDE.md` it loads
+  and the skill files it is sent to are `main`'s, the uncut ones, unless the author starts it on the package's
+  branch. `usage.py --reading` counts the `CLAUDE.md` of the tree it runs in, not the one the session loaded
+  (found at item 8).
 
 ### Implementation details
 
@@ -199,14 +203,26 @@ any requirement, tool or phase, and the rulings that ruling names. It changes th
 
 **Items 7 and 8 (D8).**
 
-1. Item 7: tick, gate, push. Run `checkpoint.sh clear`. Print a prompt that asks for a new session on Fable 5.2, not
-   a `/compact`, with `/np-implement wp 6.03`. End the turn whatever `NANOPNP_AUTO_CHECKPOINT` says.
+1. Item 7: tick, gate, push. Run `checkpoint.sh clear`. Print a prompt that asks for a new session on Fable 5.2,
+   started on the package's branch, not a `/compact`, with `/np-implement wp 6.03`. End the turn whatever
+   `NANOPNP_AUTO_CHECKPOINT` says.
 2. Item 8, in the new session: read as the instructions say, with no clause before the first edit. Make the first change with `Edit`: the Outcome's
    heading under this section. Then run `uv run .claude/scripts/usage.py --reading` and take the `first window` line.
 3. Record the words by part, the ten largest files and the words left under the limit for a plan at its cap. On a
    pass, §8.4.4's bullet loses "From WP6.03's merge",
    and `holds-now.yaml` gives AZ18 `§8.4.4` and AY8 no `open:`.
 4. On a miss, record it, cut the largest standing file, commit, and repeat items 7 and 8.
+
+> **Outcome — the first new session measured `main`'s tree, not the cut.** The session of 23 November started on a
+> branch at `main` (`e11ef54`). It loaded the uncut `CLAUDE.md` (2,342 words) and read the uncut core,
+> `np-implement/wp.md` and `current.md` before it checked out the package's head and read the cut files. Its
+> `first window` line: 10,208 words of project text before the first edit (instructions 4,348; records 4,355;
+> `CLAUDE.md` 1,505, counted from the head's tree, not the file loaded); 98,038 tokens at the start, 153,311 at the
+> edit; largest: this plan 3,349, `core.md` 2,265 (uncut and cut), `np-implement/wp.md` 2,015 (uncut and cut),
+> `current.md` 695, `knowledge/index.md` 311. It measures no cut and is no miss, so no file is cut again. Without
+> the three uncut reads the window would hold about 6,870 words, 1,130 under the limit, and 629 under it with a
+> plan at its cap: an estimate, not D8's measurement. D8 and item 7's prompt now name the package's branch; item 7
+> is repeated and row 5 stays open.
 
 **After the merge.** The ship's report adds, each in its own block, with the commit written out:
 `git log --diff-filter=D --format=%H -1 origin/main -- .claude/workflow/hosts.md`, whose parent is the tag's commit;
