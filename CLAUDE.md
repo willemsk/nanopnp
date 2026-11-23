@@ -8,109 +8,74 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 
 - **Read `knowledge/index.md`.** It is the verified knowledge base.
 - **`SPECIFICATION.md` is normative** (`FR-`, `QR-`, `CON-`, `PHY-`, `NUM-`, `VER-`, `VAL-`). It is the
-  entry point and the map. The text is in `specification/`. Dated rulings are in
-  `specification/history/`; read them on demand. `uv run .claude/scripts/clause.py <ID>` prints a
+  entry point and the map; the text is in `specification/`, the dated rulings in
+  `specification/history/`, read on demand. `uv run .claude/scripts/clause.py <ID>` prints a
   clause. Cite the identifier when you implement or test one. A change to specified behaviour changes
   the specification in the same commit.
 - **Never web-search the model equations, correction functions or parameters.** Popular summaries are
   wrong. §4 of `SPECIFICATION.md` states the model's equations and governs them; the concepts under
-  `knowledge/01-physics-epnpns/` back it. Where sources disagree, the
-  COMSOL model report governs (§1.6). Web search is fine for library versions and APIs (prefer
-  Context7) and for literature newer than the knowledge base.
+  `knowledge/01-physics-epnpns/` back it. Where sources disagree, the COMSOL model report governs
+  (§1.6). Web search is fine for library versions and APIs (prefer Context7) and for literature
+  newer than the knowledge base.
 - **Rules by path.** `.claude/rules/physics-numerics.md` and `.claude/rules/python.md` load when you
-  read or edit a file they cover. A session that writes only Markdown reads them explicitly.
+  read or edit a file they cover. The second governs prose in code (§8.4.2). A session that writes
+  only Markdown reads them explicitly.
 
 ## Setup
 
 `uv` owns the environment. Use no `pip`, no manual `activate`, no bare `python` or `pytest`.
 
-- `uv sync --all-extras` creates or refreshes `.venv` from `uv.lock`.
-- A stale `.venv` in a session takes `uv sync --all-extras --frozen`, as the session hook runs it.
-  `--frozen` installs `uv.lock` as it is and does not fail on a stale lock. `UV_LOCKED=1`, which the
-  gate and CI set, and `uv lock --check` fail on one.
-- `uv add [--group dev] <pkg>` adds a dependency.
+- `uv sync --all-extras` creates or refreshes `.venv` from `uv.lock`. A stale `.venv` in a session
+  takes `--frozen` too: it installs `uv.lock` as it is. The gate and CI fail on a stale lock.
+- `uv add [--group dev] <pkg>` adds a dependency. After a hand edit of `pyproject.toml`, run `uv lock`.
 - `uv run <anything>` is the only way to run code.
-- After you edit `pyproject.toml` by hand, run `uv lock`. CI fails on a stale lock.
 
 ## Commands
 
 | Command | Purpose |
 |---|---|
 | `uv run pytest` | Tiers 1–2 without `nightly` and `slow` tests: the default selection |
-| `uv run pytest --nightly` | Adds the `nightly` walks. `-m "(tier1 or tier2) and slow"` adds the `slow` tests, as the nightly run does. Naming a `nightly` test's file runs it without the flag |
+| `uv run pytest --nightly` | Adds the `nightly` walks; `-m "(tier1 or tier2) and slow"` adds the `slow` tests. Naming a `nightly` test's file runs it without the flag |
 | `uv run pytest -n auto --dist loadfile` | Parallel. Set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` to 1 |
 | `uv run pytest -m tier1` / `-m tier3` / `-m slow` | Unit tests / reference comparison / benchmarks (the last two are not gated) |
 | `uv run ruff check . && uv run ruff format .`; `uv run mypy src/` | Lint and format; strict types |
 | `uv run nanopnp --env` | The resolved environment and data locations |
-| `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` | The documentation build; `uv run just docs` adds CI's `docs` checks (VER-45) |
-| `uv run just` | Lists the recipes of `justfile`: these commands, the record scripts and the gate's log. A recipe never commits or pushes |
+| `uv run just docs` | The strict documentation build with CI's `docs` checks (VER-45) |
+| `uv run just` | Lists `justfile`'s recipes. None commits or pushes |
 
-**The gate before a commit** is the commit hook. `gate.sh` runs before each `git commit` that Claude
-Code makes (`--no-verify` skips it). It runs the lock check, lint, format, the decisions page's check,
-types and the Tier 1 tests without `slow` and without `nightly`. Do not run these checks by hand before a commit: a manual run
-writes no stamp, so the hook runs them all again. Run the hook itself by hand only to reproduce a
-refusal:
-`echo '{"tool_input":{"command":"git commit"}}' | .claude/hooks/gate.sh`.
-
-**The gate before a push:** `.claude/hooks/gate.sh run`. It runs lint, format, the decisions page's
-check and types, then the per-push selection:
-
-- Tier 1;
-- the Tier 2 tests that neither walk the pipeline nor carry `slow`;
-- example 01, while it solves in under 60 s;
-- example 02's charged ePNP-NS walk.
-
-Then it runs the installation's self-test, `nanopnp gui --selftest`.
-
-No coverage is measured. A commit-hook pass never stands in for `run`.
-
-1. Start `run` with Bash `run_in_background`: `.claude/hooks/gate.sh run > <log> 2>&1; echo "exit $?" >> <log>`,
-   or `uv run just gate <log>`.
-2. Wait for it in the same turn: `until grep -q '^exit ' <log>; do sleep 10; done` in the foreground.
-   If the 10-minute limit ends the wait, wait again.
-3. Push when the log ends in `exit 0`. The hook refuses a push of a tree it has not passed. End the
-   turn only then. A turn that ends on an unpushed commit trips the environment's stop hook.
-
-`run` sets `NANOPNP_REQUIRE_GMSH=1`, `NANOPNP_REQUIRE_BROWSER=1`, and `NANOPNP_REQUIRE_APBS=1` where
-the wheel exists. `tests/tier1/test_gui_screens.py` launches Chromium: the one `NANOPNP_CHROMIUM`
-names, which `run` sets to one under `/opt/pw-browsers/` where it finds one, or else Playwright's own.
-A backend or browser that cannot start then fails; it does not skip.
-
-When only prose changed, the gate runs ruff, the decisions page's check and the `records` tests
-alone: the few Tier 1 tests that hold code to a Markdown record (VER-56, VER-61, VER-79). Prose is
-Markdown outside `src/`, `data/` and `examples/`, and `specification/history/holds-now.yaml`
-(`.github/scripts/prose-only.sh`). The commit hook judges the change since `HEAD`; `run` judges it
-since the branch's last commit that passed `run`, or since `main` before the first pass. A plan or
-a record pushed after the code is then checked in seconds. CI's documentation build still runs.
+**The gate.** The commit hook, `.claude/hooks/gate.sh`, runs lint, format, types and Tier 1 before each
+`git commit` that Claude Code makes. Do not run them by hand first: a manual run writes no stamp, so
+the hook runs them again. A push needs `.claude/hooks/gate.sh run` to pass on its tree, as the core's
+*Gate and push* says (`.claude/workflow/core.md`).
 
 ## Project structure
 
 `src/nanopnp/` has one subpackage per module of SPECIFICATION.md §5.1:
 
-- `core/` units, constants, content hashing, errors, paths, the stage registry; `structure/` PDB/mmCIF and trajectory IO;
-  `density/` smearing, ensemble averaging; `symmetry/` Cₙ averaging and reduction to (r, z)
+- `core/` units, constants, content hashing, errors, paths, the stage registry; `structure/` PDB/mmCIF
+  and trajectory IO; `density/` smearing, ensemble averaging; `symmetry/` Cₙ averaging and reduction
+  to (r, z)
 - `geometry/` contours, CAD assembly, analyte bodies; `mesh/` mesher adapters (netgen, gmsh), size
   fields, quality gates; `numerics/` linear solvers, damped Newton, gates, the axisymmetric measure
 - `charge/` PDB2PQR, partial charges, projection, dielectric; `materials/` electrolytes and the
   correction registry; `physics/` weak forms and the wall-distance field; `solve/` continuation
   ladder, warm start; `post/` QoI (current, transport number, EOF, forces); `plot/` figures of the
   artefacts (Matplotlib, the `plot` extra); `sweep/` sweeps
-- `io/` case schema, artefact and resolved-case types, result store, provenance manifests. It is the base layer
-  and imports only `core` at run time. `pipeline/` case resolution, the walk, the assembler; `api/`
-  the Python interface (`Case`, `Session`, sweeps, reproduction), above `sweep/`; `cli/` and
-  `gui/` are thin shells that hold no physics; `validation/` benchmarks, MMS, COMSOL comparison
+- `io/` case schema, artefact and resolved-case types, result store, provenance manifests. It is the
+  base layer and imports only `core` at run time. `pipeline/` case resolution, the walk, the
+  assembler; `api/` the Python interface (`Case`, `Session`, sweeps, reproduction), above `sweep/`;
+  `cli/` and `gui/` are thin shells that hold no physics; `validation/` benchmarks, MMS, COMSOL
+  comparison
 
-Outside it: `data/corrections/*.yaml` (fitted parameters, shipped in the wheel), `specification/`,
-`knowledge/`, `tests/tier{1,2,3,4}/`, `docs/`, and `docs/plans/` (planning, not requirements;
-`SPECIFICATION.md` wins).
+Outside it: `data/corrections/*.yaml` (fitted parameters, shipped in the wheel) and `docs/plans/`
+(planning, not requirements; `SPECIFICATION.md` wins).
 
 A stage takes typed inputs and emits a typed, serialisable artefact that carries a content hash.
 Every stage stays independently invocable, cancellable and introspectable (FR-27).
 
 ## Testing
 
-Tests live in `tests/tier{1,2,3,4}/` (§7.1). The directory's `conftest.py` sets the marker, so the
-location decides the tier.
+A test's directory, `tests/tier{1,2,3,4}/`, decides its tier (§7.1).
 
 | Tier | Content | Runtime | When |
 |---|---|---|---|
@@ -119,22 +84,22 @@ location decides the tier.
 | 3 | Cross-implementation comparison (VAL-01 … VAL-06, VAL-16, VAL-17) | hours | nightly, recorded not gated |
 | 4 | Experimental reproduction (VAL-07 … VAL-14) | hours | before a tagged release |
 
-- **The test scope** is `SPECIFICATION.md` §7.1 and §8.2.13 N1. Write a test only for physics and
+- **The test scope** is §7.1 and §8.2.13 N1. Write a test only for physics and
   numerics, core mechanisms, and the licence and architecture guards (CON-10, CON-12, VER-61,
-  VER-65, VER-79, no backend import). Each entry point keeps a thin smoke test. Test a refusal only where
-  it is a numerical or physical gate.
+  VER-65, VER-79, no backend import). Each entry point keeps a thin smoke test. Test a refusal only
+  where it is a numerical or physical gate.
 - A new test's name or first line says which silent failure it catches, for example
   `test_ver03_ion_wall_function_check_values`.
 - Name a requirement identifier in a test only where the requirement is physics, numerics or a core
   mechanism. Other identifiers are verified at review (§7.1; N3).
-- `/np-ship` deletes off-scope tests (its §4). No tolerance is slackened and no kept test is weakened.
+- No tolerance is slackened and no kept test is weakened.
 - Fix Tier 2 before you chase a Tier 3 discrepancy.
 - Tests use no network and no COMSOL licence. Tier 3 reads archived reference data.
 
 ## Provenance and reproducibility
 
 The case file (`schema: nanopnp/case/v0.6`) is the unit of reproducibility. Every artefact carries a
-content hash over its payload and producing parameters. The hash is its cache key. Every result
+content hash over its payload and producing parameters: its cache key. Every result
 carries a manifest (FR-25, §5.3.3). The manifest holds the input hashes, library versions, mesh
 hash, solver settings, stabilisation mode, correction file versions and **every switch set away from
 the validated default**. A result whose manifest cannot reconstruct the run is not a result.
@@ -142,51 +107,29 @@ the validated default**. A result whose manifest cannot reconstruct the run is n
 ## Implementation workflow
 
 One work package per PR, green on tiers 1–2 before the next one in its lane (at most two lanes,
-`.claude/workflow/core.md`, *Two lanes*). To plan or resume, read `docs/plans/current.md`, then the WP's Execution brief and the
-sections it cites. A brief never overrides a normative requirement.
+§8.4.4). A plan's brief never overrides a normative requirement.
 
-| Step | Command | What it does |
-|---|---|---|
-| 0 | `/np-plan project`, `/np-plan phase <n>`, `/np-plan amend <n>` | Puts the decisions to the author; writes the rulings into `specification/history/` and the plan; pushes; opens its PR; pauses for `/compact` |
-| 1 | `/np-plan wp <n>` | Writes and commits the WP plan; pushes; opens the package's PR; pauses for `/compact` |
-| 0–1 | `/np-plan <level> [n] review` | Reviews the plan (`/code-review medium --fix`); fixes it; gates; pushes; gives the summary for approval |
-| 2 | `/np-implement [wp <n>]` | Executes the plan; gates; pushes; opens or reuses the PR; pauses for `/compact` |
-| 3–4 | `/np-ship [wp <n>]` | Gates; pushes; reviews (`/code-review xhigh --fix`); drives CI to green; prints the tag commands |
-| close | `/np-ship phase <n>` | Ships the close package and tags the release |
+- `/np-plan <project | phase n | amend n | wp n>` puts the decisions to the author and commits the
+  plan; with `review` after the level it reviews the plan and summarises it for approval.
+- `/np-implement [wp <n>]` executes the plan, gates, pushes and opens the PR.
+- `/np-ship [wp <n> | phase <n>]` reviews the package, drives CI to green and prints the tag
+  commands. A phase's close also tags the release.
 
-Step 2 pauses for `/compact`; `/np-ship` then runs in that session or a fresh one, and puts to the
-author each finding against a decision the implementing session took (`.claude/workflow/core.md`,
-*Report and stop*). Two switches make the pauses go on instead, for a session that inherits them (the
-shell, the cloud environment's variables, or `env` in `.claude/settings.local.json`):
-`NANOPNP_AUTO_CHECKPOINT=1` for `/np-implement`'s compaction checkpoints, `NANOPNP_AUTO_SHIP=1` for its
-pause before `/np-ship`. No hook can compact: Claude Code's own compaction comes when the context fills,
-and `.claude/hooks/checkpoint.sh` carries the checkpoint's prompt across it; `checkpoint.sh clear`
-drops a saved one. A cloud session cannot push a tag; after the merge `/np-ship` dispatches `tag.yml` and prints the
-commands. A choice put to the author follows *Putting a choice to the author* in `.claude/workflow/author.md`. The steward skill governs a PR in flight. `/np-gui <render | review | publish | collect | grill>`
-renders screens and mockups headless, reviews them, publishes them for the author's verdicts, and runs
-a design round (§8.4.4).
+Each command reads `.claude/workflow/core.md`, then its level's file. §8.4.4 holds the workflow's
+rules, its pauses and their two switches; §8.4.5 the agents, the models and the kept scripts. A
+choice put to the author follows `.claude/workflow/author.md`.
 
 **Models:** `/np-plan` at each level, its review and `/np-ship` run on Fable 5.2 at high effort;
 `/np-implement` runs on Opus 5.5 at high effort, set explicitly. A scoped item goes to a Sonnet 5.5
 sub-agent at high effort. Haiku 5.5 takes only mechanical, repetitive work that is fully specified and
-needs under 100k tokens of context (§8.2.38 AN8; §8.2.49 AY7). The kept helpers are the `physics-reviewer`,
-`gui-reviewer` and `ci-log-classifier` sub-agents and eight scripts in `.claude/scripts/`:
-`clause.py` prints a clause, `duplicates.py` names a number that two items of one register share,
-`same_tree.py` checks that changed Python files differ only in prose (§8.2.11 L5),
-`decisions.py` writes the decisions register, `index_records.py` writes the indexes of the plans
-and reviews, `links.py` checks every relative link, `archive_items.py` moves the closed review
-items to `docs/project/review-archive.md` at a phase's close, and `usage.py` measures a session's
-cost in sessions, agent hours, touches and tokens from its transcript, and with `--reading` the
-project text a window read before its first edit (§8.4.5). The caps on a WP plan, and its executors, are in `.claude/skills/np-plan/wp.md` (§8.4.4; §8.2.15 Q1;
-§8.2.16 R11).
+needs under 100k tokens of context (§8.4.5).
 
 **Code review reports** go to `docs/code_reviews/CODE_REVIEW_NNN.md`, with NNN one above the highest
-present. The skill that runs the review gives that path in the brief after `--`.
+present.
 
 **Open items** are a finding not fixed, a deferral, or a question for the author. Each is a `REV-nn`
-row in `docs/project/review-findings.md` with a section in `review-items.md`. It stays until the
-commit that resolves it sets it `fixed`; the phase's close moves it to `review-archive.md` (§8.4.6;
-§8.2.8 H12). A PR body is never its only record.
+row in `docs/project/review-findings.md` with a section in `review-items.md`, until the commit that
+resolves it sets it `fixed` (§8.4.6). A PR body is never its only record.
 
 ## Git
 
@@ -196,10 +139,6 @@ commit that resolves it sets it `fixed`; the phase's close moves it to `review-a
   in `CONTRIBUTING.md`, *Versions and releases*.
 - `main` keeps a linear history. Rebase a branch on `main`, never merge `main` into it, and push a
   rebased branch with `--force-with-lease` (`.claude/workflow/core.md`, *Gate and push*).
-
-## Prose in code
-
-In-code prose follows `.claude/rules/python.md`, which loads when you edit a `.py` file (§8.4.2).
 
 ## Durable learnings
 
@@ -215,7 +154,6 @@ scope opinions belong in the specification.
 
 ## Do NOT
 
-- Use `pip`, a hand-activated venv, or bare `python` or `pytest`.
 - Import `gmsh` on the default path. It is GPLv2+ and an optional backend only (CON-10, ADR-002).
 - Depend on Triangle, MeshPy or TetGen (CON-12).
 - Use PyQt, or a front-end dependency under a licence CON-09 does not allow (CON-09).

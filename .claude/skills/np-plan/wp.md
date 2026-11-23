@@ -136,7 +136,7 @@ Link the planned package and its live dependencies. Its word target is in its *H
    the package is planned, write the ruling as `rulings.md`, beside this file, says.
 2. Commit `docs: WP<n> implementation plan`, with the identifiers in the body. Gate and push (the
    core), so that another session on another machine can work from the branch.
-3. Open the PR by the core's *PR contract*. It is the package's PR, and `/np-implement` reuses it. The
+3. Open the PR by the *PR contract* of `.claude/workflow/finish.md`. It is the package's PR, and `/np-implement` reuses it. The
    body's In brief is the plan's. *What this delivers* says that the plan is in and the implementation
    follows. *Verification* ticks only the plan's gate, and says that the plan's review follows as
    `/np-plan wp <n> review` and the code's review waits for `/np-ship`.

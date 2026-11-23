@@ -66,8 +66,10 @@ two differ, so the ship never chains: the pause's prompt names Opus 5.5.
   `CLAUDE.md`'s *Implementation workflow* ("To plan or resume, read"); and `session-start.sh`'s summary line.
   `np-implement/wp.md:Load the brief` names the file nowhere itself.
 - `CLAUDE.md`'s *Commands* states the push gate's selection, its `NANOPNP_REQUIRE_*` variables and the prose-only
-  rule. §7.6 (`specification/07-verification/06-continuous-integration.md`), `CONTRIBUTING.md`'s *The gate* and
-  `gate.sh`'s header state each of them too.
+  rule. §7.6 (`specification/07-verification/06-continuous-integration.md`) and `CONTRIBUTING.md`'s *The gate*
+  state the selection, and between them `NANOPNP_REQUIRE_GMSH` and `NANOPNP_REQUIRE_BROWSER`. The prose-only rule
+  is stated by `gate.sh` (its header and the comment above `docs_only`) and `.github/scripts/prose-only.sh`, and
+  `NANOPNP_REQUIRE_APBS` by `gate.sh` alone (corrected at item 5).
 - `CLAUDE.md`'s *Implementation workflow* holds the command table, the two switches and the list of eight scripts;
   §8.4.4 and §8.4.5 state all three.
 - Headings cited from other files: `CLAUDE.md`'s *Setup*, *Commands*, *Testing*, *Implementation workflow* (also by

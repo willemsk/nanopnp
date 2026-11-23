@@ -64,7 +64,7 @@ The jobs:
     - **`lint`**: `ruff check`, `ruff format --check`, `mypy src/`.
     - **`docs`**.
     - **`tests (tier1)`** and **`tests (tier2)`**. They run the per-push selection
-      (`CLAUDE.md`, *Commands*), split by marker (`-m "tier1 and not slow"`, `-m "tier2 and not slow"`).
+      (§7.6), split by marker (`-m "tier1 and not slow"`, `-m "tier2 and not slow"`).
     - **`CI result`**, the one required check. It fails unless every job above succeeded.
 
   Reproduce a shard with `uv run pytest -m "tier1 and not slow"` (or `tier2`). There is no coverage

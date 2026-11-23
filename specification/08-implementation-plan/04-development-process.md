@@ -95,7 +95,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   starts. `/np-implement` stops at the pull request and pauses for a compaction; `/np-ship` then runs
   in the implementing session or in a fresh one, and puts to the author each review finding that
   contradicts a decision the implementing session took. (§8.2.11 L7; §8.2.16 R5; §8.2.33 AI4;
-  `CLAUDE.md`)
+  `.claude/workflow/finish.md`)
 * At most two lanes are in flight. The current phase runs one package at a time; the second lane is
   the next phase's design study, which changes no `src/`, `tests/`, case schema or public API before
   the current phase's release. A clause that the study restates before that release is added beside
