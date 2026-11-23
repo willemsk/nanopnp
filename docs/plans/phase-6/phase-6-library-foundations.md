@@ -11,7 +11,7 @@ change later or drop, with its gain, risk and cost. You then rule on each propos
 pore's axis, which rounding can lock 0.6 degrees off at a ragged rim. The rest waits for your rulings: about ten
 packages that restructure the library, close the gaps in the flow equations, add exports and speed up the solve.
 
-**Cost.** The review: about 10 sessions, 7 to 13 agent hours and 13 times you act. Your ruling round: 2 sessions and 3.
+**Cost.** The review: about 10 sessions, 7 to 13 agent hours and 16 times you act. Your ruling round: 2 sessions and 3.
 The axis fix: 4 sessions, 2 to 4 hours and 6. The rest, if the review changes nothing: 50 sessions, 45 to 90 hours
 and 80.
 
@@ -26,7 +26,7 @@ first.
 ## Context
 
 `SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 (AY1 to AY8), §8.2.50 (AZ1 to
-AZ21), §8.2.51 (BA1 to BA15) and §8.2.52 (BB1 to BB5; BB3 to BB5 ruled at WP6.04's plan). The text each amendment replaced is in
+AZ21), §8.2.51 (BA1 to BA15) and §8.2.52 (BB1 to BB6; BB3 to BB6 ruled at WP6.04's plan). The text each amendment replaced is in
 [the record](phase-6-record.md).
 
 Phase 6 answers one question: **can the library be made one sound base, without moving a number, before the workbench
@@ -93,7 +93,7 @@ WP6.04 takes `v0.7.0-alpha.4` and WP6.05 `v0.7.0-alpha.5`; the close takes `v0.7
 
 *Delivered 23 November 2026.* [The plan](wp6.03-the-cleanup-instructions-copilot-host.md). Live: the 8,000 words of AZ18 bind every `/np-implement` session's first window (§8.4.4), measured at 7,186; each plan proposes its two models (AZ20, AZ21); the tag `copilot-host` is pushed (AZ19).
 
-### WP6.04 — The ground-up review (BA10 to BA13; BB2 to BB5)
+### WP6.04 — The ground-up review (BA10 to BA13; BB2 to BB6)
 
 *Planned 23 November 2026.* [The plan](wp6.04-the-ground-up-review.md). A study. It changes no `src/`, no `tests/`, no case schema and no public name, and BA7 gives it no
 licence to (BA13).
@@ -105,7 +105,7 @@ licence to (BA13).
   the requirements and exclusions of §3; the process of §8.4; and every ruling behind them, those of §8.2.51 and
   §8.2.52 included (BA12).
 - **The design's reach:** the whole of §3, what v0.6 delivers and what §2.7 plans up to v0.13 (BB2).
-- **The guard, in order:** the author's view; three blind designs from the program's purpose, not from §3; their
+- **The guard, in order:** the author's interview (BB6); three blind designs from the program's purpose, not from §3; their
   judgement of §3; a walk of every open item; a challenge (BB3). It may propose a new requirement.
 - **It delivers one report,** on the project's pages (BB4): the design it would choose today; a table of each difference from the program as it is,
   marked keep, change now, change later, drop or add; for each change its gain, its risk and its cost in packages, sessions
@@ -115,7 +115,7 @@ licence to (BA13).
   program and measure it.
 
 It proposes no `VER-` and no `VAL-`, and has no test. It is done when the report is merged and each item it leaves
-open is a `REV-nn` row. About 10 sessions, 7 to 13 agent hours and 13 touches (BB3). Fable 5.2 implements it and
+open is a `REV-nn` row. About 10 sessions, 7 to 13 agent hours and 16 touches (BB6). Fable 5.2 implements it and
 Opus 5.5 ships it (BB5).
 
 ### The ruling round on the review (BA11, BA13)

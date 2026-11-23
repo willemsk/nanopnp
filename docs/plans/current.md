@@ -15,11 +15,11 @@ As you ruled at its plan, three designers who have never seen the code or the re
 program from its purpose and your view, before a reviewer who knows the program goes rule by rule. Fable writes the
 report and Opus checks it.
 
-The review: about 10 sessions, 7 to 13 agent hours and 13 times you act. Phase 6 ahead: about 66 sessions, 54 to 107
-agent hours and 102 times you act, if the review changes nothing.
+The review: about 10 sessions, 7 to 13 agent hours and 16 times you act. Phase 6 ahead: about 66 sessions, 54 to 107
+agent hours and 105 times you act, if the review changes nothing.
 
 **Your call.** Do you approve the review's plan, which its own review has now read and corrected? *Recommendation:*
-approve, so the review can start. Yours later: three answers at its start, then the rulings on its proposals.
+approve, so the review can start. Yours later: an interview at its start, then the rulings on its proposals.
 
 ## Position
 
@@ -48,9 +48,9 @@ approve, so the review can start. Yours later: three answers at its start, then 
   **validation is Phase 12 and `v0.13`, with no earlier comparison against the paper** (BA3). **A session may
   restructure the code it works with while the push gate passes, its nightly walks not asked** (BA7, BA14).
 - **WP6.04 is the ground-up review: all open but §4's physics, designed for the whole of §3, a report and no code,
-  then the author's rulings at `/np-plan project`** (BA10 to BA13; BB2). **Its guard, its report's place and its two
-  models are ruled** (BB3 to BB5). **WP6.05, the axis fix, is firm and follows those rulings** (BA8; BB1). Until then
-  BA1 to BA9 and AZ1 to AZ6 hold (BA4).
+  then the author's rulings at `/np-plan project`** (BA10 to BA13; BB2). **Its guard, its opening interview, its
+  report's place and its two models are ruled** (BB3 to BB6). **WP6.05, the axis fix, is firm and follows those rulings** (BA8;
+  BB1). Until then BA1 to BA9 and AZ1 to AZ6 hold (BA4).
 
 ## Somebody else's
 

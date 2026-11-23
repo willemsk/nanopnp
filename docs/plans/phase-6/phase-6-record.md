@@ -4,7 +4,7 @@ The amended text of [the Phase 6 plan](phase-6-library-foundations.md), quoted a
 restated it to its current scope (§8.2.16 R4). Read it on demand; the plan states what holds now. A later amendment
 appends a dated section below.
 
-**Status: a record of replaced text, last added to on 23 November 2026 (§8.2.52 BB3 to BB5); it states nothing that holds now.**
+**Status: a record of replaced text, last added to on 23 November 2026 (§8.2.52 BB6); it states nothing that holds now.**
 
 ---
 
@@ -201,3 +201,11 @@ Open decisions 5 and 8, shortened to their rulings to hold the plan's 2,750 word
 Open decision 2, shortened for the same reason, read:
 
 > | 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 and 23 November 2026**: project text in words, six recent packages, nothing leaves, closed items archived (AZ9 to AZ12); 2,500 words for a phase plan (AZ14); the limit binds the first window of an `/np-implement` session (AZ15) at 8,000 words, the plan read whole (AZ18) |
+
+## Amended 23 November 2026 (§8.2.52 BB6)
+
+At the review of WP6.04's plan the author ruled that the review opens with an interview. The In brief's cost for the
+review read "13 times you act"; the WP6.04 entry was headed "(BA10 to BA13; BB2 to BB5)", its guard began "the
+author's view;", and it closed:
+
+> About 10 sessions, 7 to 13 agent hours and 13 touches (BB3).
