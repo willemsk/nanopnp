@@ -1,7 +1,7 @@
 # WP6.04 — The ground-up review
 
 **Status: planned, not started.** Written 23 November 2026, grounded in the tree at `efda55e`. Inherits §8.2.51 BA7
-and BA10 to BA13, §8.2.52 BB1 to BB5 (BB3 to BB5 ruled at this plan), §8.4.4's sentence on a study package and the
+and BA10 to BA13, §8.2.52 BB1 to BB6 (BB3 to BB6 ruled at this plan), §8.4.4's sentence on a study package and the
 test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.4` (§8.4.1).
 
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.04 entry sets this scope; `SPECIFICATION.md` governs, and
@@ -9,29 +9,29 @@ where it and this plan disagree this plan is wrong. Identifiers are pointers int
 
 ## In brief
 
-**What changes.** Nothing in the program. You get one report on the project's pages: what the program should become,
-the design a start-over would choose, and every difference from today's program marked keep, change now, change later,
-drop or add, with its gain, risk and cost. So that the review does not argue for the program as it is, it runs in a
-fixed order. You are asked once where the program should go. Three designers who have never seen the code or the
-requirement list then each say what the program should become and design it, from the paper's physics, the users and
-your answers. Only then do they read today's requirements and judge them. A reviewer who knows the program walks every
-requirement, constraint, method and process rule, looks up today's alternatives and measures the program. Two
-challengers attack the draft, one for today's program and one against.
+**What changes.** Nothing in the program. You get one report on the project's pages: what the program should become, the
+design a start-over would choose, and every difference from today's program marked keep, change now, change later, drop
+or add, with its gain, risk and cost. So that the review does not argue for the program as it is, it runs in a fixed
+order. You are interviewed first, until your picture of the program's future is complete. Three designers who have never
+seen the code or the requirement list then each say what the program should become and design it, from the paper's
+physics, the users and your answers. Only then do they read today's requirements and judge them. A reviewer who knows
+the program walks every requirement, constraint, method and process rule, looks up today's alternatives and measures the
+program. Two challengers attack the draft, one for today's program, one against.
 
-**Cost.** About ten sessions, seven to thirteen hours of agent work and thirteen times you act, three of them today's
-answers.
+**Cost.** About ten sessions, seven to thirteen agent hours and sixteen times you act, more if the interview runs
+long.
 
 **What could go wrong.** A designer could peek at the program: every file it opened is listed, and a design that
 peeked is redone. The review could still find the program sound: each row then shows how many blind designers chose
 the same unprompted. It could propose more than one round can rule: the proposals come ranked and grouped.
 
-**Your call.** Settled today: the guard, the report's place, and that Fable writes it and Opus checks it. Inside the
-package: your three answers at its start. After it: your rulings on its proposals. *Recommendation:* answer in your
+**Your call.** Settled today: the guard, the interview, the report's place, and that Fable writes it and Opus checks
+it. Inside the package: the interview. After it: your rulings on its proposals. *Recommendation:* answer in your
 own words; the designers read them unedited.
 
 ## Execution brief
 
-Scope: the phase plan's WP6.04 entry; BA10 to BA13; BB2 to BB5. It depends on nothing unmerged. It claims no
+Scope: the phase plan's WP6.04 entry; BA10 to BA13; BB2 to BB6. It depends on nothing unmerged. It claims no
 identifier and writes no test (N1): it changes no `src/`, `tests/`, `data/`, `examples/`, case schema or public name.
 **Implementing session: Fable 5.2, high effort. Ship: Opus 5.5, high effort, in a new session; `NANOPNP_AUTO_SHIP`
 never chains it** (BB5; §8.4.5). The report and its appendices are `docs/project/ground-up-review.md` and
@@ -41,7 +41,7 @@ never chains it** (BB5; §8.4.5). The report and its appendices are `docs/projec
 
 | Decision | Choice | Why/source |
 |---|---|---|
-| **D1 The order is the guard** | Five steps, each committed before the next reads anything: the author's view; three blind designs; their unblinding; the walk with the evidence; the challenge. Until item 4's commit the main session reads no `src/`, no §5 or §6, no survey and no modularity report | Ruled by the author, §8.2.52 BB3: "Purpose first, then rule by rule" |
+| **D1 The order is the guard** | Five steps, each committed before the next reads anything: the author's view, by an interview that ends when the author calls the picture complete; three blind designs; their unblinding; the walk with the evidence; the challenge. Until item 4's commit the main session reads no `src/`, no §5 or §6, no survey and no modularity report | Ruled by the author, §8.2.52 BB3: "Purpose first, then rule by rule"; the interview, BB6 |
 | **D2 The blind designers** | Three `Plan` agents, which start without `CLAUDE.md`: A on Fable 5.2 with no lead user, B on Fable 5.2 leading with the laboratory (P3), C on Opus 5.5 leading with the method developer (P1). Each reads only the purpose pack, a folder outside the tree, and writes what the program should become, then its design. A design whose transcript shows a path or address outside the pack is discarded and redone once by a new agent; a second peek is kept, marked not blind and left out of the guard's counts | Ruled by the author, BB3; the agent type, the lenses and the check decided by the plan |
 | **D3 The unblinding** | Each designer then reads §2.6, §2.7, §3 and §5.6 and marks each requirement, constraint, exclusion and decision keep, change or drop, and names what the list lacks | Ruled by the author, BB3 |
 | **D4 The walk** | The main session gives one row to each item BA12 opens: its best alternative, what A, B and C chose, a verdict and a reason. A missing capability is a row marked add. The reason behind a ruling or a knowledge note is evidence, not authority | Ruled by the author, BB3; BA12; the rows' list decided by the plan |
@@ -61,6 +61,9 @@ never chains it** (BB5; §8.4.5). The report and its appendices are `docs/projec
   `specification/06-numerics.md`, `docs/project/architecture-survey.md`, `docs/project/modularity*.md`,
   `docs/_generated/`, `docs/design/workbench.md`. `CLAUDE.md` loads at the session's start and names the subpackages;
   the report says so under its method.
+- `AskUserQuestion` takes up to four questions a call, each with two to four options and a free-text answer it adds
+  itself. The turn does not end, so item 1's unpushed commit meets no stop hook. `.claude/workflow/author.md`'s form
+  is for a choice: an interview's options carry no preview and no recommendation.
 - The session's own transcript is `~/.claude/projects/-home-user-nanopnp/$CLAUDE_CODE_SESSION_ID.jsonl`, in the
   form D2 gives for an agent's.
 
@@ -103,7 +106,7 @@ never chains it** (BB5; §8.4.5). The report and its appendices are `docs/projec
 
 - Beside D3's rows: NUM-01 to NUM-34 (`specification/06-numerics.md`); the ten files of
   `specification/05-software-design/` but §5.6; §7.1, §7.2 to §7.5 one row a tier, §7.6, VER-61, VER-62 and VER-65;
-  §8.4's 41 bullets (4, 5, 2, 21, 4 and 5 in §8.4.1 to §8.4.6); §2.7's rows from v0.7; BA1 to BA15 and BB1 to BB5;
+  §8.4's 41 bullets (4, 5, 2, 21, 4 and 5 in §8.4.1 to §8.4.6); §2.7's rows from v0.7; BA1 to BA15 and BB1 to BB6;
   §2.6's 12 rows; the 17 sections of `docs/design/workbench.md`, which holds 63 `WB-` rows. About 245 rows.
 - `uv run .claude/scripts/clause.py <ID>` prints a clause with the rulings behind it.
 
@@ -160,22 +163,18 @@ Write the eight appendices with a title and one line each: `method.md`, `design-
 
 and one titled line for each other appendix. Add the report's row to `docs/project/index.md`. Run `uv run just docs`.
 
-**Item 2.** One `AskUserQuestion` call, as `.claude/workflow/author.md` says, with these three questions; the author's
-own words matter more than the options:
-
-1. What should the program become in the next three years, and for whom? Options: the paper's tool, validated and
-   kept small; a simulator of biological nanopores for laboratories that do not code; a platform for new continuum
-   physics.
-2. What would you not build again, or build differently? Several may be chosen: the browser workbench as it is; the
-   route from a structure to a mesh; the process and its records; the solver and its numerical methods.
-3. What must a start-over not lose? Several may be chosen: a run that its record can reconstruct; numbers checked
-   against the paper and analytic cases; a workbench a laboratory uses without Python; a library that scripts drive.
-
-Write the questions and the answers, unedited, into `method.md`.
+**Item 2.** An interview, in `AskUserQuestion` rounds of at most three open questions. An option is a suggestion, named
+so, in a user's terms; the free-text field takes the author's words. The picture has eight points: what the program
+becomes in three years, and for whom; what would not be built again, or differently, and why; what a start-over must not
+lose; its users in rank order, and what each must be able to do; how success would be seen; what it must never become;
+what is fixed from outside (licence, platforms, install, the author's time); which goal wins when two pull apart. Round
+1 asks the first three. Each later round asks what an answer left vague, where two pull apart, and the points still
+open; a ticked suggestion alone is asked why. The interview ends only when the author calls a summary of at most 400
+words complete. Write each round and the summary, unedited, into `method.md`.
 
 **Item 3.** Build the pack in the session's scratchpad, `<scratch>/pack/`: §1.1 to §1.3, less §1.3's closing paragraph,
 and §2.1 to §2.5 cut by their headings into `purpose.md`; `specification/04-physics.md`;
-`specification/b-comsol-settings.md`; the two knowledge folders of D2; the author's answers as `author.md`. Record each
+`specification/b-comsol-settings.md`; the two knowledge folders of D2; the interview as `author.md`. Record each
 file's word count in `method.md`. Launch the three `Plan` agents in one message, each with the same brief but its lens.
 A has none. B: "Design first for the experimental laboratory, P3 of `purpose.md`." C: "Design first for the method
 developer, P1 of `purpose.md`."
@@ -220,7 +219,7 @@ Write them into `technologies.md`.
 
 **Items 9 and 10.** `walk.md`, one table per group:
 `| ID | Today, in 15 words | Best alternative | A | B | C | Verdict | Reason |`. A, B and C hold `=`, `≠` or `–`
-(silent). Item 9: IF, FR, QR, CON, N1 to N7, §2.6, §2.7 and the rulings BA1 to BB5. Item 10: ADR, §5, NUM, §7, §8.4 and
+(silent). Item 9: IF, FR, QR, CON, N1 to N7, §2.6, §2.7 and the rulings BA1 to BB6. Item 10: ADR, §5, NUM, §7, §8.4 and
 the workbench design.
 
 **Item 12.** Fill the report. *The differences* is one table, `| GU | Difference | Verdict | Gain | Cost | Moves |`,
@@ -237,7 +236,8 @@ appendices and pages the site publishes; name a clause, a plan or a review in co
 
 - [ ] 1. The report's skeleton, its appendices, `mkdocs.yml` and `docs/project/index.md` (D6); done when
   `uv run just docs` passes. **Executor:** main
-- [ ] 2. The author's view, in `method.md` (D1); done when the three answers are recorded unedited. **Executor:** main
+- [ ] 2. The author's view, in `method.md` (D1); done when the author has called the summary complete. **Executor:**
+  main
 - [ ] 3. The pack and the three blind designs, in `design-a.md` to `design-c.md` and `method.md` (D2); done when each
   transcript's list holds no path outside the pack. **Executor:** main, with `Plan` agents on Fable 5.2 and Opus 5.5
 - [ ] 4. The unblinding, appended to the three designs (D3); done when each holds its tables and both lists are
@@ -268,8 +268,8 @@ No test (N1; the phase plan's verification row). Review checks, each by its comm
 
 - the no-code check of item 15 prints nothing, and `nanopnp.PUBLIC` and the case schema are unchanged with it;
 - the commits of items 2, 3 and 4 precede item 6's (`git log`);
-- `method.md` holds each designer's brief, model and lists of calls, and the main session's list up to item 4's
-  commit, which names none of D1's paths;
+- `method.md` holds the interview's rounds and summary, each designer's brief, model and lists of calls, and the main
+  session's list up to item 4's commit, which names none of D1's paths;
 - the report holds what BA13 lists: the design, each difference with its verdict, and for each change its gain, risk,
   cost and the clause or ruling it moves; each changed numerical method names its benchmarks (VER-62; G10);
 - each `walk.md` group holds every identifier of its range;
@@ -284,4 +284,4 @@ No test (N1; the phase plan's verification row). Review checks, each by its comm
 
 ### Open questions
 
-None blocks the implementation. The author's three answers are item 2's.
+None blocks the implementation. The interview is item 2's.
