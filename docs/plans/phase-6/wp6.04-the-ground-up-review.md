@@ -42,7 +42,7 @@ never chains it** (BB5; §8.4.5). The report and its appendices are `docs/projec
 | Decision | Choice | Why/source |
 |---|---|---|
 | **D1 The order is the guard** | Five steps, each committed before the next reads anything: the author's view; three blind designs; their unblinding; the walk with the evidence; the challenge. Until item 4's commit the main session reads no `src/`, no §5 or §6, no survey and no modularity report | Ruled by the author, §8.2.52 BB3: "Purpose first, then rule by rule" |
-| **D2 The blind designers** | Three `Plan` agents, which start without `CLAUDE.md`: A on Fable 5.2 with no lead user, B on Fable 5.2 leading with the laboratory (P3), C on Opus 5.5 leading with the method developer (P1). Each reads only the purpose pack, a folder outside the tree, and writes what the program should become, then its design. A design whose transcript shows a path or address outside the pack is discarded and redone once by a new agent | Ruled by the author, BB3; the agent type, the lenses and the check decided by the plan |
+| **D2 The blind designers** | Three `Plan` agents, which start without `CLAUDE.md`: A on Fable 5.2 with no lead user, B on Fable 5.2 leading with the laboratory (P3), C on Opus 5.5 leading with the method developer (P1). Each reads only the purpose pack, a folder outside the tree, and writes what the program should become, then its design. A design whose transcript shows a path or address outside the pack is discarded and redone once by a new agent; a second peek is kept, marked not blind and left out of the guard's counts | Ruled by the author, BB3; the agent type, the lenses and the check decided by the plan |
 | **D3 The unblinding** | Each designer then reads §2.6, §2.7, §3 and §5.6 and marks each requirement, constraint, exclusion and decision keep, change or drop, and names what the list lacks | Ruled by the author, BB3 |
 | **D4 The walk** | The main session gives one row to each item BA12 opens: its best alternative, what A, B and C chose, a verdict and a reason. A missing capability is a row marked add. The reason behind a ruling or a knowledge note is evidence, not authority | Ruled by the author, BB3; BA12; the rows' list decided by the plan |
 | **D5 Evidence and alternatives** | The program is measured where it cost: size, the files a package touched, open items by area, run times, the records' weight; each number with its command, no script committed. Six Sonnet agents look up today's alternatives by area; the main session checks at its source each fact a proposal rests on | The phase entry ("may run the program and measure it"); the core, *Models and executors*; decided by the plan |
@@ -59,8 +59,10 @@ never chains it** (BB5; §8.4.5). The report and its appendices are `docs/projec
   anything else.
 - What the main session must not read before item 4's commit: `src/`, `specification/05-software-design/`,
   `specification/06-numerics.md`, `docs/project/architecture-survey.md`, `docs/project/modularity*.md`,
-  `docs/design/workbench.md`. `CLAUDE.md` loads at the session's start and names the subpackages; the report says so
-  under its method.
+  `docs/_generated/`, `docs/design/workbench.md`. `CLAUDE.md` loads at the session's start and names the subpackages;
+  the report says so under its method.
+- The session's own transcript is `~/.claude/projects/-home-user-nanopnp/$CLAUDE_CODE_SESSION_ID.jsonl`, in the
+  form D2 gives for an agent's.
 
 **D2**
 
@@ -72,14 +74,21 @@ never chains it** (BB5; §8.4.5). The report and its appendices are `docs/projec
   `~/.claude/projects/-home-user-nanopnp/$CLAUDE_CODE_SESSION_ID/subagents/agent-<id>.jsonl`. Each tool call is a
   block `{"type": "tool_use", "name", "input"}` in an event's `message.content`; read on 23 November 2026 from this
   session's own agent, whose eight calls it listed with their inputs.
+- An agent's working directory is the repository (each event's `cwd`), so a check of named paths alone misses four
+  calls: a `Grep` or `Glob` with no `path`, which searches the tree; a relative path; a `WebSearch`, which has a query
+  and no address; and a tool beyond `Read`, `Grep`, `Glob`, `Bash`, `WebSearch` and `WebFetch`. The pack's own path
+  holds `-home-user-nanopnp`.
 - §8.4.5 puts a scoped item on Sonnet; BB3 excepts this package's blind designers, and §8.4.5 says so.
 - Implementation words (`ngsolve`, a `.py` path, a package number), counted by `grep -ciE`:
   `knowledge/02-electrokinetics-background/` 0 in 3,430 words; `knowledge/03-nanopore-biology/` 0 in 3,360;
-  `specification/b-comsol-settings.md` 0; `specification/04-physics.md` 18 lines; `knowledge/01-physics-epnpns/` 22
+  `specification/b-comsol-settings.md` 0; `specification/04-physics.md` 8 lines; `knowledge/01-physics-epnpns/` 22
   and `knowledge/05-analyte-and-forces/` 30, so both stay out of the pack.
 - `specification/02-product-overview.md` holds §2.1 to §2.5 (context, the reference model, S1 to S4, P1 to P3, the
   operating environment), then §2.6, the dependencies, and §2.7, the releases. `specification/01-introduction.md`
   holds §1.1 to §1.3 (purpose, scope, definitions), then §1.4 to §1.6.
+- These sources name today's choices: Python (§1.1, §2.5), a 2D-axisymmetric finite-element mesh and the pipeline's
+  steps (§1.2), a YAML case file (§1.3), the browser workbench (P3, §2.5) and a sparse direct solve (§2.5). §1.3's
+  closing paragraph lists the workbench's terms and links `docs/design/workbench.md`.
 - The repository is public; a designer's brief forbids it on disk and online.
 
 **D3**
@@ -95,7 +104,7 @@ never chains it** (BB5; §8.4.5). The report and its appendices are `docs/projec
 - Beside D3's rows: NUM-01 to NUM-34 (`specification/06-numerics.md`); the ten files of
   `specification/05-software-design/` but §5.6; §7.1, §7.2 to §7.5 one row a tier, §7.6, VER-61, VER-62 and VER-65;
   §8.4's 41 bullets (4, 5, 2, 21, 4 and 5 in §8.4.1 to §8.4.6); §2.7's rows from v0.7; BA1 to BA15 and BB1 to BB5;
-  the 17 sections of `docs/design/workbench.md`, which holds 63 `WB-` rows. About 260 rows.
+  §2.6's 12 rows; the 17 sections of `docs/design/workbench.md`, which holds 63 `WB-` rows. About 245 rows.
 - `uv run .claude/scripts/clause.py <ID>` prints a clause with the rulings behind it.
 
 **D5**
@@ -107,7 +116,8 @@ never chains it** (BB5; §8.4.5). The report and its appendices are `docs/projec
 - The register's rows are `| REV-n | Area | Severity | Status | Ruling | Finding |`, 59 in
   `docs/project/review-findings.md` and the closed ones in `review-archive.md`.
 - `uv run nanopnp run <case>` runs a case; `NANOPNP_STORE` names the store, so a new folder gives a run with no cache
-  hit. The cases: `examples/01-quickstart/quickstart.case.yaml`, `examples/02-charged-pore/epnpns.case.yaml`.
+  hit. The container has no `/usr/bin/time`; bash's `time` gives the wall time. The cases:
+  `examples/01-quickstart/quickstart.case.yaml`, `examples/02-charged-pore/epnpns.case.yaml`.
 - `docs/project/cost-study.json` holds stage timings of the `2wcd` and `quickstart` walks at `db952e3`. The phase
   plan's *True of the codebase today* and Phase 5's end-of-phase report hold the gate's 539 s, the 763 MB install and
   the redraw times; cite them, do not measure again.
@@ -122,7 +132,7 @@ never chains it** (BB5; §8.4.5). The report and its appendices are `docs/projec
   `INFO`, and the link is dead on the site. `.claude/scripts/links.py` checks every relative link.
 - §8.3's measured rates: a text or clean-up package 5 sessions, 3 to 6 agent hours and 8 touches; a shell package 6,
   6 to 12 and 10.
-- G1 to G11 are rulings of §8.2.7, so the rows take `GU-`, which no register uses.
+- G1 to G12 are rulings of §8.2.7, so the rows take `GU-`, which no register uses.
 
 **D7**
 
@@ -163,36 +173,40 @@ own words matter more than the options:
 
 Write the questions and the answers, unedited, into `method.md`.
 
-**Item 3.** Build the pack in the session's scratchpad, `<scratch>/pack/`: §1.1 to §1.3 and §2.1 to §2.5 cut by
-their headings into `purpose.md`; `specification/04-physics.md`; `specification/b-comsol-settings.md`; the two
-knowledge folders of D2; the author's answers as `author.md`. Record each file's word count in `method.md`. Launch
-the three `Plan` agents in one message, each with the same brief but its lens. A has none. B: "Design first for the
-experimental laboratory, P3 of `purpose.md`." C: "Design first for the method developer, P1 of `purpose.md`."
+**Item 3.** Build the pack in the session's scratchpad, `<scratch>/pack/`: §1.1 to §1.3, less §1.3's closing paragraph,
+and §2.1 to §2.5 cut by their headings into `purpose.md`; `specification/04-physics.md`;
+`specification/b-comsol-settings.md`; the two knowledge folders of D2; the author's answers as `author.md`. Record each
+file's word count in `method.md`. Launch the three `Plan` agents in one message, each with the same brief but its lens.
+A has none. B: "Design first for the experimental laboratory, P3 of `purpose.md`." C: "Design first for the method
+developer, P1 of `purpose.md`."
 
-> You design a program from nothing. Read only the files under `<pack>`. Open no other file on this machine and no
-> page of the project `nanopnp`. The physics in `04-physics.md` is given; a file, library or method that the texts
-> name is today's choice and binds nothing. You may look up libraries; never search for the model's equations.
-> [Lens.] Write at most 3,000 words under these headings: 1 What the program should become, for whom, its
-> capabilities in rank order, and what it leaves out. 2 The architecture: components, data, boundaries. 3 The
-> technologies, each with its runner-up and the reason: the simulation engine and discretisation; geometry and mesh;
-> linear and nonlinear solution; structure and charge preparation; the front end and visualisation; storage, file
-> formats and the record of a run; distribution to the three kinds of user; many runs at once. 4 The numerical method
-> and how its results are trusted. 5 How it is developed: process, tests, records. 6 The three choices you are least
-> sure of.
+> You design a program from nothing. Read only the files under `<pack>`, and give each search that path. Open no other
+> file on this machine and no page of the project `nanopnp`. The physics in `04-physics.md` is given; a file, library or
+> method that the texts name is today's choice and binds nothing. You may look up libraries; never search for the
+> model's equations. [Lens.] Write at most 3,000 words, with no link, under these headings: 1 What the program should
+> become, for whom, its capabilities in rank order, and what it leaves out. 2 The architecture: components, data,
+> boundaries. 3 The technologies, each with its runner-up and the reason: the simulation engine and discretisation;
+> geometry and mesh; linear and nonlinear solution; structure and charge preparation; the front end and visualisation;
+> storage, file formats and the record of a run; distribution to the three kinds of user; many runs at once. 4 The
+> numerical method and how its results are trusted. 5 How it is developed: process, tests, records. 6 The three choices
+> you are least sure of.
 
 For each agent, list the `tool_use` inputs of its transcript. A `Read`, `Grep`, `Glob` or `Bash` input that names a
-path outside `<pack>`, or an address holding `nanopnp`, discards the design. Write each design unedited into its
-file, and the brief, the lens, the model and the list's result into `method.md`.
+path outside `<pack>`, a query or an address holding `nanopnp`, or one of the four calls D2's grounding lists,
+discards the design. Write each design unedited into its file, and the brief, the lens, the model and the list's
+result into `method.md`.
 
 **Item 4.** Continue each agent: it now reads `specification/02-product-overview.md` from §2.6,
 `specification/03-requirements.md` and `specification/05-software-design/06-architecture-decisions.md`. It returns,
 in at most 1,500 words, one table per group (IF, FR, QR, CON, N1 to N7, ADR) with keep, change or drop and one line
 each, then what the lists lack. If an agent cannot be continued, a new `Plan` agent on its model gets its design and
-the texts. Append each answer unedited to its design's file.
+the texts. Append each answer unedited to its design's file. List each agent's calls again: it reads those three
+files alone. List this session's own calls up to here the same way, and write into `method.md` that none names D1's
+paths.
 
 **Item 6.** `evidence.md`, each number under its command: lines by subpackage; for each package since
 `v0.6.0-alpha.1`, the files and the subpackages its tag range changed under `src/` (`git diff --name-only`); the
-register's rows by area and severity; both example cases timed with `/usr/bin/time -v`, one thread, a new
+register's rows by area and severity; both example cases timed with bash's `time`, one thread, a new
 `NANOPNP_STORE`, each with the stabilisation mode its manifest records; `wc -w` of the specification, the history and
 the plans beside the lines of code; §8.3's measured rates.
 
@@ -206,13 +220,13 @@ Write them into `technologies.md`.
 
 **Items 9 and 10.** `walk.md`, one table per group:
 `| ID | Today, in 15 words | Best alternative | A | B | C | Verdict | Reason |`. A, B and C hold `=`, `≠` or `–`
-(silent). Item 9: IF, FR, QR, CON, N1 to N7, §2.7 and the rulings BA1 to BB5. Item 10: ADR, §5, NUM, §7, §8.4 and
+(silent). Item 9: IF, FR, QR, CON, N1 to N7, §2.6, §2.7 and the rulings BA1 to BB5. Item 10: ADR, §5, NUM, §7, §8.4 and
 the workbench design.
 
 **Item 12.** Fill the report. *The differences* is one table, `| GU | Difference | Verdict | Gain | Cost | Moves |`,
-ranked by gain over cost; the cards follow under *The proposals*. *What the guard showed* is a table of the
-technologies and the methods against A, B and C. Link only the appendices and pages the site publishes; name a
-clause, a plan or a review in code spans.
+ranked by gain over cost; the cards follow under *The proposals*. *What the guard showed* is a table of the technologies
+and the methods against A, B and C; a choice the pack names (D2's grounding) is marked prompted. Link only the
+appendices and pages the site publishes; name a clause, a plan or a review in code spans.
 
 **Item 14.** Give each challenger the report, `walk.md` and `evidence.md`. Write the three reports unedited into
 `challenge.md`, then answer each objection in the report: the row changed, or the objection shown on it.
@@ -226,8 +240,8 @@ clause, a plan or a review in code spans.
 - [ ] 2. The author's view, in `method.md` (D1); done when the three answers are recorded unedited. **Executor:** main
 - [ ] 3. The pack and the three blind designs, in `design-a.md` to `design-c.md` and `method.md` (D2); done when each
   transcript's list holds no path outside the pack. **Executor:** main, with `Plan` agents on Fable 5.2 and Opus 5.5
-- [ ] 4. The unblinding, appended to the three designs (D3); done when each holds its tables. **Executor:** main, with
-  the same agents
+- [ ] 4. The unblinding, appended to the three designs (D3); done when each holds its tables and both lists are
+  clean. **Executor:** main, with the same agents
 - [ ] 5. Compaction checkpoint. **Executor:** main
 - [ ] 6. `evidence.md` (D5); done when each number names its command. **Executor:** main
 - [ ] 7. `technologies.md` (D5); done when each cell names its source.
@@ -254,10 +268,12 @@ No test (N1; the phase plan's verification row). Review checks, each by its comm
 
 - the no-code check of item 15 prints nothing, and `nanopnp.PUBLIC` and the case schema are unchanged with it;
 - the commits of items 2, 3 and 4 precede item 6's (`git log`);
-- `method.md` holds each designer's brief, model and list of calls;
+- `method.md` holds each designer's brief, model and lists of calls, and the main session's list up to item 4's
+  commit, which names none of D1's paths;
 - the report holds what BA13 lists: the design, each difference with its verdict, and for each change its gain, risk,
   cost and the clause or ruling it moves; each changed numerical method names its benchmarks (VER-62; G10);
 - each `walk.md` group holds every identifier of its range;
+- the report holds at most 5,500 words (`wc -w`) and its proposals at most twelve groups;
 - `uv run just docs` and the push gate pass.
 
 ### Out of scope

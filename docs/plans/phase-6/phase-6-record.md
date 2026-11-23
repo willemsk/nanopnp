@@ -183,7 +183,8 @@ the Context's rulings read:
 > §8.2.51 (BA1 to BA15) and §8.2.52 (BB1, BB2).
 
 The WP6.04 entry was headed "(BA10 to BA13; BB2)" and opened "*Planned; next.*"; it had no line on the guard, its
-report's bullet began "**It delivers one report:**", and it closed:
+report's bullet began "**It delivers one report:**" and marked each difference "keep, change now, change later or
+drop", and it closed:
 
 > About 9 sessions, 6 to 12 agent hours and 12 touches. Its plan settles open decision 9.
 

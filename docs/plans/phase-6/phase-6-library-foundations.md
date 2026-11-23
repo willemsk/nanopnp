@@ -108,7 +108,7 @@ licence to (BA13).
 - **The guard, in order:** the author's view; three blind designs from the program's purpose, not from §3; their
   judgement of §3; a walk of every open item; a challenge (BB3). It may propose a new requirement.
 - **It delivers one report,** on the project's pages (BB4): the design it would choose today; a table of each difference from the program as it is,
-  marked keep, change now, change later or drop; for each change its gain, its risk and its cost in packages, sessions
+  marked keep, change now, change later, drop or add; for each change its gain, its risk and its cost in packages, sessions
   and touches, and the clause or ruling it would change. A proposal that changes a numerical method says which
   benchmarks are argued again before anything is built on it (VER-62; G10).
 - **It reads** the survey, the modularity register, WP6.02's Outcome and Phase 5's end-of-phase report, and may run the
