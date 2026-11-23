@@ -1,6 +1,6 @@
 # WP6.03 — The cleanup: the instructions cut, the Copilot host retired
 
-**Status: in progress, items 1 to 4 of 9 done.** Written 23 November 2026, grounded in the code at `939009b`. Inherits §8.2.49 AY5,
+**Status: in progress, items 1 to 7 of 9 done.** Written 23 November 2026, grounded in the code at `939009b`. Inherits §8.2.49 AY5,
 AY7 and AY8, §8.2.50 AZ7, AZ9 and AZ13 to AZ17, the rulings of this plan (AZ18 to AZ21), WP6.02's
 [audit](../sessions/instructions-audit.md) and [baseline](../sessions/reading-baseline.md), REV-166 to REV-168,
 REV-278 and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.3` (§8.4.1).
@@ -223,12 +223,12 @@ any requirement, tool or phase, and the rulings that ruling names. It changes th
 - [x] 00faf8a 3. `.claude/skills/np-plan/project.md`; REV-278 `fixed` (D7). Done when the code and review say so.
   **Executor:** main
 - [x] 4. Compaction checkpoint. **Executor:** main
-- [ ] 5. The start path: `CLAUDE.md`, `.claude/workflow/core.md`, `.claude/workflow/finish.md`,
+- [x] 866dd0e 5. The start path: `CLAUDE.md`, `.claude/workflow/core.md`, `.claude/workflow/finish.md`,
   `.claude/skills/np-implement/wp.md` and `finish.md`, and each citing file (D2). Done when Verification's row 4
   passes and the commit lists each removed passage. **Executor:** main
-- [ ] 6. The models: the `np-plan`, `np-implement` and `np-ship` skills, `CLAUDE.md`, the core, `holds-now.yaml`
+- [x] 541526b 6. The models: the `np-plan`, `np-implement` and `np-ship` skills, `CLAUDE.md`, the core, `holds-now.yaml`
   (D5). Done when the code and review say so and row 4 still passes. **Executor:** main
-- [ ] 7. Checkpoint for a new session (D8). **Executor:** main
+- [x] 7. Checkpoint for a new session (D8). **Executor:** main
 - [ ] 8. The measurement: its Outcome, §8.4.4, `holds-now.yaml` (D1, D8). Done when Verification's row 5 passes.
   **Executor:** main
 - [ ] 9. `CHANGELOG.md`'s `## [0.7.0-alpha.3]`; REV-272's section gains the instructions' word counts, before and

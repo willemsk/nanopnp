@@ -8,10 +8,9 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 
 - **Read `knowledge/index.md`.** It is the verified knowledge base.
 - **`SPECIFICATION.md` is normative** (`FR-`, `QR-`, `CON-`, `PHY-`, `NUM-`, `VER-`, `VAL-`). It is the
-  map; the text is in `specification/`, the dated rulings in
-  `specification/history/`, read on demand. `uv run .claude/scripts/clause.py <ID>` prints a
-  clause. Cite the identifier when you implement or test one. A change to specified behaviour changes
-  the specification in the same commit.
+  map; the text is in `specification/`, the dated rulings in `specification/history/`, read on
+  demand. `uv run .claude/scripts/clause.py <ID>` prints a clause. Cite the identifier when you
+  implement or test one. A change to specified behaviour changes the specification in the same commit.
 - **Never web-search the model equations, correction functions or parameters.** Popular summaries are
   wrong. §4 of `SPECIFICATION.md` states the model's equations and governs them; the concepts under
   `knowledge/01-physics-epnpns/` back it. Where sources disagree, the COMSOL model report governs
