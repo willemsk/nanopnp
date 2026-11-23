@@ -1,6 +1,6 @@
 # Plan a work package
 
-`/np-plan wp <n>` is step 1 of the implementation workflow. It turns a package of the phase plan
+`/np-plan wp <n>` is the first command of a package's workflow. It turns a package of the phase plan
 (`/np-plan phase`) into a plan that `/np-implement` can execute without deciding again anything that
 matters. The plan is a commit under `docs/plans/`, not a chat message.
 

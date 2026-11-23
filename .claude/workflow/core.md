@@ -19,7 +19,8 @@ On `main`, switch to this session's development branch. With none, stop and ask 
 1. Find the PR among the open PRs against `main`. With `wp <n>`, a match is a title that has `WP<n>`
    and an em dash after it; with none, a title that names a package.
    - One match: take it. Several: ask.
-   - None, and the plan is on `main`: `/np-implement` works on the session's branch.
+   - None, and the plan is on `main`: `/np-implement` works on the session's branch, on the package
+     `current.md` names next if `wp <n>` is absent.
    - None otherwise: ask for the PR or branch.
 2. Run `git fetch origin <head>`. If a local `<head>` has commits that `origin/<head>` lacks, check it
    out, keep them, and gate and push them; otherwise run `git checkout -B <head> origin/<head>`.
@@ -73,8 +74,7 @@ returns before you use it. Physics and numerics decisions stay in this session.
    navigation it rewrites in `mkdocs.yml`. The sources are `SPECIFICATION.md`, `specification/`,
    `knowledge/`, `CHANGELOG.md`, `examples/*/README.md`, `data/corrections/`, `docs/` outside `plans/`
    and `code_reviews/`, `mkdocs.yml`, and docstrings in `src/`.
-4. Rebase on `origin/<head>`, except after you rewrote the branch on `main` (step 7): a rebase then
-   would replay `main`'s commits onto the old branch.
+4. Rebase on an existing `origin/<head>`, unless step 7 rewrote the branch on `main`.
 5. Run the push gate and push only a tree it passed (§8.4.2; §7.6). A pass of the commit hook never
    stands in for it.
    1. Start it with Bash `run_in_background`:

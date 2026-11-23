@@ -32,7 +32,7 @@ program sees no change. The [plan](docs/plans/phase-6/wp6.03-the-cleanup-instruc
 work.
 
 - **Changed**:
-  - The instructions an implementing session reads first hold 3,246 words, from 5,789: `CLAUDE.md` 1,505 from
+  - The instructions an implementing session reads first hold 3,238 words, from 5,789: `CLAUDE.md` 1,497 from
     2,349, the workflow core 899 from 1,366, `np-implement/wp.md` 739 from 1,276, and `current.md` is opened only
     to update it. A rule stated twice is kept once; the finishing rules moved to `.claude/workflow/finish.md` and
     `np-implement/finish.md`, read when a session finishes (AY8).

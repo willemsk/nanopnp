@@ -5,7 +5,7 @@ AY7 and AY8, §8.2.50 AZ7, AZ9 and AZ13 to AZ17, the rulings of this plan (AZ18 
 [audit](../sessions/instructions-audit.md) and [baseline](../sessions/reading-baseline.md), REV-166 to REV-168,
 REV-278 and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.3` (§8.4.1).
 
-**Delivered.** What an `/np-implement` session reads first holds 3,246 words, from 5,789: `CLAUDE.md` 1,505, the
+**Delivered.** What an `/np-implement` session reads first holds 3,238 words, from 5,789: `CLAUDE.md` 1,497, the
 core 899, `np-implement/wp.md` 739; the finishing rules are in `.claude/workflow/finish.md` and
 `np-implement/finish.md`, read when they apply. A new session on the cut read 7,186 words before its first edit,
 under the 8,000 of AZ18, which now stands in §8.4.4 without a start date
@@ -244,6 +244,12 @@ any requirement, tool or phase, and the rulings that ruling names. It changes th
 > place. One read was not asked for: a combined `git` command also printed the first 60 lines of `current.md`, 592
 > words, which the measure counts as command output (AZ16). With them the window holds 7,778 words, still under
 > the limit. Row 5 passes; no file is cut again.
+
+> **Outcome — the package cost about one agent hour, under the estimate.** Implementing: three sessions, 0.7 agent
+> hours, four touches (Fable 5.2, 0.07 M tokens out); shipping to the review's fixes: 0.3 agent hours, one touch
+> (Opus 5.5, 0.11 M out). Together about 1.0 agent hour and five touches, against the In brief's two to four hours
+> and eleven touches; the tag's push after the merge is one more. [Review 078](../../code_reviews/CODE_REVIEW_078.md)
+> cut `CLAUDE.md` to 1,497 words (1,490 by plain `wc -w`).
 
 **After the merge.** The ship's report adds, each in its own block, with the commit written out:
 `git log --diff-filter=D --format=%H -1 origin/main -- .claude/workflow/hosts.md`, whose parent is the tag's commit;

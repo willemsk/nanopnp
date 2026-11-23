@@ -7,6 +7,9 @@
 #                              ship chains only where the plan names one model for both: the
 #                              session, which has read the plan, calls `save ship` only then.
 #
+# The author sets a switch where the session inherits it: the shell, the cloud environment's
+# variables, or `env` in .claude/settings.local.json.
+#
 # No hook can start a compaction, so Claude Code's own auto-compaction, when the context fills, takes
 # the checkpoint's place. This script carries the checkpoint's prompt across it:
 #

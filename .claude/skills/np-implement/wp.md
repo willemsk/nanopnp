@@ -1,6 +1,6 @@
 # Implement a work package
 
-`/np-implement [wp <n>]` is step 2 of the implementation workflow. It executes the plan under
+`/np-implement [wp <n>]` runs between `/np-plan wp <n>` and `/np-ship`. It executes the plan under
 `docs/plans/`, records what the execution taught, and opens the PR. It chains into `/np-ship` only
 when the author sets `NANOPNP_AUTO_SHIP=1` and the plan names one model for both (`finish.md`,
 *Finishing*).
@@ -28,7 +28,7 @@ loaded with `ToolSearch` where they are deferred.
 3. Start at the first unticked item.
 
 **`finish.md`**, beside this file, holds the compaction checkpoint, *Keeping the record straight* and
-*Finishing*. Read it when the first checkpoint comes, or when the last item is done, and not before.
+*Finishing*. Read it when each checkpoint comes, or when the last item is done, and not before then.
 
 **Sub-agent items** (§8.2.16 R6, R11). If an item's **Executor** names a sub-agent, give the item to a
 new agent of that type and model (Agent tool). Give it:
