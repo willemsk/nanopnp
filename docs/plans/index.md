@@ -12,6 +12,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [Phase 6 plan: the record](phase-6/phase-6-record.md): no status line
 - [WP6.01 — The Windows leg: the stall named and bounded, the failures fixed](phase-6/wp6.01-the-windows-leg.md): delivered, 22 November 2026.
 - [WP6.02 — The cleanup: the reading measured, the instructions audited, the records cut](phase-6/wp6.02-the-cleanup-measure-audit-records.md): delivered, 22 November 2026.
+- [WP6.03 — The cleanup: the instructions cut, the Copilot host retired](phase-6/wp6.03-the-cleanup-instructions-copilot-host.md): planned, not started.
 
 ## Phase 5
 
