@@ -4,6 +4,8 @@ The amended text of [the Phase 6 plan](phase-6-library-foundations.md), quoted a
 restated it to its current scope (§8.2.16 R4). Read it on demand; the plan states what holds now. A later amendment
 appends a dated section below.
 
+**Status: a record of replaced text, last added to on 23 November 2026 (§8.2.52); it states nothing that holds now.**
+
 ---
 
 ## Amended 22 November 2026 (§8.2.50 AZ8)
@@ -144,3 +146,29 @@ Criterion 2 read:
 The In brief told of the three fixed packages, the rescoping round to come and fifteen drafted packages, at 15, 2 and
 75 sessions. The exclusions gave the validation runs to Phase 11, and the end-of-phase report named WP6.13's re-pin
 and WP6.17's timings.
+
+The second paragraph of the Context, its risks and its exclusions read:
+
+> `SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 (AY1 to AY8) and §8.2.50 (AZ1
+> to AZ21; AZ8 ruled at WP6.01's plan, AZ13 and AZ14 at WP6.02's item 5, AZ15 to AZ17 at its review, AZ18 to AZ21 at
+> WP6.03's plan).
+>
+> Risks: none is retired; WP6.13 mitigates **RSK-15** (AY6).
+>
+> Excluded: §5.4.1's interface, Phase 8's round (AZ1); the workbench's foundations and the suites' words, Phase 7; the
+> validation runs, Phase 11 (AY6); the structure pipeline's loose ends, Phase 9; a converter for v0.6 runs (AZ5); a
+> linear-solver swap (Z6).
+
+The rows of the design decisions on the field reading and the speed read:
+
+> | Field reading | By the cell's own P2 basis, in WP6.07 | v0.7's exports hold the solved field (AZ2) |
+> | Speed | No fixed target; thresholds registered in WP6.17's plan | AZ6; M2, Z6 |
+
+The lead of the work packages, and the live lines of the WP6.01 and WP6.03 entries, read:
+
+> WP6.02 takes `v0.7.0-alpha.2`; the close takes `v0.7.0` alone (§8.4.1). Each is about 5 sessions, 3 to 6 agent hours
+> and 8 touches (§8.3).
+>
+> Live: AZ8's ship rule; REV-279 waits for the rescoping round.
+>
+> Live: the 8,000 words of AZ18 bind every `/np-implement` session's first window (§8.4.4), measured at 7,186; each plan proposes its two models (AZ20, AZ21); the tag `copilot-host` waits for the author's push (AZ19).

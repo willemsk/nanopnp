@@ -16,10 +16,10 @@ rest of Phase 6, about ten packages, waits for your rulings on the review.
 
 Phase 6 ahead: about 65 sessions, 53 to 106 agent hours and 101 times you act, if the review changes nothing.
 
-**Your call.** Do you approve the amended plan, once it is reviewed? *Recommendation:* wait for its review, the next
-step, which checks it against your rulings. Yours later: how the review guards against reasoning from the program as
-it is, at its plan; the rulings on its proposals; your customised protonation tool; the analyte's model files; and
-what version 1 is.
+**Your call.** Do you approve the amended plan? Its review moved neither ruling. *Recommendation:* approve, so the
+ground-up review can be planned. Yours later: how the review guards against reasoning from the program as it is, at
+its plan; the rulings on its proposals; your customised protonation tool; the analyte's model files; and what
+version 1 is.
 
 ## Position
 
@@ -31,8 +31,9 @@ what version 1 is.
 - **Phase 6 is amended**
   ([§8.2.52](../../specification/history/52-phase-6-amended-the-ground-up-review-planned.md)): WP6.04, the ground-up
   review, and WP6.05, the axis fix, are planned; the rest is provisional.
-- **Next:** `/np-plan amend 6 review` on Fable 5.2. Then `/np-plan wp 6.04`; after its merge `/np-plan project`,
-  `/np-plan amend 6`, `/np-plan wp 6.05`.
+- **Next:** `/np-plan wp 6.04` on Fable 5.2, once the amended plan is merged
+  ([its review](../code_reviews/CODE_REVIEW_080.md)). After WP6.04: `/np-plan project`, `/np-plan amend 6`,
+  `/np-plan wp 6.05`.
 
 ## Not to be re-decided
 

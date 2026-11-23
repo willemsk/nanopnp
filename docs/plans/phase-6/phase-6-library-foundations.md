@@ -38,7 +38,8 @@ True of the codebase today:
 
 - **A pore's axis found from its channel can lock off the true one.** `structure/cavity.py` `channel_axis` holds a
   second fixed point at a ragged rim, up to about 0.6° off, and rounding decides which one it reaches (REV-279).
-  `structure/stage.py` `align` takes that axis only under C1 or `axis: cavity`; every walk of VER-62 takes the ring's.
+  `structure/stage.py` `align` takes that axis only under C1 or `axis: cavity`, and `structure/orient.py`
+  `_channel_line` where no covariance axis stands apart; every walk of VER-62 takes the ring's.
 - **A run's record is an untyped dict.** `pipeline/run.py` `RunResult.write` writes `run.json`; 13 sites parse it raw.
 - **A field carries neither its order nor its log branch.** `post/fields.py` `field_at` reads P2 values linearly;
   `gui/render.py` `render_fields` writes the fields file.
@@ -82,7 +83,7 @@ WP6.04 takes `v0.7.0-alpha.4` and WP6.05 `v0.7.0-alpha.5`; the close takes `v0.7
 
 ### WP6.01 — The Windows leg (REV-277; AY4)
 
-*Delivered 22 November 2026.* [The plan](wp6.01-the-windows-leg.md). Live: AZ8's ship rule; REV-279 waits for the rescoping round.
+*Delivered 22 November 2026.* [The plan](wp6.01-the-windows-leg.md). Live: AZ8's ship rule; REV-279 is WP6.05's.
 
 ### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8; AZ9 to AZ17)
 
@@ -90,7 +91,7 @@ WP6.04 takes `v0.7.0-alpha.4` and WP6.05 `v0.7.0-alpha.5`; the close takes `v0.7
 
 ### WP6.03 — The cleanup: instructions, the Copilot host retired (AY5; AZ18 to AZ21; REV-166 to REV-168, REV-278)
 
-*Delivered 23 November 2026.* [The plan](wp6.03-the-cleanup-instructions-copilot-host.md). Live: the 8,000 words of AZ18 bind every `/np-implement` session's first window (§8.4.4), measured at 7,186; each plan proposes its two models (AZ20, AZ21); the tag `copilot-host` waits for the author's push (AZ19).
+*Delivered 23 November 2026.* [The plan](wp6.03-the-cleanup-instructions-copilot-host.md). Live: the 8,000 words of AZ18 bind every `/np-implement` session's first window (§8.4.4), measured at 7,186; each plan proposes its two models (AZ20, AZ21); the tag `copilot-host` is pushed (AZ19).
 
 ### WP6.04 — The ground-up review (BA10 to BA13; BB2)
 
@@ -117,17 +118,18 @@ open is a `REV-nn` row. About 9 sessions, 6 to 12 agent hours and 12 touches. It
 ### The ruling round on the review (BA11, BA13)
 
 After WP6.04 merges, at `/np-plan project`, since a proposal may move a requirement or a phase. The author rules each
-proposal; a declined one leaves Phase 6 as BA4 has it. `/np-plan amend 6` then plans WP6.05 on the phase as the round
-leaves it, and numbers what is left. About 2 sessions and 3 touches.
+proposal; a declined one leaves Phase 6 as BA4 has it. `/np-plan amend 6` then confirms WP6.05's entry on the phase as
+the round leaves it, and numbers what is left. About 2 sessions and 3 touches.
 
 ### WP6.05 — The channel's axis at a ragged rim (REV-279; VER-48; BA8; BB1)
 
 *Firm; planned after the ruling round and its amendment (BB1).* It makes a plane's centre robust to a broken tie at a
 ragged rim, and measures 2WCD's channel axis again. From v0.7 a structure with a ragged rim may be given an axis up to
 about 0.6° different from v0.6's, the third exception to AY1's rule that Phase 6 changes no number a user sees (BA8);
-`CHANGELOG.md` says so. VER-48's gate test tilts the wall with the ragged rim again. The oracle is the axis the test
-wall is built about. No Tier 3 leg. About 4 sessions, 2 to 4 agent hours and 6 touches. Its plan settles open
-decision 11.
+`CHANGELOG.md` says so. VER-48's gate test tilts the wall with the ragged rim again; the perturbed draws read
+`cavity.channel_axis` itself, since the gate's refusal prints 0.01°. The oracle is the axis the test wall is built
+about. §5.2's NOTE on stage 1 takes the new method and 2WCD's numbers. No Tier 3 leg. About 4 sessions, 2 to 4 agent
+hours and 6 touches. Its plan settles open decision 11.
 
 ### Provisional (BA4; BA11)
 
@@ -162,14 +164,14 @@ The round's input, in order:
 | 8 | What comes first after the review; what the review designs for | **Settled by the author, 23 November 2026**: the rulings before the axis fix; the whole program, built and planned (BB1, BB2) |
 | 9 | How the review guards against reasoning from the program as it is; where its report lives; its two models | **Author**, at WP6.04's plan |
 | 10 | The review's proposals, which may reopen any ruling | **Author**, at `/np-plan project` after WP6.04 (BA13) |
-| 11 | What VER-48's two limits become if the fix moves 2WCD's measured axis (REV-239) | **Author**, at WP6.05's plan, before any measurement |
+| 11 | What §5.2's two limits become if the fix moves 2WCD's measured axis (REV-239) | **Author**, at WP6.05's plan, before the fix is measured |
 | 12 | The provisional packages' numbers and grouping | `/np-plan amend 6`, after the round on the review (BA4) |
 
 ## What the author supplies
 
 | Item | Needed by | If it does not arrive |
 |---|---|---|
-| Rulings on the ground-up review's proposals | The round after WP6.04 | WP6.05 stays unplanned and the rest provisional (BA11; BB1) |
+| Rulings on the ground-up review's proposals | The round after WP6.04 | WP6.05's plan stays unwritten and the rest provisional (BA11; BB1) |
 | Merges; tags a session cannot push | Each package | The session dispatches `tag.yml` and prints the commands |
 
 ## Verification
@@ -201,13 +203,13 @@ until the round on the review rules):
    carried. No factor is predicted (AZ6). **FR-28 has its test.**
 6. **Each row the phase owns is `fixed` or ruled** (AM4).
 7. **Each proposal of the ground-up review is ruled by the author or carried with its owner** (BA13); the round's
-   record names each. The phase does not close on an unruled one.
+   record names each. The phase does not close on one neither ruled nor carried.
 8. **The wall with a ragged rim recovers its known axis to VER-48's 10⁻⁶ rad** on every perturbed draw, and on the three
    platforms at the close. Today 3 of 8 draws lock 0.22° to 0.62° off (REV-279); prediction: none locks. A draw that
    still locks is investigated, and the tolerance stands. **2WCD's channel axis is measured again** against its
    0.0073 nm. Prediction: unmoved within VER-48's 10⁻⁴ nm if none of 2WCD's planes holds a split tie, which WP6.05's
-   plan measures first. A move amends VER-48 in the fix's commit and goes to the author with the two limits (open
-   decision 11).
+   plan measures first. A move, of it or of the farthest centre's 0.0148 nm, amends VER-48 and §5.2's NOTE in the
+   fix's commit and goes to the author with the two limits (open decision 11).
 
 ## End-of-phase report
 
