@@ -146,7 +146,7 @@ S23: the WP5.01 plan
 S24: 'the design document''s *The areas*; its naming of QR-10''s observer by the close amended by AW2'
 T1: spent
 T2: 'REV-28, REV-30, REV-32, REV-39, REV-52, REV-62; MOD-13'
-T3: 'REV-41, REV-45, REV-67; open: WP6.15 (FR-28) and the composer''s phase'
+T3: 'REV-41, REV-45, REV-67; open: Phase 6''s tolerances and exports package (FR-28) and the composer''s phase'
 T4: §5.5
 T5: spent
 T6: 'FR-43; placed by BA9'
@@ -210,7 +210,7 @@ Z2: the Phase 4 plan
 Z3: §8.1's Phase 4 documentation increment
 Z4: the Phase 4 plan
 Z5: REV-121
-Z6: 'REV-156; placed by AY3; open: WP6.17'
+Z6: 'REV-156; placed by AY3; open: Phase 6''s speed-up'
 AA1: superseded by AY5
 AA2: superseded by AY5
 AA3: superseded by AY5
@@ -223,7 +223,7 @@ AB1: §8.4.2
 AC1: IF-01's NOTE on the interface; the Phase 4 plan
 AC2: NUM-16's NOTE
 AC3: 'REV-170; placed by AD4'
-AC4: 'REV-171; amended by AD5; open: WP6.17 (AY3; AZ6)'
+AC4: 'REV-171; amended by AD5; open: Phase 6''s speed-up (AY3; AZ6)'
 AC5: REV-169
 AC6: spent
 AD1: the Phase 5 plan; spent by AG1
@@ -312,7 +312,7 @@ AL27: 'knowledge/07-software-stack/25; neither tool adopted (AW6)'
 AL28: '§8.4.4, §8.4.5'
 AL29: superseded by AN8
 AM1: PHY-12, PHY-13, PHY-14, PHY-22, NUM-09, NUM-12, NUM-16, NUM-17, NUM-26, NUM-30
-AM2: 'NUM-04, NUM-28; open: WP6.13 and WP6.14 (REV-223 to REV-225; AY6), and Phase 12 (the measurement; BA5)'
+AM2: 'NUM-04, NUM-28; open: Phase 6''s equations package and its tolerances and exports package (REV-223 to REV-225; AY6), and Phase 12 (the measurement; BA5)'
 AM3: §7.6
 AM4: '§8.4.6, `/np-ship phase`'
 AM5: §2.2, §3, §8.3, Appendix B
@@ -391,18 +391,18 @@ AX2: 'REV-273; open: Phase 7''s tree of results (AY1)'
 AX3: '§8.1''s Phase 5 gate; REV-277, fixed by WP6.01; its placement in V&V in CI amended by AY4'
 AY1: '§2.7; §8.1; §8.3; FR-32''s and FR-36''s Release; its packages numbered by AZ4; its no-number rule amended by AZ2 and BA8'
 AY2: '§2.7; §8.1; RSK-15; QR-02, QR-15; the Release of FR-21, FR-22 and FR-40 to FR-42; VAL-16, VAL-17; its phase and release for validation amended by BA5; open: each tool phase''s round'
-AY3: 'REV-156, REV-60, REV-171; open: WP6.17'
+AY3: 'REV-156, REV-60, REV-171; open: Phase 6''s speed-up'
 AY4: '§8.1''s gates from Phase 6; §7.6; REV-277, fixed by WP6.01; its /np-ship rule narrowed by AZ8'
 AY5: §8.4.4; the git tag copilot-host
 AY6: 'the review register; FR-28''s Release; NUM-04''s NOTE; its packages numbered by AZ4; the analyte forces placed by BA5'
 AY7: '§8.4.5; its implementing and shipping models set by AZ20 and AZ21'
 AY8: '§8.4.4; its limit set by AZ13 and AZ14'
 AZ1: '§5.4.1 NOTE; Appendix A''s QR-13 row; MOD-10; open: /np-plan phase 8'
-AZ2: '§2.7; §8.1''s Phase 6 row and GUI increment 6; REV-270; open: WP6.07'
+AZ2: '§2.7; §8.1''s Phase 6 row and GUI increment 6; REV-270; open: Phase 6''s fields package'
 AZ3: 'FR-35''s NOTE; REV-254, REV-242; open: Phase 6''s error base and its refusals reworded, numbered by /np-plan amend 6 (BA4)'
 AZ4: '§8.1''s Phase 6 row; §8.3; the review register; MOD-08; the Phase 6 plan; its packages from WP6.04 provisional by AZ7, their number amended by BA4'
-AZ5: '§2.7; open: WP6.05, WP6.07 and WP6.09 (§5.3.3, §5.3.5)'
-AZ6: '§8.1''s Phase 6 gate; REV-60, REV-156, REV-171; open: WP6.17'
+AZ5: '§2.7; open: Phase 6''s run record, fields and results file packages (§5.3.3, §5.3.5)'
+AZ6: '§8.1''s Phase 6 gate; REV-60, REV-156, REV-171; open: Phase 6''s speed-up'
 AZ7: 'spent; the round is §8.2.51'
 AZ8: '§8.4.4; §7.6; np-ship/phase.md; the Phase 6 plan'
 AZ9: '§8.4.4, §8.4.5; usage.py; the Phase 6 plan; its number set by AZ13'
@@ -425,11 +425,13 @@ BA4: '§2.7; §8.1''s Phase 6 row; §8.3; open: /np-plan amend 6, after the roun
 BA5: '§2.7; §8.1; §8.3; QR-02, QR-15; the Release of FR-21 and FR-22; VAL-16, VAL-17; RSK-15; open: /np-plan phase 11'
 BA6: 'OPN-08; §2.7''s v1.0 row; open: Phase 12''s close'
 BA7: §8.4.4
-BA8: '§2.7; §8.1''s Phase 6 row; REV-279; open: Phase 6''s axis package'
+BA8: '§2.7; §8.1''s Phase 6 row; REV-279; its place after the round set by BB1; open: WP6.05'
 BA9: 'FR-43''s Release; §2.7; §8.1''s Phase 9 row; REV-183; open: /np-plan phase 9'
-BA10: '§2.7; §8.1''s Phase 6 row; §8.3; open: /np-plan amend 6, then WP6.04'
-BA11: '§8.1''s Phase 6 row; open: /np-plan amend 6'
+BA10: '§2.7; §8.1''s Phase 6 row; §8.3; the Phase 6 plan; open: WP6.04'
+BA11: '§8.1''s Phase 6 row; the Phase 6 plan; its place for the axis package amended by BB1; open: the /np-plan amend 6 after the round on WP6.04''s proposals'
 BA12: 'open: WP6.04'
 BA13: '§8.4.4; open: WP6.04, and the round after it'
 BA14: '§8.4.4; §7.6''s NOTE on the per-push selection'
 BA15: 'the decisions register''s Package column (.claude/scripts/decisions.py)'
+BB1: '§8.1''s Phase 6 row; the Phase 6 plan; open: the round after WP6.04'
+BB2: '§8.1''s Phase 6 row; the Phase 6 plan; open: WP6.04'

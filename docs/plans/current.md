@@ -1,38 +1,38 @@
 # Current work
 
-Updated 23 November 2026. Navigation;
-`SPECIFICATION.md` governs; an unmerged branch is not shipped.
+Updated 23 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-Phase 6's first three packages are merged and tagged, and the rescoping round you asked for is held.
+Phase 6's first three packages are merged and tagged, the project is rescoped, and Phase 6's plan is amended to match.
 
-You kept the direction. All three tools stay before validation, the workbench is rebuilt in full, and the program is
-first compared with the paper in the last phase. The forces on an analyte become a phase of their own, so validation
-is now Phase 12 and the thirteenth release. Version 1 is defined when validation closes. A session may
-restructure the code it works with while every test passes. Fractional protonation joins the mutator's phase.
+Its next package reviews the program from the ground up: how would it be built if we started over? Everything is
+open to it but the paper's physics. It changes no code and hands you a report: the design it would choose, and each
+difference from today's program marked keep, change now, change later or drop, with its gain, risk and cost.
 
-Two things change Phase 6. Its next package reviews the program from the ground up: how would it be built if we
-started over? Everything is open to it but the paper's physics. It changes no code and hands you a report, and you
-rule on each proposal. The rest of Phase 6, about ten packages, waits for those rulings, except a small fix for the
-pore's axis at a ragged rim.
+You ruled twice at the amendment. Your rulings on the review's proposals come before the small fix for the pore's axis
+at a ragged rim. And the review designs for the whole program, what exists and what is planned up to version 1. The
+rest of Phase 6, about ten packages, waits for your rulings on the review.
 
 Phase 6 ahead: about 65 sessions, 53 to 106 agent hours and 101 times you act, if the review changes nothing.
 
-**Your call.** Do you approve the round's record, now reviewed? *Recommendation:* yes; the review changed none of
-your rulings, and you settled its two questions. Then start the amendment that plans the ground-up
-review and the axis fix. Yours later: the rulings on the review's proposals, your customised protonation tool, the
-analyte's model files, and what version 1 is.
+**Your call.** Do you approve the amended plan, once it is reviewed? *Recommendation:* wait for its review, the next
+step, which checks it against your rulings. Yours later: how the review guards against reasoning from the program as
+it is, at its plan; the rulings on its proposals; your customised protonation tool; the analyte's model files; and
+what version 1 is.
 
 ## Position
 
 - Phases 1 to 5 **closed**, `v0.2.0` to `v0.6.0` ([Phase 5's report](phase-5/phase-5-workbench.md#end-of-phase-report)).
 - **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md); §8.2.50), `v0.7`: **WP6.01 to WP6.03
   merged**, `v0.7.0-alpha.3` published, the tag `copilot-host` pushed.
-- **The project is rescoped** ([§8.2.51](../../specification/history/51-the-project-rescoped.md), BA1 to BA15),
-  reviewed (review 079). Phases 7 to 12: [the input note](sessions/phases-6-to-11.md).
-- **Next:** `/np-plan amend 6` on Fable 5.2: it plans WP6.04, the ground-up review, and the axis package; the rest stays
-  provisional; then `/np-plan wp 6.04`.
+- **The project is rescoped** ([§8.2.51](../../specification/history/51-the-project-rescoped.md)). Phases 7 to 12:
+  [the input note](sessions/phases-6-to-11.md).
+- **Phase 6 is amended**
+  ([§8.2.52](../../specification/history/52-phase-6-amended-the-ground-up-review-planned.md)): WP6.04, the ground-up
+  review, and WP6.05, the axis fix, are planned; the rest is provisional.
+- **Next:** `/np-plan amend 6 review` on Fable 5.2. Then `/np-plan wp 6.04`; after its merge `/np-plan project`,
+  `/np-plan amend 6`, `/np-plan wp 6.05`.
 
 ## Not to be re-decided
 
@@ -46,9 +46,9 @@ analyte's model files, and what version 1 is.
 - **The phases are library, workbench, composer, mutator, sketcher, analyte forces, validation** (BA1, BA2, BA5);
   **validation is Phase 12 and `v0.13`, with no earlier comparison against the paper** (BA3). **A session may
   restructure the code it works with while the push gate passes, its nightly walks not asked** (BA7, BA14).
-- **WP6.04 is the ground-up review: all open but §4's physics, a report and no code, then the author's rulings at
-  `/np-plan project`. Only the axis fix is planned before them** (BA8, BA10 to BA13). Until then BA1 to BA9 and AZ1
-  to AZ6 hold (BA4).
+- **WP6.04 is the ground-up review: all open but §4's physics, designed for the whole of §3, a report and no code,
+  then the author's rulings at `/np-plan project`** (BA10 to BA13; BB2). **WP6.05, the axis fix, is firm and follows
+  those rulings** (BA8; BB1). Until then BA1 to BA9 and AZ1 to AZ6 hold (BA4).
 
 ## Somebody else's
 
@@ -63,7 +63,7 @@ analyte's model files, and what version 1 is.
 ## On demand
 
 - **Specification:** `SPECIFICATION.md` and the file it maps; `docs/project/decisions.md`.
-- **Amendments:** `phase-5/phase-5-record.md`.
+- **Amendments:** `phase-6/phase-6-record.md`.
 - **Workflow:** `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5.
 - **Workbench:** `docs/design/workbench.md`; `docs/design/reviews/`; §8.2.17 onwards.
 - **Code:** `docs/project/architecture-survey.md`.
