@@ -19,8 +19,8 @@ of its sub-agents beside it, and prints one Markdown line for a report or a pull
 The window opens at the last prompt that ran an ``/np-`` command, or at the ``/compact`` typed just
 before it; at ``--since`` (an ISO time, or a
 git commit, whose author time is taken), or with ``--all`` at the session's start. The session
-is ``$CLAUDE_CODE_SESSION_ID``'s, else the newest transcript of the project. Where none exists, as
-on another host, the line says "not measured" and the exit status is 0.
+is ``$CLAUDE_CODE_SESSION_ID``'s, else the newest transcript of the project. Where none exists,
+the line says "not measured" and the exit status is 0.
 
 Run it as ``uv run .claude/scripts/usage.py [--label <level>] [--since <time|commit> | --all]``.
 

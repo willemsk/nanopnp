@@ -6,10 +6,9 @@ Each level of `/np-plan`, `/np-implement` and `/np-ship` reads this file, then i
 
 ## Reading order
 
-1. On a host other than Claude Code, read `hosts.md` beside this file before the rest.
-2. Read `docs/plans/current.md`, the plan of the level, then what the level's file lists.
-3. `uv run .claude/scripts/clause.py <ID>` prints a clause with its NOTEs and rulings.
-4. A stale `.venv` takes `uv sync --all-extras --frozen` (`CLAUDE.md`, *Setup*).
+1. Read `docs/plans/current.md`, the plan of the level, then what the level's file lists.
+2. `uv run .claude/scripts/clause.py <ID>` prints a clause with its NOTEs and rulings.
+3. A stale `.venv` takes `uv sync --all-extras --frozen` (`CLAUDE.md`, *Setup*).
 
 ## The branch
 
@@ -50,17 +49,6 @@ section is a session's conduct under it. While two package PRs are open:
 - After you rebase on `main`, renumber each new item of every register §8.4.4 lists. Start one above the
   highest on `main`, change every reference, and repeat until `uv run .claude/scripts/duplicates.py`
   passes.
-
-## Host coordination
-
-- One host drives a branch at a time (§8.2.25 AA4). It is named `host: claude-code` or
-  `host: copilot` in the lane line of `docs/plans/current.md` and in the PR's **Verification**
-  checkpoint. If the other host is named and the branch moved within the hour, ask before you write.
-- Hosts never share a working tree. The two-lane cap and the renumbering above apply across hosts.
-- Before each push, rebase on `origin/<head>`, except after you rewrote the branch on `main`
-  (*Gate and push*, step 6): that push replaces `origin/<head>` with `--force-with-lease`, and a
-  rebase on it would replay `main`'s commits onto the old branch. Never force-push a branch the
-  other host may hold.
 
 ## Normativity
 
@@ -108,10 +96,13 @@ a choice to the author.
    `SPECIFICATION.md`, `specification/`, `knowledge/`, `CHANGELOG.md`, `examples/*/README.md`,
    `data/corrections/`, `docs/` outside `plans/` and `code_reviews/`, `mkdocs.yml`, and docstrings in
    `src/`.
-4. Run the gate before a push as `CLAUDE.md`'s *Commands* say (on Copilot, `hosts/copilot.md`), and
-   push only a tree it passed (§8.4.2).
-5. Run `git push -u origin <branch>`. On a network failure, retry after 2, 4, 8 and 16 s.
-6. `main` keeps a linear history: its branch protection refuses a merge commit. Bring a branch up to
+4. Run the gate before a push as `CLAUDE.md`'s *Commands* say, and push only a tree it passed
+   (§8.4.2).
+5. Before each push, rebase on `origin/<head>`, except after you rewrote the branch on `main`
+   (step 7): that push replaces `origin/<head>` with `--force-with-lease`, and a rebase on it would
+   replay `main`'s commits onto the old branch.
+6. Run `git push -u origin <branch>`. On a network failure, retry after 2, 4, 8 and 16 s.
+7. `main` keeps a linear history: its branch protection refuses a merge commit. Bring a branch up to
    `main` with `git rebase origin/main`, never by merging `main` into it. Where the branch carries
    commits that `main` took in another form, as a plan's PR merged before its implementation, rebuild
    it on `origin/main` from its own new commits (`git cherry-pick`). Push a rewritten branch with

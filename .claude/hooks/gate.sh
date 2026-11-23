@@ -24,8 +24,8 @@
 #                  `push` stamp. Tags and deletions go through.
 #
 # A refusal in hook mode is the reason on stderr and one JSON object on stdout carrying the deny
-# as `hookSpecificOutput` (Claude Code) and top-level (Copilot), with exit 0; exit 2 if it cannot
-# be printed (SPECIFICATION.md section 8.2.26, AB1).
+# as `hookSpecificOutput` and top-level, with exit 0; exit 2 if it cannot be printed
+# (SPECIFICATION.md section 8.2.26, AB1).
 #
 # Every run appends one line to <git dir>/nanopnp-gate.log: time, mode, selection, seconds,
 # tree and result.

@@ -12,8 +12,8 @@ sources:
   resource: docs/plans/phase-5/wp5.10-the-written-knowledges-tools-and-rules.md
   title: WP5.10 plan, D6 and D8
 - id: survey
-  resource: .claude/scripts/audit/survey.sh
-  title: The survey script of code review 039, which runs both tools from ephemeral environments
+  resource: .claude/scripts/audit/survey.sh at the git tag copilot-host
+  title: The survey script of code review 039, which runs both tools from ephemeral environments; removed by WP6.03
 - id: modularity
   resource: docs/project/modularity.md
   title: The modularity report, its edge kinds and its layer order

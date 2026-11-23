@@ -221,7 +221,7 @@ REV-60's factorisation reuse follows it. `/np-plan phase 6` reads this row.
 
 ### REV-166: The Copilot hook probes are incomplete
 
-Raised by the implementation of [the Copilot host plan](../plans/sessions/copilot-host.md), built before its
+Raised by the implementation of the Copilot host plan (`docs/plans/sessions/copilot-host.md` at the git tag `copilot-host`), built before its
 Phase 0 probes ran (§8.2.25 AA6).
 
 **Verified** (app 1.1.34, WSL host, disposable clones, 31 October 2026):
@@ -245,7 +245,7 @@ matcher; the full 1800 s timeout; `session-start.sh`'s JSON.
 **Procedure:** a disposable clone opened as its own WSL repository, probes installed before startup;
 record only tool names, argument types and sentinels.
 
-**Placed** (§8.2.46 AV6, 20 November 2026): owned by [the Copilot host's session plan](../plans/sessions/copilot-host.md), run by the author on a WSL host before the close; the close carries it to Phase 6 if not run.
+**Placed** (§8.2.46 AV6, 20 November 2026): owned by the Copilot host's session plan (at the git tag `copilot-host`), run by the author on a WSL host before the close; the close carries it to Phase 6 if not run.
 
 **Carried** (WP5.28, 22 November 2026): not run before Phase 5's close; carried to Phase 6, placed by its scope round (§8.2.48 AX1).
 
@@ -254,6 +254,8 @@ commit so we can find it back." Phase 6's cleanup removes the host's files and r
 commit that holds them, and this row closes as `declined` in that commit. Nothing is run on Copilot until then.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): WP6.03, the instructions and the Copilot host's retirement.
+
+**Declined** (§8.2.49 AY5, 23 November 2026): WP6.03 removed the host's files, hooks and rules, so nothing is left to check. The git tag `copilot-host` marks the last commit that holds them.
 
 ### REV-167: Six Copilot app behaviours the substitutes assume are unchecked
 
@@ -271,7 +273,7 @@ Code construct the workflow names; six of them rest on app behaviour no session 
 Recommendation: check each in the same session as REV-166 and write the answer into `hosts/copilot.md`.
 Only the first can let an ungated tree through; the rest change how a substitute is worded.
 
-**Placed** (§8.2.46 AV6, 20 November 2026): with REV-166, in [the Copilot host's session plan](../plans/sessions/copilot-host.md).
+**Placed** (§8.2.46 AV6, 20 November 2026): with REV-166, in the Copilot host's session plan (at the git tag `copilot-host`).
 
 **Carried** (WP5.28, 22 November 2026): not run before Phase 5's close; carried to Phase 6, placed by its scope round (§8.2.48 AX1).
 
@@ -280,6 +282,8 @@ commit so we can find it back." Phase 6's cleanup removes the host's files and r
 commit that holds them, and this row closes as `declined` in that commit. Nothing is run on Copilot until then.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): WP6.03, the instructions and the Copilot host's retirement.
+
+**Declined** (§8.2.49 AY5, 23 November 2026): WP6.03 removed the host's files, hooks and rules, so nothing is left to check. The git tag `copilot-host` marks the last commit that holds them.
 
 ### REV-168: The Copilot host has not been verified live
 
@@ -294,7 +298,7 @@ session-start text and `format.sh`), the sub-agents called through `task`, and a
 Recommendation: run it after REV-166, on a WSL host, and ship the Copilot host's pull request from
 Claude Code with `/np-ship`, as the plan says, which also covers the Claude Code regression.
 
-**Placed** (§8.2.46 AV6, 20 November 2026): with REV-166, in [the Copilot host's session plan](../plans/sessions/copilot-host.md).
+**Placed** (§8.2.46 AV6, 20 November 2026): with REV-166, in the Copilot host's session plan (at the git tag `copilot-host`).
 
 **Carried** (WP5.28, 22 November 2026): not run before Phase 5's close; carried to Phase 6, placed by its scope round (§8.2.48 AX1).
 
@@ -303,6 +307,8 @@ commit so we can find it back." Phase 6's cleanup removes the host's files and r
 commit that holds them, and this row closes as `declined` in that commit. Nothing is run on Copilot until then.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): WP6.03, the instructions and the Copilot host's retirement.
+
+**Declined** (§8.2.49 AY5, 23 November 2026): WP6.03 removed the host's files, hooks and rules, so nothing is left to check. The git tag `copilot-host` marks the last commit that holds them.
 
 ### REV-171: The architecture review's unmeasured costs
 
