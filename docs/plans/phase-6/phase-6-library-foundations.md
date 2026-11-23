@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the library's foundations): a library the workbench and the tools can build on
 
-**Status: in progress. Delivered: WP6.01, WP6.02. WP6.01 to WP6.03 as planned on 22 November 2026; then a rescoping round; WP6.04 to WP6.18 provisional until it rules (§8.2.50). Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03. WP6.01 to WP6.03 as planned on 22 November 2026; then a rescoping round; WP6.04 to WP6.18 provisional until it rules (§8.2.50). Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -80,14 +80,11 @@ and 8 touches (§8.3).
 
 ### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8; AZ9 to AZ17)
 
-*Delivered 22 November 2026.* [The plan](wp6.02-the-cleanup-measure-audit-records.md). Live: the limit of AZ13 and AZ18, which binds a session's first window (AZ15), from WP6.03's merge; its Outcome's outdated list.
+*Delivered 22 November 2026.* [The plan](wp6.02-the-cleanup-measure-audit-records.md). Live: the limit of AZ13 and AZ18, which binds a session's first window (AZ15); its Outcome's outdated list.
 
 ### WP6.03 — The cleanup: instructions, the Copilot host retired (AY5; AZ18 to AZ21; REV-166 to REV-168, REV-278)
 
-*Planned 23 November 2026.* [The plan](wp6.03-the-cleanup-instructions-copilot-host.md). The instructions a session
-reads first are cut; the host's files and rules are removed, findable by the tag `copilot-host` (AZ19); each plan
-proposes its implementing and shipping model (AZ20, AZ21). Done when a new session's first window reads at most 8,000
-words (AZ18), which then stands in §8.4.4. Fable 5.2 implements it and Opus 5.5 ships it.
+*Delivered 23 November 2026.* [The plan](wp6.03-the-cleanup-instructions-copilot-host.md). Live: the 8,000 words of AZ18 bind every `/np-implement` session's first window (§8.4.4), measured at 7,186; each plan proposes its two models (AZ20, AZ21); the tag `copilot-host` waits for the author's push (AZ19).
 
 ### The rescoping round (AZ7)
 
@@ -132,7 +129,7 @@ Each waits on the rescoping round; none is planned before it.
 
 | Item | Needed by | If it does not arrive |
 |---|---|---|
-| The tag `copilot-host`, pushed after WP6.03's merge; one new session for WP6.03's measurement | WP6.03 | The session prints the commands and the hash; the measurement waits |
+| The tag `copilot-host`, pushed after WP6.03's merge | WP6.03 | The ship's report prints the commands and the hash |
 | What to keep, cut and add | The rescoping round | The round proposes from the records |
 | Merges; tags a session cannot push | Each package | The session dispatches `tag.yml` and prints the commands |
 
