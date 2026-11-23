@@ -1,6 +1,6 @@
 # Checkpoints and finishing a work package
 
-`wp.md` beside this file sends a session here at its first compaction checkpoint, or when the last
+`wp.md` beside this file sends a session here at each compaction checkpoint, or when the last
 item is done.
 
 ## The compaction checkpoint

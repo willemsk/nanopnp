@@ -1449,9 +1449,9 @@ read before its first edit, and the limit is 6,500 from WP6.03's merge (§8.2.50
 **The instructions cut** (WP6.03, 23 November 2026), in words by `wc -w` under `LC_ALL=C.UTF-8`, at `e11ef54` and
 `20bb8b4`. What an implementing session reads first: `CLAUDE.md` 2,349 to 1,505; `.claude/workflow/core.md` 1,366 to
 899; `np-implement/wp.md` 1,276 to 739; `np-implement/SKILL.md` 103, unchanged; `current.md` 695, no longer read at
-the start. Together 5,789 to 3,246. The finishing rules are read when they apply: `.claude/workflow/finish.md` 348
-and `np-implement/finish.md` 682. The 29 Markdown files of `.claude/skills/`, `workflow/`, `rules/` and `agents/`
-hold 18,329 to 17,288. The limit is 8,000 words with the plan read whole (§8.2.50 AZ18), and a new session on the
+the start. Together 5,789 to 3,246. The finishing rules are read when they apply: `.claude/workflow/finish.md` 349
+and `np-implement/finish.md` 682. Review 078 then cut `CLAUDE.md` to 1,497, under the plan's target of 1,500. The
+29 Markdown files of `.claude/skills/`, `workflow/`, `rules/` and `agents/` hold 18,329 to 17,288. The limit is 8,000 words with the plan read whole (§8.2.50 AZ18), and a new session on the
 cut read 7,186 before its first edit
 ([the Outcome](../plans/phase-6/wp6.03-the-cleanup-instructions-copilot-host.md#implementation-details)).
 
