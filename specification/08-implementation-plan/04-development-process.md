@@ -184,9 +184,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   effort, set explicitly, because Opus 5.5's default is medium. The
   author picks the model when a session starts; a plan names it, and a pause's prompt names the next
   step's. A scoped item, one that a sub-agent takes whole with its checks, runs on Sonnet 5.5 at high
-  effort. Haiku 5.5 takes only mechanical, repetitive work that is fully specified and whose expected
+  effort; WP6.04's three blind designers are excepted and run on Fable 5.2 and Opus 5.5, as its plan names them. Haiku 5.5 takes only mechanical, repetitive work that is fully specified and whose expected
   context stays under 100,000 tokens. An item a sub-agent fails goes to a new worker once, then to the
-  next model. (§8.2.11 L6; §8.2.38 AN8; §8.2.49 AY7; §8.2.50 AZ20, AZ21)
+  next model. (§8.2.11 L6; §8.2.38 AN8; §8.2.49 AY7; §8.2.50 AZ20, AZ21; §8.2.52 BB3)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only and on Opus at high
   effort (§8.2.38 AN9), and the CI-log classifier. Eight scripts are kept in `.claude/scripts/`,
   beside `/np-gui`'s own in `.claude/scripts/gui/`: `clause.py` prints a clause by identifier,

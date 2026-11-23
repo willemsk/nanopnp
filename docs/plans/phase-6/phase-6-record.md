@@ -4,7 +4,7 @@ The amended text of [the Phase 6 plan](phase-6-library-foundations.md), quoted a
 restated it to its current scope (§8.2.16 R4). Read it on demand; the plan states what holds now. A later amendment
 appends a dated section below.
 
-**Status: a record of replaced text, last added to on 23 November 2026 (§8.2.52); it states nothing that holds now.**
+**Status: a record of replaced text, last added to on 23 November 2026 (§8.2.52 BB3 to BB5); it states nothing that holds now.**
 
 ---
 
@@ -172,3 +172,31 @@ The lead of the work packages, and the live lines of the WP6.01 and WP6.03 entri
 > Live: AZ8's ship rule; REV-279 waits for the rescoping round.
 >
 > Live: the 8,000 words of AZ18 bind every `/np-implement` session's first window (§8.4.4), measured at 7,186; each plan proposes its two models (AZ20, AZ21); the tag `copilot-host` waits for the author's push (AZ19).
+
+## Amended 23 November 2026 (§8.2.52 BB3 to BB5)
+
+At WP6.04's plan the author ruled the review's guard, its report's place and its two models. The In brief's cost and
+the Context's rulings read:
+
+> **Cost.** The review: about 9 sessions, 6 to 12 agent hours and 12 times you act.
+>
+> §8.2.51 (BA1 to BA15) and §8.2.52 (BB1, BB2).
+
+The WP6.04 entry was headed "(BA10 to BA13; BB2)" and opened "*Planned; next.*"; it had no line on the guard, its
+report's bullet began "**It delivers one report:**", and it closed:
+
+> About 9 sessions, 6 to 12 agent hours and 12 touches. Its plan settles open decision 9.
+
+Open decision 9 read:
+
+> | 9 | How the review guards against reasoning from the program as it is; where its report lives; its two models | **Author**, at WP6.04's plan |
+
+Open decisions 5 and 8, shortened to their rulings to hold the plan's 2,750 words, ended:
+
+> **Settled by the author, 23 November 2026**: the content kept in about ten packages, the ground-up review first, the axis fix firm (BA1 to BA15) |
+>
+> **Settled by the author, 23 November 2026**: the rulings before the axis fix; the whole program, built and planned (BB1, BB2) |
+
+Open decision 2, shortened for the same reason, read:
+
+> | 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 and 23 November 2026**: project text in words, six recent packages, nothing leaves, closed items archived (AZ9 to AZ12); 2,500 words for a phase plan (AZ14); the limit binds the first window of an `/np-implement` session (AZ15) at 8,000 words, the plan read whole (AZ18) |

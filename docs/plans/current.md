@@ -4,22 +4,22 @@ Updated 23 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-Phase 6's first three packages are merged and tagged, the project is rescoped, and Phase 6's plan is amended to match.
+Phase 6's next package, the ground-up review, is planned.
 
-Its next package reviews the program from the ground up: how would it be built if we started over? Everything is
-open to it but the paper's physics. It changes no code and hands you a report: the design it would choose, and each
-difference from today's program marked keep, change now, change later or drop, with its gain, risk and cost.
+The review asks how the program would be built if we started over, and takes only the paper's physics as given. It
+changes no code and hands you a report on the project's pages: what the program should become, the design it would
+choose, and each difference from today's program marked keep, change now, change later, drop or add, with its gain,
+risk and cost.
 
-You ruled twice at the amendment. Your rulings on the review's proposals come before the small fix for the pore's axis
-at a ragged rim. And the review designs for the whole program, what exists and what is planned up to version 1. The
-rest of Phase 6, about ten packages, waits for your rulings on the review.
+As you ruled at its plan, three designers who have never seen the code or the requirement list design the
+program from its purpose and your view, before a reviewer who knows the program goes rule by rule. Fable writes the
+report and Opus checks it.
 
-Phase 6 ahead: about 65 sessions, 53 to 106 agent hours and 101 times you act, if the review changes nothing.
+The review: about 10 sessions, 7 to 13 agent hours and 13 times you act. Phase 6 ahead: about 66 sessions, 54 to 107
+agent hours and 102 times you act, if the review changes nothing.
 
-**Your call.** Do you approve the amended plan? Its review moved neither ruling. *Recommendation:* approve, so the
-ground-up review can be planned. Yours later: how the review guards against reasoning from the program as it is, at
-its plan; the rulings on its proposals; your customised protonation tool; the analyte's model files; and what
-version 1 is.
+**Your call.** Do you approve the review's plan, once its own review has read it? *Recommendation:* approve, so the
+review can start. Yours later: three answers at its start, then the rulings on its proposals.
 
 ## Position
 
@@ -28,12 +28,12 @@ version 1 is.
   merged**, `v0.7.0-alpha.3` published, the tag `copilot-host` pushed.
 - **The project is rescoped** ([§8.2.51](../../specification/history/51-the-project-rescoped.md)). Phases 7 to 12:
   [the input note](sessions/phases-6-to-11.md).
-- **Phase 6 is amended**
-  ([§8.2.52](../../specification/history/52-phase-6-amended-the-ground-up-review-planned.md)): WP6.04, the ground-up
-  review, and WP6.05, the axis fix, are planned; the rest is provisional.
-- **Next:** `/np-plan wp 6.04` on Fable 5.2, once the amended plan is merged
-  ([its review](../code_reviews/CODE_REVIEW_080.md)). After WP6.04: `/np-plan project`, `/np-plan amend 6`,
-  `/np-plan wp 6.05`.
+- **WP6.04, the ground-up review, is planned**
+  ([its plan](phase-6/wp6.04-the-ground-up-review.md);
+  [§8.2.52](../../specification/history/52-phase-6-amended-the-ground-up-review-planned.md)); WP6.05 follows the
+  rulings on it; the rest is provisional.
+- **Next:** `/np-plan wp 6.04 review` on Fable 5.2; then `/np-implement wp 6.04` on Fable 5.2 and `/np-ship wp 6.04`
+  on Opus 5.5, in a new session. After WP6.04: `/np-plan project`, `/np-plan amend 6`, `/np-plan wp 6.05`.
 
 ## Not to be re-decided
 
@@ -48,8 +48,9 @@ version 1 is.
   **validation is Phase 12 and `v0.13`, with no earlier comparison against the paper** (BA3). **A session may
   restructure the code it works with while the push gate passes, its nightly walks not asked** (BA7, BA14).
 - **WP6.04 is the ground-up review: all open but §4's physics, designed for the whole of §3, a report and no code,
-  then the author's rulings at `/np-plan project`** (BA10 to BA13; BB2). **WP6.05, the axis fix, is firm and follows
-  those rulings** (BA8; BB1). Until then BA1 to BA9 and AZ1 to AZ6 hold (BA4).
+  then the author's rulings at `/np-plan project`** (BA10 to BA13; BB2). **Its guard, its report's place and its two
+  models are ruled** (BB3 to BB5). **WP6.05, the axis fix, is firm and follows those rulings** (BA8; BB1). Until then
+  BA1 to BA9 and AZ1 to AZ6 hold (BA4).
 
 ## Somebody else's
 
