@@ -30,10 +30,10 @@ touches. Each phase's own round estimates it again:
 
 | Work | Sessions | Agent hours | Touches |
 |---|---|---|---|
-| Phase 6, the cleanup and the library's foundations, after WP6.01 to WP6.03: the ground-up review with its ruling round (11 sessions, 6 to 12 agent hours, 15 touches); the axis package (4, 2 to 4, 6); and, provisional until that round rules, the drafted content in about ten packages at the text and clean-up rate: the restructure, the model's open terms, the tolerances with the exports, the refusals, the speed-up and the close (50, 45 to 90, 80) (§8.2.49 AY1, AY3, AY4, AY6; §8.2.50 AZ4; §8.2.51 BA4, BA8, BA10, BA11) | 65 | 53 to 106 | 101 |
+| Phase 6, the cleanup and the library's foundations, after WP6.01 to WP6.03: the ground-up review with its ruling round (11 sessions, 6 to 12 agent hours, 15 touches); the axis package (4, 2 to 4, 6); and, provisional until that round rules, the drafted content in about ten packages at the text and clean-up rate, its agent hours those of the 15 drafted packages whose content is kept: the restructure, the model's open terms, the tolerances with the exports, the refusals, the speed-up and the close (50, 45 to 90, 80) (§8.2.49 AY1, AY3, AY4, AY6; §8.2.50 AZ4; §8.2.51 BA4, BA8, BA10, BA11) | 65 | 53 to 106 | 101 |
 | Phase 7, the workbench rebuilt: about 14 packages at the shell rate, its foundations and the packages Phase 5's seventh amendment moved (§8.2.47 AW1), and the author's design rounds | 85 | 85 to 170 | 140 |
 | Phases 8 to 10, the composer, the structural mutator with fractional protonation, and the sketcher: not estimated; each round sets its own (§8.2.17 S7; §8.2.49 AY2; §8.2.51 BA1, BA9) | — | — | — |
-| Phase 11, the analyte forces: about four packages at the library rate, until its round estimates it (§8.2.51 BA5) | 20 | 12 to 24 | 32 |
+| Phase 11, the analyte forces: about four packages at the text and clean-up rate, until its round estimates it (§8.2.51 BA5) | 20 | 12 to 24 | 32 |
 | Phase 12, validation and release: about four packages, and the machine time of its Tier 3 and Tier 4 runs (the datum below) | 23 | 20 to 40 | 40 |
 
 A ruling round, a plan and a ship session on Fable 5.2 cost about a quarter to a half more in model spend than on
