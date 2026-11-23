@@ -6,7 +6,7 @@ Rows: 1,589. By source: history ruling 418; plan decision row 780; REV row 279; 
 
 By decider: author 718; open 5; session, own call 863; session, put to the author 3.
 
-This page lists the 493 that bind now. The 1,096 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
+This page lists the 492 that bind now. The 1,097 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -423,7 +423,6 @@ This page lists the 493 that bind now. The 1,096 of a delivered plan, fixed, spe
 | REV-274 | author | `docs/project/review-findings.md` |  |  | Five details the Qt panels show are carried to Phase 7 | §8.2.47 AW11; §8.2.49 AY1: Phase 7, the structure's layers and the polish pass | accepted |
 | REV-275 | author | `docs/project/review-findings.md` |  |  | What WP5.27's screen review left open | ruled by the author, 21 November 2026; §8.2.47 AW1, AW10; §8.2.49 AY1: Phase 7, its forms, the tree of results and the polish pass | accepted |
 | REV-276 | author | `docs/project/review-findings.md` |  |  | The radius set's notice names the removed bundle notice | ruled by the author, 21 November 2026: at the radius set's next change | accepted |
-| REV-278 | author | `docs/project/review-findings.md` |  | WP6.03 | `/np-plan project` as written cannot hold the rescoping round | §8.2.50 AZ7; proposed by review 073: WP6.03, the cleanup's instructions | open |
 | REV-279 | author | `docs/project/review-findings.md` |  | WP6.01 | At a ragged rim the channel's axis can lock about 0.6° off, as rounding decides | ruled by the author, 22 November 2026 (WP6.01): the rescoping round after WP6.03 (§8.2.50 AZ7) | accepted |
 | MOD-08 | author | `docs/project/modularity-findings.md` |  | WP6.12 | Five registries in four shapes | §8.2.8 H5; brought forward to WP6.12 by REV-272 and §8.2.50 AZ4 | post-1.0 |
 | MOD-10 | author | `docs/project/modularity-findings.md` |  |  | The backend interface of section 5.4.1 does not exist | §8.2.8 H3; §8.2.50 AZ1: `/np-plan phase 8` | deferred |

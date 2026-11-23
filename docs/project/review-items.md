@@ -1556,6 +1556,12 @@ tool or phase, and AZ1 to AZ6 with them. It names `/np-plan amend 6` as the step
 **Proposed** (review 073, 22 November 2026): WP6.03, the cleanup's instructions; the author's approval of the Phase 6
 plan accepts the placement.
 
+**Fixed** (WP6.03, 23 November 2026): `.claude/skills/np-plan/project.md` gains *A rescoping round*. When a ruling
+opens the project's scope, the round also reads §3's requirements, §8.1's tools and phases, OPN-08, the last
+cleanup's Outcome, the architecture survey and the last closed phase's measured cost. It may open any requirement,
+tool or phase with the rulings that ruling names, and it changes the phase in flight only by naming
+`/np-plan amend <n>`.
+
 ### REV-279: At a ragged rim the channel's axis can lock about 0.6° off, as rounding decides
 
 Found by WP6.01's dispatched [run 851](https://github.com/willemsk/nanopnp/actions/runs/45035649973), the Windows leg's
