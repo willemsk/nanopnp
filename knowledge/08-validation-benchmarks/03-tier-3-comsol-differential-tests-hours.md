@@ -39,7 +39,7 @@ verified:
 
 The field-oracle tier, optional while the author's COMSOL licence lasts (RSK-14).
 
-> **Scope** (`SPECIFICATION.md` §8.2.4 D6; §8.2.49 AY2). The comparison that gates v0.12
+> **Scope** (`SPECIFICATION.md` §8.2.4 D6; §8.2.49 AY2; §8.2.51 BA5). The comparison that gates v0.13
 > is against the paper's *published* current–voltage relationships and in-pore averages (VAL-16,
 > VAL-17), which need no licence. The field comparison below is kept, but not required. What a
 > published-results comparison cannot do is localise: see the ablation paragraph below, and

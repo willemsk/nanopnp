@@ -83,6 +83,8 @@ export stays with FR-28, v0.7.
 
 **Placed** (§8.2.49 AY2, 22 November 2026): Phase 11, the validation runs.
 
+**Placed** (§8.2.51 BA5, 23 November 2026): Phase 12, the validation runs.
+
 ### REV-58 — The azimuthal reduction projects cells it then drops
 
 *Area:* performance. *Severity:* low. *Found:* CODE_REVIEW_003 (PR #49), *Leads not investigated*.
@@ -120,6 +122,8 @@ left out of WP20, and nothing in `src/` or the specification owns them.
 
 **Placed** (§8.2.49 AY2, 22 November 2026): Phase 11, the validation runs.
 
+**Placed** (§8.2.51 BA5, 23 November 2026): Phase 12, the validation runs.
+
 ### REV-64 — A sweep's plan-time NUM-34 gate skips generated meshes
 
 *Area:* verification. *Severity:* low. *Found:* PR #42 (WP21); verified open at `5559c7e`.
@@ -132,6 +136,8 @@ left out of WP20, and nothing in `src/` or the specification owns them.
 **Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *the validation runs*, with the envelope sweeps.
 
 **Placed** (§8.2.49 AY2, 22 November 2026): Phase 11, the validation runs.
+
+**Placed** (§8.2.51 BA5, 23 November 2026): Phase 12, the validation runs.
 
 ### REV-67 — Public registration functions for backend registries (MOD-11)
 
@@ -161,6 +167,8 @@ The strip removed test docstrings. Where a test's requirement identifier lived o
 **Placed** (§8.2.46 AV5, 20 November 2026): Phase 6's provisional package *V&V in CI*, which renames each test in scope for its requirement.
 
 **Placed** (§8.2.49 AY2, 22 November 2026): Phase 11, V&V in CI.
+
+**Placed** (§8.2.51 BA5, 23 November 2026): Phase 12, V&V in CI.
 
 ### REV-149: Notebook 01 prepares a structure but does not change its residues
 
@@ -398,6 +406,8 @@ using a custom version of PDB2PQR. This is something we can look into later, so 
 then, and writes the physics into §4 first (T6). Found at WP5.04's plan, 3 November 2026.
 
 **Placed** (§8.2.46 AV5, 20 November 2026): FR-43's library package, in a later phase.
+
+**Placed** (§8.2.51 BA9, 23 November 2026): Phase 9, the mutator's phase, as a library package tagged v0.10. The author supplies the customised PDB2PQR by `/np-plan phase 9`; if it has not arrived, that round moves the package to after version 1.
 
 ### REV-186: A stored mesh beside a `structure:` section is refused
 
@@ -1592,3 +1602,5 @@ enclosed space a symmetry image of the widest, or by leaving out of the fit a pl
 **Accepted** (the author, 22 November 2026, at WP6.01's implementation): the gate test tilts a wall without the
 ragged rim, its precision kept; the method's fix waits for the rescoping round after WP6.03 (§8.2.50 AZ7), which
 places it.
+
+**Placed** (§8.2.51 BA8, 23 November 2026): a small package of Phase 6, firm and numbered by `/np-plan amend 6`. From v0.7 a structure with a ragged rim may be given an axis up to about 0.6° different.

@@ -21,7 +21,7 @@ electro-osmotic flow rate. It is built around three rules:
   classical PNP-NS is ePNP-NS with its corrections switched off, not a second code path.
 
 !!! warning "Pre-alpha"
-    The comparison against the paper's published results gates v0.12, the Phase 11 release. What
+    The comparison against the paper's published results gates v0.13, the Phase 12 release. What
     each version delivered is in the [release notes](_generated/project/changelog.md).
 
 ## Where to start

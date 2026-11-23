@@ -96,26 +96,27 @@ reference-solution generation; MD trajectories are supplied as input.
 | v0.1 | 0 | Spike. Analytic cylindrical/conical pore, coupled steady axisymmetric ePNP-NS, continuation ladder, analytic benchmarks, one COMSOL comparison. No structure pipeline, no GUI. |
 | v0.2 | 1 | Solver core on an externally supplied mesh and material/charge fields; full QoI extraction; pluggable correction models; a versioned case-file schema; the Python API (stable from v1.0, IF-01); CLI; sweep runner. |
 | v0.3 | 2 | Geometry pipeline: structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh. |
-| v0.4 | 3 | Charge pipeline: PDB2PQR to smeared ρ_fixed and dielectric field; the physics-model interface (FR-20). Runs the paper's pipeline end to end, from structure to current; the reproduction of the published results is measured at v0.12 (VAL-16, VAL-17; §8.2.4 D6; §8.2.49 AY2). |
+| v0.4 | 3 | Charge pipeline: PDB2PQR to smeared ρ_fixed and dielectric field; the physics-model interface (FR-20). Runs the paper's pipeline end to end, from structure to current; the reproduction of the published results is measured at v0.13 (VAL-16, VAL-17; §8.2.4 D6; §8.2.49 AY2; §8.2.51 BA5). |
 | v0.5 | 4 | Polish and user testing (§8.2.6 F3): an exploration of the modularity of the implementation architecture, then a user-testing pass over the physics, the numerics, the Python API and the command line. No GUI increment. |
 | v0.6 | 5 | Graphical interface (§8.2.6 F5): a design and requirements document with mockups, a visual-feedback workflow, then the browser workbench its plan sets (FR-31 to FR-35, FR-37 to FR-39): six suites over a project folder and a run queue, replacing the Qt shell. |
-| v0.7 | 6 | The cleanup and the library's foundations (§8.2.49 AY1): the records and instructions cleaned up; then, as the open-minded rescoping round after the cleanup confirms or changes it (§8.2.50 AZ7): the library's results side, registries and error base restructured, with the numbers the shell computed; the model's open terms, the tolerances argued, the exports (FR-28) and the speed-up (AY3, AY6). It changes no number a user sees but those the equations package re-pins and the values a map, a cut or a probe reads between a field's nodes, which become the solved field's own (REV-270; §8.2.50 AZ2). A project of v0.6 opens without its runs: a run record of v0.6 is refused, not converted, and its study is run again (§8.2.6 F4; §8.2.50 AZ5). |
+| v0.7 | 6 | The cleanup and the library's foundations (§8.2.49 AY1): the records and instructions cleaned up; a review of the program from the ground up, open to everything but the physics of §4, which changes no code and whose proposals the author rules (§8.2.51 BA10 to BA13); the channel axis's fault at a ragged rim fixed (REV-279; §8.2.51 BA8); then, provisional until those rulings (§8.2.51 BA4, BA11): the library's results side, registries and error base restructured, with the numbers the shell computed; the model's open terms, the tolerances argued, the exports (FR-28) and the speed-up (AY3, AY6). It changes no number a user sees but those the equations package re-pins, the values a map, a cut or a probe reads between a field's nodes, which become the solved field's own (REV-270; §8.2.50 AZ2), and the axis of a structure with a ragged rim (§8.2.51 BA8). A project of v0.6 opens without its runs: a run record of v0.6 is refused, not converted, and its study is run again (§8.2.6 F4; §8.2.50 AZ5). |
 | v0.8 | 7 | The workbench rebuilt on its foundations, with the packages Phase 5's early close moved: the tree of results (FR-32), the structure's layers, the performance package, the polish pass and the guided route (FR-36), and the full guide (§8.2.47 AW1; §8.2.49 AY1; REV-272). |
 | v0.9 | 8 | The physics composer (FR-40), library first (§8.2.17 S3; §8.2.49 AY2). |
-| v0.10 | 9 | The structural mutator (FR-41), library first, with the structure pipeline's loose ends (§8.2.17 S4; §8.2.49 AY2, AY6). |
+| v0.10 | 9 | The structural mutator (FR-41), library first, with the structure pipeline's loose ends and fractional protonation (FR-43) (§8.2.17 S4; §8.2.49 AY2, AY6; §8.2.51 BA9). |
 | v0.11 | 10 | The 2D sketcher of the (r, z) domain (FR-42), library first (§8.2.17 S5; §8.2.49 AY2). |
-| v0.12 | 11 | Validated release: V&V suite in CI, the analyte forces (FR-21, FR-22), the published current–voltage relationships and in-pore averages reproduced (VAL-16, VAL-17), documentation, tutorials, JOSS submission, DOI-archived (§8.2.49 AY2). Released before v1.0. |
-| v1.0 | — | Stable release: the API stability promise of IF-01. Its content and gate are the author's to define (OPN-08); QR-10 is observed on its release candidate (§8.2.47 AW2). |
+| v0.12 | 11 | The analyte forces (FR-21, FR-22): a rigid body of revolution on the pore's axis and the forces on it, library first (§8.2.51 BA5). |
+| v0.13 | 12 | Validated release: V&V suite in CI, the published current–voltage relationships and in-pore averages reproduced (VAL-16, VAL-17), documentation, tutorials, JOSS submission, DOI-archived (§8.2.49 AY2; §8.2.51 BA5). Released before v1.0. |
+| v1.0 | — | Stable release: the API stability promise of IF-01. Its content and gate are the author's to define, at Phase 12's close (OPN-08; §8.2.51 BA6); QR-10 is observed on its release candidate (§8.2.47 AW2). |
 | post-1.0 | — | Backlog: installers for all three platforms and in-application tutorials; 3D; transient; ion-specific rather than mean-concentration-driven property models; MD-fitting toolkit for corrections; solid-state pores; charge regulation; multi-species electrolytes beyond binary; non-axisymmetric analytes. |
 
 A requirement's release in §3 is a release of the table above, or "a later phase", which takes a number when a
-round places it (§8.2.48 AX1; §8.2.49 AY2).
+round places it (§8.2.48 AX1; §8.2.49 AY2; §8.2.51 BA9).
 
 NOTE (Versioning; §8.2.4 D1): the
 releases above are git tags `vX.Y.Z`, one minor version per phase, on the commit that merges the
 phase's end-of-phase report (§8.1): `v0.1.0` for Phase 0, `v0.2.0` for Phase 1, `v0.3.0` for
-Phase 2, `v0.4.0` for Phase 3, `v0.5.0` for Phase 4, `v0.6.0` for Phase 5, `v0.7.0` for Phase 6 and so on to `v0.12.0` for Phase 11
-(§8.2.5 E2, §8.2.6 F1 and F2; §8.2.49 AY1, AY2). Each merged work package is tagged
+Phase 2, `v0.4.0` for Phase 3, `v0.5.0` for Phase 4, `v0.6.0` for Phase 5, `v0.7.0` for Phase 6 and so on to `v0.13.0` for Phase 12
+(§8.2.5 E2, §8.2.6 F1 and F2; §8.2.49 AY1, AY2; §8.2.51 BA5). Each merged work package is tagged
 `vX.Y.Z-alpha.N` on its last commit on `main`, where N counts the phase's work packages toward
 that release; from Phase 5, N is the package's number within its phase (`WP5.02` takes
 `v0.6.0-alpha.2`), and a package merged before its previous phase's release takes no tag (§8.4.1;

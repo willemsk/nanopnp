@@ -8,6 +8,10 @@ paths:
 
 ## Coding conventions
 
+- **Restructuring (§8.4.4; §8.2.51 BA7).** A session may restructure any code it works with, beyond what its plan
+  names, while the push gate passes. A change of specified behaviour edits its clause; a break of a public name or
+  the case schema goes into `CHANGELOG.md`; a moved edge edits `modularity-layering.yaml`. Name the restructure in
+  the pull request. A package whose plan says it changes no code changes none.
 - `from __future__ import annotations` in every module; type hints on every signature; `mypy --strict` clean.
 - **In-code prose (§8.4.2; §8.2.11 L4).** A docstring on every public function, class and method of `src/` (no
   leading underscore; a dunder method is public): a summary line, with NumPy-style parameters only where the name and type do not say, and no derivation or history.

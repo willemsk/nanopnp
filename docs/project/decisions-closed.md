@@ -1,6 +1,6 @@
 # Decisions register, closed
 
-The 1,105 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
+The 1,106 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -837,6 +837,7 @@ The 1,105 decisions of [the register](decisions.md) that bind nothing now, writt
 | WP5.27 D8 | session, own call | `docs/plans/phase-5/wp5.27-qts-removal-and-the-short-guide.md` | 2026-11-21 | WP5.27 | `io/manifest.py:DISTRIBUTIONS` loses `PySide6` and gains `nicegui` and `fastapi`. No stage key reads it \| §5.3.3 with §2.6 as restated; decided by the plan \| | §5.3.3, §2.6 | delivered plan |
 | WP5.27 D9 | session, own call | `docs/plans/phase-5/wp5.27-qts-removal-and-the-short-guide.md` | 2026-11-21 | WP5.27 | Each restated NOTE becomes the text. Four sentences are corrected to the program as they land: VER-43's (the view-models import no front-end framework; neither they nor the server import NGSolve); VER-43's and VER-44's… | VER-43, VER-44, VER-55, RSK-13 | delivered plan |
 | WP5.27 D10 | session, own call | `docs/plans/phase-5/wp5.27-qts-removal-and-the-short-guide.md` | 2026-11-21 | WP5.27 | `docs/guide/workbench.md` replaces `desktop.md`: install, start, the project folder, one section and one picture a suite, the self-test. `generate.py` copies the four register pages that link plans and reviews, so those… | REV-228 | delivered plan |
+| §8.2.50 AZ7 | author | `specification/history/50-phase-5-exit-and-phase-6-decisions.md` | 2026-11-22 | phase ruling | An open-minded rescoping of the project is held after the cleanup, before the restructure.** REV-272 ruled that Phase 6 opens with a round that re-aligns its scope, and §8.2.49 took that round as a re-ordering: it quest… | spent; the round is §8.2.51 (*The round is §8.2.51.*) | spent |
 | §8.2.50 AZ10 | author | `specification/history/50-phase-5-exit-and-phase-6-decisions.md` | 2026-11-22 | WP6.02 | Added 22 November 2026, at WP6.02's plan.* **The baseline is six recent packages, read from the session service.** The transcript of a cloud session goes with its machine (AM11), so no past package can be measured from… | spent; the baseline is docs/plans/sessions/reading-baseline.md | spent |
 | WP5.28 D1 | author | `docs/plans/phase-5/wp5.28-the-close.md` | 2026-11-22 | WP5.28 | No `REV-nn` row is `open` (AX2, set in this plan's commit). REV-166 to REV-168, if still `accepted` at item 2, are carried: their ruling cells and `copilot-host.md` name Phase 6's scope round in place of Phase 5's close… | REV-166, REV-168, §8.4.6, §8.2.46 AV5, §8.2.48 AX2 | delivered plan |
 | WP5.28 D2 | session, own call | `docs/plans/phase-5/wp5.28-the-close.md` | 2026-11-22 | WP5.28 | In `holds-now.yaml`, each `open:` that names only a delivered Phase 5 package is removed: the line keeps the clause it names, or reads `spent`. T3, AC3 and AW1 keep what still waits. A line that names Phase 6, v1.0 or t… | unstated | delivered plan |
