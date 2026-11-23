@@ -3,7 +3,6 @@ paths:
   - "src/**/*.py"
   - "tests/**/*.py"
   - ".claude/scripts/**/*.py"
-  - ".github/scripts/**/*.py"
   - "docs/scripts/**/*.py"
 ---
 
