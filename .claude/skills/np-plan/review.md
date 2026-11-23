@@ -52,11 +52,12 @@ is. About 1,000 words; never drop a decision, ruling or risk to meet the count.
 5. **The rulings and the specification.** Each ruling taken in this round, in the author's terms, and
    each clause the plan amends.
 6. **What the checks changed.** What reading the code and the review moved in the plan, one line each.
-7. **How the work runs.** For `wp`, the items in groups, with the pauses and what goes to a sub-agent;
+7. **How the work runs.** For `wp`, the model that implements and the model that ships, then the
+   items in groups, with the pauses and what goes to a sub-agent;
    for `phase` and `amend`, the package sequence, the provisional ones and what each waits on; for
    `project`, the phases with their releases.
 8. **How we'll know it works.** Each verification row or completion criterion in one plain sentence.
 9. **What it does not do.** Each deferral and who takes it.
 10. **Risks.** A table `Risk | Guard`: each risk and how it would be noticed.
 11. **What I need from you.** Approve, or name the decision to change; what the author must supply,
-    and by when; the next command.
+    and by when; the next command and the model it runs on.

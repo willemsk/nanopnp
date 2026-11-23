@@ -1,7 +1,8 @@
 # Ship a work package
 
 `/np-ship [wp <n>]` runs steps 3 and 4 of the implementation workflow as one sequence, without a stop.
-It runs in the implementing session after its compaction, or in a fresh session (§8.2.33 AI4).
+It runs in the implementing session after its compaction, or in a fresh session (§8.2.33 AI4), on the
+model the plan names for the ship (§8.2.50 AZ20).
 Usually `/np-implement` has opened the PR: reuse it. If there is no PR and the author names the branch,
 this invocation authorises you to open the PR without asking again. The review, the fixes and the CI
 watch need no further prompt.

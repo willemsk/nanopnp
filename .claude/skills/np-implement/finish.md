@@ -55,11 +55,16 @@ monitor CI in this turn. Then pause (§8.2.33 AI4):
 
 1. Write a prompt. It holds `/compact`, the package, the PR, its head, each decision this session took
    that the plan does not hold, the values the review needs that the plan and `git log` do not hold,
-   the model of the next step (the core's *Models and executors*), and "resume with `/np-ship wp <n>`".
-   Pipe it to `.claude/hooks/checkpoint.sh save ship <plan> <n>`,
-   and print it in a `text` block.
-2. If that printed `off`, end the turn. The author compacts and resumes here, or starts `/np-ship` in a
-   fresh session.
-3. If it printed `on`, the author set `NANOPNP_AUTO_SHIP=1`: run the `np-ship` skill with `wp <n>` in
-   this turn. The hooks carry the prompt across the compaction that comes when the context fills, as at
-   a checkpoint. `/np-ship` still puts to the author each finding against this session's decisions.
+   the shipping model that the plan names, and "resume with `/np-ship wp <n>`". Print it in a `text`
+   block.
+2. Where the plan names another model for the ship than for the implementation, the ship never chains
+   (§8.2.50 AZ21): run `.claude/hooks/checkpoint.sh clear` and end the turn. The author switches the
+   model, then compacts and resumes here or starts `/np-ship` in a fresh session.
+3. Where it names one model for both, pipe the prompt to
+   `.claude/hooks/checkpoint.sh save ship <plan> <n>`.
+   - If that printed `off`, end the turn. The author compacts and resumes here, or starts `/np-ship`
+     in a fresh session.
+   - If it printed `on`, the author set `NANOPNP_AUTO_SHIP=1`: run the `np-ship` skill with `wp <n>`
+     in this turn. The hooks carry the prompt across the compaction that comes when the context
+     fills, as at a checkpoint. `/np-ship` still puts to the author each finding against this
+     session's decisions.
