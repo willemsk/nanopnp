@@ -31,7 +31,7 @@ the plan, fixes what the review finds, gates and pushes again, and ends with the
      fixes, split the package.
 4. **The commit.** Commit `docs: <the level's commit subject>, review fixes`, with the identifiers in
    the body. `docs/plans/current.md` names the level's own next step. Gate and push (the core). Bring
-   the PR's body to the tree's state (the core's *PR contract*): its In brief if a decision moved, and
+   the PR's body to the tree's state (`.claude/workflow/finish.md`, *The PR contract*): its In brief if a decision moved, and
    under **Verification** the review's report and its findings' outcomes.
 5. **The summary.** Report the manager's summary below. Then stop.
 

@@ -138,7 +138,7 @@ echo "- branch ${branch}${position}, working tree ${tree}"
 [ -z "$sync_note" ] || echo "$sync_note"
 
 if [ -f docs/plans/current.md ]; then
-    echo "- current phase and work package: docs/plans/current.md (read when planning or resuming work)"
+    echo "- current phase and work package: docs/plans/current.md (read when planning; /np-implement and /np-ship open it when they update it)"
 else
     echo "- current brief unavailable; locate the requested plan in docs/plans/ when needed"
 fi

@@ -9,7 +9,7 @@ watch need no further prompt.
 ## 0. Resolve the package's PR and branch
 
 Run `.claude/hooks/checkpoint.sh clear`: an automatic pause that led here is spent
-(`np-implement/wp.md`, *Finishing*).
+(`np-implement/finish.md`, *Finishing*).
 
 1. Find them as the core's *The package's PR and branch* says. If no open PR matches, list the closed
    PRs against `main` (the REST route `pulls?state=closed`) with the same title rule. If one of them is
@@ -44,7 +44,7 @@ If §1 changed the tree, or `<head>` is ahead of `origin/<head>`, gate and push 
 
 ## 3. Open or reuse the PR
 
-Reuse the PR from §0. Open a PR by the core's *PR contract* only if §0 found none and the branch has
+Reuse the PR from §0. Open a PR by the *PR contract* of `.claude/workflow/finish.md` only if §0 found none and the branch has
 the package's commits. This section starts no review and no monitoring.
 
 ## 4. Review pass
