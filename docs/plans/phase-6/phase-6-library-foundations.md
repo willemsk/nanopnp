@@ -80,7 +80,7 @@ and 8 touches (§8.3).
 
 ### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8; AZ9 to AZ17)
 
-*Delivered 22 November 2026.* [The plan](wp6.02-the-cleanup-measure-audit-records.md). Live: AZ13's limit, which binds a session's first window (AZ15), from WP6.03's merge; its Outcome's outdated list.
+*Delivered 22 November 2026.* [The plan](wp6.02-the-cleanup-measure-audit-records.md). Live: the limit of AZ13 and AZ18, which binds a session's first window (AZ15), from WP6.03's merge; its Outcome's outdated list.
 
 ### WP6.03 — The cleanup: instructions, the Copilot host retired (AY5; AZ18 to AZ21; REV-166 to REV-168, REV-278)
 

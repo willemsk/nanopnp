@@ -13,12 +13,12 @@ where it and this plan disagree this plan is wrong. Identifiers are pointers int
 **What changes.** The instructions every session reads first are cut by almost half, from about 5,800 words to
 about 3,200. Nothing a session needs is dropped. A rule stated twice is kept once, and the rules for finishing a
 package are read when a session finishes, not when it starts. The setup for the second assistant app, Copilot, is
-removed from about twenty files and three scripts, and a tag keeps it findable. From now on each plan proposes which
+removed from about twenty files and three scripts, and a tag keeps it findable. Each plan now proposes which
 model implements and which one reviews, you decide, and the plan is written for your choice. The planning command
 for the whole project learns to hold the rescoping round that comes next.
 
-**Cost.** About five sessions, two to four hours of agent work and eleven times you act: five were today's answers,
-one starts a fresh session for the measurement, one pushes the tag. A user of the program sees no change.
+**Cost.** About five sessions, two to four hours of agent work and eleven times you act, among them today's five
+answers, a fresh session for the measurement and the tag's push. A user of the program sees no change.
 
 **What could go wrong.** A rule could be lost in the cut: each removed passage is listed with the place that still
 states it, and the review reads that list. A fresh session could still read more than the limit: the package then
@@ -43,8 +43,8 @@ two differ, so the ship never chains: the pause's prompt names Opus 5.5.
 | Decision | Choice | Why/source |
 |---|---|---|
 | **D1 The limit** | The first window of an `/np-implement` session reads at most 8,000 words of project text before its first edit, and reads its plan whole. A plan's caps stay | Ruled by the author, §8.2.50 AZ18 |
-| **D2 The start path** | What that window must read holds at most: `CLAUDE.md` 1,500 words, `.claude/workflow/core.md` 900, `np-implement/wp.md` 750 (`wc -w`). A removed passage is either a duplicate, deleted with the place that keeps it named, or a finishing rule, moved to a file read when it applies: `.claude/workflow/finish.md` and `np-implement/finish.md`. `/np-implement` and `/np-ship` open `current.md` when they update it. Every heading that another file cites keeps its name. The three numbers are this plan's targets, not rules of §8.4 | AY8 chose a measured limit over budgets per file; decided by the plan |
-| **D3 The host removed** | Every file, hook branch and rule that serves the Copilot app goes, and with them `.agents/`, the Antigravity adapter that only `hosts.md` describes. `AGENTS.md`, `.githooks/pre-push` and the gate's refusal object stay as they are. REV-166 to REV-168 close `declined`; AA1 to AA4, AA7 and AA8 are superseded by AY5 | AY5 ("the workflow runs on Claude Code alone"); the list decided by the plan |
+| **D2 The start path** | What that window must read holds at most: `CLAUDE.md` 1,500 words, `.claude/workflow/core.md` 900, `np-implement/wp.md` 750 (`wc -w`). A removed passage is either a duplicate, deleted with the place that keeps it named, or a finishing rule, moved to a file read when it applies: `.claude/workflow/finish.md` and `np-implement/finish.md`. `/np-implement` and `/np-ship` open `current.md` when they update it, and `/np-implement` reads a clause when the item that cites it starts. Every heading that another file cites keeps its name. The three numbers are this plan's targets, not rules of §8.4 | AY8 chose a measured limit over budgets per file; decided by the plan |
+| **D3 The host removed** | Every file, hook branch and rule that serves the Copilot app goes, and with them `.agents/`, the Antigravity adapter that only `hosts.md` describes. `AGENTS.md`, `.githooks/pre-push`, the gate's refusal object and the payload shapes `gate.sh` and `format.sh` read stay as they are. REV-166 to REV-168 close `declined`; AA1 to AA4, AA7 and AA8 are superseded by AY5 | AY5 ("the workflow runs on Claude Code alone"); the list decided by the plan |
 | **D4 The tag** | The git tag `copilot-host` marks the parent, on `main`, of the commit that deletes `.claude/workflow/hosts.md`. That commit's body holds the line `Tag: copilot-host`. The ship's report after the merge prints the author's two commands | Ruled by the author, §8.2.50 AZ19 |
 | **D5 The models** | A work-package plan proposes its implementing and its shipping model, `/np-plan wp` puts both to the author, and the plan is written for the models ruled. Opus 5.5 implements and Fable 5.2 ships by default. `NANOPNP_AUTO_SHIP` chains only where the plan names one model for both | Ruled by the author, §8.2.50 AZ20, AZ21 |
 | **D6 The audit's rest** | Hunk 3 (F4) is applied; hunks 1 and 2 (F1) are replaced by D5. The glob of F8 goes. `.claude/scripts/audit/` is deleted, found again at D4's tag; §8.4.5 names `.claude/scripts/gui/` as `/np-gui`'s scripts. F3 stays the rescoping round's | The audit; WP6.02's outdated list; decided by the plan |
@@ -56,10 +56,15 @@ two differ, so the ship never chains: the pause's prompt names Opus 5.5.
 **D1, D2**
 
 - A first window reads today, in words (`wc -w`): `CLAUDE.md` 2,342; `np-implement/SKILL.md` 103; `core.md` 1,364;
-  `np-implement/wp.md` 1,276; `current.md` 698; a plan of up to 3,850; `knowledge/index.md` 302; `clause.py`'s
+  `np-implement/wp.md` 1,276; `current.md` 700; a plan of up to 3,850; `knowledge/index.md` 302; `clause.py`'s
   output, a median of 1,192 in the baseline. The two path-scoped rules arrive as attachments and are not counted.
-- `core.md:Reading order` has every level read `current.md`. `np-implement/wp.md:Load the brief` finds the package
-  through the core's *The package's PR and branch*, which lists the open pull requests and reads no `current.md`.
+- At D2's targets the window reads 3,253 words of instructions, the index's 302 and this plan's 3,350: about 1,100
+  are left for clauses, under the baseline's median. A plan at its cap leaves 595. `clause.py AZ18` alone prints 487.
+  `np-implement/wp.md:Load the brief` step 3 reads every cited clause before the first item.
+- Four places have an implementing session read `current.md`: `core.md:Reading order` step 2; the last bullet of
+  step 2 of the core's *The package's PR and branch* ("Read `current.md` and the plan from this tree");
+  `CLAUDE.md`'s *Implementation workflow* ("To plan or resume, read"); and `session-start.sh`'s summary line.
+  `np-implement/wp.md:Load the brief` names the file nowhere itself.
 - `CLAUDE.md`'s *Commands* states the push gate's selection, its `NANOPNP_REQUIRE_*` variables and the prose-only
   rule. §7.6 (`specification/07-verification/06-continuous-integration.md`), `CONTRIBUTING.md`'s *The gate* and
   `gate.sh`'s header state each of them too.
@@ -71,6 +76,7 @@ two differ, so the ship never chains: the pause's prompt names Opus 5.5.
   `np-implement/wp.md`'s *Finishing* and *How the work lands*.
 - The core's *PR contract* is cited by `np-implement/wp.md`, `np-plan/wp.md`, `np-plan/review.md` and
   `np-ship/wp.md`; *Report and stop* by `CLAUDE.md`; `np-implement/wp.md`'s *Finishing* by `np-ship/wp.md`.
+- The steward's *What CI runs* cites `CLAUDE.md`'s *Commands* for the per-push selection, which leaves that section.
 - No test and no CI step reads `CLAUDE.md` or a file under `.claude/skills/` or `.claude/workflow/`.
 
 **D3, D4**
@@ -80,8 +86,12 @@ two differ, so the ship never chains: the pause's prompt names Opus 5.5.
 - `session-start.sh` opens with a block under `COPILOT_CLI` that collects the summary into one JSON object.
   `checkpoint.sh:switch_on` returns 1 under `COPILOT_CLI`. `gate.sh:refuse` prints one object with the deny
   top-level and as `hookSpecificOutput`; only its header comment names Copilot.
+- Two payload shapes came with the host and no file says so: `gate.sh` reads a `tool_input` that is a string, and
+  `format.sh` a `path` key and a raw `apply_patch` string. Claude Code sends neither; both are harmless.
 - `.githooks/pre-push` calls `gate.sh check-push` and serves any push no agent hook sees; its comment names the
   Copilot app.
+- *Host coordination*'s third bullet also holds a rule that is not the host's: rebase on `origin/<head>` before
+  each push. No other section states it.
 - The host is named in `core.md` (*Reading order* step 1, *Host coordination*, *Gate and push* step 4), `CLAUDE.md`
   (*Commands*, *Other hosts*), `np-plan/review.md` step 2, `np-implement/wp.md` (the task list), `np-ship/wp.md`
   §7 step 3, `justfile`'s comment on the commit gate and `usage.py`'s module docstring.
@@ -106,7 +116,7 @@ two differ, so the ship never chains: the pause's prompt names Opus 5.5.
 
 **D6, D7**
 
-- `.claude/scripts/audit/` holds ten files of code review 039's audit and two spent migrations; nothing under
+- `.claude/scripts/audit/` holds ten files, eight of code review 039's audit and two spent migrations; nothing under
   `.claude/`, `CLAUDE.md` or `justfile` runs them. `knowledge/07-software-stack/25-complexity-and-import-contract-tools.md`
   names `audit/survey.sh` as a resource. `.claude/scripts/gui/` holds six files that `np-gui`'s level files run.
 - `.claude/rules/python.md`'s front matter lists `.github/scripts/**/*.py`; that folder holds `prose-only.sh` alone.
@@ -128,8 +138,10 @@ two differ, so the ship never chains: the pause's prompt names Opus 5.5.
    of whose files name the host. The knowledge note's resource line names the tag, with a line in
    `knowledge/log.md`.
 2. Hooks: remove `session-start.sh`'s `COPILOT_CLI` block and `switch_on`'s guard, each with its comment; reword
-   `gate.sh`'s header and `.githooks/pre-push`'s comment. Change no logic of `gate.sh`.
-3. Remove the host from each file Grounding D3 lists. In `core.md` the whole of *Host coordination* goes.
+   `gate.sh`'s header and `.githooks/pre-push`'s comment. Change no logic of `gate.sh` or `format.sh`.
+3. Remove the host from each file Grounding D3 lists; `np-ship/wp.md` keeps its `gh` command, "where `gh` is
+   installed". In `core.md` *Host coordination* goes; its rule to rebase on
+   `origin/<head>` before each push moves into *Gate and push*, without "the other host".
 4. §8.4.2: drop "on both hosts". §8.4.4: replace the bullet with one sentence, that the workflow runs on Claude Code
    alone and `.claude/` is its single source (AY5). §8.4.5: drop the tiers bullet and the "A host without" sentence.
 5. Record 25: the first cell of AA1 to AA4, AA7 and AA8 gains `*Superseded by AY5.*`; `holds-now.yaml` gives each
@@ -158,13 +170,15 @@ any requirement, tool or phase, and the rulings that ruling names. It changes th
   in code* folds into *Rules by path*.
 - `core.md` keeps *Reading order*, *The branch*, *The package's PR and branch*, *Two lanes*, *Normativity*, *Models
   and executors*, *Records* and *Gate and push*, which gains the three steps of the push gate from `CLAUDE.md`.
-  *Reading order* says that `/np-plan` reads `current.md` and that the other two open it when they update it.
+  *Reading order* says that `/np-plan` reads `current.md` and that the other two open it when they update it;
+  the other three places of Grounding D2 say the same or drop the file.
 - `.claude/workflow/finish.md` takes *The author's page*, *The PR contract* and *Report and stop*, unchanged in
   substance. The core ends with one line that names it.
+- *Load the brief* step 3 becomes: read a clause the plan cites when the item that cites it starts.
 - `np-implement/wp.md` keeps *Load the brief*, the task list, *Sub-agent items*, *How the work lands* and
   *Measurements are deliverables*. `np-implement/finish.md` takes the compaction checkpoint, *Keeping the record
   straight* and *Finishing*. `wp.md` says to read it at the first checkpoint or when the last item is done.
-- Change each citing file of Grounding D2 to the new place.
+- Change each citing file of Grounding D2 to the new place; the steward cites §7.6 for the per-push selection.
 - The commit's body lists each removed passage with the file that keeps it.
 
 **Item 6 (D5).**
@@ -172,21 +186,23 @@ any requirement, tool or phase, and the rulings that ruling names. It changes th
 - `np-plan/wp.md`, *Putting the decisions to the author*: every plan puts two proposals, the implementing and the
   shipping model, each with its reason and what another model would change in the plan. After the ruling the plan
   fits the models: its executors, its checkpoints and how much *Implementation details* spells out. The template's
-  brief names both models. *Grounding the plan* says "the model the author ruled".
+  brief names both models. *Grounding the plan* and *Work items* say "the model the author ruled".
 - `np-plan/review.md`: the approval summary names both models.
 - `CLAUDE.md` **Models** and the core's *Models and executors*: §8.4.5's rule in two sentences.
 - `np-implement/finish.md`, the pause: the prompt names the plan's shipping model. Call `checkpoint.sh save ship`
   only where the plan names one model for both; otherwise run `checkpoint.sh clear`, print the prompt and end the turn.
-- `np-ship/wp.md`: it runs on the model the plan names.
+- `np-ship/wp.md`: it runs on the model the plan names. `np-implement/wp.md`'s opening line and
+  `checkpoint.sh`'s header say that the ship chains only where the plan names one model.
 - `holds-now.yaml`: AZ20 and AZ21 lose their `open:` parts.
 
 **Items 7 and 8 (D8).**
 
 1. Item 7: tick, gate, push. Run `checkpoint.sh clear`. Print a prompt that asks for a new session on Fable 5.2, not
    a `/compact`, with `/np-implement wp 6.03`. End the turn whatever `NANOPNP_AUTO_CHECKPOINT` says.
-2. Item 8, in the new session: read as the instructions say. Make the first change with `Edit`: the Outcome's
+2. Item 8, in the new session: read as the instructions say, with no clause before the first edit. Make the first change with `Edit`: the Outcome's
    heading under this section. Then run `uv run .claude/scripts/usage.py --reading` and take the `first window` line.
-3. Record the words by part and the ten largest files. On a pass, §8.4.4's bullet loses "From WP6.03's merge",
+3. Record the words by part, the ten largest files and the words left under the limit for a plan at its cap. On a
+   pass, §8.4.4's bullet loses "From WP6.03's merge",
    and `holds-now.yaml` gives AZ18 `§8.4.4` and AY8 no `open:`.
 4. On a miss, record it, cut the largest standing file, commit, and repeat items 7 and 8.
 
@@ -220,12 +236,12 @@ any requirement, tool or phase, and the rulings that ruling names. It changes th
 
 | # | Check | Oracle | Command |
 |---|---|---|---|
-| 1 | No live file names the host | Prints nothing | `git grep -il copilot -- .claude .github .githooks .agents AGENTS.md CLAUDE.md justfile specification/08-implementation-plan/04-development-process.md` |
-| 2 | The three hooks run | `bash -n` passes on each; the gate allows a `git status` payload with exit 0 and no output; `session-start.sh </dev/null` exits 0 with its summary; `checkpoint.sh save ship` prints `off` with the switch unset | `echo '{"tool_input":{"command":"git status"}}' \| .claude/hooks/gate.sh` |
-| 3 | The records agree (Tier 1; VER-61, VER-79; VER-45) | The kept tests pass unchanged; `links.py --anchors` names no file this package changed; the strict documentation build passes | `.claude/hooks/gate.sh run`; `CLAUDE.md`, *Commands* |
+| 1 | No live file names the host | Prints nothing | `git grep -il -e copilot -e antigravity -e 'hosts\.md' -e 'another host' -e 'a host where' -- .claude .github .githooks .agents AGENTS.md CLAUDE.md justfile specification/08-implementation-plan/04-development-process.md` |
+| 2 | The three hooks run | `bash -n` passes on each; the gate allows a `git status` payload with exit 0 and no output; `session-start.sh` exits 0 with its summary; with the switch unset `checkpoint.sh` prints `off`. Run before item 4: `off` drops a saved checkpoint | `bash -n .claude/hooks/<hook>.sh`; `echo '{"tool_input":{"command":"git status"}}' \| .claude/hooks/gate.sh`; `.claude/hooks/session-start.sh </dev/null`; `NANOPNP_AUTO_SHIP= .claude/hooks/checkpoint.sh save ship <plan> 6.03 </dev/null` |
+| 3 | The records agree (Tier 1; VER-61, VER-79; VER-45) | The kept tests pass unchanged; `links.py --anchors` names no file this package changed; the strict documentation build passes | `.claude/hooks/gate.sh run`; `uv run .claude/scripts/links.py --anchors`; `CLAUDE.md`, *Commands* |
 | 4 | D2's targets | 1,500, 900 and 750 words or fewer | `wc -w CLAUDE.md .claude/workflow/core.md .claude/skills/np-implement/wp.md` |
 | 5 | The limit (AZ18) | The new session's `first window` line gives at most 8,000 words of project text | `uv run .claude/scripts/usage.py --reading` |
-| 6 | The plan's identifiers | `clause.py` resolves AY5, AY7, AY8, AZ7, AZ9, AZ13 to AZ21, AA1 to AA8, AB1, AI4, AN8, N1, N3, VER-45, VER-61 and VER-79 | `uv run .claude/scripts/clause.py <ID>` |
+| 6 | The plan's identifiers | `clause.py` resolves AY5, AY7, AY8, AZ7, AZ9, AZ13 to AZ21, AA1 to AA8, AB1, AI4, AN8, N1, N3, OPN-08, VER-45, VER-61 and VER-79 | `uv run .claude/scripts/clause.py <ID>` |
 
 No test is added: every item is outside the test scope.
 

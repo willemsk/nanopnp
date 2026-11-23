@@ -67,3 +67,7 @@ Open decision 3 read:
 The first row of *What the author supplies* read:
 
 > | The tag on the last commit that holds the Copilot host | WP6.03 | The session prints the command and the hash |
+
+The live line of the WP6.02 entry read:
+
+> Live: AZ13's limit, which binds a session's first window (AZ15), from WP6.03's merge; its Outcome's outdated list.
