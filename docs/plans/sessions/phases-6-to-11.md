@@ -10,13 +10,14 @@ package below is provisional and named by its scope. The file keeps its first na
 ## Phase 6 — the cleanup and the library's foundations (`v0.7`)
 
 **Planned, 22 November 2026** ([the plan](../phase-6/phase-6-library-foundations.md); §8.2.50); WP6.01 to WP6.03 are
-delivered. **Rescoped, 23 November 2026** (§8.2.51): `/np-plan amend 6` plans the two firm packages and lists the rest
-as provisional. The package numbers of §8.2.50 AZ4 from WP6.04 no longer hold; the amendment gives the new ones.
+delivered. **Rescoped, 23 November 2026** (§8.2.51), and **amended** the same day (§8.2.52): WP6.04 is the ground-up review and
+WP6.05 the axis package, both firm; the rest is provisional and named by its scope. The package numbers of §8.2.50 AZ4
+from WP6.04 no longer hold; the `/np-plan amend 6` after the round on the review numbers what is left.
 
 | Package | Its items |
 |---|---|
-| The ground-up review, next, WP6.04 (BA10 to BA13) | Given what the program is now, how would it be built if it were started over? Open: the code's structure, every technology, the constraints of §3.4, the decisions of §5.6, the numerical methods of §6, the requirements and exclusions of §3, the process of §8.4 and every ruling behind them. Given: the physics of §4 alone. A report and no code: the design it would choose, each difference from the program marked keep, change now, change later or drop, each change with its gain, risk and cost. Then a ruling round at `/np-plan project` |
-| The channel axis's fault, firm (BA8) | REV-279: a plane's centre made robust to a broken tie at a ragged rim; 2WCD's axis measured again (VER-48). After WP6.04's merge, one package at a time |
+| The ground-up review, next, WP6.04 (BA10 to BA13; BB2) | Given what the program is now, how would it be built if it were started over? Its design covers the whole of §3, what is built and what is planned up to v0.13 (BB2). Open: the code's structure, every technology, the constraints of §3.4, the decisions of §5.6, the numerical methods of §6, the requirements and exclusions of §3, the process of §8.4 and every ruling behind them. Given: the physics of §4 alone. A report and no code: the design it would choose, each difference from the program marked keep, change now, change later or drop, each change with its gain, risk and cost. Then a ruling round at `/np-plan project` |
+| The channel axis's fault, firm, WP6.05 (BA8; BB1) | REV-279: a plane's centre made robust to a broken tie at a ragged rim; 2WCD's axis measured again (VER-48). After the author's ruling round on the review and the amendment that follows it (BB1) |
 
 Provisional until the author has ruled on the review's proposals (BA4, BA11), about ten packages, in this order as
 the round's input:
@@ -94,7 +95,7 @@ the first comparison with the published results (BA3). Its close defines v1.0 (O
 |---|---|
 | The ground-up review's proposals, which may reopen any ruling of §8.2.51 | The author, at `/np-plan project` after WP6.04 (BA11, BA13) |
 | Phase 6's provisional packages, their numbers and grouping | `/np-plan amend 6`, after that round (BA4, BA11) |
-| The numbers WP6.05 to WP6.17 that `holds-now.yaml`, the review register and the Phase 6 plan still give | The next `/np-plan amend 6`, which numbers the axis package (review 079, finding 11) |
+| The numbers WP6.05 to WP6.17 that `holds-now.yaml`, the review register and the Phase 6 plan gave | Settled, §8.2.52: the axis package is WP6.05, and each provisional package is named by its scope until it is numbered (review 079, finding 11) |
 | Whether VAL-12 to VAL-14 are Phase 11's, if the PlyAB files arrive (§7.5) | `/np-plan phase 11` (review 079, finding 6) |
 | Each tool phase's and the analyte phase's gate, estimate and dependencies | Its round |
 | Whether §5.4.1's backend interface and the rest of MOD-13 are decided with the library's shape | Settled, §8.2.50 AZ1: `/np-plan phase 8` |

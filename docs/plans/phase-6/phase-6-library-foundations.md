@@ -1,41 +1,44 @@
 # Phase 6 (Cleanup and the library's foundations): a library the workbench and the tools can build on
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03. WP6.01 to WP6.03 as planned on 22 November 2026; then a rescoping round; WP6.04 to WP6.18 provisional until it rules (§8.2.50). Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03. Amended 23 November 2026 (§8.2.51; §8.2.52): WP6.04, the ground-up review, and WP6.05, the axis fix, are planned; the rest is provisional until the author rules on the review. Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
-**What changes.** Three packages are fixed now. The Windows test run is repaired. Then the project's records and
-instructions are cut down to a measured reading limit, and the second host is retired. After them comes the open-minded
-rescoping you asked for: one round with every requirement, tool and phase on the table, and the content of version 1
-with them. Fifteen more packages are drafted and wait for that round, which may
-confirm, change or drop them. As drafted they restructure the library in small steps that leave every stored number as
-it is, close the known gaps in the flow equations, add field exports and make the solve faster; a project made with
-version 0.6 then opens without its finished runs.
+**What changes.** The next package reviews the program from the ground up: how would it be built if we started over
+today? It designs for the whole program, built and planned, and takes only the paper's physics as given. It changes no
+code. Its report holds the design it would choose, and each difference from today's program marked keep, change now,
+change later or drop, with its gain, risk and cost. You then rule on each proposal. Then comes a small fix for the
+pore's axis, which rounding can lock 0.6 degrees off at a ragged rim. The rest waits for your rulings: about ten
+packages that restructure the library, close the gaps in the flow equations, add exports and speed up the solve.
 
-**Cost.** The three packages: about 15 sessions, 9 to 18 hours of agent work and 24 times you act. The rescoping round:
-about 2 sessions and 3. The fifteen drafted packages, if confirmed: 75 sessions, 45 to 90 hours and 120.
+**Cost.** The review: about 9 sessions, 6 to 12 agent hours and 12 times you act. Your ruling round: 2 sessions and 3.
+The axis fix: 4 sessions, 2 to 4 hours and 6. The rest, if the review changes nothing: 50 sessions, 45 to 90 hours
+and 80.
 
-**What could go wrong.** The cleanup could delete a ruling that still binds: you ruled that nothing leaves the
-history. The rescoping could be read from stale records: it waits for the cleanup. A drafted package could be started
-before the round: none has a plan until the round rules.
+**What could go wrong.** The review could reason from the program as it is and find it sound: its plan says how it
+guards against that, and a report proposing nothing would show it. It could propose more than one round can rule:
+each proposal carries its cost, so you can rank them. The axis fault stays until you have ruled; it is recorded.
 
-**Your call.** Settled on 22 November 2026, with the reading limit and the length of a phase plan inside the cleanup.
-Still yours: the rescoping itself. *Recommendation:* bring to the round what you would keep, cut and add, so it
-starts from your view and not from the records.
+**Your call.** Settled on 23 November 2026: your rulings come before the axis fix, and the review designs for the whole
+plan. Still yours: the rulings on the review's proposals. *Recommendation:* read the report's table of differences
+first.
 
 ## Context
 
-`SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 (AY1 to AY8) and §8.2.50 (AZ1
-to AZ21; AZ8 ruled at WP6.01's plan, AZ13 and AZ14 at WP6.02's item 5, AZ15 to AZ17 at its review, AZ18 to AZ21 at
-WP6.03's plan).
+`SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 (AY1 to AY8), §8.2.50 (AZ1 to
+AZ21), §8.2.51 (BA1 to BA15) and §8.2.52 (BB1, BB2). The text each amendment replaced is in
+[the record](phase-6-record.md).
 
 Phase 6 answers one question: **can the library be made one sound base, without moving a number, before the workbench
-is rebuilt and three tools are built on it?** Its gate is §8.1's. Only WP6.01 to WP6.03 are fixed (AZ7); the
-[architecture survey](../../project/architecture-survey.md) shapes the rest.
+is rebuilt and three tools are built on it?** Its gate is §8.1's. Since the rescoping round it asks a second one first:
+**given what the program is now, how would it be built if it were started over?** (BA10) Only WP6.04 and WP6.05 are
+firm (BA8, BA11); the [architecture survey](../../project/architecture-survey.md) shapes the rest.
 
 True of the codebase today:
 
-- **The Windows leg is red.** `ci.yml`'s `platforms` job has not finished on Windows since 10 November.
+- **A pore's axis found from its channel can lock off the true one.** `structure/cavity.py` `channel_axis` holds a
+  second fixed point at a ragged rim, up to about 0.6° off, and rounding decides which one it reaches (REV-279).
+  `structure/stage.py` `align` takes that axis only under C1 or `axis: cavity`; every walk of VER-62 takes the ring's.
 - **A run's record is an untyped dict.** `pipeline/run.py` `RunResult.write` writes `run.json`; 13 sites parse it raw.
 - **A field carries neither its order nor its log branch.** `post/fields.py` `field_at` reads P2 values linearly;
   `gui/render.py` `render_fields` writes the fields file.
@@ -44,22 +47,26 @@ True of the codebase today:
   again the terms of `physics/flow.py`.
 - **69 error classes share no base** (`core/errors.py` `classify`).
 
-Risks: none is retired; WP6.13 mitigates **RSK-15** (AY6).
+Risks: none is retired; the equations package mitigates **RSK-15** (AY6).
 
-Excluded: §5.4.1's interface, Phase 8's round (AZ1); the workbench's foundations and the suites' words, Phase 7; the
-validation runs, Phase 11 (AY6); the structure pipeline's loose ends, Phase 9; a converter for v0.6 runs (AZ5); a
-linear-solver swap (Z6).
+Excluded: any change of code, and any trial of a design, in WP6.04 (BA13); §5.4.1's interface, Phase 8's round (AZ1);
+the workbench's foundations and the suites' words, Phase 7; the analyte forces, Phase 11, and the validation runs,
+Phase 12 (BA5); the structure pipeline's loose ends, Phase 9; a converter for v0.6 runs (AZ5); a linear-solver swap
+(Z6); a comparison with the published results (BA3).
 
 ## Design decisions
 
 | Decision | Choice | Why |
 |---|---|---|
-| Rescoping | `/np-plan project` after WP6.03; `/np-plan amend 6` then plans the rest | It reads cleaned-up records; nothing is built for a scope that may be dropped (AZ7) |
-| Order, as drafted | Windows, cleanup, restructure, equations, exports, rewording, speed-up, close | A step that moves no number is reviewed alone (AY3, AY4; AZ4) |
-| Field reading | By the cell's own P2 basis, in WP6.07 | v0.7's exports hold the solved field (AZ2) |
+| The ground-up review | WP6.04, next: a report and no code; everything open but §4's physics | The survey took every constraint as given; after the restructure the answer could no longer shape it (BA10 to BA13) |
+| What the review designs for | The whole of §3, what is built and what is planned up to v0.13 | The tools stay before validation, so the design must carry them (BA1; BB2) |
+| Order | The review, the author's rulings, a further amendment, the axis fix, then what that amendment plans | A proposal on how an axis is found is ruled before the fix is built (BA11; BB1) |
+| Order of the provisional content | The error base, the restructure, the equations, the exports, the rewording, the speed-up, the close | A step that moves no number is reviewed alone (AY3, AY4; AZ4; BA4) |
+| Field reading | By the cell's own P2 basis, in the fields package | v0.7's exports hold the solved field (AZ2) |
 | Refusals | The base first; the words after the restructure | No refusal is written twice (AZ3) |
 | Old runs | Refused by schema, never converted | AZ5; F4 |
-| Speed | No fixed target; thresholds registered in WP6.17's plan | AZ6; M2, Z6 |
+| Speed | No fixed target; thresholds registered in the speed-up's plan | AZ6; M2, Z6 |
+| Restructuring beyond a plan | Allowed while the push gate passes; never in WP6.04 | BA7, BA13, BA14 |
 
 ## Conventions established by earlier phases
 
@@ -71,8 +78,7 @@ linear-solver swap (Z6).
 
 ## Work packages
 
-WP6.02 takes `v0.7.0-alpha.2`; the close takes `v0.7.0` alone (§8.4.1). Each is about 5 sessions, 3 to 6 agent hours
-and 8 touches (§8.3).
+WP6.04 takes `v0.7.0-alpha.4` and WP6.05 `v0.7.0-alpha.5`; the close takes `v0.7.0` alone (§8.4.1).
 
 ### WP6.01 — The Windows leg (REV-277; AY4)
 
@@ -86,51 +92,84 @@ and 8 touches (§8.3).
 
 *Delivered 23 November 2026.* [The plan](wp6.03-the-cleanup-instructions-copilot-host.md). Live: the 8,000 words of AZ18 bind every `/np-implement` session's first window (§8.4.4), measured at 7,186; each plan proposes its two models (AZ20, AZ21); the tag `copilot-host` waits for the author's push (AZ19).
 
-### The rescoping round (AZ7)
+### WP6.04 — The ground-up review (BA10 to BA13; BB2)
 
-After WP6.03 merges. Open: every requirement of §3, each tool and phase of §8.1, and v1.0's content (OPN-08). It reads
-the cleaned-up records, WP6.02's Outcome, the survey and Phase 5's measured cost, and confirms or reopens AZ1 to AZ6.
+*Planned; next.* A study. It changes no `src/`, no `tests/`, no case schema and no public name, and BA7 gives it no
+licence to (BA13).
 
-### Provisional (AZ4; AZ7)
+- **The question:** given what the program is now, how would it be built if it were started over?
+- **Given:** the physical model of §4 alone, under §1.6's precedence.
+- **Open:** the code's structure in the library and the workbench; every technology, the backend, the front end, the
+  store and the file formats among them; the constraints of §3.4 and the decisions of §5.6; the numerical methods of §6;
+  the requirements and exclusions of §3; the process of §8.4; and every ruling behind them, those of §8.2.51 and
+  §8.2.52 included (BA12).
+- **The design's reach:** the whole of §3, what v0.6 delivers and what §2.7 plans up to v0.13 (BB2).
+- **It delivers one report:** the design it would choose today; a table of each difference from the program as it is,
+  marked keep, change now, change later or drop; for each change its gain, its risk and its cost in packages, sessions
+  and touches, and the clause or ruling it would change. A proposal that changes a numerical method says which
+  benchmarks are argued again before anything is built on it (VER-62; G10).
+- **It reads** the survey, the modularity register, WP6.02's Outcome and Phase 5's end-of-phase report, and may run the
+  program and measure it.
 
-Each waits on the rescoping round; none is planned before it.
+It proposes no `VER-` and no `VAL-`, and has no test. It is done when the report is merged and each item it leaves
+open is a `REV-nn` row. About 9 sessions, 6 to 12 agent hours and 12 touches. Its plan settles open decision 9.
+
+### The ruling round on the review (BA11, BA13)
+
+After WP6.04 merges, at `/np-plan project`, since a proposal may move a requirement or a phase. The author rules each
+proposal; a declined one leaves Phase 6 as BA4 has it. `/np-plan amend 6` then plans WP6.05 on the phase as the round
+leaves it, and numbers what is left. About 2 sessions and 3 touches.
+
+### WP6.05 — The channel's axis at a ragged rim (REV-279; VER-48; BA8; BB1)
+
+*Firm; planned after the ruling round and its amendment (BB1).* It makes a plane's centre robust to a broken tie at a
+ragged rim, and measures 2WCD's channel axis again. From v0.7 a structure with a ragged rim may be given an axis up to
+about 0.6° different from v0.6's, the third exception to AY1's rule that Phase 6 changes no number a user sees (BA8);
+`CHANGELOG.md` says so. VER-48's gate test tilts the wall with the ragged rim again. The oracle is the axis the test
+wall is built about. No Tier 3 leg. About 4 sessions, 2 to 4 agent hours and 6 touches. Its plan settles open
+decision 11.
+
+### Provisional (BA4; BA11)
+
+Each waits on the author's rulings on the review. None is planned or numbered before the amendment that follows them.
+The round's input, in order:
 
 | Package | Scope |
 |---|---|
-| WP6.04 | One base for every library error, carrying its case path and file |
-| WP6.05 | A typed run record with one reader |
-| WP6.06 | One catalogue of quantities and units |
-| WP6.07 | Fields with their order, read by the cell's own basis, written by the library |
-| WP6.08 | The definitions' evaluator on arrays |
-| WP6.09 | The results file and its facade |
-| WP6.10 | The shell's numbers into the library |
-| WP6.11 | `Project` split; stages take their upstream |
-| WP6.12 | One registry shape, switches as data, the dead code |
-| WP6.13 | The model's open terms, each measured first; forces share the weak form's terms |
-| WP6.14 | The tolerances argued |
-| WP6.15 | The exports |
-| WP6.16 | The refusals reworded |
-| WP6.17 | The speed-up |
-| WP6.18 | The close: the report and `v0.7.0`; `/np-ship phase 6` ships it |
+| The error base | One base for every library error, carrying its case path and file |
+| The run record and the quantity catalogue | A typed run record with one reader; one catalogue of quantities and units |
+| The fields | Fields with their order, read by the cell's own basis, written by the library; a package of its own |
+| The definitions and the results file | The definitions' evaluator on arrays; the results file and its facade |
+| The shell's numbers | The numbers the shell computes, moved into the library |
+| The library's shape | `Project` split; stages take their upstream; one registry shape, switches as data; the dead code |
+| The model's open terms | Each measured first; forces share the weak form's terms; a package of its own |
+| The tolerances and the exports | The tolerances argued; the field and region exports |
+| The refusals reworded | The stages' diagnostics and the command line's messages |
+| The speed-up | Each cost against a threshold registered first |
+| The close | The report and `v0.7.0`; `/np-ship phase 6` ships it |
 
 ## Open decisions
 
 | # | Decision | Owner and status |
 |---|---|---|
-| 1 | This round's seven rulings | **Settled by the author, 22 November 2026** (AZ1 to AZ7) |
-| 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 November 2026**: project text in words, six recent packages, nothing leaves, closed items archived (AZ9 to AZ12). The limit's number and the phase plan's word target: **settled by the author, 22 November 2026**, inside WP6.02 from the baseline: 6,500 words, 2,500 for a phase plan (AZ13, AZ14). At WP6.02's review: the limit binds the first window of an `/np-implement` session (AZ15). At WP6.03's plan, 23 November 2026: 8,000 words, the plan read whole (AZ18) |
+| 1 | §8.2.50's seven rulings | **Settled by the author, 22 November 2026** (AZ1 to AZ7) |
+| 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 and 23 November 2026**: project text in words, six recent packages, nothing leaves, closed items archived (AZ9 to AZ12); 2,500 words for a phase plan (AZ14); the limit binds the first window of an `/np-implement` session (AZ15) at 8,000 words, the plan read whole (AZ18) |
 | 3 | The Copilot tag's name | **Settled by the author, 23 November 2026**: the git tag `copilot-host` (AZ19) |
 | 4 | Whether a pull request's CI runs the Windows leg | **Settled by the author, 22 November 2026**: no; the three platforms at the close alone (AZ8) |
-| 5 | The project's scope, and WP6.04 to WP6.18 with it | **Author**, at the rescoping round (AZ7) |
-| 6 | What AM2's "moves one of them" means, and the drift that stops the re-pin | **Author**, at WP6.13's plan, before any measurement |
+| 5 | The project's scope, and Phase 6's packages with it | **Settled by the author, 23 November 2026**: the content kept in about ten packages, the ground-up review first, the axis fix firm (BA1 to BA15) |
+| 6 | What AM2's "moves one of them" means, and the drift that stops the re-pin | **Author**, at the equations package's plan, before any measurement |
 | 7 | A run above order 2; the speed-up's thresholds; the names after `Project` splits | Their packages' plans |
+| 8 | What comes first after the review; what the review designs for | **Settled by the author, 23 November 2026**: the rulings before the axis fix; the whole program, built and planned (BB1, BB2) |
+| 9 | How the review guards against reasoning from the program as it is; where its report lives; its two models | **Author**, at WP6.04's plan |
+| 10 | The review's proposals, which may reopen any ruling | **Author**, at `/np-plan project` after WP6.04 (BA13) |
+| 11 | What VER-48's two limits become if the fix moves 2WCD's measured axis (REV-239) | **Author**, at WP6.05's plan, before any measurement |
+| 12 | The provisional packages' numbers and grouping | `/np-plan amend 6`, after the round on the review (BA4) |
 
 ## What the author supplies
 
 | Item | Needed by | If it does not arrive |
 |---|---|---|
-| The tag `copilot-host`, pushed after WP6.03's merge | WP6.03 | The ship's report prints the commands and the hash |
-| What to keep, cut and add | The rescoping round | The round proposes from the records |
+| Rulings on the ground-up review's proposals | The round after WP6.04 | WP6.05 stays unplanned and the rest provisional (BA11; BB1) |
 | Merges; tags a session cannot push | Each package | The session dispatches `tag.yml` and prints the commands |
 
 ## Verification
@@ -144,28 +183,42 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 |---|---|---|
 | WP6.01 | 1, 2 | The failing test, on the three platforms |
 | WP6.02, WP6.03 | none kept | VER-45; `clause.py` resolves each identifier WP6.02's plan lists |
-| WP6.04 to WP6.18 | — | Set by `/np-plan amend 6` |
+| WP6.04 | none | No test: review checks that its diff holds no `src/`, `tests/`, case schema or public name, and that the report holds what BA13 lists |
+| WP6.05 | 1 | VER-48 |
+| The provisional packages | — | Set by the `/np-plan amend 6` after the round |
 
-**The phase is complete when** (§8.1's gate; criteria 2, 3 and 5 are the rescoping round's to confirm):
+**The phase is complete when** (§8.1's gate; criteria 2 and 5 rest on provisional packages and stand as BA4 keeps them
+until the round on the review rules):
 
 1. **Tiers 1 and 2 pass on Linux, macOS and Windows**, on the close's own full run. No waiver (AY4); a miss is fixed.
-2. **VER-62 is unmoved at 10⁻⁸** by every package but the equations'. Prediction: round-off alone. A miss is reverted
-   (G10). The equations package re-pins once, within the bound open decision 6 sets; beyond it the package stops.
+2. **VER-62 is unmoved at 10⁻⁸** by every package but the equations'. Prediction: round-off alone; WP6.05 moves none,
+   since no walk takes the channel's axis. A miss is reverted (G10). The equations package re-pins once, within the
+   bound open decision 6 sets; beyond it the package stops.
 3. **VER-61 and VER-65 hold.** A cycle or a new backend subpackage goes to the author (H6).
 4. **A fresh package session starts under the reading limit** (`usage.py`). A miss continues the cleanup; the limit is
    re-ruled only before a measurement.
 5. **Each cost the speed-up names is measured against its registered threshold**, and each one over it is fixed or
    carried. No factor is predicted (AZ6). **FR-28 has its test.**
 6. **Each row the phase owns is `fixed` or ruled** (AM4).
+7. **Each proposal of the ground-up review is ruled by the author or carried with its owner** (BA13); the round's
+   record names each. The phase does not close on an unruled one.
+8. **The wall with a ragged rim recovers its known axis to VER-48's 10⁻⁶ rad** on every perturbed draw, and on the three
+   platforms at the close. Today 3 of 8 draws lock 0.22° to 0.62° off (REV-279); prediction: none locks. A draw that
+   still locks is investigated, and the tolerance stands. **2WCD's channel axis is measured again** against its
+   0.0073 nm. Prediction: unmoved within VER-48's 10⁻⁴ nm if none of 2WCD's planes holds a split tie, which WP6.05's
+   plan measures first. A move amends VER-48 in the fix's commit and goes to the author with the two limits (open
+   decision 11).
 
 ## End-of-phase report
 
 The close fills it. It reports, each with the command or test that logs it:
 
 - the three platforms' Tier 1 and Tier 2 counts and times, from the close's full run;
-- VER-62's largest relative drift per walk and platform, and WP6.13's re-pin, old against new;
+- VER-62's largest relative drift per walk and platform, and the equations package's re-pin, old against new;
 - the reading baseline and a fresh session's reading against the limit (`usage.py`);
-- the tube's solve time, with its assembly, factorisation and residual shares, before and after WP6.17, and each
+- the ground-up review's proposals by ruling: kept, changed now, changed later, dropped;
+- the ragged-rim wall's axis over its perturbed draws, and 2WCD's channel axis against 0.0073 nm (WP6.05);
+- the tube's solve time, with its assembly, factorisation and residual shares, before and after the speed-up, and each
   threshold with its measured cost (stabilisation mode named);
 - the word counts of the records the cleanup cut, before and after;
 - the review register's counts by status, and `holds-now.yaml`'s `open:` lines;
