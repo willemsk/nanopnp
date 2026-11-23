@@ -10,13 +10,13 @@ Phase 6's first two packages are merged.
 The third package, the cleanup's second half, is planned. It cuts the instructions every session reads first by almost
 half, removes the setup for the Copilot app and keeps it findable by a tag, and teaches the project-planning command
 to hold the rescoping round that follows. You ruled four things at its plan. A fresh implementing session may read
-8,000 words before its first edit, and reads its plan whole. The tag is named copilot-host. Each plan now proposes
-which model implements and which one reviews, and you decide. For this package Fable 5.2 implements and Opus 5.5
+8,000 words before its first edit, plan included. The tag is named copilot-host. Each plan proposes
+which model implements and which reviews, and you decide. For this package Fable 5.2 implements and Opus 5.5
 reviews.
 
-**Your call.** Nothing before the plan's review. The second package's tag is not yet published. Who owns the code
+**Your call.** Approve the plan, or name the decision to change. The second package's tag is not yet published. Who owns the code
 waits for the rescoping round. *Next:*
-the plan's review, on the planning model.
+the implementation, on Fable 5.2.
 
 ## Position
 
@@ -26,9 +26,8 @@ the plan's review, on the planning model.
   then the rescoping round at `/np-plan project`; WP6.04 to WP6.18 provisional until it rules. Phases 7 to 11:
   [the input note](sessions/phases-6-to-11.md).
   **WP6.01 and WP6.02 merged**; `v0.7.0-alpha.2` is not yet published.
-  **WP6.03 planned** ([the plan](phase-6/wp6.03-the-cleanup-instructions-copilot-host.md); AZ18 to AZ21).
-  **Next:** `/np-plan wp 6.03 review`, on Fable 5.2; then `/np-implement wp 6.03` on Fable 5.2, its ship on
-  Opus 5.5.
+  **WP6.03 planned and reviewed** ([the plan](phase-6/wp6.03-the-cleanup-instructions-copilot-host.md); AZ18 to AZ21).
+  **Next:** `/np-implement wp 6.03` on Fable 5.2; its ship on Opus 5.5.
 
 ## Not to be re-decided
 
@@ -40,7 +39,7 @@ the plan's review, on the planning model.
   draws the molecule** (AF4). **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4).
 - **The workbench's design rulings stand** (§8.2.31 to §8.2.46; WB-33 to WB-63; VER-44, VER-56); every open item
   names a package (§8.2.46).
-- **QR-10's trial waits for v1.0's release candidate; QR-16's gaps are carried to Phase 7** (§8.2.47; REV-274).
+- **QR-10's trial waits for v1.0's release candidate; QR-16's keyboard gaps and five Qt details go to Phase 7** (§8.2.47; REV-274).
 - **The Windows leg is first; every later gate asks the three platforms** (§8.2.49 AY4); **a pull request and a
   package's ship test Linux alone, the close the three** (§8.2.50 AZ8). **The Copilot host is
   retired, findable by the tag `copilot-host`** (AY5; AZ19). **Fable 5.2 plans; each plan proposes its implementing
