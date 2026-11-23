@@ -158,7 +158,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * No ruling leaves the history: a spent or superseded ruling stays in its dated record.
   `clause.py` prints one that only names the identifier asked for as one line, its `holds-now.yaml`
   entry and its first bold phrase, and `--all` prints it in full. (§8.2.50 AZ11)
-* From WP6.03's merge, the first window of an `/np-implement` session reads at most 8,000 words of
+* The first window of an `/np-implement` session reads at most 8,000 words of
   project text before its first edit: the instruction files, the records and `CLAUDE.md`, as
   `usage.py --reading` counts them (§8.4.5). The number holds the standing instructions, the largest
   plan this section allows, which the session reads whole, and room for the clauses the plan cites.

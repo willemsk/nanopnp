@@ -224,6 +224,16 @@ any requirement, tool or phase, and the rulings that ruling names. It changes th
 > plan at its cap: an estimate, not D8's measurement. D8 and item 7's prompt now name the package's branch; item 7
 > is repeated and row 5 stays open.
 
+> **Outcome — the second new session measured the cut: 7,186 words, a pass.** The session of 23 November started
+> on a branch at the package's head (`31e88f2`) and loaded the cut `CLAUDE.md`. Its `first window` line: 7,186
+> words of project text before the first edit (instructions 1,706; records 3,975; `CLAUDE.md` 1,505); code 0;
+> commands 854; 91,693 tokens at the start, 123,816 at the edit. It read four files, not ten: this plan 3,664,
+> `core.md` 899, `np-implement/wp.md` 739, `knowledge/index.md` 311; the skill's own text is the rest of the
+> instructions. That is 814 words under the limit, and 628 under it with a plan of 3,850 words in this plan's
+> place. One read was not asked for: a combined `git` command also printed the first 60 lines of `current.md`, 592
+> words, which the measure counts as command output (AZ16). With them the window holds 7,778 words, still under
+> the limit. Row 5 passes; no file is cut again.
+
 **After the merge.** The ship's report adds, each in its own block, with the commit written out:
 `git log --diff-filter=D --format=%H -1 origin/main -- .claude/workflow/hosts.md`, whose parent is the tag's commit;
 `git tag -a copilot-host <parent> -m "The last commit that holds the Copilot host (§8.2.49 AY5)"`; and
