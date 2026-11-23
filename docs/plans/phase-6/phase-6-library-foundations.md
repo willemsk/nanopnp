@@ -11,7 +11,7 @@ change later or drop, with its gain, risk and cost. You then rule on each propos
 pore's axis, which rounding can lock 0.6 degrees off at a ragged rim. The rest waits for your rulings: about ten
 packages that restructure the library, close the gaps in the flow equations, add exports and speed up the solve.
 
-**Cost.** The review: about 9 sessions, 6 to 12 agent hours and 12 times you act. Your ruling round: 2 sessions and 3.
+**Cost.** The review: about 10 sessions, 7 to 13 agent hours and 13 times you act. Your ruling round: 2 sessions and 3.
 The axis fix: 4 sessions, 2 to 4 hours and 6. The rest, if the review changes nothing: 50 sessions, 45 to 90 hours
 and 80.
 
@@ -26,7 +26,7 @@ first.
 ## Context
 
 `SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 (AY1 to AY8), §8.2.50 (AZ1 to
-AZ21), §8.2.51 (BA1 to BA15) and §8.2.52 (BB1, BB2). The text each amendment replaced is in
+AZ21), §8.2.51 (BA1 to BA15) and §8.2.52 (BB1 to BB5; BB3 to BB5 ruled at WP6.04's plan). The text each amendment replaced is in
 [the record](phase-6-record.md).
 
 Phase 6 answers one question: **can the library be made one sound base, without moving a number, before the workbench
@@ -93,9 +93,9 @@ WP6.04 takes `v0.7.0-alpha.4` and WP6.05 `v0.7.0-alpha.5`; the close takes `v0.7
 
 *Delivered 23 November 2026.* [The plan](wp6.03-the-cleanup-instructions-copilot-host.md). Live: the 8,000 words of AZ18 bind every `/np-implement` session's first window (§8.4.4), measured at 7,186; each plan proposes its two models (AZ20, AZ21); the tag `copilot-host` is pushed (AZ19).
 
-### WP6.04 — The ground-up review (BA10 to BA13; BB2)
+### WP6.04 — The ground-up review (BA10 to BA13; BB2 to BB5)
 
-*Planned; next.* A study. It changes no `src/`, no `tests/`, no case schema and no public name, and BA7 gives it no
+*Planned 23 November 2026.* [The plan](wp6.04-the-ground-up-review.md). A study. It changes no `src/`, no `tests/`, no case schema and no public name, and BA7 gives it no
 licence to (BA13).
 
 - **The question:** given what the program is now, how would it be built if it were started over?
@@ -105,7 +105,9 @@ licence to (BA13).
   the requirements and exclusions of §3; the process of §8.4; and every ruling behind them, those of §8.2.51 and
   §8.2.52 included (BA12).
 - **The design's reach:** the whole of §3, what v0.6 delivers and what §2.7 plans up to v0.13 (BB2).
-- **It delivers one report:** the design it would choose today; a table of each difference from the program as it is,
+- **The guard, in order:** the author's view; three blind designs from the program's purpose, not from §3; their
+  judgement of §3; a walk of every open item; a challenge (BB3). It may propose a new requirement.
+- **It delivers one report,** on the project's pages (BB4): the design it would choose today; a table of each difference from the program as it is,
   marked keep, change now, change later or drop; for each change its gain, its risk and its cost in packages, sessions
   and touches, and the clause or ruling it would change. A proposal that changes a numerical method says which
   benchmarks are argued again before anything is built on it (VER-62; G10).
@@ -113,7 +115,8 @@ licence to (BA13).
   program and measure it.
 
 It proposes no `VER-` and no `VAL-`, and has no test. It is done when the report is merged and each item it leaves
-open is a `REV-nn` row. About 9 sessions, 6 to 12 agent hours and 12 touches. Its plan settles open decision 9.
+open is a `REV-nn` row. About 10 sessions, 7 to 13 agent hours and 13 touches (BB3). Fable 5.2 implements it and
+Opus 5.5 ships it (BB5).
 
 ### The ruling round on the review (BA11, BA13)
 
@@ -155,14 +158,14 @@ The round's input, in order:
 | # | Decision | Owner and status |
 |---|---|---|
 | 1 | §8.2.50's seven rulings | **Settled by the author, 22 November 2026** (AZ1 to AZ7) |
-| 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 and 23 November 2026**: project text in words, six recent packages, nothing leaves, closed items archived (AZ9 to AZ12); 2,500 words for a phase plan (AZ14); the limit binds the first window of an `/np-implement` session (AZ15) at 8,000 words, the plan read whole (AZ18) |
+| 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 and 23 November 2026** (AZ9 to AZ12, AZ14, AZ15, AZ18; §8.4.4) |
 | 3 | The Copilot tag's name | **Settled by the author, 23 November 2026**: the git tag `copilot-host` (AZ19) |
 | 4 | Whether a pull request's CI runs the Windows leg | **Settled by the author, 22 November 2026**: no; the three platforms at the close alone (AZ8) |
-| 5 | The project's scope, and Phase 6's packages with it | **Settled by the author, 23 November 2026**: the content kept in about ten packages, the ground-up review first, the axis fix firm (BA1 to BA15) |
+| 5 | The project's scope, and Phase 6's packages with it | **Settled by the author, 23 November 2026** (BA1 to BA15) |
 | 6 | What AM2's "moves one of them" means, and the drift that stops the re-pin | **Author**, at the equations package's plan, before any measurement |
 | 7 | A run above order 2; the speed-up's thresholds; the names after `Project` splits | Their packages' plans |
-| 8 | What comes first after the review; what the review designs for | **Settled by the author, 23 November 2026**: the rulings before the axis fix; the whole program, built and planned (BB1, BB2) |
-| 9 | How the review guards against reasoning from the program as it is; where its report lives; its two models | **Author**, at WP6.04's plan |
+| 8 | What comes first after the review; what the review designs for | **Settled by the author, 23 November 2026** (BB1, BB2) |
+| 9 | How the review guards against reasoning from the program as it is; where its report lives; its two models | **Settled by the author, 23 November 2026**: blind designs from the program's purpose, then rule by rule; the project's pages; Fable 5.2, then Opus 5.5 (BB3 to BB5) |
 | 10 | The review's proposals, which may reopen any ruling | **Author**, at `/np-plan project` after WP6.04 (BA13) |
 | 11 | What §5.2's two limits become if the fix moves 2WCD's measured axis (REV-239) | **Author**, at WP6.05's plan, before the fix is measured |
 | 12 | The provisional packages' numbers and grouping | `/np-plan amend 6`, after the round on the review (BA4) |
