@@ -109,7 +109,7 @@ Then record the pass under **Verification**: what you invoked, how many findings
 survived step 1, the reviewed base and head SHAs, and the fix commits. Keep the independently reviewed
 revision apart from the fixes decided here. Give the user each finding that is architectural or that
 would make the package wider: scope is the author's decision. A restructure of code the package works
-with, which changes no behaviour, is not wider (§8.4.4).
+with, which changes no behaviour, is neither: make it and name it in the pull request (§8.4.4).
 
 ## 5. Drive to green
 

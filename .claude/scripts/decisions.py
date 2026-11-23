@@ -56,6 +56,8 @@ DATE = re.compile(rf"\b(?:(\d{{1,2}}) )?({MONTHS}) (\d{{4}})\b")
 ISO_DATE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 RULING_ROW = re.compile(r"^\|\s*([A-Z]{1,2}\d+)\b([^|]*)\|(.*)$")
 RECORD_HEADING = re.compile(r"^#+\s+(8\.2(?:\.\d+)?)\s+(.*)$")
+# A ruling added or transcribed at a package opens with this mark (`np-plan/rulings.md`).
+OPENING_MARK = re.compile(r"\*(?:Added|Ruled)[^*]*\*")
 D_ROW = re.compile(r"^\|\s*\*{0,2}(D\d+[a-z]?)\b\.?[^|]*\|(.*)$")
 WB_ROW = re.compile(r"^\|\s*(WB-\d+)\s*\|(.*)$")
 OPN_ROW = re.compile(r"^\|\s*\*{0,2}(OPN-\d+)\*{0,2}\s*\|(.*)$")
@@ -242,7 +244,8 @@ def history() -> list[Decision]:
             letter, annotation, rest = match.group(1), match.group(2).strip(), match.group(3)
             cells = _cells(rest)
             decided = cells[0] if cells else ""
-            row_date = _iso(decided) if re.match(r"\*(?:Added|Ruled)", decided) else ""
+            mark = OPENING_MARK.match(decided)
+            row_date = _iso(decided) if mark else ""
             entry = holds.get(letter, "")
             rows.append(
                 Decision(
@@ -250,7 +253,7 @@ def history() -> list[Decision]:
                     decided_by="author",
                     where=_relative(path),
                     date=row_date or record_date,
-                    package=_package_of(path, decided) or package,
+                    package=_package_of(path, mark.group(0) if mark else "") or package,
                     decided=_clean(decided),
                     holds_now=_clean(
                         (entry or "unstated") + (f" ({annotation})" if annotation else ""), 160

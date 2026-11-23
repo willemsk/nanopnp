@@ -94,6 +94,8 @@ the first comparison with the published results (BA3). Its close defines v1.0 (O
 |---|---|
 | The ground-up review's proposals, which may reopen any ruling of §8.2.51 | The author, at `/np-plan project` after WP6.04 (BA11, BA13) |
 | Phase 6's provisional packages, their numbers and grouping | `/np-plan amend 6`, after that round (BA4, BA11) |
+| The numbers WP6.05 to WP6.17 that `holds-now.yaml`, the review register and the Phase 6 plan still give | The next `/np-plan amend 6`, which numbers the axis package (review 079, finding 11) |
+| Whether VAL-12 to VAL-14 are Phase 11's, if the PlyAB files arrive (§7.5) | `/np-plan phase 11` (review 079, finding 6) |
 | Each tool phase's and the analyte phase's gate, estimate and dependencies | Its round |
 | Whether §5.4.1's backend interface and the rest of MOD-13 are decided with the library's shape | Settled, §8.2.50 AZ1: `/np-plan phase 8` |
 | v1.0's content and gate (OPN-08) | The author, at Phase 12's close (BA6) |

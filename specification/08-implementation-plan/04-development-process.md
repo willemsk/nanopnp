@@ -97,11 +97,12 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   contradicts a decision the implementing session took. (§8.2.11 L7; §8.2.16 R5; §8.2.33 AI4;
   `.claude/workflow/finish.md`)
 * An implementing session may restructure any code it works with, beyond what its plan names, as long
-  as every test of the push gate passes: Tiers 1 and 2, with the number-stability golden (VER-62), the
-  layering guard (VER-61) and the backend guard (VER-65). A change of specified behaviour still edits
+  as every test of the push gate passes: Tiers 1 and 2 as a push selects them, without the `nightly`
+  and `slow` tests (§7.6), with the number-stability golden's per-push walks (VER-62), the layering
+  guard (VER-61) and the backend guard (VER-65). The nightly run holds the other walks. A change of specified behaviour still edits
   its clause, and a break of the public surface or the case schema is still listed in `CHANGELOG.md`
   with its migration. The pull request names the restructure. A study package that its plan says
-  changes no code changes none. (§8.2.51 BA7, BA13; `.claude/rules/python.md`)
+  changes no code changes none. (§8.2.51 BA7, BA13, BA14; `.claude/rules/python.md`)
 * At most two lanes are in flight. The current phase runs one package at a time; the second lane is
   the next phase's design study, which changes no `src/`, `tests/`, case schema or public API before
   the current phase's release. A clause that the study restates before that release is added beside
