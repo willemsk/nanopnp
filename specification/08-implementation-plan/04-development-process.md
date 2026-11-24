@@ -203,10 +203,11 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   next model. (§8.2.11 L6; §8.2.38 AN8; §8.2.49 AY7; §8.2.50 AZ20, AZ21; §8.2.52 BB3)
 * A helper of `/np-carry` runs on its step's model, set in the main session's `Agent` call with
   `effort: "high"`: Fable 5.2 for the plan and its review, the plan's implementing model for each
-  stretch, its shipping model for the ship. On Claude Code 2.1.331 a helper has no `Agent` and no
-  `AskUserQuestion`, so it can start no agent and ask the author nothing; it keeps the task list,
-  commits under the commit gate, runs the push gate and pushes, and resumes with its context
-  (`knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md`). (§8.2.54 BD2)
+  stretch, its shipping model for the ship. A helper can start no agent and ask the author nothing,
+  so the main session does both for it; it keeps the task list, commits under the commit gate, runs
+  the push gate and pushes, and resumes with its context. The note
+  `knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md` holds what was measured, and
+  on which version of Claude Code. (§8.2.54 BD2)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only and on Opus at high
   effort (§8.2.38 AN9), and the CI-log classifier. Eight scripts are kept in `.claude/scripts/`,
   beside `/np-gui`'s own in `.claude/scripts/gui/`: `clause.py` prints a clause by identifier,
@@ -218,11 +219,12 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   `usage.py` measures a session in §8.3's units, with its tokens by model, from its Claude Code
   transcript. It takes the agent hours from the main transcript and its sub-agents' as one
   timeline and names the count of sub-agents; the sessions and touches stay the main transcript's.
-  With `--reading` it gives, for each window an `/np-` command opens and for each sub-agent, the
-  words of project text read before the first edit, and with `--pages` it reads them from the
-  session service's pages of past sessions. A file counts when it is read, or printed by a command
-  that only prints files. Only a call of an edit tool ends the count; a change a shell command makes
-  does not, so a session measured against the limit makes its first change with an edit tool.
+  With `--reading` it gives, for each window an `/np-` command opens, in the session's transcript
+  and in each sub-agent's, the words of project text read before the first edit, and with
+  `--pages` it reads them from the session service's pages of past sessions. A file counts when
+  it is read, or printed by a command that only prints files. Only a call of an edit tool ends the
+  count; a change a shell command makes does not, so a session measured against the limit makes
+  its first change with an edit tool.
   (§8.2.11 L6, L9; §8.2.16 R6; §8.2.17 S22; §8.2.36 AL3, AL4, AL28; §8.2.37 AM11; §8.2.50 AZ9,
   AZ10, AZ12, AZ16, AZ17; §8.2.54 BD3)
 * Each level of `/np-plan`, `/np-implement` and `/np-ship` ends its report with `usage.py`'s line for

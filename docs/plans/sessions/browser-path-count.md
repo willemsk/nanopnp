@@ -37,6 +37,11 @@ The window of 100 lies in the first two pages. Pages 3 and 4 supply the previous
 before it. A branch whose previous head lies beyond page 4 would take its merge base with `main` instead. The
 count does not look for one.
 
+One counted push is a merge commit, `17ebf87` on `claude/sleepy-carson-oomrxu`: its delta holds what the merge
+brought in from `main`, so it is not skippable by delta, and it is skippable on its whole branch (14 paths). It
+is the only counted push that is skippable on its whole branch and not by delta, so no reading of a push raises
+`k` above 33, still below 34.
+
 ## By branch
 
 | Branch | Pushes counted | Skippable by delta | Skippable on the whole branch |

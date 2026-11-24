@@ -62,7 +62,12 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 AWAY_S = 30 * 60
-NOT_TYPED = ("<local-command-stdout>", "<local-command-caveat>", "<task-notification>")
+NOT_TYPED = (
+    "<local-command-stdout>",
+    "<local-command-caveat>",
+    "<task-notification>",
+    "<agent-message",
+)
 SKILL_TEXT = "Base directory for this skill:"
 CONTINUED = "This session is being continued from a previous conversation"
 EDITS = ("Edit", "Write", "NotebookEdit")
@@ -152,7 +157,6 @@ def _start(events: list[dict[str, Any]], since: str | None, everything: bool) ->
 
 
 def _subagents(path: Path) -> list[Path]:
-    """Return the transcripts of the sub-agents of the session ``path`` holds."""
     return sorted((path.parent / path.stem / "subagents").glob("*.jsonl"))
 
 

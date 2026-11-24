@@ -139,10 +139,11 @@ Input to that round, in order; none is numbered before it:
 | 6, 7 | AM2's drift bound; a run above order 2; the speed-up's thresholds; the names after `Project` splits | **Moved to Phase 7** (BC7); the input note carries them |
 | 11 | What §5.2's two limits become if the fix moves 2WCD's measured axis (REV-239) | **Author**, at WP6.06's plan, before the fix is measured |
 | 12 | The numbers of the packages after the review | **Settled by the author, 24 November 2026**: in build order (BD1) |
-| 13, 17 | What the reading limit counts under the orchestrator; helpers or separate sessions | **Settled by the author, 24 November 2026**: every helper that implements; helpers (BD2, BD3). The browser tests' rule waits for WP6.05's count (BD4) |
+| 13, 17 | What the reading limit counts under the orchestrator; helpers or separate sessions | **Settled by the author, 24 November 2026**: every helper that implements; helpers (BD2, BD3). The browser tests' rule is not built: WP6.05's count missed, 32 < 34 (BD4; BC15 spent) |
 | 14 | Which walk carries each switch off its default; the guard numbers' identifier in §7; whether the nightly run holds them | WP6.07's plan (BC3) |
 | 15 | The target for the author's touches a package | **Author**, at the round after WP6.08, from WP6.06's and WP6.07's measured lines (BC10) |
 | 16 | The kernel's design; the number and order of its packages; whether the 3D benchmark is built, on its price | **Author**, at the round after WP6.08 (BC2, BC5) |
+| 18 | The model a carried package's main session is started on, which both of its reviews take (REV-288) | **Author**, at the round after WP6.08, with WP6.06's and WP6.07's measured lines; left open by the author, 24 November 2026 |
 
 ## What the author supplies
 

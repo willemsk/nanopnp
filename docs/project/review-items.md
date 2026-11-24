@@ -1785,3 +1785,18 @@ second challenger showed that measuring after the first rebuilt suite is the ord
 audits it against QR-16 before the rebuild starts.
 
 **Ruled** (§8.2.53 BC13, 24 November 2026): Phase 8's first package builds the hardest view in the kit and audits it against QR-16, on pass marks `/np-plan phase 8` registers first; the rebuild starts after the author has seen the result. It runs in no second lane.
+
+### REV-288: Nothing names the model of a carried package's main session
+
+Left open by WP6.05; review 086's finding 5. Under `/np-carry` the main session calls the `code-review` skill for
+the plan's review and for the ship's, and the review's agent takes the session's model: review 086's agent ran on
+its session's Fable 5.2 with no model named. §8.4.5 puts a plan's review on Fable 5.2 and a plan names the model
+that ships, but neither `np-carry/SKILL.md` nor §8.4.5 says which model the author starts the main session on. A
+main session started on Opus 5.5 reviews the plan on Opus 5.5, and nothing reports it.
+
+*Recommendation:* start every carried package on Fable 5.2, the model of `/np-plan`, of its review and of the
+default ship; both reviews then run on it, whatever a plan names for the ship.
+
+**Ruled** (the author, 24 November 2026): left open. The author decides it at the round after WP6.08, with
+WP6.06's and WP6.07's measured lines (§8.2.53 BC10); until then the reviews of a carried package run on the model
+its session was started on, which `usage.py`'s line names with its tokens.
