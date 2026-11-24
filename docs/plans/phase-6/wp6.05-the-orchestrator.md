@@ -239,7 +239,7 @@ tests are left to CI, in the summary line too.
   > answered from its context. It now loads `TaskCreate`, and its `TaskList` returned this session's eight tasks, so
   > D1 gives the task list to the helper and `helper.md` and `/np-carry` drop it
   > ([the note](../../../knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md)).
-- [ ] 2. `.claude/workflow/helper.md` (D2, D3); done when the code and review say so, at 250 words or fewer.
+- [x] 2. 11c5a90 `.claude/workflow/helper.md` (D2, D3); done when the code and review say so, at 250 words or fewer.
   **Executor:** main
 - [ ] 3. `.claude/skills/np-carry/SKILL.md` (D1 to D3); done when the code and review say so, at 900 words or
   fewer. **Executor:** main
