@@ -11,7 +11,7 @@ against a written specification. It is pre-alpha and single-maintainer.
 | [Modularity report](../_generated/project/modularity.md) | The architecture measured against its own claims, and the `MOD-nn` findings it logs |
 | [Modularity findings](../_generated/project/modularity-findings.md) | The findings log: each `MOD-nn`, its status and the ruling behind it |
 | [Architecture survey](architecture-survey.md) | The workbench and the library surveyed for robustness and extension on 21 November 2026, the evidence behind REV-272 |
-| [Ground-up review](ground-up-review.md) | How the program would be built from nothing, given only the paper's physics, and each difference from today's program with a verdict: the evidence behind REV-280. In the making |
+| [Ground-up review](ground-up-review.md) | How the program would be built from nothing, given only the paper's physics, and each difference from today's program with a verdict: the evidence behind REV-280. A draft, before its challenge |
 | [Modularity measurements](../_generated/project/modularity-measurements.md) | The report's measurements, run on the tree this site was built from |
 | [Architecture](../_generated/project/architecture.md) | The modules, their layers and stages, generated from the tree this site was built from |
 | [Review register](../_generated/project/review-items.md) | Every item a work package's implementation or review left open, with what was measured and how it was resolved |
