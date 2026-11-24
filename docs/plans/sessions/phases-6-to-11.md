@@ -41,7 +41,7 @@ this order as the round's input:
 | The verification ledger (BC9) | FR-45: a page generated from the tests, each term and correction against its analytic case and measured error; a term with no case marked unverified |
 | The mesh-error estimate (BC9) | FR-46: a ladder of finer meshes, the observed order and an error bar, on the exact benchmarks and the idealised pore; four meshes or a safety factor; whether Netgen meshes a wall layer at the Debye length (REV-286) |
 | Unequal reservoirs (BC21) | FR-48: a bulk concentration for each reservoir and the reversal potential, default off; its physics written into §4 first, the boundary conditions ruled by the author at its plan; an analytic benchmark of Tier 2 |
-| Python 3.12 (BC22) | The minimum raised, Pint's pin released, QR-09 and §8.4.2 amended, the break listed |
+| Python 3.12 (BC22) | The minimum raised, Pint's pin released, QR-09, §2.5 and §8.4.2 amended, the break listed |
 | The refusals reworded (AZ3) | FR-35's NOTE; REV-254 |
 | The speed-up, last (AY3; BC24) | REV-60, REV-156, REV-171; the assembly first (Z6), each cost against a registered threshold (M2; AZ6); the direct solve at 10⁶ unknowns with UMFPACK and PARDISO, which sets QR-07's numbers (REV-281; BC12); compiled forms and a threaded assembly (REV-282); the trial of a continuation path that switches the corrections on at the target, with the log branch compared, adopted on a full pass of marks registered first (REV-283) |
 | The close (BC8) | The frozen ClyA case of example 05 and a current–voltage sweep set beside the published values, in bands, gating nothing; the end-of-phase report; `v0.8.0` |
@@ -109,7 +109,7 @@ fixed: from v1.0 the case file and the run record are converted (BC20).
 
 | Decision | Owner |
 |---|---|
-| Phase 6's packages after WP6.05, their numbers and grouping | `/np-plan amend 6` (BC3) |
+| Phase 6's other packages, their numbers, tags and grouping, the orchestrator coming before WP6.05 | `/np-plan amend 6` (BC3) |
 | The kernel's design, the number of its packages, and the cost of the benchmark on a coarse 3D mesh | The author, at Phase 6's design package (BC2, BC5) |
 | Whether the push gate chooses the browser tests by path | Phase 6's orchestrator package, by its count (BC15) |
 | The target for the author's touches a package | Set from the first two packages the orchestrator carries (BC10) |

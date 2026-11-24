@@ -4,8 +4,8 @@ Updated 24 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-You have ruled on every proposal of the ground-up review. The rulings are written into the specification and wait
-for their check.
+You have ruled on every proposal of the ground-up review. The specification holds the rulings, and their check
+moved none.
 
 **What changes.** The physics is rebuilt from small registered terms in this phase, first after the axis fix, after
 a design package with a throwaway prototype that you rule on. The phase is split in two: the library's foundations
@@ -21,8 +21,8 @@ phase: about 68 sessions and 108.
 moves may be found late; the nightly run would show it. Its size is the review's draft count, which the challenge
 found low. Unequal reservoirs are physics outside the paper's model.
 
-**Your call.** Nothing now: the write-up is checked first. *Recommendation:* push the tag for the review's package,
-which is still missing.
+**Your call.** Approve the re-plan by merging its pull request, or name the ruling to change. *Recommendation:*
+approve, and push the tag for the review's package, which is still missing.
 
 ## Position
 
@@ -30,16 +30,16 @@ which is still missing.
 - **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.04 merged**;
   `v0.7.0-alpha.4` is the author's to push.
 - **The ground-up review is ruled** ([§8.2.53](../../specification/history/53-the-ground-up-review-ruled.md), BC1 to
-  BC24; REV-280 fixed). Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
-- **Next:** `/np-plan project review`, on Fable 5.2. Then `/np-plan amend 6`: the orchestrator, WP6.05, the guard
-  numbers, the kernel's design, the kernel, the installed packages, the close. Until it, the Phase 6 plan reads as
-  before the rulings.
+  BC24). Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
+- **Next:** `/np-plan amend 6`, on Fable 5.2: the packages left, with their order, numbers and tags. Until it,
+  the Phase 6 plan reads as before the rulings.
 
 ## Not to be re-decided
 
-- **Process rules** are §8.4: two lanes at most (S15); a VER-62 miss is reverted or re-pinned by ruling (G10); an
-  open item is a `REV-nn` row (H12); the reading limit is 8,000 words (AZ18); each plan proposes its two models
-  (AZ20, AZ21).
+- **Process rules** are §8.4: two lanes at most (S15); a VER-62 miss is reverted or re-pinned by ruling (G10); the
+  reading limit is 8,000 words (AZ18); each plan proposes its two models (AZ20, AZ21). **A gate asks three
+  platforms at a phase's close; a pull request tests Linux** (AY4; AZ8).
+- **A session may restructure code while the push gate passes, its nightly walks not asked** (BA7, BA14).
 - **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4); **from v1.0 the case file and the run record are
   converted** (BC20).
 - **The front end is NiceGUI, tried on its hardest view before the rebuild** (AF4; BC13); **the workbench's layout
@@ -47,10 +47,10 @@ which is still missing.
 - **The phases are kernel, library, workbench with the composer's tool, mutator, sketcher, analyte forces,
   validation** (BC1, BC6, BC7; BA1, BA5). **One comparison with the paper is recorded at Phase 7's close and gates
   nothing** (BC8).
-- **The kernel comes first after the axis fix, after a design the author rules; its full check runs at its last
-  package** (BC1 to BC4).
-- **An orchestrator carries a package; the three commands stay** (BC10). **QR-11 is withdrawn** (BC11). **The
-  continuation trial adopts its path on a full pass of marks registered first** (BC24).
+- **The kernel follows the axis fix and a design the author rules; its full check runs at its last package** (BC1
+  to BC4).
+- **An orchestrator carries a package; the three commands stay** (BC10). **The continuation trial adopts its path
+  on a full pass of marks registered first** (BC24).
 
 ## Somebody else's
 
@@ -64,10 +64,9 @@ which is still missing.
 
 ## On demand
 
-- **Specification:** `SPECIFICATION.md` and the file it maps; `docs/project/decisions.md`.
-- **Amendments:** `phase-6/phase-6-record.md`.
-- **Workflow:** `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5.
-- **Workbench:** `docs/design/workbench.md`; `docs/design/reviews/`; §8.2.17 onwards.
+- **Specification:** `SPECIFICATION.md`; `docs/project/decisions.md`. **Amendments:** `phase-6/phase-6-record.md`.
+- **Workflow:** `.claude/workflow/core.md`, `.claude/skills/np-*/`.
+- **Workbench:** `docs/design/workbench.md`.
 - **Code:** `docs/project/architecture-survey.md`; `docs/project/ground-up-review.md`.
 
 ## Handoff Rules

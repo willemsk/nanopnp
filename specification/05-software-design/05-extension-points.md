@@ -81,7 +81,8 @@ comparison and the contribution of each individual correction are configuration 
 project's primary differential-testing instrument (§7.4).
 
 Boundary of the framework (N1): a nanopore transport solver with swappable physics models, which
-will not become a general symbolic PDE framework. Users do not write weak forms. A model may be
-swapped or extended; an unrelated multiphysics problem may not be posed, and users wanting
+will not become a general symbolic PDE framework. A developer writes terms within electrolyte
+transport, and a model may be swapped, extended or composed of them (FR-40; §8.2.53 BC5); an
+unrelated multiphysics problem may not be posed, and users wanting
 arbitrary weak forms should use NGSolve or FEniCS directly. Deriving new correction
 parameterisations from MD is a separate later tool (N6).

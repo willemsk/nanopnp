@@ -101,8 +101,8 @@ needed.
 | CON-13 | VER-43 in part (the server's self-test runs on ubuntu, macOS and Windows on every push to `main`, nightly and before a release, §7.6); VER-78 on ubuntu (the workbench in a headless Chromium) |
 | CON-14 | None yet |
 
-Coverage: 65 of the 87 requirements in §3 have a specified activity, QR-11 being withdrawn and not counted
-(§8.2.53 BC11); 22 are recorded as "none yet",
+Coverage: 66 of the 87 requirements in §3 have a specified activity, QR-11 being withdrawn and not counted
+(§8.2.53 BC11); 21 are recorded as "none yet",
 predominantly interface, portability, licensing and documentation requirements whose demonstration
 is by inspection rather than by test. QR-07 is counted as "none yet", its entry
 naming §8.2 criterion 3 as the measurement it is still waiting for rather than as one it has. VER-61 and VER-62 verify Phase 4's gate (§8.1; §8.2.7 G1 and G10), VER-69 that the user-testing sessions still run as written, VER-72 the import guard, rather than a requirement

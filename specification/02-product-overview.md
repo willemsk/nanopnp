@@ -80,7 +80,7 @@ ClyA's C₁₂ symmetry.
 | NiceGUI, FastAPI | MIT, BSD-3 | The workbench's front end and server, the `gui` extra (ADR-004) |
 
 NOTE (§2.6, the workbench, v0.6). The `gui` extra takes Matplotlib (its own permissive licence), whose
-registered colour maps the workbench offers by name (§8.2.45 AU2). From the tree of results' package (WP5.22 before §8.2.47 AW1; Phase 7's since §8.2.49 AY1) the front end draws every
+registered colour maps the workbench offers by name (§8.2.45 AU2). From the tree of results' package (WP5.22 before §8.2.47 AW1; Phase 8's since §8.2.53 BC7) the front end draws every
 chart and every (r, z) view with Plotly (plotly.js, MIT) as NiceGUI ships it, unmodified, which adds no
 dependency, and uPlot and NGSolve's `webgui` leave it (WB-57, restating §8.2.45 AU1; CON-09). Until then it
 vendors uPlot 1.6.32 (MIT) unmodified as separate files for its charts.

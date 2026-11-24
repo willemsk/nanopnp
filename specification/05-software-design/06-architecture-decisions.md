@@ -118,7 +118,7 @@ NOTE (the front end, v0.6). The workbench's front end SHALL be written in Python
 FastAPI server of the desktop-wrapper NOTE; it has no build step, and NiceGUI's own Vue layer ships
 prebuilt (CON-07). JavaScript SHALL be the bridge to a renderer and nothing else. The renderers are Mol*
 for the molecule, as its unmodified standalone bundle served as separate files (CON-09), and, from the tree of results' package (WP5.22 before §8.2.47 AW1; Phase 8's since
-§8.2.49 AY1),
+§8.2.53 BC7),
 Plotly (plotly.js, MIT) as NiceGUI ships it, unmodified, for every plot of y against x and every (r, z) view:
 maps, meshes, drawings and the field turned about the axis, each axis linear or logarithmic, a
 square-root axis drawn as its root with ticks in its own units, its range typed by the user (WB-57,
