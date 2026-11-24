@@ -1,6 +1,6 @@
 # WP6.04 — The ground-up review
 
-**Status: planned, not started.** Written 23 November 2026, grounded in the tree at `efda55e`. Inherits §8.2.51 BA7
+**Status: in progress, started 24 November 2026.** Written 23 November 2026, grounded in the tree at `efda55e`. Inherits §8.2.51 BA7
 and BA10 to BA13, §8.2.52 BB1 to BB6 (BB3 to BB6 ruled at this plan), §8.4.4's sentence on a study package and the
 test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.4` (§8.4.1).
 
@@ -234,7 +234,7 @@ appendices and pages the site publishes; name a clause, a plan or a review in co
 
 ### Work items
 
-- [ ] 1. The report's skeleton, its appendices, `mkdocs.yml` and `docs/project/index.md` (D6); done when
+- [x] 9e27418 1. The report's skeleton, its appendices, `mkdocs.yml` and `docs/project/index.md` (D6); done when
   `uv run just docs` passes. **Executor:** main
 - [ ] 2. The author's view, in `method.md` (D1); done when the author has called the summary complete. **Executor:**
   main
