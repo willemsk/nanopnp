@@ -515,3 +515,91 @@ to its first line, and a long command ends in `...`.
 14  WebSearch        'fenics-dolfinx conda-forge Windows support win-64 release'
 15  SubagentHandback [the design, returned]
 ```
+
+## The unblinding
+
+Each designer of the second run was continued with its context, by `SendMessage`, after its design was committed
+(`ea377ff`). The message, the same for each:
+
+> The unblinding: you now read today's requirement lists and judge them against your design. Read these three files,
+> and only these: `/home/user/nanopnp/specification/02-product-overview.md` from its heading `### 2.6 Assumptions and
+> dependencies` to the end; `/home/user/nanopnp/specification/03-requirements.md`;
+> `/home/user/nanopnp/specification/05-software-design/06-architecture-decisions.md`. Open no other file on this
+> machine, follow no link out of them, and search nothing. Do not revise your design. Return, in at most 1,500 words
+> and with no link, one table per group (IF, FR, QR, CON, N1 to N7, ADR), with a row for every identifier of the
+> group: `keep`, `change` or `drop`, and one line of reason each. Then, under a last heading, say what the lists lack.
+
+Each answer stands unedited under *After the unblinding* in its design's appendix. Each holds 95 rows, one for every
+identifier: IF-01 to IF-09, FR-01 to FR-44, QR-01 to QR-16, CON-01 to CON-14, N1 to N7 and ADR-001 to ADR-005.
+
+| Designer | Model that served it | Calls after the design | Files read | Answer, words |
+|---|---|---|---|---|
+| A | `claude-fable-5-2` | 6 | The three named, alone | 1,504 |
+| B | `claude-fable-5-2` | 6 | The three named, alone | 1,490 |
+| C | `claude-opus-5-5` | 4 | The three named, alone | 1,734 |
+
+**Each designer read the three files alone.** The calls after each design, in order; `<spec>` is
+`/home/user/nanopnp/specification`. A and B each end with a word count of their own draft, which names no file.
+Answer C holds 1,734 words against the 1,500 asked and is kept whole.
+
+**Designer A**
+
+```text
+ 1  Bash             sed -n '/^### 2.6 Assumptions and dependencies/,$p' <spec>/02-product-overview.md
+ 2  Bash             wc -w -l <spec>/03-requirements.md <spec>/05-software-design/06-architecture-decisions.md
+ 3  Read             <spec>/03-requirements.md
+ 4  Read             <spec>/05-software-design/06-architecture-decisions.md
+ 5  Bash             printf '%s' [the designer's own draft] | wc -w
+ 6  SubagentHandback [the judgement, returned]
+```
+
+**Designer B**
+
+```text
+ 1  Bash             wc -w [the three files]; grep -n '^### 2.6' <spec>/02-product-overview.md; wc -l [the three files]
+ 2  Read             <spec>/02-product-overview.md {'offset': 65}
+ 3  Read             <spec>/03-requirements.md
+ 4  Read             <spec>/05-software-design/06-architecture-decisions.md
+ 5  Bash             wc -w <<'EOF' [the designer's own draft]
+ 6  SubagentHandback [the judgement, returned]
+```
+
+**Designer C**
+
+```text
+ 1  Bash             cd <spec> && sed -n '/^### 2.6 Assumptions and dependencies/,$p' 02-product-overview.md; wc -w 03-requirements.md 05-software-design/06-architecture-decisions.md
+ 2  Read             <spec>/03-requirements.md
+ 3  Read             <spec>/05-software-design/06-architecture-decisions.md
+ 4  SubagentHandback [the judgement, returned]
+```
+
+## The main session's calls
+
+The order is the guard (the plan's D1): until the unblinding was committed, the main session, which writes the
+report, was to read no code, no §5 or §6 of the specification, no architecture survey, no modularity report and no
+workbench design. Its own transcript was listed by the same script, before this section was written.
+
+| Tool | Calls | What they touched |
+|---|---|---|
+| `Read` | 3 | `.claude/workflow/core.md`, the skill's `wp.md`, and this package's plan |
+| `Write`, `Edit` | 12 | The report's skeleton and its appendices, `mkdocs.yml`, `docs/project/index.md` |
+| `Bash` | 51 | `git`; the documentation build and the gates, of which it read the logs' last lines; `grep` and `sed` on `mkdocs.yml`, `docs/project/index.md`, §1, §2 and §4 of the specification and the pack; the scratchpad scripts on the agents' transcripts |
+| `Agent`, `SendMessage` | 9 | The six designers of the two runs, and the three messages of the unblinding |
+| `AskUserQuestion` | 6 | The interview |
+| Others | 27 | The task list, two tool look-ups, one list of the open pull requests |
+
+**None of the 57 `Read`, `Write`, `Edit` and `Bash` calls opens one of the guarded paths**: `src/`,
+`specification/05-software-design/`, `specification/06-numerics.md`, `docs/project/architecture-survey.md`,
+`docs/project/modularity*.md`, `docs/_generated/` and `docs/design/workbench.md`. Four `Bash` commands hold such a
+path as text and read nothing at it: a `grep` over the pack whose pattern holds `src/`; the two scratchpad scripts
+that check for these paths; and the command that wrote the paragraph under *After the unblinding*, which names the
+file of the architecture decisions.
+
+Three things the main session did know before the walk, stated so that the reader can weigh them:
+
+- The repository's `CLAUDE.md` loads at a session's start. It names the twenty subpackages of `src/nanopnp/` with a
+  line each, the test tiers, and several constraints by their identifiers.
+- The plan of this package, read first, holds counts of today's program and names of its files.
+- The designers' judgements came back to the main session before they were committed. Each holds one line on each
+  requirement and on ADR-001 to ADR-005, so the main session saw those fifteen lines on §5.6 a commit early. It read
+  nothing of §5 itself.

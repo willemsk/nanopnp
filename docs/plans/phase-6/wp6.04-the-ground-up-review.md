@@ -246,8 +246,9 @@ appendices and pages the site publishes; name a clause, a plan or a review in co
   `uv run just docs` passes. **Executor:** main
 - [x] 2085983 2. The author's view, in `method.md` (D1); done when the author has called the summary complete. **Executor:**
   main
-- [ ] 3. The pack and the three blind designs, in `design-a.md` to `design-c.md` and `method.md` (D2); done when each
-  transcript's list holds no path outside the pack. **Executor:** main, with `Plan` agents on Fable 5.2 and Opus 5.5
+- [x] 3547056, ea377ff 3. The pack and the three blind designs, in `design-a.md` to `design-c.md` and `method.md`
+  (D2); done when each transcript's list holds no path outside the pack. **Executor:** main, with `Plan` agents on
+  Fable 5.2 and Opus 5.5
 - [ ] 4. The unblinding, appended to the three designs (D3); done when each holds its tables and both lists are
   clean. **Executor:** main, with the same agents
 - [ ] 5. Compaction checkpoint. **Executor:** main

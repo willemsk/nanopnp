@@ -129,3 +129,151 @@ Nothing exists yet; these pack files bind the design.
 - <pack>/author.md
 - <pack>/b-comsol-settings.md
 - <pack>/02-electrokinetics-background/09-quantities-the-software-must-compute.md
+
+---
+
+## After the unblinding
+
+Designer B then read §2.6 and §2.7 of `specification/02-product-overview.md`, `specification/03-requirements.md` and
+`specification/05-software-design/06-architecture-decisions.md`, and nothing else, and returned the judgement below. It
+is unedited, and the design above was not revised.
+
+Verdicts are against my design as delivered, unrevised.
+
+## IF
+
+| ID | Verdict | Reason |
+|---|---|---|
+| IF-01 | keep | Separately invocable stages are my kernel. |
+| IF-02 | keep | Same interface; the exit-code contract serves job arrays. |
+| IF-03 | change | Add migrations: an old case or record must always open. |
+| IF-04 | keep | Same formats, trajectories optional. |
+| IF-05 | keep | Grids are the currency of molecular exchange; off the P3 path. |
+| IF-06 | change | With adaptive curved meshes the record is mesh plus refinement history; MSH becomes an export. |
+| IF-07 | keep | Same choice. |
+| IF-08 | keep | Same. |
+| IF-09 | change | Keep local server and thin shell; six suites are a modeller's map, not a laboratory's route. |
+
+## FR
+
+| ID | Verdict | Reason |
+|---|---|---|
+| FR-01 | keep | Needed; a static structure must be a first-class input. |
+| FR-02 | keep | Sound, pore-neutral axis rule. |
+| FR-03 | change | Take the oligomer from the entry's assembly or the user, not a three-pore table. |
+| FR-04 | change | Reduce density by the same closed-form azimuthal mean as the charge; no 3D grid in 2D. |
+| FR-05 | change | Follows FR-04: the closed form replaces rotated copies and annular binning. |
+| FR-06 | keep | A trust output; feeds my band. |
+| FR-07 | change | Fit a smooth spline; a polyline's corners are field singularities. |
+| FR-08 | keep | Named gates apply equally to a spline. |
+| FR-09 | keep | Same region assembly. |
+| FR-10 | change | Start coarse, refine towards the quantity; the user sets a tolerance. |
+| FR-11 | drop | Adaptivity makes boundary layers unnecessary. |
+| FR-12 | keep | Given pipeline. |
+| FR-13 | keep | Given physics. |
+| FR-14 | keep | Given physics. |
+| FR-15 | keep | Given physics. |
+| FR-16 | keep | Same registry; I add out-of-tree registration. |
+| FR-17 | keep | Log variables meet the positivity clause by construction. |
+| FR-18 | keep | Same single composition path. |
+| FR-19 | keep | Same. |
+| FR-20 | keep | The developer's core need. |
+| FR-21 | keep | Same capability. |
+| FR-22 | change | Add residual current, the quantity laboratories report. |
+| FR-23 | keep | Cross-checked extraction is right; my closures are the second route. |
+| FR-24 | change | The unit is a continuation chain; independent points cannot also warm-start. |
+| FR-25 | keep | Same manifest; see lacks. |
+| FR-26 | keep | Semantic round trip is the right test. |
+| FR-27 | keep | Same staged artefacts. |
+| FR-28 | keep | I add the single-file bundle. |
+| FR-29 | change | Promote from optional backlog to the default mesh strategy. |
+| FR-30 | keep | Figures from stored artefacts alone. |
+| FR-31 | change | Lead with one route from structure to prediction; suites sit behind it. |
+| FR-32 | keep | Plain folder, portable copy, run comparison. |
+| FR-33 | keep | Residue-to-charge-map linking is what a laboratory reads. |
+| FR-34 | keep | Makes deviations visible. |
+| FR-35 | keep | Refusal at the field, with remedy. |
+| FR-36 | change | The guided route is the first surface built, not a v0.8 layer. |
+| FR-37 | keep | Pore-neutral preparation; I add a proposed membrane place. |
+| FR-38 | keep | Charge-only variants are the cheap mutation scan. |
+| FR-39 | change | Keep reuse and model axes; defer the expression language and forecast. |
+| FR-40 | change | Term composition is the kernel's shape from phase 1, not a v0.9 addition. |
+| FR-41 | keep | Same, with a vetted dependency. |
+| FR-42 | drop | Parametric shapes and supplied profiles suffice; a sketcher is costly for one maintainer. |
+| FR-43 | keep | A named, optional model; harmless. |
+| FR-44 | keep | Same. |
+
+## QR
+
+| ID | Verdict | Reason |
+|---|---|---|
+| QR-01 | keep | My rungs 2 and 3. |
+| QR-02 | change | Keep published-result bands; drop the matching stabilised mode. Extensible over exact. |
+| QR-03 | keep | Given tolerance. |
+| QR-04 | keep | Same closure. |
+| QR-05 | keep | My rung 5. |
+| QR-06 | keep | Chains over workers meet it. |
+| QR-07 | change | State seconds and gigabytes; adaptivity changes the production size. |
+| QR-08 | keep | Same. |
+| QR-09 | keep | Same. |
+| QR-10 | change | Observe at every workbench release with a timed script, not once at v1.0. |
+| QR-11 | drop | A graphical surface every release works against proving the kernel first. |
+| QR-12 | keep | Same. |
+| QR-13 | keep | Identical to my engine confinement. |
+| QR-14 | keep | Entry points make "no file edited" true for outsiders. |
+| QR-15 | keep | Papers built on it need this. |
+| QR-16 | keep | My design omitted accessibility; the list is right. |
+
+## CON
+
+| ID | Verdict | Reason |
+|---|---|---|
+| CON-01 | change | "Not preclude" is too weak: model terms must pass 3D manufactured solutions from the start. |
+| CON-02 | keep | Follows from axisymmetry. |
+| CON-03 | keep | Honest limit. |
+| CON-04 | keep | Honest limit, reported. |
+| CON-05 | keep | States the given model's weakness. |
+| CON-06 | keep | Same engine. |
+| CON-07 | keep | Same. |
+| CON-08 | keep | Records what I could not verify: UMFPACK ships in the wheel. |
+| CON-09 | keep | BSD-3 serves as my Apache-2.0 would; not worth reopening. |
+| CON-10 | keep | Same reasoning. |
+| CON-11 | keep | Its measurement refutes my SuperLU floor at reference size; the list is right. |
+| CON-12 | keep | Same. |
+| CON-13 | keep | Same. |
+| CON-14 | keep | Same. |
+
+## N1 to N7
+
+| ID | Verdict | Reason |
+|---|---|---|
+| N1 | change | Developers do write weak forms, as plug-in terms; laboratories never do. |
+| N2 | keep | Same. |
+| N3 | keep | Same. |
+| N4 | change | 3D lies inside the author's three years; give it a release, not the backlog. |
+| N5 | keep | Until 3D. |
+| N6 | keep | For now; the first-principles aim will reopen it. |
+| N7 | keep | Same. |
+
+## ADR
+
+| ID | Verdict | Reason |
+|---|---|---|
+| ADR-001 | keep | Same choice, with better evidence than mine. |
+| ADR-002 | change | Netgen only; with adaptivity Gmsh's size fields no longer earn a second backend. |
+| ADR-003 | keep | Permissive core; same end. |
+| ADR-004 | change | I chose TypeScript for the design ceiling; the author's spike, unseen by me, may outweigh that. Server, token, packaging: keep. |
+| ADR-005 | change | Add a third level, terms composed into a model, and out-of-tree registration. |
+
+## What the lists lack
+
+- **An error bar.** No requirement makes a run report its discretisation error per quantity or demonstrate mesh convergence, which the reference model also lacked.
+- **An envelope.** Nothing classes a result as validated, extrapolated or outside, or says what a salt without a fit (KCl, for one) may run as.
+- **The laboratory's own quantities.** Overlay of measured I-V data, asymmetric reservoirs with the reversal potential, and residual current have no identifier.
+- **Sensitivities.** No adjoint, no per-residue map, no band from the fitted permittivity, offset and isolevel. Inverse design has no foothold.
+- **The static-structure question.** The lists assume trajectories are supplied. Nothing bounds what a single structure costs, and nothing validates on a second pore.
+- **Extension from outside.** Registration exists, but not discovery of another group's package, nor automatic verification of a contributed model.
+- **Continuity of records.** v0.7 refuses v0.6 run records; no requirement says old cases and records reopen.
+- **The author's horizons.** 3D, molecular exchange, inverse design and solid-state pores appear only as backlog, with no requirement to test room for them.
+- **Numbers on the P3 path.** No time from install to a first I-V, and no self-test that checks computed numbers on the user's machine rather than loaded libraries.
+- **A public verification gallery.** "Shown openly" has no deliverable.
