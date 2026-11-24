@@ -1,4 +1,4 @@
-"""VER-66, QR-14, IF-03, QR-11 — the backend registries (WP39)."""
+"""VER-66, QR-14, IF-03 — the backend registries (WP39)."""
 
 from __future__ import annotations
 
