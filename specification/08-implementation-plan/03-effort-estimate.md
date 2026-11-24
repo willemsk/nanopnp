@@ -10,9 +10,11 @@ The work is done by agents in Claude Code, and its cost is stated in three units
 
 - **sessions**, the context windows it takes, each ended by a compaction the author runs. A package
   takes at least four: its plan, the plan's review, its implementation and its shipping, and one more
-  for each compaction checkpoint of its implementation;
+  for each compaction checkpoint of its implementation. A package that `/np-carry` carries is one
+  session and its helpers (§8.4.4; §8.2.53 BC10);
 - **agent hours**, the hours an agent works on it, waits for the gate and CI included and waits for
-  the author excluded;
+  the author excluded; a carried package's hours run over its main session and its helpers as one
+  timeline (§8.4.5);
 - **the author's touches**, each time the author acts: a command, a compaction, a question round, a
   verdict, an approval, a merge or a tag.
 

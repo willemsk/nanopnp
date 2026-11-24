@@ -25,6 +25,24 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.7.0-alpha.5]
+
+WP6.05: the orchestrator; tag `v0.7.0-alpha.5` once merged (§8.2.53 BC10, BC15; §8.2.54 BD2 to BD6). A user of the
+program sees no change: the package changes no code. The [plan](docs/plans/phase-6/wp6.05-the-orchestrator.md)
+records the work.
+
+- **Added**:
+  - `/np-carry wp <n>`: one session carries a work package from its plan to the merge, and hands each step to a
+    fresh helper; it asks the author and starts the reviews and agents a helper cannot (§8.4.4, §8.4.5).
+  - `.claude/workflow/helper.md`: what a helper hands back where a level's file names something it cannot do.
+  - [What a Claude Code helper can do](knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md), checked
+    on Claude Code 2.1.331.
+  - [The browser-path count](docs/plans/sessions/browser-path-count.md): 32 of the last 100 pushes that ran tests
+    could have left the browser tests out, below the 34 that the rule needed, so the push gate keeps them (BC15).
+- **Changed**:
+  - `usage.py` measures a session and its helpers on one timeline, and reports each helper's reading window
+    (§8.3, §8.4.5).
+
 ## [0.7.0-alpha.4]
 
 WP6.04: the ground-up review; tag `v0.7.0-alpha.4` once merged (§8.2.51 BA10 to BA13; §8.2.52 BB2 to BB7; REV-280

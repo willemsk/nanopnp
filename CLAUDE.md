@@ -113,9 +113,10 @@ One work package per PR, green on tiers 1–2 before the next one in its lane (a
 - `/np-implement [wp <n>]` executes the plan, gates, pushes and opens the PR.
 - `/np-ship [wp <n> | phase <n>]` reviews the package, drives CI to green and prints the tag
   commands. A phase's close also tags the release.
+- `/np-carry wp <n>` runs all three in one session through fresh helpers.
 
-§8.4.4 holds the workflow's rules, its pauses and their two switches; §8.4.5 the agents, the models
-and the kept scripts. A choice put to the author follows `.claude/workflow/author.md`.
+§8.4.4 holds the workflow's rules and pauses; §8.4.5 the agents, the models and the kept scripts. A
+choice put to the author follows `.claude/workflow/author.md`.
 
 **Models:** `/np-plan` and its review run on Fable 5.2. A work package's plan names the models that
 implement and ship it, as the author ruled them: Opus 5.5 and Fable 5.2 by default. Each session runs
