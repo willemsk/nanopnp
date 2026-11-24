@@ -66,6 +66,17 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * The workflow is three commands with levels: `/np-plan <project | phase n | amend n | wp n> [review]`,
   `/np-implement [wp n]` and `/np-ship [wp n | phase n]`, with no aliases. Each routes to a shared
   core and the file of its level. (§8.2.16 R5, R12; `.claude/workflow/core.md`)
+* Beside them, `/np-carry wp <n>` carries one package in one session the author starts, and resumes
+  it in a new one. It hands each step to a new `general-purpose` helper with an empty context: the
+  plan and its review, each stretch of the implementation up to a checkpoint, and the ship. A helper
+  ends each turn with one `HANDBACK` block (`.claude/workflow/helper.md`). The main session serves
+  it: it asks the author, passing the questions and the answers on unchanged, starts the code
+  reviews and the agents a helper asks for, holds the pull request's subscription and check-in, and
+  measures. A helper keeps the task list, which the two share, and commits, gates and pushes; the
+  main session commits nothing and edits only through a review's `--fix`. The stage is read from the
+  branch's commit subjects and the plan's ticks, so the three commands stay the way back. A phase,
+  an amendment or a ruling round is not carried. (§8.2.53 BC10; §8.2.54 BD2, BD6;
+  `.claude/skills/np-carry/`)
 * A pull request's CI tests on Linux, and a package's `/np-ship` reads no platform leg. `/np-ship phase`
   dispatches `ci.yml` on the close's head and stops while a `platforms` leg on ubuntu, macOS or Windows is
   not `success`. (§7.6; §8.2.49 AY4; §8.2.50 AZ8; `.claude/skills/np-ship/phase.md`)
@@ -152,8 +163,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   `NANOPNP_AUTO_CHECKPOINT=1`, the session goes on instead, and the hooks give the prompt to the
   compaction that comes when the context fills; `NANOPNP_AUTO_SHIP=1` does the same for the pause
   before `/np-ship`, where the plan names one model for both. Where the two differ, the session
-  pauses and its prompt names the model to switch to. (§8.2.11 L7; §8.2.16 R11; §8.2.50 AZ21; the
-  WP5.10 plan, D10)
+  pauses and its prompt names the model to switch to. Under `/np-carry`, a checkpoint or a pause
+  ends a helper instead, and the next step goes to a new one. (§8.2.11 L7; §8.2.16 R11; §8.2.50
+  AZ21; §8.2.53 BC10; the WP5.10 plan, D10)
 * A phase plan states each package's current scope. The text of each amendment goes to the phase's
   record, read on demand. (§8.2.16 R4)
 * A phase plan holds 2,500 words, up to 10% over, without its end-of-phase report; review checks it.
@@ -171,7 +183,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   plan this section allows, which the session reads whole, and room for the clauses the plan cites.
   A session's first window is the one no message precedes.
   A later window, after a compaction or not, and the plan and ship windows are reported beside it,
-  not limited. (§8.2.49 AY8; §8.2.50 AZ9, AZ13, AZ15, AZ18)
+  not limited. Under `/np-carry`, nothing precedes a helper, so every helper that implements is
+  bound by the same limit; the main session's reading is reported, not limited. (§8.2.49 AY8;
+  §8.2.50 AZ9, AZ13, AZ15, AZ18; §8.2.54 BD3)
 
 #### 8.4.5 Agents and models
 
@@ -187,6 +201,12 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   effort; WP6.04's three blind designers are excepted and run on Fable 5.2 and Opus 5.5, as its plan names them. Haiku 5.5 takes only mechanical, repetitive work that is fully specified and whose expected
   context stays under 100,000 tokens. An item a sub-agent fails goes to a new worker once, then to the
   next model. (§8.2.11 L6; §8.2.38 AN8; §8.2.49 AY7; §8.2.50 AZ20, AZ21; §8.2.52 BB3)
+* A helper of `/np-carry` runs on its step's model, set in the main session's `Agent` call with
+  `effort: "high"`: Fable 5.2 for the plan and its review, the plan's implementing model for each
+  stretch, its shipping model for the ship. On Claude Code 2.1.331 a helper has no `Agent` and no
+  `AskUserQuestion`, so it can start no agent and ask the author nothing; it keeps the task list,
+  commits under the commit gate, runs the push gate and pushes, and resumes with its context
+  (`knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md`). (§8.2.54 BD2)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only and on Opus at high
   effort (§8.2.38 AN9), and the CI-log classifier. Eight scripts are kept in `.claude/scripts/`,
   beside `/np-gui`'s own in `.claude/scripts/gui/`: `clause.py` prints a clause by identifier,
@@ -196,13 +216,15 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   plans and reviews (§8.4.4), `links.py` checks every relative link of the tracked Markdown
   (§7.6), `archive_items.py` moves the closed review items to their archive (§8.4.6), and
   `usage.py` measures a session in §8.3's units, with its tokens by model, from its Claude Code
-  transcript; with `--reading` it gives, for each window an `/np-` command opens, the
+  transcript. It takes the agent hours from the main transcript and its sub-agents' as one
+  timeline and names the count of sub-agents; the sessions and touches stay the main transcript's.
+  With `--reading` it gives, for each window an `/np-` command opens and for each sub-agent, the
   words of project text read before the first edit, and with `--pages` it reads them from the
   session service's pages of past sessions. A file counts when it is read, or printed by a command
   that only prints files. Only a call of an edit tool ends the count; a change a shell command makes
   does not, so a session measured against the limit makes its first change with an edit tool.
   (§8.2.11 L6, L9; §8.2.16 R6; §8.2.17 S22; §8.2.36 AL3, AL4, AL28; §8.2.37 AM11; §8.2.50 AZ9,
-  AZ10, AZ12, AZ16, AZ17)
+  AZ10, AZ12, AZ16, AZ17; §8.2.54 BD3)
 * Each level of `/np-plan`, `/np-implement` and `/np-ship` ends its report with `usage.py`'s line for
   the level. The pull request's **Measured** section keeps one line per level, and `/np-ship` sums
   them into the plan's Outcome beside its estimate. (§8.2.37 AM11)
