@@ -1,6 +1,6 @@
 # Decisions register, closed
 
-The 1,121 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
+The 1,123 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -884,7 +884,9 @@ The 1,121 decisions of [the register](decisions.md) that bind nothing now, writt
 | WP6.04 D7 | session, own call | `docs/plans/phase-6/wp6.04-the-ground-up-review.md` | 2026-11-23 | WP6.04 | Two Sonnet agents read the draft: one argues that each change costs more than it gains, one that each keep is habit. The physics reviewer reads each proposal on a numerical method. Their reports are kept unedited; an ob… | §8.4.5 | delivered plan |
 | WP6.04 D8 | session, own call | `docs/plans/phase-6/wp6.04-the-ground-up-review.md` | 2026-11-23 | WP6.04 | Open: REV-280, the proposals waiting for their rulings, and one row for each question only a trial could settle, each owned by the round. `CHANGELOG.md` gains `## [0.7.0-alpha.4]`. A fact that contradicts a knowledge no… | REV-280, §8.4.6 | delivered plan |
 | §8.2.52 BB7 | author | `specification/history/52-phase-6-amended-the-ground-up-review-planned.md` | 2026-11-24 | WP6.04 | Added 24 November 2026, at WP6.04's ship.* **Fable 5.2 ships WP6.04, in the session that implemented it.** BB5 put the ship on Opus 5.5 in a new session. The author started `/np-ship wp 6.04` in the implementing session… | spent with WP6.04 | spent |
+| §8.2.53 BC15 | author | `specification/history/53-the-ground-up-review-ruled.md` | 2026-11-24 | phase ruling | The push gate runs the browser tests by path, after a count** (GU-13). The 149 browser tests take 468 s of the push gate's 539 s, and a pull request's CI runs them again on Linux. The session offered the question carrie… | spent; WP6.05's count missed, k = 32 &lt; 34 (docs/plans/sessions/browser-path-count.md) | spent |
 | §8.2.53 BC23 | author | `specification/history/53-the-ground-up-review-ruled.md` | 2026-11-24 | phase ruling | The keeps against a designer are confirmed** (GU-20, GU-24, GU-25). The second challenger called four keeps habit: the built parts a start-over would not build (FR-39's expression language and forecast, NUM-14's mode),… | spent; the keeps stand | spent |
+| §8.2.54 BD4 | author | `specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md` | 2026-11-24 | WP6.05 | Added 24 November 2026, at WP6.05's plan.* **The count of BC15 takes the last 100 pushes that ran tests.** BC15 ruled a count of the last 100 pushes and the rule above a third. A push that changes only prose already ski… | spent; WP6.05 counted, k = 32 &lt; 34 | spent |
 | REV-01 | session, own call | `docs/project/review-archive.md` |  | WP37 | TOL_NM's home loaded pydantic and yaml | WP37 | fixed |
 | REV-02 | session, own call | `docs/project/review-archive.md` |  | WP37 | cli/errors.py was a re-export nothing imported | WP37 | fixed |
 | REV-03 | session, own call | `docs/project/review-archive.md` |  | WP38 | The solution-field names lived in two layers | WP38 | fixed |
