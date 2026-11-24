@@ -1681,7 +1681,7 @@ places it.
 
 **Placed** (§8.2.51 BA8, 23 November 2026): a small package of Phase 6, firm. From v0.7 a structure with a ragged rim may be given an axis up to about 0.6° different.
 
-**Numbered** (§8.2.52 BB1, 23 November 2026): WP6.05. Its plan is written after the author's ruling round on the ground-up review's proposals, so a proposal on how a pore's axis is found is ruled before the fix is built.
+**Numbered** (§8.2.52 BB1, 23 November 2026; §8.2.54 BD1, 24 November 2026): WP6.06, in build order after the orchestrator's package, which carries it (§8.2.53 BC3, BC10). Its plan is written after the author's ruling round on the ground-up review's proposals, which ruled no proposal on how a pore's axis is found (§8.2.53).
 
 ### REV-280: The ground-up review's proposals wait for the author's rulings
 

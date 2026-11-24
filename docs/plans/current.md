@@ -4,35 +4,32 @@ Updated 24 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-You have ruled on every proposal of the ground-up review. The specification holds the rulings, and their check
-moved none.
+**What changes.** Four packages have their numbers, in the order they are built. The first builds a new way to carry
+a package: one session that you start hands each step to a fresh helper and comes to you only for rulings, the
+plan's approval and the merge. It is tried on the next two: the fix for the pore's axis, and stored reference numbers
+for the model's optional switches. The fourth designs how the physics is rebuilt from small registered terms, with a
+prototype. You rule that design before any package of the rebuild is planned.
 
-**What changes.** The physics is rebuilt from small registered terms in this phase, first after the axis fix, after
-a design package with a throwaway prototype that you rule on. The phase is split in two: the library's foundations
-become the next phase, and the workbench's rebuild, with the composer's tool, the one after. No later release is
-renumbered. One session will carry a whole package through fresh helpers, tried on the axis fix. The next phase
-adds a page that shows which test proves each term, an error bar for the mesh, unequal reservoirs, and one
-recorded comparison with the paper at its close.
+**Cost.** About 43 sessions, 26 to 49 agent hours and 66 times you act. Your ruling round on the
+design adds about 2 sessions and 3.
 
-**Cost.** This phase: about 43 more sessions, 26 to 49 agent hours and 66 times you act, at today's rates. The next
-phase: about 68 sessions and 108.
+**What could go wrong.** The helpers may be unable to run the commit checks or to ask you a question; the first
+package tests that first and falls back to separate sessions. The prototype may miss the stored numbers, which comes
+to you before the rebuild is planned. The rebuild is checked in full only at its last package; the nightly run would
+show a moved result sooner.
 
-**What could go wrong.** The kernel is checked in full only at its last package, so a result an early package
-moves may be found late; the nightly run would show it. Its size is the review's draft count, which the challenge
-found low. Unequal reservoirs are physics outside the paper's model.
-
-**Your call.** Approve the re-plan by merging its pull request, or name the ruling to change. *Recommendation:*
-approve, and push the tag for the review's package, which is still missing.
+**Your call.** Do you approve the amendment, by merging its pull request? *Recommendation:* approve; it departs from
+none of your rulings.
 
 ## Position
 
 - Phases 1 to 5 **closed**, `v0.2.0` to `v0.6.0` ([Phase 5's report](phase-5/phase-5-workbench.md#end-of-phase-report)).
-- **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.04 merged**;
-  `v0.7.0-alpha.4` is the author's to push.
-- **The ground-up review is ruled** ([§8.2.53](../../specification/history/53-the-ground-up-review-ruled.md), BC1 to
-  BC24). Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
-- **Next:** `/np-plan amend 6`, on Fable 5.2: the packages left, with their order, numbers and tags. Until it,
-  the Phase 6 plan reads as before the rulings.
+- **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.04 merged**
+  and tagged, to `v0.7.0-alpha.4`.
+- **Phase 6 is amended** ([§8.2.54](../../specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md),
+  BD1): WP6.05 the orchestrator, WP6.06 the axis fix, WP6.07 the guard numbers, WP6.08 the kernel's design; the
+  rest is numbered at the round on the design. Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
+- **Next:** `/np-plan amend 6 review`, on Fable 5.2; then `/np-plan wp 6.05`.
 
 ## Not to be re-decided
 
@@ -54,8 +51,8 @@ approve, and push the tag for the review's package, which is still missing.
 
 ## Somebody else's
 
-- **The ruling on the kernel's design** (BC2); **the boundary conditions of unequal reservoirs** (BC21); **the
-  paper's figure data**, by Phase 7's close (D6; BC8); **verdicts at each design round and on the kit's trial**
+- **What the reading limit counts under the orchestrator**, at WP6.05's plan; **the ruling on the kernel's design**,
+  after WP6.08 (BC2); **the boundary conditions of unequal reservoirs** (BC21); **the paper's figure data**, by Phase 7's close (D6; BC8); **verdicts at each design round and on the kit's trial**
   (AJ8; BC13); **whether shapes replace the sketcher**, at Phase 10's round (BC14).
 - E1's ensemble legs; Read the Docs; `$NANOPNP_REFERENCE_DATA` on the nightly runner; the 200 ms redraw's GPU run
   (REV-258); rulings on a cycle (H6) or drift (I4).

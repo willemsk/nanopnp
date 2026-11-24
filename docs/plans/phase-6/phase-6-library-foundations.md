@@ -1,38 +1,38 @@
-# Phase 6 (Cleanup and the library's foundations): a library the workbench and the tools can build on
+# Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04. Amended 23 November 2026 (§8.2.51; §8.2.52): WP6.05, the axis fix, is planned; the rest is provisional until the author rules on the ground-up review (REV-280). Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04. Amended 24 November 2026 (§8.2.53; §8.2.54): WP6.05 to WP6.08 are planned by scope and numbered in build order; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
-**What changes.** The next package reviews the program from the ground up: how would it be built if we started over
-today? It designs for the whole program, built and planned, and takes only the paper's physics as given. It changes no
-code. Its report holds the design it would choose, and each difference from today's program marked keep, change now,
-change later or drop, with its gain, risk and cost. You then rule on each proposal. Then comes a small fix for the
-pore's axis, which rounding can lock 0.6 degrees off at a ragged rim. The rest waits for your rulings: about ten
-packages that restructure the library, close the gaps in the flow equations, add exports and speed up the solve.
+**What changes.** First comes a package that changes how a package is carried: one session that you start hands the
+plan, its review, the building and the shipping to fresh helpers, and comes to you only for rulings, the plan's
+approval and the merge. It is tried on the next two packages: the fix for the pore's axis, which rounding can lock
+0.6 degrees off, and stored reference numbers for the model's optional switches. Then a design package writes how the physics will be rebuilt from small
+registered terms, with a throwaway prototype. You rule that design; only then are the kernel's packages planned.
+Packages are numbered in the order they are built.
 
-**Cost.** The review: about 10 sessions, 7 to 13 agent hours and 16 times you act. Your ruling round: 2 sessions and 3.
-The axis fix: 4 sessions, 2 to 4 hours and 6. The rest, if the review changes nothing: 50 sessions, 45 to 90 hours
-and 80.
+**Cost.** About 43 sessions, 26 to 49 agent hours and 66 times you act, at the rates of before the new way of
+carrying a package. Your ruling round on the design adds about 2 sessions and 3.
 
-**What could go wrong.** The review could reason from the program as it is and find it sound: its plan says how it
-guards against that, and a report proposing nothing would show it. It could propose more than one round can rule:
-each proposal carries its cost, so you can rank them. The axis fault stays until you have ruled; it is recorded.
+**What could go wrong.** The helpers may be unable to run the commit checks or to ask you a question: the first
+package tests that first, and falls back to separate sessions. The prototype may miss the stored numbers: that comes
+to you before any kernel package is planned. The kernel is checked in full only at its last package, so a moved
+result may be found late; the nightly run would show it. Its size is a draft count that the review found low.
 
-**Your call.** Settled on 23 November 2026: your rulings come before the axis fix, and the review designs for the whole
-plan. Still yours: the rulings on the review's proposals. *Recommendation:* read the report's table of differences
-first.
+**Your call.** Do you approve this amendment, by merging its pull request? Yours later: the kernel's design,
+and the target for how often a package needs you. *Recommendation:* approve; it departs from none of your rulings.
 
 ## Context
 
 `SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 (AY1 to AY8), §8.2.50 (AZ1 to
-AZ21), §8.2.51 (BA1 to BA15) and §8.2.52 (BB1 to BB6; BB3 to BB6 ruled at WP6.04's plan). The text each amendment replaced is in
-[the record](phase-6-record.md).
+AZ21), §8.2.51 (BA1 to BA15), §8.2.52 (BB1 to BB7), §8.2.53 (BC1 to BC24) and §8.2.54 (BD1). The text each amendment
+replaced is in [the record](phase-6-record.md). This file keeps its first name: the library's foundations are Phase 7
+since BC7, and [the input note](../sessions/phases-6-to-11.md) holds them.
 
-Phase 6 answers one question: **can the library be made one sound base, without moving a number, before the workbench
-is rebuilt and three tools are built on it?** Its gate is §8.1's. Since the rescoping round it asks a second one first:
-**given what the program is now, how would it be built if it were started over?** (BA10) Only WP6.04 and WP6.05 are
-firm (BA8, BA11); the [architecture survey](../../project/architecture-survey.md) shapes the rest.
+Phase 6 answers one question: **can the physics be rebuilt from registered terms, without moving a number, before the
+library's foundations and the workbench are built on it?** Its gate is §8.1's. Its earlier question, how the program
+would be built if it were started over (BA10), is answered by [the ground-up review](../../project/ground-up-review.md)
+and ruled (§8.2.53).
 
 True of the codebase today:
 
@@ -40,34 +40,37 @@ True of the codebase today:
   second fixed point at a ragged rim, up to about 0.6° off, and rounding decides which one it reaches (REV-279).
   `structure/stage.py` `align` takes that axis only under C1 or `axis: cavity`, and `structure/orient.py`
   `_channel_line` where no covariance axis stands apart; every walk of VER-62 takes the ring's.
-- **A run's record is an untyped dict.** `pipeline/run.py` `RunResult.write` writes `run.json`; 13 sites parse it raw.
-- **A field carries neither its order nor its log branch.** `post/fields.py` `field_at` reads P2 values linearly;
-  `gui/render.py` `render_fields` writes the fields file.
-- **The shell computes numbers at 12 sites**, among them `gui/render.py` `render_charge_elements`.
+- **A model is assembled in one class.** `physics/models.py` `CoupledModel` assembles the weak forms of the modules
+  beside it, and `physics/terms.py` holds a `Term` for each, for display alone (GU-01).
 - **A switch is code.** `physics/models.py` `SWITCHES` is a closed tuple; `post/forces.py` `_domain_force` assembles
   again the terms of `physics/flow.py`.
-- **69 error classes share no base** (`core/errors.py` `classify`).
+- **Nothing finds a registration in an installed package** when the command line or the workbench starts (REV-67).
+- **VER-62's stored numbers cover the default switches alone.** The round took this from the review and did not check
+  it at its source (§8.2.53); WP6.07 checks it first.
+- **A package takes at least four sessions the author starts** and about eight touches (§8.3); the browser tests take
+  468 s of the push gate's 539 s (BC15).
 
-Risks: none is retired; the equations package mitigates **RSK-15** (AY6).
+Risks: none is retired.
 
-Excluded: any change of code, and any trial of a design, in WP6.04 (BA13); §5.4.1's interface, Phase 8's round (AZ1);
-the workbench's foundations and the suites' words, Phase 7; the analyte forces, Phase 11, and the validation runs,
-Phase 12 (BA5); the structure pipeline's loose ends, Phase 9; a converter for v0.6 runs (AZ5); a linear-solver swap
-(Z6); a comparison with the published results (BA3).
+Excluded: the error base, the results side, the library's shape but for "switches as data", the model's open terms,
+the exports, the refusals reworded and the speed-up, all Phase 7 (BC3, BC7); the workbench's rebuild and the
+composer's tool, Phase 8 (BC6); the benchmark on a coarse 3D mesh, until WP6.08 has priced it and the author has
+ruled (BC5); any code of WP6.08's prototype in the tree it merges (BC2); a converter for v0.6 runs (AZ5; BC20); a
+linear-solver swap (Z6); a comparison with the published results (BA3; BC8 records one at Phase 7's close).
 
 ## Design decisions
 
 | Decision | Choice | Why |
 |---|---|---|
-| The ground-up review | WP6.04, delivered: a report and no code; everything open but §4's physics | The survey took every constraint as given; after the restructure the answer could no longer shape it (BA10 to BA13) |
-| What the review designs for | The whole of §3, what is built and what is planned up to v0.13 | The tools stay before validation, so the design must carry them (BA1; BB2) |
-| Order | The review, the author's rulings, a further amendment, the axis fix, then what that amendment plans | A proposal on how an axis is found is ruled before the fix is built (BA11; BB1) |
-| Order of the provisional content | The error base, the restructure, the equations, the exports, the rewording, the speed-up, the close | A step that moves no number is reviewed alone (AY3, AY4; AZ4; BA4) |
-| Field reading | By the cell's own P2 basis, in the fields package | v0.7's exports hold the solved field (AZ2) |
-| Refusals | The base first; the words after the restructure | No refusal is written twice (AZ3) |
-| Old runs | Refused by schema, never converted | AZ5; F4 |
-| Speed | No fixed target; thresholds registered in the speed-up's plan | AZ6; M2, Z6 |
-| Restructuring beyond a plan | Allowed while the push gate passes; never in WP6.04 | BA7, BA13, BA14 |
+| The ground-up review | WP6.04, delivered and ruled: a report and no code; everything open but §4's physics | BA10 to BA13; §8.2.53 |
+| Order | The orchestrator, the axis fix, the guard numbers, the kernel's design, the author's ruling on it, the kernel, the installed packages, the close | The kernel is checked against numbers that nothing else has moved (BC3; BC10) |
+| Numbers | In the order the packages are built; each tag by its number | Tags rise along the history (BD1; §8.4.1) |
+| How a package is carried | From WP6.06 by the orchestrator: one session, a fresh helper for each step; the three commands stay as the way back | A fresh helper for each stretch is today's checkpoint without the compaction (BC10) |
+| The kernel's design | A package of its own with a throwaway prototype; ruled by the author at a further amendment, before any kernel package is planned | The composition is a design problem, not a refactor (BC2) |
+| The kernel's check | Each kernel package on the per-push selection; all seven walks and the guard numbers at the last | BC4; BA14 |
+| Terms from outside | N1 admits a term within electrolyte transport; an installed package's term is found after the kernel | The kernel fixes the public names, so they break once (BC5) |
+| Old runs | Refused by schema, never converted before v1.0 | AZ5; F4; BC20 |
+| Restructuring beyond a plan | Allowed while the push gate passes | BA7, BA14 |
 
 ## Conventions established by earlier phases
 
@@ -77,13 +80,15 @@ Phase 12 (BA5); the structure pipeline's loose ends, Phase 9; a converter for v0
 - **The schema and `nanopnp.PUBLIC` may change until v1.0**, each break in `CHANGELOG.md` (F4).
 - **A cost is fixed after it is measured** (M2). **An open item is a `REV-nn` row** (H12).
 
+
 ## Work packages
 
-WP6.04 takes `v0.7.0-alpha.4` and WP6.05 `v0.7.0-alpha.5`; the close takes `v0.7.0` alone (§8.4.1).
+WP6.05 to WP6.08 take `v0.7.0-alpha.5` to `v0.7.0-alpha.8`, each by its number; the close takes `v0.7.0` alone
+(§8.4.1; BD1).
 
 ### WP6.01 — The Windows leg (REV-277; AY4)
 
-*Delivered 22 November 2026.* [The plan](wp6.01-the-windows-leg.md). Live: AZ8's ship rule; REV-279 is WP6.05's.
+*Delivered 22 November 2026.* [The plan](wp6.01-the-windows-leg.md). Live: AZ8's ship rule; REV-279 is WP6.06's.
 
 ### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8; AZ9 to AZ17)
 
@@ -93,46 +98,76 @@ WP6.04 takes `v0.7.0-alpha.4` and WP6.05 `v0.7.0-alpha.5`; the close takes `v0.7
 
 *Delivered 23 November 2026.* [The plan](wp6.03-the-cleanup-instructions-copilot-host.md). Live: the 8,000 words of AZ18 bind every `/np-implement` session's first window (§8.4.4), measured at 7,186; each plan proposes its two models (AZ20, AZ21); the tag `copilot-host` is pushed (AZ19).
 
+
 ### WP6.04 — The ground-up review (BA10 to BA13; BB2 to BB7)
 
-*Delivered 24 November 2026.* [The plan](wp6.04-the-ground-up-review.md). Live: each verdict of the report is a
-proposal until the ruling round (BA11, BA13); REV-280 holds the proposals and REV-281 to REV-287 seven questions
-for a trial; AZ1 to AZ6 and BA1 to BA9 hold until the round rules (BA4).
+*Delivered 24 November 2026.* [The plan](wp6.04-the-ground-up-review.md). Live: each of its 25 proposals is ruled or
+carried with its owner (§8.2.53; REV-280); REV-281 to REV-287, seven questions for a trial, are Phase 7's and
+Phase 8's.
 
-### The ruling round on the review (BA11, BA13)
+### WP6.05 — The orchestrator (BC10, BC15)
 
-After WP6.04 merges, at `/np-plan project`, since a proposal may move a requirement or a phase. The author rules each
-proposal; a declined one leaves Phase 6 as BA4 has it. `/np-plan amend 6` then confirms WP6.05's entry on the phase as
-the round leaves it, and numbers what is left. About 2 sessions and 3 touches.
+*Planned by scope; next.* One session that the author starts carries a package. It reads the position and the brief,
+hands the plan, the plan's review, each stretch of the implementation between two checkpoints and the ship to a
+sub-agent with an empty context, and brings the author the rulings, the plan's approval and the merge. The plan and
+the commits carry the state. The three commands stay as the way back, each plan still proposes its two models (AZ20,
+AZ21), and a ruling round stays a session of its own.
 
-### WP6.05 — The channel's axis at a ragged rim (REV-279; VER-48; BA8; BB1)
+The package first checks three facts that the round did not verify: that the commit gate runs inside a sub-agent,
+that a sub-agent can start its own, and that it can put a question to the author. If one fails it builds separate
+sessions that the orchestrator starts. It also counts how many of the last 100 pushes a safe path rule for the
+browser tests would have skipped, and applies the rule if they are more than a third; a pull request's CI still runs
+every browser test. §8.4.4 and §8.4.5 change with it, and §7.6 with the gate if the count passes. The package itself
+runs under the three commands. Its plan settles open decision 17. About 5 sessions, 3 to 6 agent hours and 8 touches.
 
-*Firm; planned after the ruling round and its amendment (BB1).* It makes a plane's centre robust to a broken tie at a
-ragged rim, and measures 2WCD's channel axis again. From v0.7 a structure with a ragged rim may be given an axis up to
-about 0.6° different from v0.6's, the third exception to AY1's rule that Phase 6 changes no number a user sees (BA8);
+### WP6.06 — The channel's axis at a ragged rim (REV-279; VER-48; BA8; BB1)
+
+*Firm; planned after WP6.05 merges, since the orchestrator carries it (BC10).* It makes a plane's centre robust to a
+broken tie at a ragged rim, and measures 2WCD's channel axis again. From v0.7 a structure with a ragged rim may be
+given an axis up to about 0.6° different from v0.6's, the one number a user sees that Phase 6 changes (BA8);
 `CHANGELOG.md` says so. VER-48's gate test tilts the wall with the ragged rim again; the perturbed draws read
 `cavity.channel_axis` itself, since the gate's refusal prints 0.01°. The oracle is the axis the test wall is built
-about. §5.2's NOTE on stage 1 takes the new method and 2WCD's numbers. No Tier 3 leg. About 4 sessions, 2 to 4 agent
-hours and 6 touches. Its plan settles open decision 11.
+about. §5.2's NOTE on stage 1 takes the new method and 2WCD's numbers. No Tier 3 leg. It is the first package the
+orchestrator carries, and its sessions, agent hours and touches are measured for open decision 14. About 4 sessions,
+2 to 4 agent hours and 6 touches, at the rates of before the orchestrator. Its plan settles open decision 11.
 
-### Provisional (BA4; BA11)
+### WP6.07 — The guard numbers (BC3)
 
-Each waits on the author's rulings on the review. None is planned or numbered before the amendment that follows them.
-The round's input, in order:
+*Planned by scope.* Reference numbers stored for the switches off their default: PHY-23's terms, the log branch and
+NUM-14's mode. The package first checks that VER-62's walks cover the default switches alone; where a walk already
+covers one of the three, it stores only what is missing and says so. Each number is stored as VER-62's are, to be
+reproduced to 10⁻⁸ relative, and names its stabilisation mode. It changes no physics and no number a user sees. Its
+plan settles open decision 18; this plan's input is that the nightly run holds the guard numbers, as it holds
+VER-62's other walks (BA14). It is the second package the orchestrator carries, and is measured as WP6.06 is. About 3
+sessions, 2 to 3 agent hours and 4 touches.
+
+### WP6.08 — The kernel's design (BC2, BC5)
+
+*Planned by scope.* A design page and a throwaway prototype. The page states the term, a correction as a coefficient
+that terms share, the rule that binds terms (PHY-08), each flux integrated once, the nine names of `physics/` that
+the workbench reads, and how an installed package registers. The prototype rebuilds the simplest model from terms,
+and the package reports whether example 01's walk of VER-62 holds to 10⁻⁸; the tree it merges holds none of the
+prototype's code. It proposes the kernel's packages, their number and order, and the kernel's own Tier 1 and Tier 2
+tests (FR-40), and it prices the benchmark that solves VER-13 or VER-17 on a coarse 3D mesh (BC5). §5.4.1's interface
+is its subject too (MOD-10; AZ1). The page is a proposal until the round below; ADR-005, §5.4 and §5.5 are rewritten
+at the ruling, not in this package. About 5 sessions, 3 to 6 agent hours and 8 touches.
+
+### The ruling round on the kernel's design (BC2)
+
+After WP6.08 merges, at `/np-plan amend 6`, in a session of its own (BC10). The author rules the design; a prototype
+that missed 10⁻⁸ is put first, before any kernel package is planned. The round also rules the 3D benchmark on its
+price (BC5), sets the target for a package's touches from WP6.06's and WP6.07's measured lines (BC10), and numbers
+the kernel's packages from WP6.09, then the installed packages and the close. About 2 sessions and 3 touches.
+
+### Provisional (BC1, BC4, BC5)
+
+None is planned or numbered before the round on the design. Its input, in order:
 
 | Package | Scope |
 |---|---|
-| The error base | One base for every library error, carrying its case path and file |
-| The run record and the quantity catalogue | A typed run record with one reader; one catalogue of quantities and units |
-| The fields | Fields with their order, read by the cell's own basis, written by the library; a package of its own |
-| The definitions and the results file | The definitions' evaluator on arrays; the results file and its facade |
-| The shell's numbers | The numbers the shell computes, moved into the library |
-| The library's shape | `Project` split; stages take their upstream; one registry shape, switches as data; the dead code |
-| The model's open terms | Each measured first; forces share the weak form's terms; a package of its own |
-| The tolerances and the exports | The tolerances argued; the field and region exports |
-| The refusals reworded | The stages' diagnostics and the command line's messages |
-| The speed-up | Each cost against a threshold registered first |
-| The close | The report and `v0.7.0`; `/np-ship phase 6` ships it |
+| The kernel | FR-40's library half, in about four packages until the design sets the number: a physics model composed of registered terms in `physics/`, FR-20's interface as the composition, §5.4.1's interface (MOD-10), switches as data, and the forces sharing the weak form's terms. The shell reads a moved name of `physics/` at its new place, and no screen changes. Each package is pushed on the per-push selection; the last reproduces all seven walks of VER-62 and the guard numbers to 10⁻⁸ before it merges (BC4). About 20 sessions, 12 to 24 agent hours and 32 touches |
+| The installed packages | A term, a correction, a shape or a solver that an installed package declares, found by the command line and the workbench and named in the manifest with its package and version; a term with no analytic case marked unverified; which registering names are public (REV-67); QR-14 and §5.5. About 3 sessions, 2 to 3 agent hours and 4 touches |
+| The close | The end-of-phase report, the three platforms' full run and `v0.7.0`; `/np-ship phase 6` ships it. About 3 sessions, 2 to 3 agent hours and 4 touches |
 
 ## Open decisions
 
@@ -143,19 +178,28 @@ The round's input, in order:
 | 3 | The Copilot tag's name | **Settled by the author, 23 November 2026**: the git tag `copilot-host` (AZ19) |
 | 4 | Whether a pull request's CI runs the Windows leg | **Settled by the author, 22 November 2026**: no; the three platforms at the close alone (AZ8) |
 | 5 | The project's scope, and Phase 6's packages with it | **Settled by the author, 23 November 2026** (BA1 to BA15) |
-| 6 | What AM2's "moves one of them" means, and the drift that stops the re-pin | **Author**, at the equations package's plan, before any measurement |
-| 7 | A run above order 2; the speed-up's thresholds; the names after `Project` splits | Their packages' plans |
+| 6 | What AM2's "moves one of them" means, and the drift that stops the re-pin | **Moved to Phase 7** with the equations package (BC7); the input note carries it |
+| 7 | A run above order 2; the speed-up's thresholds; the names after `Project` splits | **Moved to Phase 7** with their packages (BC7); the input note carries them |
 | 8 | What comes first after the review; what the review designs for | **Settled by the author, 23 November 2026** (BB1, BB2) |
 | 9 | How the review guards against reasoning from the program as it is; where its report lives; its two models | **Settled by the author, 23 November 2026**: blind designs from the program's purpose, then rule by rule; the project's pages; Fable 5.2 writes and ships (BB3 to BB5, BB7) |
-| 10 | The review's proposals, which may reopen any ruling | **Author**, at `/np-plan project` after WP6.04 (BA13) |
-| 11 | What §5.2's two limits become if the fix moves 2WCD's measured axis (REV-239) | **Author**, at WP6.05's plan, before the fix is measured |
-| 12 | The provisional packages' numbers and grouping | `/np-plan amend 6`, after the round on the review (BA4) |
+| 10 | The review's proposals | **Settled by the author, 24 November 2026** (BC1 to BC24) |
+| 11 | What §5.2's two limits become if the fix moves 2WCD's measured axis (REV-239) | **Author**, at WP6.06's plan, before the fix is measured |
+| 12 | The numbers of the packages after the review | **Settled by the author, 24 November 2026**: in build order, WP6.05 to WP6.08 (BD1); the rest from WP6.09, at the round on the design |
+| 13 | The kernel's design; the number and order of its packages; whether the benchmark on a coarse 3D mesh is built, on its price | **Author**, at `/np-plan amend 6` after WP6.08 (BC2, BC5) |
+| 14 | The target for the author's touches a package | **Author**, at that round, from WP6.06's and WP6.07's measured lines (BC10) |
+| 15 | Whether the helpers run inside one session or as separate sessions | WP6.05, by its three checks (BC10) |
+| 16 | Whether the push gate chooses the browser tests by path | WP6.05, by its count (BC15) |
+| 17 | What the reading limit counts once an orchestrator carries a package: its own first window, each helper's, or both | **Author**, at WP6.05's plan, before any measurement (AZ18; criterion 4) |
+| 18 | Which walk carries each switch off its default; the identifier the guard numbers take in §7; whether the nightly run holds them | WP6.07's plan (BC3) |
 
 ## What the author supplies
 
 | Item | Needed by | If it does not arrive |
 |---|---|---|
-| Rulings on the ground-up review's proposals | The round after WP6.04 | WP6.05's plan stays unwritten and the rest provisional (BA11; BB1) |
+| The ruling on what the reading limit counts under the orchestrator | WP6.05's plan | The plan waits; nothing is measured against a limit not yet ruled |
+| The ruling on §5.2's two limits, if the fix moves 2WCD's axis | WP6.06's plan | The fix is not measured (open decision 11) |
+| The ruling on the kernel's design, and on the 3D benchmark at its price | The round after WP6.08 | No kernel package is planned (BC2) |
+| The target for a package's touches | The round after WP6.08 | The packages are reported with their touches and no target (BC10) |
 | Merges; tags a session cannot push | Each package | The session dispatches `tag.yml` and prints the commands |
 
 ## Verification
@@ -170,42 +214,62 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP6.01 | 1, 2 | The failing test, on the three platforms |
 | WP6.02, WP6.03 | none kept | VER-45; `clause.py` resolves each identifier WP6.02's plan lists |
 | WP6.04 | none | No test: review checks that its diff holds no `src/`, `tests/`, case schema or public name, and that the report holds what BA13 lists |
-| WP6.05 | 1 | VER-48 |
-| The provisional packages | — | Set by the `/np-plan amend 6` after the round |
+| WP6.05 | none | No test in §8.2.13 N1's scope: review checks the record of the three facts, the count behind the path rule, and that a pull request's CI still runs every browser test |
+| WP6.06 | 1 | VER-48 |
+| WP6.07 | 2 | VER-62's walks, with the switches off their default; the identifier is open decision 18 |
+| WP6.08 | none kept | Example 01's walk of VER-62 on the prototype, reported; review checks that the merged tree holds none of the prototype's code |
+| The provisional packages | 1, 2 | FR-40's tests, which the design names; VER-62 and the guard numbers; VER-12 to VER-22, VER-31, VER-42, VER-77; set by the `/np-plan amend 6` after WP6.08 |
 
-**The phase is complete when** (§8.1's gate; criteria 2 and 5 rest on provisional packages and stand as BA4 keeps them
-until the round on the review rules):
+**The phase is complete when** (§8.1's gate; criteria 3 and 6 rest on provisional packages, and the round on the
+design restates them with their tests):
 
 1. **Tiers 1 and 2 pass on Linux, macOS and Windows**, on the close's own full run. No waiver (AY4); a miss is fixed.
-2. **VER-62 is unmoved at 10⁻⁸** by every package but the equations'. Prediction: round-off alone; WP6.05 moves none,
-   since no walk takes the channel's axis. A miss is reverted (G10). The equations package re-pins once, within the
-   bound open decision 6 sets; beyond it the package stops.
-3. **VER-61 and VER-65 hold.** A cycle or a new backend subpackage goes to the author (H6).
-4. **A fresh package session starts under the reading limit** (`usage.py`). A miss continues the cleanup; the limit is
-   re-ruled only before a measurement.
-5. **Each cost the speed-up names is measured against its registered threshold**, and each one over it is fixed or
-   carried. No factor is predicted (AZ6). **FR-28 has its test.**
-6. **Each row the phase owns is `fixed` or ruled** (AM4).
-7. **Each proposal of the ground-up review is ruled by the author or carried with its owner** (BA13); the round's
-   record names each. The phase does not close on one neither ruled nor carried.
-8. **The wall with a ragged rim recovers its known axis to VER-48's 10⁻⁶ rad** on every perturbed draw, and on the three
-   platforms at the close. Today 3 of 8 draws lock 0.22° to 0.62° off (REV-279); prediction: none locks. A draw that
-   still locks is investigated, and the tolerance stands. **2WCD's channel axis is measured again** against its
-   0.0073 nm. Prediction: unmoved within VER-48's 10⁻⁴ nm if none of 2WCD's planes holds a split tie, which WP6.05's
-   plan measures first. A move, of it or of the farthest centre's 0.0148 nm, amends VER-48 and §5.2's NOTE in the
-   fix's commit and goes to the author with the two limits (open decision 11).
+2. **VER-62 is unmoved at 10⁻⁸** by every package: on a push the two walks it selects, on the nightly run the other
+   five (BA14). Prediction: round-off alone. WP6.05 changes no `src/`; WP6.06 moves none, since no walk takes the
+   channel's axis; WP6.07 adds numbers and moves none; WP6.08 merges no code of its prototype. A miss is reverted, or
+   re-pinned only by ruling (G10).
+3. **The kernel's last package reproduces all seven walks of VER-62 and the guard numbers to 10⁻⁸ before it merges,
+   and VER-12 to VER-22, VER-31, VER-42 and VER-77 pass unchanged** (BC4). The tolerance is VER-62's own. Prediction:
+   it holds where each flux is integrated once, since a flux integrated term by term moves its quadrature (the
+   physics reviewer, at BC2); the prototype's walk of example 01 is the first measurement. A miss is investigated and
+   fixed, or reverted, and re-pinned only by ruling (G10).
+4. **A fresh package session starts under the reading limit** of 8,000 words (`usage.py`; AZ18), counted as open
+   decision 17 rules. A miss continues the cleanup; the limit is re-ruled only before a measurement.
+5. **The kernel's design is ruled by the author before its packages are planned**, and its prototype holds example
+   01's walk to 10⁻⁸ or the miss is put to the author (BC2). The round's record shows both.
+6. **The kernel's own Tier 1 and Tier 2 tests pass** (FR-40; BC1), **and a term that an installed package registers
+   is found by the command line and the workbench and named in the manifest, with its test** (BC5).
+7. **VER-61 and VER-65 hold.** A cycle or a new backend subpackage goes to the author (H6).
+8. **Each row the phase owns is `fixed` or ruled** (AM4): REV-279, REV-67 and MOD-10.
+9. **Each proposal of the ground-up review is ruled by the author or carried with its owner** (BA13). Met: §8.2.53
+   names each.
+10. **The wall with a ragged rim recovers its known axis to VER-48's 10⁻⁶ rad** on every perturbed draw, and on the
+    three platforms at the close. Today 3 of 8 draws lock 0.22° to 0.62° off (REV-279); prediction: none locks. A
+    draw that still locks is investigated, and the tolerance stands. **2WCD's channel axis is measured again**
+    against its 0.0073 nm. Prediction: unmoved within VER-48's 10⁻⁴ nm if none of 2WCD's planes holds a split tie,
+    which WP6.06's plan measures first. A move, of it or of the farthest centre's 0.0148 nm, amends VER-48 and §5.2's
+    NOTE in the fix's commit and goes to the author with the two limits (open decision 11).
+11. **The orchestrator's three facts are checked and recorded, and its first two packages, WP6.06 and WP6.07, are
+    reported with their sessions, agent hours and touches** (BC10). A fact that fails builds separate sessions; a
+    package the orchestrator cannot carry goes back to the three commands, and its report says why.
+12. **The guard numbers are stored for PHY-23's terms, the log branch and NUM-14's mode**, after the check that
+    VER-62's walks cover the default switches alone (BC3). Prediction: the check confirms it. If a walk already
+    covers a switch off its default, WP6.07 stores only what is missing.
 
 ## End-of-phase report
 
 The close fills it. It reports, each with the command or test that logs it:
 
 - the three platforms' Tier 1 and Tier 2 counts and times, from the close's full run;
-- VER-62's largest relative drift per walk and platform, and the equations package's re-pin, old against new;
+- VER-62's largest relative drift per walk and platform, and the guard numbers' per switch, at the kernel's last
+  package (stabilisation mode named);
+- the prototype's drift on example 01's walk, and the design as ruled;
+- the kernel's terms with the test each has, and each term an installed package registered in the close's run;
 - the reading baseline and a fresh session's reading against the limit (`usage.py`);
 - the ground-up review's proposals by ruling: kept, changed now, changed later, dropped;
-- the ragged-rim wall's axis over its perturbed draws, and 2WCD's channel axis against 0.0073 nm (WP6.05);
-- the tube's solve time, with its assembly, factorisation and residual shares, before and after the speed-up, and each
-  threshold with its measured cost (stabilisation mode named);
+- the ragged-rim wall's axis over its perturbed draws, and 2WCD's channel axis against 0.0073 nm (WP6.06);
+- the orchestrator's three facts, each package it carried with its sessions, agent hours and touches against the
+  packages before it, and the count behind the browser tests' path rule;
 - the word counts of the records the cleanup cut, before and after;
 - the review register's counts by status, and `holds-now.yaml`'s `open:` lines;
 - the push gate's and CI's times;

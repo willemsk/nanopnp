@@ -4,7 +4,7 @@ The amended text of [the Phase 6 plan](phase-6-library-foundations.md), quoted a
 restated it to its current scope (§8.2.16 R4). Read it on demand; the plan states what holds now. A later amendment
 appends a dated section below.
 
-**Status: a record of replaced text, last added to on 24 November 2026 (§8.2.52 BB7); it states nothing that holds now.**
+**Status: a record of replaced text, last added to on 24 November 2026 (§8.2.54 BD1); it states nothing that holds now.**
 
 ---
 
@@ -224,3 +224,154 @@ WP6.04's plan read, in its In brief and its Execution brief:
 >
 > **Implementing session: Fable 5.2, high effort. Ship: Opus 5.5, high effort, in a new session; `NANOPNP_AUTO_SHIP`
 > never chains it** (BB5; §8.4.5).
+
+## Amended 24 November 2026 (§8.2.53 BC1 to BC5, BC7, BC10, BC15; §8.2.54 BD1)
+
+At `/np-plan project` the author ruled the ground-up review's proposals: the kernel is built in Phase 6, and the
+library's foundations become Phase 7. At `/np-plan amend 6` the author ruled that the packages are numbered in the
+order they are built. In every section above this one, and in the quotations below, WP6.05 is the axis package,
+which is WP6.06 from this amendment. The plan's title read:
+
+> # Phase 6 (Cleanup and the library's foundations): a library the workbench and the tools can build on
+
+Its Status line read:
+
+> **Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04. Amended 23 November 2026 (§8.2.51; §8.2.52): WP6.05, the axis fix, is planned; the rest is provisional until the author rules on the ground-up review (REV-280). Release: v0.7 (`v0.7.0`).**
+
+Its In brief read:
+
+> **What changes.** The next package reviews the program from the ground up: how would it be built if we started over
+> today? It designs for the whole program, built and planned, and takes only the paper's physics as given. It changes no
+> code. Its report holds the design it would choose, and each difference from today's program marked keep, change now,
+> change later or drop, with its gain, risk and cost. You then rule on each proposal. Then comes a small fix for the
+> pore's axis, which rounding can lock 0.6 degrees off at a ragged rim. The rest waits for your rulings: about ten
+> packages that restructure the library, close the gaps in the flow equations, add exports and speed up the solve.
+>
+> **Cost.** The review: about 10 sessions, 7 to 13 agent hours and 16 times you act. Your ruling round: 2 sessions and 3.
+> The axis fix: 4 sessions, 2 to 4 hours and 6. The rest, if the review changes nothing: 50 sessions, 45 to 90 hours
+> and 80.
+>
+> **What could go wrong.** The review could reason from the program as it is and find it sound: its plan says how it
+> guards against that, and a report proposing nothing would show it. It could propose more than one round can rule:
+> each proposal carries its cost, so you can rank them. The axis fault stays until you have ruled; it is recorded.
+>
+> **Your call.** Settled on 23 November 2026: your rulings come before the axis fix, and the review designs for the whole
+> plan. Still yours: the rulings on the review's proposals. *Recommendation:* read the report's table of differences
+> first.
+
+Its Context read, from its second paragraph to its exclusions:
+
+> Phase 6 answers one question: **can the library be made one sound base, without moving a number, before the workbench
+> is rebuilt and three tools are built on it?** Its gate is §8.1's. Since the rescoping round it asks a second one first:
+> **given what the program is now, how would it be built if it were started over?** (BA10) Only WP6.04 and WP6.05 are
+> firm (BA8, BA11); the [architecture survey](../../project/architecture-survey.md) shapes the rest.
+>
+> True of the codebase today:
+>
+> - **A pore's axis found from its channel can lock off the true one.** `structure/cavity.py` `channel_axis` holds a
+>   second fixed point at a ragged rim, up to about 0.6° off, and rounding decides which one it reaches (REV-279).
+>   `structure/stage.py` `align` takes that axis only under C1 or `axis: cavity`, and `structure/orient.py`
+>   `_channel_line` where no covariance axis stands apart; every walk of VER-62 takes the ring's.
+> - **A run's record is an untyped dict.** `pipeline/run.py` `RunResult.write` writes `run.json`; 13 sites parse it raw.
+> - **A field carries neither its order nor its log branch.** `post/fields.py` `field_at` reads P2 values linearly;
+>   `gui/render.py` `render_fields` writes the fields file.
+> - **The shell computes numbers at 12 sites**, among them `gui/render.py` `render_charge_elements`.
+> - **A switch is code.** `physics/models.py` `SWITCHES` is a closed tuple; `post/forces.py` `_domain_force` assembles
+>   again the terms of `physics/flow.py`.
+> - **69 error classes share no base** (`core/errors.py` `classify`).
+>
+> Risks: none is retired; the equations package mitigates **RSK-15** (AY6).
+>
+> Excluded: any change of code, and any trial of a design, in WP6.04 (BA13); §5.4.1's interface, Phase 8's round (AZ1);
+> the workbench's foundations and the suites' words, Phase 7; the analyte forces, Phase 11, and the validation runs,
+> Phase 12 (BA5); the structure pipeline's loose ends, Phase 9; a converter for v0.6 runs (AZ5); a linear-solver swap
+> (Z6); a comparison with the published results (BA3).
+
+Its Design decisions, but for the rows on the review's subject, restructuring and old runs, read:
+
+> | Decision | Choice | Why |
+> |---|---|---|
+> | Order | The review, the author's rulings, a further amendment, the axis fix, then what that amendment plans | A proposal on how an axis is found is ruled before the fix is built (BA11; BB1) |
+> | Order of the provisional content | The error base, the restructure, the equations, the exports, the rewording, the speed-up, the close | A step that moves no number is reviewed alone (AY3, AY4; AZ4; BA4) |
+> | Field reading | By the cell's own P2 basis, in the fields package | v0.7's exports hold the solved field (AZ2) |
+> | Refusals | The base first; the words after the restructure | No refusal is written twice (AZ3) |
+> | Speed | No fixed target; thresholds registered in the speed-up's plan | AZ6; M2, Z6 |
+
+The line on tags, the entry of the ruling round, the WP6.05 entry and the provisional packages read:
+
+> WP6.04 takes `v0.7.0-alpha.4` and WP6.05 `v0.7.0-alpha.5`; the close takes `v0.7.0` alone (§8.4.1).
+
+> ### The ruling round on the review (BA11, BA13)
+>
+> After WP6.04 merges, at `/np-plan project`, since a proposal may move a requirement or a phase. The author rules each
+> proposal; a declined one leaves Phase 6 as BA4 has it. `/np-plan amend 6` then confirms WP6.05's entry on the phase as
+> the round leaves it, and numbers what is left. About 2 sessions and 3 touches.
+>
+> ### WP6.05 — The channel's axis at a ragged rim (REV-279; VER-48; BA8; BB1)
+>
+> *Firm; planned after the ruling round and its amendment (BB1).* It makes a plane's centre robust to a broken tie at a
+> ragged rim, and measures 2WCD's channel axis again. From v0.7 a structure with a ragged rim may be given an axis up to
+> about 0.6° different from v0.6's, the third exception to AY1's rule that Phase 6 changes no number a user sees (BA8);
+> `CHANGELOG.md` says so. VER-48's gate test tilts the wall with the ragged rim again; the perturbed draws read
+> `cavity.channel_axis` itself, since the gate's refusal prints 0.01°. The oracle is the axis the test wall is built
+> about. §5.2's NOTE on stage 1 takes the new method and 2WCD's numbers. No Tier 3 leg. About 4 sessions, 2 to 4 agent
+> hours and 6 touches. Its plan settles open decision 11.
+>
+> ### Provisional (BA4; BA11)
+>
+> Each waits on the author's rulings on the review. None is planned or numbered before the amendment that follows them.
+> The round's input, in order:
+>
+> | Package | Scope |
+> |---|---|
+> | The error base | One base for every library error, carrying its case path and file |
+> | The run record and the quantity catalogue | A typed run record with one reader; one catalogue of quantities and units |
+> | The fields | Fields with their order, read by the cell's own basis, written by the library; a package of its own |
+> | The definitions and the results file | The definitions' evaluator on arrays; the results file and its facade |
+> | The shell's numbers | The numbers the shell computes, moved into the library |
+> | The library's shape | `Project` split; stages take their upstream; one registry shape, switches as data; the dead code |
+> | The model's open terms | Each measured first; forces share the weak form's terms; a package of its own |
+> | The tolerances and the exports | The tolerances argued; the field and region exports |
+> | The refusals reworded | The stages' diagnostics and the command line's messages |
+> | The speed-up | Each cost against a threshold registered first |
+> | The close | The report and `v0.7.0`; `/np-ship phase 6` ships it |
+
+Open decisions 6, 7 and 10 to 12 read:
+
+> | # | Decision | Owner and status |
+> |---|---|---|
+> | 6 | What AM2's "moves one of them" means, and the drift that stops the re-pin | **Author**, at the equations package's plan, before any measurement |
+> | 7 | A run above order 2; the speed-up's thresholds; the names after `Project` splits | Their packages' plans |
+> | 10 | The review's proposals, which may reopen any ruling | **Author**, at `/np-plan project` after WP6.04 (BA13) |
+> | 11 | What §5.2's two limits become if the fix moves 2WCD's measured axis (REV-239) | **Author**, at WP6.05's plan, before the fix is measured |
+> | 12 | The provisional packages' numbers and grouping | `/np-plan amend 6`, after the round on the review (BA4) |
+
+The first row of *What the author supplies* read:
+
+> | Item | Needed by | If it does not arrive |
+> |---|---|---|
+> | Rulings on the ground-up review's proposals | The round after WP6.04 | WP6.05's plan stays unwritten and the rest provisional (BA11; BB1) |
+
+The last two rows of the Verification table, and criteria 2, 5 and 7 with the sentence above them, read:
+
+> | WP6.05 | 1 | VER-48 |
+> | The provisional packages | — | Set by the `/np-plan amend 6` after the round |
+
+> **The phase is complete when** (§8.1's gate; criteria 2 and 5 rest on provisional packages and stand as BA4 keeps them
+> until the round on the review rules):
+
+> 2. **VER-62 is unmoved at 10⁻⁸** by every package but the equations'. Prediction: round-off alone; WP6.05 moves none,
+>    since no walk takes the channel's axis. A miss is reverted (G10). The equations package re-pins once, within the
+>    bound open decision 6 sets; beyond it the package stops.
+
+> 5. **Each cost the speed-up names is measured against its registered threshold**, and each one over it is fixed or
+>    carried. No factor is predicted (AZ6). **FR-28 has its test.**
+
+> 7. **Each proposal of the ground-up review is ruled by the author or carried with its owner** (BA13); the round's
+>    record names each. The phase does not close on one neither ruled nor carried.
+
+Two lines of the End-of-phase report read:
+
+> - VER-62's largest relative drift per walk and platform, and the equations package's re-pin, old against new;
+> - the tube's solve time, with its assembly, factorisation and residual shares, before and after the speed-up, and each
+>   threshold with its measured cost (stabilisation mode named);
