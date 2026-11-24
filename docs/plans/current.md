@@ -4,22 +4,19 @@ Updated 24 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-**What changes.** The next package is planned: a new way to carry a package. One session that you start hands the
-plan, the building and the shipping to fresh helpers, and comes to you only for rulings, the plan's approval and the
-merge. A helper cannot ask you a question or start its own helper, so your session does both for it. It is tried
-on the two packages after it: the fix for the pore's axis, and stored reference numbers for the model's optional
-switches. Then a design package says how the physics is rebuilt from small registered terms, and you rule that
-design before the rebuild.
+**What changes.** The orchestrator is built and waits for its review. One session that you start now carries a
+package: fresh helpers write the plan, build it and ship it, and your session asks you the questions and starts the
+reviews they cannot. It is tried on the next two packages: the fix for the pore's axis, and stored reference
+numbers for the model's optional switches. The count of past pushes found too few that could skip the browser
+tests, so the local check keeps them.
 
-**Cost.** This package: about 5 sessions, 3 to 6 agent hours and 8 times you act; the phase after it, about 38, 23
-to 43 and 58.
+**Cost.** The rest of the phase: about 38 sessions, 23 to 43 agent hours and 58 times you act.
 
 **What could go wrong.** The session you start may fill up from the reviews it runs; the next two packages measure
-it, and the three commands remain. The prototype may miss the stored numbers, which comes to you first. The rebuild
-is checked in full only at its last package; the nightly run would show a moved result sooner.
+it, and the three commands remain the way back.
 
-**Your call.** Do you approve the plan of the orchestrator's package, after its review? *Recommendation:* approve;
-it follows your six rulings of today.
+**Your call.** Ship the orchestrator's package: switch to Fable 5.2 and run its review. *Recommendation:* ship it;
+nothing in it waits for you.
 
 ## Position
 
@@ -29,8 +26,9 @@ it follows your six rulings of today.
 - **Phase 6 is amended** ([§8.2.54](../../specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md),
   BD1): then WP6.06 the axis fix, WP6.07 the guard numbers, WP6.08 the kernel's design; the rest is numbered at the
   round on the design. Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
-- **WP6.05 is planned** ([the plan](phase-6/wp6.05-the-orchestrator.md); BD2 to BD6).
-- **Next:** `/np-implement wp 6.05`, on Opus 5.5, once the author approves the reviewed plan.
+- **WP6.05 is built**, its pull request open ([the plan](phase-6/wp6.05-the-orchestrator.md); BD2 to BD6); the
+  browser-path count missed, so BC15 is spent.
+- **Next:** `/np-ship wp 6.05` on Fable 5.2; then `/np-carry wp 6.06`.
 
 ## Not to be re-decided
 
