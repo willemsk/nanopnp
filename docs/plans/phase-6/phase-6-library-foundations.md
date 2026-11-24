@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04. Amended 24 November 2026 (§8.2.53; §8.2.54): WP6.05 is planned and WP6.06 to WP6.08 are planned by scope and numbered in build order; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05. Amended 24 November 2026 (§8.2.53; §8.2.54): WP6.06 to WP6.08 are planned by scope and numbered in build order; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -83,17 +83,9 @@ WP6.05 to WP6.08 take `v0.7.0-alpha.5` to `v0.7.0-alpha.8`; the close takes `v0.
 
 ### WP6.05 — The orchestrator (BC10, BC15; BD2 to BD6)
 
-*Planned; next.* [The plan](wp6.05-the-orchestrator.md). `/np-carry wp <n>` starts one session that carries a
-package: it hands the plan, the fixes after its review, each stretch of the implementation and the ship to a helper
-with an empty context, and brings the author the rulings, the plan's approval and the merge. The three commands
-stay, and a ruling round stays a session of its own.
-
-Of BC10's three facts the plan found one true: the commit gate runs inside a helper. A helper cannot start its own
-or ask the author, so the main session does both (BD2); the package records the facts again. The reading limit
-binds every helper that implements (BD3). It counts how many of the last 100 pushes that ran tests a safe path rule
-for the browser tests would have skipped, and applies the rule above a third (BD4); a pull request's CI still runs
-every browser test. §8.3, §8.4.4 and §8.4.5 change with it, and §7.6 if the count passes. About 5 sessions, 3 to 6
-agent hours and 8 touches.
+*Delivered 24 November 2026.* [The plan](wp6.05-the-orchestrator.md). Live: `/np-carry wp <n>` carries WP6.06 and
+WP6.07, which are measured (BC10); the reading limit binds every helper that implements (BD3); the browser-path
+count missed, 32 < 34, so the push gate keeps the browser tests (BC15 spent).
 
 ### WP6.06 — The channel's axis at a ragged rim (REV-279; VER-48; BA8; BB1)
 

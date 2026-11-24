@@ -1,8 +1,20 @@
 # WP6.05 — The orchestrator
 
-**Status: planned, not started.** Written 24 November 2026, grounded in the code at `8b54c5f`. Inherits §8.2.53 BC10
-and BC15, the rulings of this plan (§8.2.54 BD2 to BD6), §8.2.50 AZ15, AZ17, AZ18, AZ20 and AZ21, §8.2.37 AM10 and
-AM11, and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.5` (§8.4.1).
+**Status: delivered, 24 November 2026.** Written 24 November 2026, grounded in the code at `8b54c5f`. Inherits
+§8.2.53 BC10 and BC15, the rulings of this plan (§8.2.54 BD2 to BD6), §8.2.50 AZ15, AZ17, AZ18, AZ20 and AZ21,
+§8.2.37 AM10 and AM11, and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.5`
+(§8.4.1).
+
+**Delivered.** `/np-carry wp <n>` (`.claude/skills/np-carry/SKILL.md`, 804 words) and `.claude/workflow/helper.md`
+(246 words): one main session hands each step to a fresh helper and serves its `HANDBACK` blocks. The facts were
+checked again on Claude Code 2.1.331
+([the note](../../../knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md)): a helper has no `Agent`
+and no `AskUserQuestion`, and gates, pushes and resumes; it now keeps the task list, so D1 gives it that. `usage.py`
+measures a session and its helpers on one timeline and reports each helper's reading window. The browser-path count
+missed, `k` = 32 < 34 ([the count](../sessions/browser-path-count.md)): no rule is added and BC15 is spent. §8.3,
+§8.4.4 and §8.4.5 carry BC10 and BD2, BD3 and BD6. No `src/` or `tests/` change and no identifier is claimed. Live:
+every helper that implements is bound by the 8,000-word limit (BD3); WP6.06 and WP6.07 run under `/np-carry` and
+are measured (BC10).
 
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.05 entry sets this scope; `SPECIFICATION.md` governs, and
 where it and this plan disagree this plan is wrong. Identifiers are pointers into it.
