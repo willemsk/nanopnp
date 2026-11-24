@@ -1606,3 +1606,90 @@ places it.
 **Placed** (§8.2.51 BA8, 23 November 2026): a small package of Phase 6, firm. From v0.7 a structure with a ragged rim may be given an axis up to about 0.6° different.
 
 **Numbered** (§8.2.52 BB1, 23 November 2026): WP6.05. Its plan is written after the author's ruling round on the ground-up review's proposals, so a proposal on how a pore's axis is found is ruled before the fix is built.
+
+### REV-280: The ground-up review's proposals wait for the author's rulings
+
+Left open by WP6.04 (§8.2.51 BA13). [the ground-up review](ground-up-review.md) holds 25 differences between today's program and a design from nothing,
+`GU-01` to `GU-25`, each with a verdict, and a card for each change, drop and add, in twelve groups. Nothing changes
+until the author has ruled. The proposals for Phase 6 are: QR-11 dropped (GU-02); the two switches tried before a
+package changes the workflow, with a target for the author's touches (GU-03, GU-04); a verification ledger (GU-06);
+four clauses reworded and four spent sections of the workbench design removed (GU-07); a mesh-error estimate where
+the answer is exact (GU-08); one comparison with the paper at the phase's close (GU-09, which asks BA3 again); and
+the composed kernel's target stated, the names the workbench reads fixed, and numbers stored for the switches off
+their default (GU-01). The other proposals name a later phase. [The challenge](ground-up-review/challenge.md) holds
+each objection and its answer; an objection not met stands on its row.
+
+*Recommendation:* rule groups 1 to 6 at the round, and leave groups 7 to 10 to the rounds of their phases.
+`/np-plan amend 6` then plans what the rulings leave of Phase 6 (BA4, BA11).
+
+### REV-281: What a direct solve of the model costs at a million unknowns is not measured
+
+Left open by WP6.04; a question only a trial settles (BA13). Two surveys of
+[today's alternatives](ground-up-review/technologies.md) timed stand-in matrices on a shared container and disagree:
+50 s to factor 653,000 unknowns in one, 21 s and 6.2 GB for 1.16 million in the other, with times that varied tenfold
+between identical runs. Neither matrix is the model's. The engine's code takes PARDISO from pip's `mkl` on Windows and
+Linux x86-64; that was read and not run. The answer decides QR-07's number (GU-07) and whether PARDISO is worth
+offering as an option that a user registers (CON-08).
+
+*Recommendation:* Phase 6's speed-up package factors the model's own Jacobian at 10⁶ unknowns with UMFPACK and with
+PARDISO, on a named machine, and records seconds and gigabytes.
+
+### REV-282: Whether compiled weak forms and a threaded assembly cut the corrections' cost is not tried
+
+Left open by WP6.04; a question only a trial settles (BA13). At 16,444 elements the full model takes 761 s on four
+cores, 62 % of it the Jacobian's assembly on one thread, and the corrections make a Newton step 13 times dearer
+(REV-156); on 392 elements the factor is six ([the evidence](ground-up-review/evidence.md)). The weak forms of a solve
+are evaluated as uncompiled expression trees: `Compile(` appears once in `src/nanopnp`, in `validation/mms.py`. No
+file enters the engine's `TaskManager`.
+
+*Recommendation:* Phase 6's speed-up package tries both on REV-156's case before it sets its thresholds.
+
+### REV-283: Whether the corrections can switch on at the target concentration is not tried
+
+Left open by WP6.04; a question only a trial settles (BA13). `solve/continuation.py:default_ladder` builds the state
+at 0.05 M, switches the corrections and the steric term on, and then ramps the salt in four rungs, so six rungs carry
+the corrections. All three blind designs step adaptively (GU-22). If the corrections can switch on at the target
+concentration over FR-17's envelope, the salt ramp runs in the classical model. The physics reviewer names what could
+make it fail: it is the largest jump of the coefficients (by PHY-12, the fluid's relative permittivity is 77.6 at
+0.05 M and 51 at 3 M), and a classical state at high salt may pass the packing limit near a charged wall, where the
+steric rung is refused (PHY-05, PHY-06). A new path ends at another iterate inside Newton's floor, so VER-62's
+stored numbers would be re-pinned. The same runs can compare the log branch with primitive unknowns (GU-23), which
+design C names among its least sure choices.
+
+*Recommendation:* Phase 6's speed-up package runs the trial at the corners of FR-17's envelope and keeps NUM-18's
+ladder unless every corner converges.
+
+### REV-284: Whether Plotly pans a field map of 100,000 cells smoothly is not tried
+
+Left open by WP6.04; a question only a trial settles (BA13). The workbench draws its charts with Plotly, and two
+blind designs draw fields with vtk.js or a renderer of their own. The walk keeps today's choice (its row *The shell's
+reading of artefacts*) without a measurement of a production-sized field map.
+
+*Recommendation:* Phase 7's design study measures it with REV-287's trial.
+
+### REV-285: Whether ParaView shows a second-order field without resampling is not tried
+
+Left open by WP6.04; a question only a trial settles (BA13). IF-07 writes fields as XDMF with HDF5 at the exact
+second-order node set. Design A writes HDF5 in the VTKHDF layout, whose specification calls itself incomplete. The
+walk keeps IF-07 and cannot say whether ParaView shows either file's second-order field as it is.
+
+*Recommendation:* the package of Phase 6 that argues the exports opens one field of each kind in ParaView.
+
+### REV-286: Whether Netgen meshes a wall layer at the Debye length is not tried
+
+Left open by WP6.04; a question only a trial settles (BA13). NUM-30 sets the first wall layer at
+min(0.05 nm, λ_D/5), and FR-11 allows structured boundary layers after version 1. The walk keeps Gmsh as an optional
+backend because its size fields are the fallback if Netgen cannot mesh such a layer; knowledge 07/01 records that
+Netgen's 2D boundary layers are immature.
+
+*Recommendation:* the round names the package; GU-08's mesh ladder meets the question first.
+
+### REV-287: Whether NiceGUI carries the workbench's hardest view and QR-16 is not tried
+
+Left open by WP6.04; a question only a trial settles (BA13). ADR-004 chose NiceGUI on a spike of one screen, which
+measured lines, a redraw, URL states, keyboard use, the install and the licence, and neither the ceiling of a design
+nor accessibility. No blind design chose the kit: two chose a TypeScript application and one trame (GU-21). The
+second challenger showed that measuring after the first rebuilt suite is the order of a sunk cost.
+
+*Recommendation:* Phase 7's design study, in the second lane, builds the workbench's hardest view in the kit and
+audits it against QR-16 before the rebuild starts.

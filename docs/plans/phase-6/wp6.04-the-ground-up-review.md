@@ -116,6 +116,7 @@ never chains it** (BB5; §8.4.5). The report and its appendices are `docs/projec
   `specification/05-software-design/` but §5.6; §7.1, §7.2 to §7.5 one row a tier, §7.6, VER-61, VER-62 and VER-65;
   §8.4's 41 bullets (4, 5, 2, 21, 4 and 5 in §8.4.1 to §8.4.6); §2.7's rows from v0.7; BA1 to BA15 and BB1 to BB6;
   §2.6's 12 rows; the 17 sections of `docs/design/workbench.md`, which holds 63 `WB-` rows. About 245 rows.
+- Corrected at items 9 and 10: the walk holds 259 rows, with 11 rows for what the lists lack.
 - `uv run .claude/scripts/clause.py <ID>` prints a clause with the rulings behind it.
 
 **D5**
@@ -156,6 +157,9 @@ never chains it** (BB5; §8.4.5). The report and its appendices are `docs/projec
 
 - The highest review item is REV-279; REV-280 is free. The statuses and the row form are in the head of
   `docs/project/review-findings.md`; a row has a section `### REV-n: <title>` in `review-items.md`.
+- Corrected at item 15: item 14 added a seventh trial question, so the rows are REV-280 to REV-287. No checked fact
+  contradicts a knowledge note: knowledge 07/01 says that the wheels hold no PARDISO, which stands, and it gains the
+  route through pip's `mkl` that item 7 read.
 - `CHANGELOG.md`'s newest section is `## [0.7.0-alpha.3]`, under `## [Unreleased]`.
 
 ### Implementation details
@@ -266,10 +270,19 @@ appendices and pages the site publishes; name a clause, a plan or a review in co
 - [x] d5ebeb0 12. The report: the design, the differences and the proposals (D5, D6); done when each fact a card rests on is
   checked at its source. **Executor:** main
 - [x] 13. Compaction checkpoint. **Executor:** main
-- [ ] 14. The challenge, in `challenge.md`, and the report answered (D7). **Executor:** main, with two
+- [x] 8937edb 14. The challenge, in `challenge.md`, and the report answered (D7). **Executor:** main, with two
   `general-purpose` agents on Sonnet and the physics reviewer
 - [ ] 15. The records: REV-280 and its like, `CHANGELOG.md`, the knowledge notes corrected (D8); the no-code check.
   **Executor:** main
+
+> **Outcome — the challenge moved the lead proposal.** The draft of item 12 built the composed kernel in Phase 6
+> and asked for seven more packages. Item 14's three reports showed that the workbench reads the model through nine
+> names, that shared coefficients and bound terms make the composition a design round's work, and that VER-62
+> guards the default switches alone. The report now keeps the kernel in Phase 8 (AZ1) and asks for about three
+> packages. Eleven verdicts of the walk changed; `challenge.md` holds each objection and its answer.
+
+> **Outcome — the first run of the designers was set aside.** One line of the pack's §4 named the engine; the pack
+> was corrected and three new agents designed again (`method.md`, *The first run, set aside*).
 
 Items 2 to 4, 6, 7, 9, 10, 12, 14 and 15 are outside the test scope: done when the code and review say so, and
 `uv run just docs` passes.

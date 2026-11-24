@@ -2,11 +2,11 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,615. By source: history ruling 439; plan decision row 788; REV row 279; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 5.
+Rows: 1,623. By source: history ruling 439; plan decision row 788; REV row 287; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 5.
 
-By decider: author 741; open 5; session, own call 866; session, put to the author 3.
+By decider: author 749; open 5; session, own call 866; session, put to the author 3.
 
-This page lists the 509 that bind now. The 1,106 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
+This page lists the 517 that bind now. The 1,106 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -444,6 +444,14 @@ This page lists the 509 that bind now. The 1,106 of a delivered plan, fixed, spe
 | REV-275 | author | `docs/project/review-findings.md` |  |  | What WP5.27's screen review left open | ruled by the author, 21 November 2026; §8.2.47 AW1, AW10; §8.2.49 AY1: Phase 7, its forms, the tree of results and the polish pass | accepted |
 | REV-276 | author | `docs/project/review-findings.md` |  |  | The radius set's notice names the removed bundle notice | ruled by the author, 21 November 2026: at the radius set's next change | accepted |
 | REV-279 | author | `docs/project/review-findings.md` |  | WP6.01 | At a ragged rim the channel's axis can lock about 0.6° off, as rounding decides | ruled by the author, 22 November 2026 (WP6.01): placed by the rescoping round (§8.2.50 AZ7; §8.2.51 BA8): WP6.05, the axis package, after the ruling round on t… | accepted |
+| REV-280 | author | `docs/project/review-findings.md` |  |  | The ground-up review's proposals wait for the author's rulings | open: the ruling round on the ground-up review (§8.2.52 BB1), at `/np-plan project` | open |
+| REV-281 | author | `docs/project/review-findings.md` |  |  | What a direct solve of the model costs at a million unknowns is not measured | open: the ruling round on the ground-up review (§8.2.52 BB1), at `/np-plan project` | open |
+| REV-282 | author | `docs/project/review-findings.md` |  |  | Whether compiled weak forms and a threaded assembly cut the corrections' cost is not tried | open: the ruling round on the ground-up review (§8.2.52 BB1), at `/np-plan project` | open |
+| REV-283 | author | `docs/project/review-findings.md` |  |  | Whether the corrections can switch on at the target concentration is not tried | open: the ruling round on the ground-up review (§8.2.52 BB1), at `/np-plan project` | open |
+| REV-284 | author | `docs/project/review-findings.md` |  |  | Whether Plotly pans a field map of 100,000 cells smoothly is not tried | open: the ruling round on the ground-up review (§8.2.52 BB1), at `/np-plan project` | open |
+| REV-285 | author | `docs/project/review-findings.md` |  |  | Whether ParaView shows a second-order field without resampling is not tried | open: the ruling round on the ground-up review (§8.2.52 BB1), at `/np-plan project` | open |
+| REV-286 | author | `docs/project/review-findings.md` |  |  | Whether Netgen meshes a wall layer at the Debye length is not tried | open: the ruling round on the ground-up review (§8.2.52 BB1), at `/np-plan project` | open |
+| REV-287 | author | `docs/project/review-findings.md` |  |  | Whether NiceGUI carries the workbench's hardest view and QR-16 is not tried | open: the ruling round on the ground-up review (§8.2.52 BB1), at `/np-plan project` | open |
 | MOD-08 | author | `docs/project/modularity-findings.md` |  |  | Five registries in four shapes | §8.2.8 H5; brought forward to Phase 6's library-shape package by REV-272 and §8.2.50 AZ4 | post-1.0 |
 | MOD-10 | author | `docs/project/modularity-findings.md` |  |  | The backend interface of section 5.4.1 does not exist | §8.2.8 H3; §8.2.50 AZ1: `/np-plan phase 8` | deferred |
 | MOD-17 | author | `docs/project/modularity-findings.md` |  |  | The validated correction set is a default in eight signatures | §8.2.8 H5 | post-1.0 |
