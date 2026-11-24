@@ -295,3 +295,48 @@ The closing question carried this summary, here set out by its labels with no wo
 
 Asked "Is this summary of your picture complete?", with the options *Complete*, *Complete, with corrections* and
 *Not complete, ask more*, the author answered: **Complete.** The interview ended there, after five rounds.
+
+## The purpose pack
+
+What a blind designer could read: a folder outside the repository, `<pack>`, built in the session's scratchpad by
+`sed`, `cp` and `awk` from the tree at `2085983`. It holds no code, no requirement list and no design text.
+
+| File of the pack | Taken from | Words |
+|---|---|---|
+| `purpose.md` | `specification/01-introduction.md`, §1.1 to §1.3 less §1.3's closing paragraph; `specification/02-product-overview.md`, §2.1 to §2.5 | 975 |
+| `04-physics.md` | `specification/04-physics.md`, whole | 6,201 |
+| `b-comsol-settings.md` | `specification/b-comsol-settings.md`, whole | 465 |
+| `02-electrokinetics-background/`, 11 files | `knowledge/02-electrokinetics-background/`, whole | 3,430 |
+| `03-nanopore-biology/`, 10 files | `knowledge/03-nanopore-biology/`, whole | 3,360 |
+| `author.md` | *The author's view* above, from its heading to the interview's close | 2,528 |
+| **26 files** | `find . -type f \| xargs wc -w` in `<pack>` | **16,959** |
+
+The pack names some of today's choices, and a designer who chose the same was prompted, not independent. They are
+Python (§1.1, §2.5), a 2D-axisymmetric finite-element mesh and the pipeline's steps (§1.2), a YAML case file (§1.3),
+the browser workbench (P3, §2.5) and a sparse direct solve (§2.5). The interview names the graphical interface as a
+goal. The report's guard table marks each as prompted.
+
+## The blind designers
+
+Three agents of the type `Plan`, which starts without the repository's `CLAUDE.md` and without its git status. They
+were launched together, in one message, each at high effort, before the main session had read any design text
+(*The main session's calls*, below).
+
+| Designer | Model | Lens, the one sentence added to the brief |
+|---|---|---|
+| A | Fable 5.2 | None |
+| B | Fable 5.2 | "Design first for the experimental laboratory, P3 of `purpose.md`." |
+| C | Opus 5.5 | "Design first for the method developer, P1 of `purpose.md`." |
+
+The brief, the same for each but its lens, which stood where `[Lens.]` stands:
+
+> You design a program from nothing. Read only the files under `<pack>`, and give each search that path. Open no other
+> file on this machine and no page of the project `nanopnp`. The physics in `04-physics.md` is given; a file, library or
+> method that the texts name is today's choice and binds nothing. You may look up libraries; never search for the
+> model's equations. [Lens.] Write at most 3,000 words, with no link, under these headings: 1 What the program should
+> become, for whom, its capabilities in rank order, and what it leaves out. 2 The architecture: components, data,
+> boundaries. 3 The technologies, each with its runner-up and the reason: the simulation engine and discretisation;
+> geometry and mesh; linear and nonlinear solution; structure and charge preparation; the front end and visualisation;
+> storage, file formats and the record of a run; distribution to the three kinds of user; many runs at once. 4 The
+> numerical method and how its results are trusted. 5 How it is developed: process, tests, records. 6 The three choices
+> you are least sure of.
