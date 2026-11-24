@@ -30,7 +30,7 @@ it follows your six rulings of today.
   BD1): then WP6.06 the axis fix, WP6.07 the guard numbers, WP6.08 the kernel's design; the rest is numbered at the
   round on the design. Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
 - **WP6.05 is planned** ([the plan](phase-6/wp6.05-the-orchestrator.md); BD2 to BD6).
-- **Next:** `/np-plan wp 6.05 review`, on Fable 5.2; then `/np-implement wp 6.05`, on Opus 5.5.
+- **Next:** `/np-implement wp 6.05`, on Opus 5.5, once the author approves the reviewed plan.
 
 ## Not to be re-decided
 
