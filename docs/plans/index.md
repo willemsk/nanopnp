@@ -8,12 +8,13 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 
 ## Phase 6
 
-- [Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read](phase-6/phase-6-library-foundations.md): in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04. Amended 24 November 2026 (§8.2.53; §8.2.54): WP6.05 to WP6.08 are planned by scope and numbered in build order; the kernel's packages, the installed packages and t…
+- [Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read](phase-6/phase-6-library-foundations.md): in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04. Amended 24 November 2026 (§8.2.53; §8.2.54): WP6.05 is planned and WP6.06 to WP6.08 are planned by scope and numbered in build order; the kernel's packages, the in…
 - [Phase 6 plan: the record](phase-6/phase-6-record.md): a record of replaced text, last added to on 24 November 2026 (§8.2.54 BD1); it states nothing that holds now.
 - [WP6.01 — The Windows leg: the stall named and bounded, the failures fixed](phase-6/wp6.01-the-windows-leg.md): delivered, 22 November 2026.
 - [WP6.02 — The cleanup: the reading measured, the instructions audited, the records cut](phase-6/wp6.02-the-cleanup-measure-audit-records.md): delivered, 22 November 2026.
 - [WP6.03 — The cleanup: the instructions cut, the Copilot host retired](phase-6/wp6.03-the-cleanup-instructions-copilot-host.md): delivered, 23 November 2026.
 - [WP6.04 — The ground-up review](phase-6/wp6.04-the-ground-up-review.md): delivered, 24 November 2026.
+- [WP6.05 — The orchestrator](phase-6/wp6.05-the-orchestrator.md): planned, not started.
 
 ## Phase 5
 

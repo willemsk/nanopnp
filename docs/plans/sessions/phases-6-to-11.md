@@ -16,7 +16,7 @@ numbers the kernel's packages from WP6.09, then the installed packages and the c
 
 | Package | Its items |
 |---|---|
-| The orchestrator, first, WP6.05 (BC10, BC15) | One session carries a package: the plan, its review, each stretch of the implementation and the ship each run in a sub-agent with an empty context. The package first checks that the commit gate runs inside a sub-agent, that a sub-agent can start its own, and that it can put a question to the author; if one fails it builds separate sessions. It counts how many of the last 100 pushes a safe path rule for the browser tests would have skipped, and applies the rule above a third. §8.4.4, §8.4.5 and §7.6 change with it |
+| The orchestrator, first, WP6.05 (BC10, BC15; BD2 to BD6) | `/np-carry wp <n>` starts one session that carries a package: the plan, the fixes after its review, each stretch of the implementation and the ship each run in a helper with an empty context. The plan found that the commit gate runs inside a helper, and that a helper can neither start its own nor ask the author, so the main session does both (BD2). The reading limit binds every helper that implements (BD3). The package counts how many of the last 100 pushes that ran tests a safe path rule for the browser tests would have skipped, and applies the rule above a third (BD4). §8.3, §8.4.4, §8.4.5 and §7.6 change with it |
 | The channel axis's fault, firm, WP6.06 (BA8; BB1) | REV-279: a plane's centre made robust to a broken tie at a ragged rim; 2WCD's axis measured again (VER-48). It runs under the orchestrator and is measured; the target for the author's touches is set from the first two packages carried, this one and WP6.07 |
 | The guard numbers, WP6.07 (BC3) | Reference numbers stored for the switches off their default: PHY-23's terms, the log branch, NUM-14's mode. It first checks that VER-62's walks cover the default switches alone, which the round took from the review |
 | The kernel's design, WP6.08 (BC2) | A design page and a throwaway prototype: the term, a correction as a shared coefficient, the rule that binds terms (PHY-08), each flux integrated once, the nine names the workbench reads, how an installed package registers. The prototype holds example 01's walk to 10⁻⁸ or the miss goes to the author. It prices the benchmark on a coarse 3D mesh (BC5). The author rules the design; it rewrites ADR-005, §5.4 and §5.5 |
@@ -114,7 +114,7 @@ fixed: from v1.0 the case file and the run record are converted (BC20).
 | The kernel's design, the number of its packages, and the cost of the benchmark on a coarse 3D mesh | The author, at the round after WP6.08 (BC2, BC5) |
 | Whether the push gate chooses the browser tests by path | WP6.05, by its count (BC15) |
 | The target for the author's touches a package | The author, at the round after WP6.08, from WP6.06's and WP6.07's measured lines (BC10) |
-| What the reading limit counts once an orchestrator carries a package | The author, at WP6.05's plan, before any measurement (AZ18) |
+| What the reading limit counts once an orchestrator carries a package | Settled by the author, 24 November 2026: every helper that implements (BD3) |
 | Phase 7's packages, their numbers and grouping | `/np-plan phase 7` (BA4; BC7) |
 | What AM2's "moves one of them" means, and the drift that stops the re-pin | The author, at the plan of Phase 7's equations package, before any measurement |
 | A run above order 2; the speed-up's thresholds; the names after `Project` splits | Their packages' plans, in Phase 7 |

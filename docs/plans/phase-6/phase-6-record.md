@@ -440,3 +440,39 @@ naming REV-279's package by its new number:
 The last row of its Design decisions, dropped with the rows on old runs and speed as each is held by its ruling, read:
 
 > | Restructuring beyond a plan | Allowed while the push gate passes; never in WP6.04 | BA7, BA13, BA14 |
+
+## Amended 24 November 2026, at WP6.05's plan (§8.2.54 BD2 to BD6)
+
+WP6.05's plan checked BC10's three facts, and the author ruled the orchestrator's shape, the reading limit's count,
+the count of pushes, the package's two models and the command's name. The entry of WP6.05 read:
+
+> ### WP6.05 — The orchestrator (BC10, BC15)
+>
+> *Planned by scope; next.* One session that the author starts carries a package: it hands the plan, its review, each
+> stretch of the implementation and the ship to a sub-agent with an empty context, and brings the author the rulings,
+> the plan's approval and the merge. The three commands stay, and a ruling round stays a session of its own.
+>
+> It first checks three facts: that the commit gate runs inside a sub-agent, that a sub-agent can start its own, and
+> that it can put a question to the author. If one fails it builds separate sessions. It counts how many of the last
+> 100 pushes a safe path rule for the browser tests would have skipped, and applies the rule above a third; a pull
+> request's CI still runs every browser test. §8.4.4 and §8.4.5 change with it, and §7.6 if the count passes. Its plan settles open decision 13.
+> About 5 sessions, 3 to 6 agent hours and 8 touches.
+
+The In brief's first risk read:
+
+> **What could go wrong.** The helpers may be unable to run the commit checks or to ask you a question: the first
+> package tests that first, and falls back to separate sessions.
+
+Open decisions 13 and 17 read:
+
+> | 13 | What the reading limit counts once an orchestrator carries a package | **Author**, at WP6.05's plan, before any measurement (AZ18; criterion 4) |
+> | 17 | Helpers inside one session or separate sessions; the browser tests chosen by path | WP6.05, by its three checks and its count (BC10, BC15) |
+
+The first row of *What the author supplies* read:
+
+> | What the reading limit counts under the orchestrator | WP6.05's plan | The plan waits; nothing is measured against a limit not ruled |
+
+Criterion 4 ended "counted as open decision 13 rules", and criterion 11 ended:
+
+> hours and touches** (BC10). A fact that fails builds separate sessions; a package it cannot carry goes back to
+>     the three commands.
