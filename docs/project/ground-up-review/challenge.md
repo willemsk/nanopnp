@@ -27,6 +27,9 @@ The main session checked each objection's evidence at its source before it answe
 of the report, and of the walk where it has one, was changed. *Shown* means that the objection is not met and
 stands on its row for the author.
 
+The code review at the package's ship corrected two of these answers, and each says so: the reason GU-13 gave for
+its delay, and the figures shown on GU-25 for the plans' size.
+
 ### To the first challenger: each change costs more than it gains
 
 | GU | Objection, in short | Answer |
@@ -55,10 +58,10 @@ stands on its row for the author.
 | GU-22, GU-23 | "Keep until a trial" names no place; the trial is cheap; C is unsure of primitive unknowns; BA13's row says five questions | Changed. The trial's place is Phase 6's speed-up package and it compares the log branch too; GU-23 says that C is unsure; BA13's row says seven. The trial is not run here: `wp6.04` tries no design (BA13), and `continuation: none` removes the ladder and does not reorder it |
 | GU-21, ADR-004 | Measuring the kit after the first rebuilt suite is the order of a sunk cost; the spike tested neither a design's ceiling nor QR-16 | Changed. Phase 7's design study builds the hardest view in the kit and audits it before the rebuild; it is the seventh trial |
 | §7.6, §8.4.4 (2) | "Nothing measured argues against" Linux alone is wrong: a red Windows leg cost a package | Changed in part and shown. The walk's reason is corrected: the keep rests on AZ8, ruled on 22 November with that cost known. The objection stands on GU-25 |
-| GU-25, the records | "Read on demand" counts reading alone; writing is measured | Shown on GU-25 with the measured figures. The keep rests on the author's "same process form" |
+| GU-25, the records | "Read on demand" counts reading alone; writing is measured | Shown on GU-25 with the measured figures. The keep rests on the author's "same process form". Corrected at the ship: the report first set the plans' whole size, 3,885 to 4,779 words, against the cap of 3,500. The cap counts a plan outside its Outcome annotations and allows a tenth over, as the challenger's own row says; counted so, the three plans hold 3,623, 3,728 and 4,099 words against 3,850 |
 | GU-25, §2.7 v0.13 | The row's reason argues a change: each design validates before its workbench | Shown on GU-25 and on GU-09, which now says that it is the least of what each design does |
 | GU-24 | "Built" is the sunk-cost reason, and the sizes were not stated | Shown, with the sizes: `io/variables.py` 678 lines and `sweep/forecast.py` 120, `physics/stabilisation.py` 716 |
-| GU-12, GU-13 | The delay is unexplained | Changed in part. The four sections go now. GU-13 gives its reason: the gate can skip the browser tests only once CI runs them, and Phase 7 rebuilds them. The first challenger argues the other way on the same row |
+| GU-12, GU-13 | The delay is unexplained | Changed in part and shown. The four sections go now. GU-13 first gave as its reason that the gate can skip the browser tests only once CI runs them. Corrected at the ship: a pull request's CI already runs them on Linux (`ci.yml`'s `tests (tier1)` job installs Chromium and requires it), and only the platform legs skip them. The reason left is that Phase 7 rebuilds those tests, so the objection stands on the card. The first challenger argues the other way on the same row |
 | GU-20 | The direct solve is prompted, yet counted; the evidence for no stabilisation is two small cases | Changed. GU-20 no longer names the direct solve, and the design argues from NUM-11 and NUM-12's check on each run in place of the two cases' Péclet number |
 | §8.4.4 (15), FR-30, §5.3.1, FR-33, IF-06 | Reasons that argue a change but carry a keep | Shown, as a list under group 11 |
 | The headline | "207 of 259 kept" overstates agreement | Changed. In brief gives the split: a designer for and none against, no designer, at least one against |

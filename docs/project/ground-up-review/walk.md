@@ -21,8 +21,9 @@ what the three blind designs chose, a verdict and a reason. An appendix of
 
 A verdict is a proposal. Nothing changes until the author has ruled on the report. The walk holds 259 rows: 209 are
 kept, 22 change now, 16 change later, one is dropped, 9 are added and 2 lacks are not added. Eleven verdicts were
-changed by [the challenge](challenge.md), and other rows gained what it found; each such row says so. A keep means
-that a start-over would choose the same, unless its reason says otherwise.
+changed by [the challenge](challenge.md), and other rows gained what it found; each such row says so. The review at
+the ship corrected six rows and changed no verdict. A keep means that a start-over would choose the same, unless
+its reason says otherwise.
 
 ## The requirements, the releases and the rulings
 
@@ -37,7 +38,7 @@ floor changes, later, although each designer kept it. Each row says why.
 
 | ID | Today, in 15 words | Best alternative | A | B | C | Verdict | Reason |
 |---|---|---|---|---|---|---|---|
-| IF-01 | Python interface of `Case` and `Session`; each stage runs alone; stable from v1.0. | One service layer that every interface calls | = | = | = | keep | Each design puts one layer under every interface, and `Session` is it. A start-over would choose it. |
+| IF-01 | Python interface of `Case` and `Session`; each stage runs alone; stable from v1.0. | One service layer that every interface calls | = | = | = | keep | Each design puts one layer under every interface, and `Session` is it. A start-over would choose it. IF-03's row adds the case file and the run record to its promise of stability, at version 1's gate. |
 | IF-02 | Command line over the same interface, with an exit-code contract for job arrays. | None better found | = | = | = | keep | All three keep it and name the exit codes as what makes a job array reliable. |
 | IF-03 | One YAML case file, schema `nanopnp/case/v0.6`; unknown keys and earlier schemas refused. | A versioned schema with migration functions, so an old case and record open | ≠ | ≠ | ≠ | change later: version 1's gate | B and C ask for migrations. Until v1.0 the author is the one user, so a migration per schema change buys little; the stability promise of IF-01 names neither the case file nor the run record, and should. |
 | IF-04 | Reads PDB and mmCIF structures, and DCD, XTC, TRR and NetCDF trajectories. | None better found | = | = | = | keep | All three keep it. |
@@ -170,14 +171,14 @@ floor changes, later, although each designer kept it. Each row says why.
 | ID | Today, in 15 words | Best alternative | A | B | C | Verdict | Reason |
 |---|---|---|---|---|---|---|---|
 | §2.7 v0.7 | Phase 6: the cleanup, this review, then the library's foundations, provisional. | The same, with what this review proposes for now | – | – | – | change now | Its content waits on these rulings (BA4, BA11). The rows marked change now are its additions. |
-| §2.7 v0.8 | Phase 7: the workbench rebuilt on its foundations, with five moved packages. | The workbench built once, after the kernel holds | ≠ | ≠ | ≠ | keep | Each design builds its workbench after the composed kernel. With the kernel's shape in Phase 6 (FR-40) the rebuild meets that order where it stands. |
+| §2.7 v0.8 | Phase 7: the workbench rebuilt on its foundations, with five moved packages. | The workbench built once, after the kernel holds | ≠ | ≠ | ≠ | keep | Each design builds its workbench after the composed kernel, and this keep goes against that order: the kernel is built in Phase 8, as AZ1 rules and the challenge kept it (FR-40's row). What Phase 6 gives the rebuild is the kernel's shape stated and the nine names the workbench reads fixed. |
 | §2.7 v0.9 | Phase 8: the physics composer, library first. | Its kernel in Phase 6; its surfaces here | ≠ | ≠ | ≠ | keep | As FR-40's row. The draft moved the kernel to Phase 6; the challenge kept it here, as AZ1 rules. |
 | §2.7 v0.10 | Phase 9: the structural mutator, with fractional protonation. | The same, with per-residue sensitivities | – | = | = | keep | B and C place mutation after the base, as here. The sensitivities are a row of their own below. |
 | §2.7 v0.11 | Phase 10: the hand-drawn sketcher of the (r, z) domain. | Parametric shapes; the sketcher after version 1 | ≠ | ≠ | ≠ | change later: Phase 10's round | As FR-42's row. |
 | §2.7 v0.12 | Phase 11: the analyte forces, library first. | None better found | = | = | = | keep | Each design holds the capability after its base. |
 | §2.7 v0.13 | Phase 12: validation against the published results, documentation and release, last. | A first comparison with the paper before the workbench is built on the model | ≠ | ≠ | ≠ | keep | The validated release stays last. Each design compares with the published pore before it builds a workbench; that is BA3's row. |
 | §2.7 v1.0 | Version 1: the stability promise; its content decided at Phase 12's close. | None better found | – | – | – | keep | No designer speaks to it; BA6's row. |
-| §2.7 post-1.0 | The backlog after version 1: nine items in no order. | The author's order: 3D, the molecular link, inverse design, then the rest | ≠ | ≠ | = | change now: text | The interview ranks three of the nine. A and B would schedule 3D. Ranking the row costs one line and tells each phase which room to leave. |
+| §2.7 post-1.0 | The backlog after version 1: nine items in no order. | The author's order: 3D, the molecular link, inverse design, then the rest | ≠ | ≠ | = | change now: text | The interview ranks three horizons. The nine hold the first, 3D; the molecular link only as a toolkit that fits the corrections; and not inverse design. A and B would schedule 3D. Ranking the row costs one line and tells each phase which room to leave. |
 
 ### The rulings BA1 to BA15 and BB1 to BB6
 
@@ -202,7 +203,7 @@ floor changes, later, although each designer kept it. Each row says why.
 | BB2 | The review designs for the whole program, built and planned. | None | – | – | – | keep | The reach of the design in the report. |
 | BB3 | Blind designs from the purpose first, then a walk rule by rule. | None | – | – | – | keep | The guard changed verdicts: on QR-11, FR-42 and BA3 the walk follows three blind designs against the plan. The report says what it showed. |
 | BB4 | The report is one page on the project's site, with appendices. | None | – | – | – | keep | Spent. |
-| BB5 | Fable 5.2 writes the review and Opus 5.5 checks it. | None | – | – | – | keep | Spent at the ship. |
+| BB5 | Fable 5.2 writes the review and Opus 5.5 checks it. | None | – | – | – | keep | Amended at the ship: the author ruled on 24 November that Fable 5.2 checks it too, in the session that wrote it (BB7). |
 | BB6 | The review opens with an interview of the author. | None | – | – | – | keep | The interview gave the ranks that decide FR-40, N1 and the backlog's order. A start-over would open so. |
 
 ### What the lists lack
@@ -310,7 +311,7 @@ workbench design.
 | §7.3 | Tier 2: eleven analytic benchmarks and a manufactured solution of the coupled system. | The same, with one manufactured solution for each registered term over a verified base operator (B, C) | = | = | = | change later: Phase 8, with the terms | The benchmarks stand. A term from another package is trusted only if it brings its own case, and the program holds SymPy already, so the harness can derive a term's source. A term is no operator on its own, and a smooth manufactured field never reaches the clamps (the physics reviewer). |
 | §7.4 | Tier 3: comparison with the reference model, APBS and the published results; not gated. | The same, earlier (BA3's row) | = | = | = | keep | Each design holds the same cross-code rung, as bands. |
 | §7.5 | Tier 4: reproduction of experiments before a release; no job yet. | The same, with a second pore (B) | = | = | = | keep | Each design's last rung. The second pore is a row below. |
-| §7.6 | A pull request tests on Linux; three platforms on `main`, nightly and at a release. | Three systems on every change (A, B, C); the browser grid chosen by the paths a push changes | ≠ | ≠ | ≠ | change later: Phase 7 | AZ8 (22 November) keeps the platforms off a pull request for their cost. Objected: a red Windows leg cost one package (WP6.01); the author ruled with that cost known. The browser grid runs in the push gate alone and CI's legs skip it; when Phase 7 rebuilds those tests, CI's Linux leg can run them and the gate choose them by path. The share of pushes that such a rule would skip is not measured. |
+| §7.6 | A pull request tests on Linux; three platforms on `main`, nightly and at a release. | Three systems on every change (A, B, C); the browser grid chosen by the paths a push changes | ≠ | ≠ | ≠ | change later: Phase 7 | AZ8 (22 November) keeps the platforms off a pull request for their cost. Objected: a red Windows leg cost one package (WP6.01); the author ruled with that cost known. The browser grid runs in the push gate and in a pull request's CI on Linux; the platform legs skip 142 of its 149 tests. The gate could therefore choose the grid by path today, as the second challenger asks; the verdict leaves it to Phase 7, which rebuilds those tests, and the share of pushes that such a rule would skip is not measured. The ship's review corrected this row, which said that CI skips the grid. |
 | VER-61 | The import relation of the subpackages equals a recorded file, both ways. | None better found | – | – | – | keep | It is what makes BA7's freedom safe. A start-over would hold the same guard. |
 | VER-62 | The numbers of seven walks are held at 10⁻⁸ against stored values. | None better found | – | = | – | keep | B holds the same golden bundles. Every proposal on a numerical method names its re-pin against it. |
 | VER-65 | The subpackages that import the engine equal a recorded list of eleven. | The same guard over two or three layers | = | = | = | keep | Each design confines the engine and would guard it. The list is long; §5.4's row says where it shrinks. |
@@ -331,7 +332,7 @@ workbench design.
 | §8.4.3 (1) | A test names the silent failure it catches; a plan commits none. | None better found | – | – | – | keep | C asks the same of a requirement: one without a test is a wish. |
 | §8.4.3 (2) | The ship deletes tests outside the scope. | None better found | – | – | – | keep | It keeps the gate's time down. |
 | §8.4.4 (1) | Three commands with levels: plan, implement, ship. | One command that carries a package from its brief to its pull request | ≠ | ≠ | ≠ | change now | The author's one complaint is the sessions he must start. A package takes at least four windows, each ended by a compaction he runs, and about eight touches, most of them a command or a compaction and not a judgement. Each designer keeps the form and cuts the starts. Two switches already remove two of the pauses; the challenge has them tried first, for two packages, before any package is spent. |
-| §8.4.4 (2) | A pull request's CI tests on Linux; the close reads three platforms. | None better found | ≠ | ≠ | ≠ | keep | §7.6's row. |
+| §8.4.4 (2) | A pull request's CI tests on Linux; the close reads three platforms. | Three systems on every change (A, B, C) | ≠ | ≠ | ≠ | keep | §7.6's row. |
 | §8.4.4 (3) | `/np-gui` renders screens for the author's verdicts; a suite opens with prototypes. | None better found | = | = | = | keep | Each design puts mockups and the author's verdicts before the code. |
 | §8.4.4 (4) | The workflow runs on Claude Code alone. | None better found | – | – | – | keep | Ruled at WP6.03; no cost found. |
 | §8.4.4 (5) | A package is named by phase and number. | None better found | – | – | – | keep | No cost found. |

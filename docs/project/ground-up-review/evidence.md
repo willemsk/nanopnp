@@ -226,5 +226,5 @@ The workflow's scripts and hooks (`.claude/**/*.py` and `*.sh`) are another 4,39
 - **Continuous integration.** The critical path of run 837 was 10 min 58 s on Linux and macOS; the Windows leg has not
   finished since 10 November 2026 (REV-277; the same report).
 - **The suite.** 2,068 tests: 1,758 in Tier 1, 220 in Tier 2 (the same report, *The suite*).
-- **A slow solve.** A cylinder of 16,562 elements takes minutes (REV-156); UMFPACK repeats its symbolic analysis in
-  every Newton step (REV-60).
+- **A slow solve.** A cylinder of 16,444 elements takes 761 s on four cores (REV-156, whose title gives the mesh as
+  16,562 elements); UMFPACK repeats its symbolic analysis in every Newton step (REV-60).

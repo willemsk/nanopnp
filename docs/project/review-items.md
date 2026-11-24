@@ -1609,7 +1609,7 @@ places it.
 
 ### REV-280: The ground-up review's proposals wait for the author's rulings
 
-Left open by WP6.04 (§8.2.51 BA13). [the ground-up review](ground-up-review.md) holds 25 differences between today's program and a design from nothing,
+Left open by WP6.04 (§8.2.51 BA13). [The ground-up review](ground-up-review.md) holds 25 differences between today's program and a design from nothing,
 `GU-01` to `GU-25`, each with a verdict, and a card for each change, drop and add, in twelve groups. Nothing changes
 until the author has ruled. The proposals for Phase 6 are: QR-11 dropped (GU-02); the two switches tried before a
 package changes the workflow, with a target for the author's touches (GU-03, GU-04); a verification ledger (GU-06);

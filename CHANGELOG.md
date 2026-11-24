@@ -26,7 +26,7 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [0.7.0-alpha.4]
 
-WP6.04: the ground-up review; tag `v0.7.0-alpha.4` once merged (§8.2.51 BA10 to BA13; §8.2.52 BB2 to BB6; REV-280
+WP6.04: the ground-up review; tag `v0.7.0-alpha.4` once merged (§8.2.51 BA10 to BA13; §8.2.52 BB2 to BB7; REV-280
 to REV-287). A user of the program sees no change: the package changes no code. The
 [plan](docs/plans/phase-6/wp6.04-the-ground-up-review.md) records the work.
 
