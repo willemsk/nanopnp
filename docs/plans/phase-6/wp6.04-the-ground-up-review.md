@@ -1,8 +1,18 @@
 # WP6.04 — The ground-up review
 
-**Status: in progress, started 24 November 2026.** Written 23 November 2026, grounded in the tree at `efda55e`.
+**Status: delivered, 24 November 2026.** Written 23 November 2026, grounded in the tree at `efda55e`.
 Inherits §8.2.51 BA7 and BA10 to BA13, §8.2.52 BB1 to BB6 (BB3 to BB6 ruled at this plan), §8.4.4's sentence on a
 study package and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.4` (§8.4.1).
+
+**Delivered.** One report, `docs/project/ground-up-review.md` (5,499 words), and eight appendices under
+`docs/project/ground-up-review/`: the author's interview and the method, three blind designs with their unblinding,
+the evidence, today's alternatives, a walk of 259 rows (209 keep, 22 change now, 16 change later, one drop, 9 add,
+2 not added) and the challenge with each answer. The report holds 25 differences, `GU-01` to `GU-25`, in twelve
+groups. The package claims no identifier, writes no test and changes no `src/`, `tests/`, `data/` or `examples/`:
+item 15's check prints nothing. Open: REV-280, the proposals, and REV-281 to REV-287, seven questions for a trial,
+each owned by the ruling round. Live for later packages: every verdict is a proposal until `/np-plan project` rules
+(BA11, BA13); AZ1 to AZ6 and BA1 to BA9 hold until then (BA4); the `GU-` numbers are the draft's, which
+`challenge.md` cites.
 
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.04 entry sets this scope; `SPECIFICATION.md` governs, and
 where it and this plan disagree this plan is wrong. Identifiers are pointers into it.
@@ -272,7 +282,7 @@ appendices and pages the site publishes; name a clause, a plan or a review in co
 - [x] 13. Compaction checkpoint. **Executor:** main
 - [x] 8937edb 14. The challenge, in `challenge.md`, and the report answered (D7). **Executor:** main, with two
   `general-purpose` agents on Sonnet and the physics reviewer
-- [ ] 15. The records: REV-280 and its like, `CHANGELOG.md`, the knowledge notes corrected (D8); the no-code check.
+- [x] 3f56656 15. The records: REV-280 and its like, `CHANGELOG.md`, the knowledge notes corrected (D8); the no-code check.
   **Executor:** main
 
 > **Outcome — the challenge moved the lead proposal.** The draft of item 12 built the composed kernel in Phase 6

@@ -1,25 +1,27 @@
 # Current work
 
-Updated 23 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged branch is not shipped.
+Updated 24 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-Phase 6's next package, the ground-up review, is planned, and its plan is reviewed.
+The ground-up review is written. It waits for its check, and then for your rulings. It changed nothing in the
+program.
 
-The review asks how the program would be built if we started over, and takes only the paper's physics as given. It
-changes no code and hands you a report on the project's pages: what the program should become, the design it would
-choose, and each difference from today's program marked keep, change now, change later, drop or add, with its gain,
-risk and cost.
+It finds that a start-over would keep the numerical method: three designers who had never seen the program chose the
+same engine, mesh tool, elements and solver. What they would change is the shape around it. For this phase the review
+proposes a published page that shows which test proves each term of the model, an estimate of the mesh error beside
+a number, one comparison with the paper at the phase's close, fewer sessions that you must start, and a few
+corrections of text. Building the physics from registered terms stays where you ruled it, with the composer: two
+challengers and the physics reviewer showed that moving it forward would cost more than the draft said.
 
-As you ruled at its plan, three designers who have never seen the code or the requirement list design the
-program from its purpose and your view, before a reviewer who knows the program goes rule by rule. Fable writes the
-report and Opus checks it.
+The proposals for this phase add about three packages to its ten: 13 to 18 sessions, 8 to 21 agent hours and 20 to
+28 times you act.
 
-The review: about 10 sessions, 7 to 13 agent hours and 16 times you act. Phase 6 ahead: about 66 sessions, 54 to 107
-agent hours and 105 times you act, if the review changes nothing.
+The review may lean towards the program as it is. One challenger says so; each objection not met is shown beside its
+row.
 
-**Your call.** Do you approve the review's plan, which its own review has now read and corrected? *Recommendation:*
-approve, so the review can start. Yours later: an interview at its start, then the rulings on its proposals.
+**Your call.** Nothing yet: the review is checked first. At the round after it you rule on twelve groups of
+proposals. *Recommendation:* read the report's first section before that round; it is one page.
 
 ## Position
 
@@ -28,12 +30,11 @@ approve, so the review can start. Yours later: an interview at its start, then t
   merged**, `v0.7.0-alpha.3` published, the tag `copilot-host` pushed.
 - **The project is rescoped** ([§8.2.51](../../specification/history/51-the-project-rescoped.md)). Phases 7 to 12:
   [the input note](sessions/phases-6-to-11.md).
-- **WP6.04, the ground-up review, is planned and its plan reviewed**
-  ([its plan](phase-6/wp6.04-the-ground-up-review.md);
-  [§8.2.52](../../specification/history/52-phase-6-amended-the-ground-up-review-planned.md)); WP6.05 follows the
-  rulings on it; the rest is provisional.
-- **Next:** `/np-implement wp 6.04` on Fable 5.2, then `/np-ship wp 6.04` on Opus 5.5 in a new session. After WP6.04:
-  `/np-plan project`, `/np-plan amend 6`, `/np-plan wp 6.05`.
+- **WP6.04, the ground-up review, is implemented and its pull request open**
+  ([its plan](phase-6/wp6.04-the-ground-up-review.md)). Its
+  proposals are REV-280 and its seven trials REV-281 to REV-287. WP6.05 follows the rulings; the rest is provisional.
+- **Next:** `/np-ship wp 6.04` on Opus 5.5 in a new session. After its merge: `/np-plan project`, then
+  `/np-plan amend 6` and `/np-plan wp 6.05`.
 
 ## Not to be re-decided
 
@@ -47,10 +48,9 @@ approve, so the review can start. Yours later: an interview at its start, then t
 - **The phases are library, workbench, composer, mutator, sketcher, analyte forces, validation** (BA1, BA2, BA5);
   **validation is Phase 12 and `v0.13`, with no earlier comparison against the paper** (BA3). **A session may
   restructure the code it works with while the push gate passes, its nightly walks not asked** (BA7, BA14).
-- **WP6.04 is the ground-up review: all open but §4's physics, designed for the whole of §3, a report and no code,
-  then the author's rulings at `/np-plan project`** (BA10 to BA13; BB2). **Its guard, its opening interview, its
-  report's place and its two models are ruled** (BB3 to BB6). **WP6.05, the axis fix, is firm and follows those rulings** (BA8;
-  BB1). Until then BA1 to BA9 and AZ1 to AZ6 hold (BA4).
+- **The ground-up review's verdicts are proposals; the author rules them at `/np-plan project`** (BA11, BA13).
+  **WP6.05, the axis fix, is firm and follows those rulings** (BA8; BB1). Until then BA1 to BA9 and AZ1 to AZ6 hold
+  (BA4).
 
 ## Somebody else's
 
@@ -59,8 +59,8 @@ approve, so the review can start. Yours later: an interview at its start, then t
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents, at Phase 12's close (BA6).
 - **The 200 ms redraw**'s GPU run (REV-258); **verdicts at each design round** (AJ8); rulings on a cycle (H6) or
   drift (I4).
-- **The rulings on the ground-up review** (BA13); **the customised PDB2PQR**, by Phase 9's round (BA9); **the PlyAB
-  model files**, by Phase 11's (OPN-03); **QR-10's observer** (AW2).
+- **The rulings on the ground-up review** (BA13; REV-280); **the customised PDB2PQR**, by Phase 9's round (BA9);
+  **the PlyAB model files**, by Phase 11's (OPN-03); **QR-10's observer** (AW2).
 
 ## On demand
 
