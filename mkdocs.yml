@@ -397,6 +397,16 @@ nav:
       - Modularity report: _generated/project/modularity.md
       - Modularity findings: _generated/project/modularity-findings.md
       - Architecture survey: project/architecture-survey.md
+      - Ground-up review: project/ground-up-review.md
+      - "Ground-up review, appendices":
+          - How it was made: project/ground-up-review/method.md
+          - Blind design A: project/ground-up-review/design-a.md
+          - Blind design B: project/ground-up-review/design-b.md
+          - Blind design C: project/ground-up-review/design-c.md
+          - The evidence: project/ground-up-review/evidence.md
+          - Today's alternatives: project/ground-up-review/technologies.md
+          - The walk: project/ground-up-review/walk.md
+          - The challenge: project/ground-up-review/challenge.md
       - Modularity measurements: _generated/project/modularity-measurements.md
       - Architecture: _generated/project/architecture.md
       - Review register: _generated/project/review-items.md
