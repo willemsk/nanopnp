@@ -29,7 +29,7 @@ none of your rulings.
 - **Phase 6 is amended** ([§8.2.54](../../specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md),
   BD1): WP6.05 the orchestrator, WP6.06 the axis fix, WP6.07 the guard numbers, WP6.08 the kernel's design; the
   rest is numbered at the round on the design. Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
-- **Next:** `/np-plan amend 6 review`, on Fable 5.2; then `/np-plan wp 6.05`.
+- **Next:** `/np-plan wp 6.05`, the orchestrator, on Fable 5.2, once the amendment's pull request is merged.
 
 ## Not to be re-decided
 

@@ -287,7 +287,7 @@ Its Context read, from its second paragraph to its exclusions:
 > Phase 12 (BA5); the structure pipeline's loose ends, Phase 9; a converter for v0.6 runs (AZ5); a linear-solver swap
 > (Z6); a comparison with the published results (BA3).
 
-Its Design decisions, but for the rows on the review's subject, restructuring and old runs, read:
+Its Design decisions read, in part (the rest of the table is quoted at this section's end):
 
 > | Decision | Choice | Why |
 > |---|---|---|
@@ -375,3 +375,68 @@ Two lines of the End-of-phase report read:
 > - VER-62's largest relative drift per walk and platform, and the equations package's re-pin, old against new;
 > - the tube's solve time, with its assembly, factorisation and residual shares, before and after the speed-up, and each
 >   threshold with its measured cost (stabilisation mode named);
+
+The first paragraph of its Context read:
+
+> `SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 (AY1 to AY8), §8.2.50 (AZ1 to
+> AZ21), §8.2.51 (BA1 to BA15) and §8.2.52 (BB1 to BB6; BB3 to BB6 ruled at WP6.04's plan). The text each amendment replaced is in
+> [the record](phase-6-record.md).
+
+Three more rows of its Design decisions read:
+
+> | The ground-up review | WP6.04, delivered: a report and no code; everything open but §4's physics | The survey took every constraint as given; after the restructure the answer could no longer shape it (BA10 to BA13) |
+> | What the review designs for | The whole of §3, what is built and what is planned up to v0.13 | The tools stay before validation, so the design must carry them (BA1; BB2) |
+> | Old runs | Refused by schema, never converted | AZ5; F4 |
+
+The WP6.04 entry read:
+
+> ### WP6.04 — The ground-up review (BA10 to BA13; BB2 to BB7)
+>
+> *Delivered 24 November 2026.* [The plan](wp6.04-the-ground-up-review.md). Live: each verdict of the report is a
+> proposal until the ruling round (BA11, BA13); REV-280 holds the proposals and REV-281 to REV-287 seven questions
+> for a trial; AZ1 to AZ6 and BA1 to BA9 hold until the round rules (BA4).
+
+The settled rows of its Open decisions, which the plan now holds as one row, read:
+
+> | 1 | §8.2.50's seven rulings | **Settled by the author, 22 November 2026** (AZ1 to AZ7) |
+> | 2 | The reading limit; what may leave the history; the baseline's transcripts | **Settled by the author, 22 and 23 November 2026** (AZ9 to AZ12, AZ14, AZ15, AZ18; §8.4.4) |
+> | 3 | The Copilot tag's name | **Settled by the author, 23 November 2026**: the git tag `copilot-host` (AZ19) |
+> | 4 | Whether a pull request's CI runs the Windows leg | **Settled by the author, 22 November 2026**: no; the three platforms at the close alone (AZ8) |
+> | 5 | The project's scope, and Phase 6's packages with it | **Settled by the author, 23 November 2026** (BA1 to BA15) |
+> | 8 | What comes first after the review; what the review designs for | **Settled by the author, 23 November 2026** (BB1, BB2) |
+> | 9 | How the review guards against reasoning from the program as it is; where its report lives; its two models | **Settled by the author, 23 November 2026**: blind designs from the program's purpose, then rule by rule; the project's pages; Fable 5.2 writes and ships (BB3 to BB5, BB7) |
+
+Criteria 4 and 8, which are now criteria 4 and 10, read:
+
+> 4. **A fresh package session starts under the reading limit** (`usage.py`). A miss continues the cleanup; the limit is
+>    re-ruled only before a measurement.
+
+> 8. **The wall with a ragged rim recovers its known axis to VER-48's 10⁻⁶ rad** on every perturbed draw, and on the three
+>    platforms at the close. Today 3 of 8 draws lock 0.22° to 0.62° off (REV-279); prediction: none locks. A draw that
+>    still locks is investigated, and the tolerance stands. **2WCD's channel axis is measured again** against its
+>    0.0073 nm. Prediction: unmoved within VER-48's 10⁻⁴ nm if none of 2WCD's planes holds a split tie, which WP6.05's
+>    plan measures first. A move, of it or of the farthest centre's 0.0148 nm, amends VER-48 and §5.2's NOTE in the
+>    fix's commit and goes to the author with the two limits (open decision 11).
+
+One more line of the End-of-phase report read:
+
+> - the ragged-rim wall's axis over its perturbed draws, and 2WCD's channel axis against 0.0073 nm (WP6.05);
+
+The entries of WP6.01 to WP6.03, which the plan now holds as rows of one table, read, with WP6.01's line already
+naming REV-279's package by its new number:
+
+> ### WP6.01 — The Windows leg (REV-277; AY4)
+>
+> *Delivered 22 November 2026.* [The plan](wp6.01-the-windows-leg.md). Live: AZ8's ship rule; REV-279 is WP6.06's.
+>
+> ### WP6.02 — The cleanup: measure, audit, records (REV-271, REV-272; AY8; AZ9 to AZ17)
+>
+> *Delivered 22 November 2026.* [The plan](wp6.02-the-cleanup-measure-audit-records.md). Live: the limit of AZ13 and AZ18, which binds a session's first window (AZ15); its Outcome's outdated list.
+>
+> ### WP6.03 — The cleanup: instructions, the Copilot host retired (AY5; AZ18 to AZ21; REV-166 to REV-168, REV-278)
+>
+> *Delivered 23 November 2026.* [The plan](wp6.03-the-cleanup-instructions-copilot-host.md). Live: the 8,000 words of AZ18 bind every `/np-implement` session's first window (§8.4.4), measured at 7,186; each plan proposes its two models (AZ20, AZ21); the tag `copilot-host` is pushed (AZ19).
+
+The last row of its Design decisions, dropped with the rows on old runs and speed as each is held by its ruling, read:
+
+> | Restructuring beyond a plan | Allowed while the push gate passes; never in WP6.04 | BA7, BA13, BA14 |
