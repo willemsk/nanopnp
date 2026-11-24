@@ -129,5 +129,5 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP54 Review and Specification: Notebooks and Scientific Plots](sessions/notebooks-review-for-wp54.md): no status line
 - [WP47 — converter, ledger and gate rules](sessions/okf-converter-rules.md): planned, 14 October 2026.
 - [The knowledge base as an Open Knowledge Format bundle — evaluation and decisions](sessions/okf-knowledge-bundle.md): decided, not planned.
-- [Phases 6 to 12: the input to each phase's round](sessions/phases-6-to-11.md): input note, written 22 November 2026 at `/np-plan project` (§8.2.49), Phase 6's section planned the same day (§8.2.50), rescoped 23 November 2026 (§8.2.51); each `/np-plan phase <n>` reads its section, numbers and order…
+- [Phases 6 to 12: the input to each phase's round](sessions/phases-6-to-11.md): input note, written 22 November 2026 at `/np-plan project` (§8.2.49), Phase 6's section planned the same day (§8.2.50), rescoped 23 November 2026 (§8.2.51), and written again on 24 November 2026 after the rulings on the…
 - [The reading baseline: what six packages read before their first edit](sessions/reading-baseline.md): measured 22 November 2026 at WP6.02 item 2 (§8.2.50 AZ9, AZ10); the limit taken from it is ruled at item 5.

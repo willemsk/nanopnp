@@ -1,8 +1,10 @@
 # The ground-up review
 
-**Status: complete, awaiting the author's rulings.** WP6.04 of Phase 6 (`§8.2.51` BA10 to BA13; `§8.2.52` BB2 to
-BB7), written 24 November 2026. The review changes no code. Each verdict is a proposal: nothing changes until the
-author has ruled.
+**Status: ruled by the author on 24 November 2026** (`§8.2.53` BC1 to BC24, in
+[the decisions register](decisions.md)). WP6.04 of Phase 6 (`§8.2.51` BA10 to BA13; `§8.2.52` BB2 to BB7), written
+24 November 2026. The review changes no code, and each verdict below is the proposal as it was put: the rulings
+differ from it in eight places. Above all, the kernel is built in Phase 6, the phase is split in two, and the
+phases named below are renumbered: the library's foundations are Phase 7 and the workbench's rebuild Phase 8.
 
 ## In brief
 

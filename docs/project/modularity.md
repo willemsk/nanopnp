@@ -272,7 +272,8 @@ rest moves code without changing what can be extended.
 **User-visible.** No.
 
 **Outcome:** post-1.0, §8.2.8 H5; brought forward to Phase 6's library-shape package, one registry shape with switches as data, by
-REV-272 and §8.2.50 AZ4 (22 November 2026).
+REV-272 and §8.2.50 AZ4 (22 November 2026). The package is Phase 7's, and its switches as data are Phase 6's
+kernel (§8.2.53 BC3, BC7, 24 November 2026).
 
 ### MOD-09 — Outputs and steric models are closed enumerations in the assembler
 
@@ -327,7 +328,8 @@ machinery can pin.
 **User-visible.** No.
 
 **Outcome:** deferred, §8.2.8 H3. The author handed the decision to Phase 8's round, with the size of
-`physics/models.py` and `default_ladder` that MOD-13 tied to it (§8.2.50 AZ1, 22 November 2026).
+`physics/models.py` and `default_ladder` that MOD-13 tied to it (§8.2.50 AZ1, 22 November 2026). The kernel's
+design package of Phase 6 decides it (§8.2.53 BC1, BC2, 24 November 2026).
 
 ### MOD-11 — with_section and register are outside PUBLIC
 

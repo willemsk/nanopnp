@@ -54,6 +54,8 @@ export stays with FR-28, v0.7.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): its region export is that of Phase 6's tolerances and exports package.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's tolerances and exports package.
+
 ### REV-45 — The derived χ field has no export
 
 *Area:* interface. *Severity:* low. *Found:* PR #60 (WP30).
@@ -69,6 +71,8 @@ export stays with FR-28, v0.7.
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the exports.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): Phase 6's tolerances and exports package.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's tolerances and exports package.
 
 ### REV-46 — Example 07 is not run at default sizes or on the ensemble
 
@@ -108,6 +112,8 @@ saving from reusing it is unmeasured.
 **Placed** (§8.2.49 AY3, 22 November 2026): Phase 6, the speed-up, its last package before the close.
 
 **Placed** (§8.2.50 AZ6, 22 November 2026): Phase 6's speed-up, with no fixed target. Its plan registers each threshold before it measures, on the code as the restructure leaves it; a cost over its threshold is fixed or carried.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's speed-up, its thresholds registered in its plan.
 
 ### REV-61 — No B-spline fit or HOLE cross-check of the contour
 
@@ -155,6 +161,8 @@ left out of WP20, and nothing in `src/` or the specification owns them.
 **Placed** (§8.2.46 AV5, 20 November 2026): the composer's phase, with MOD-11.
 
 **Placed** (§8.2.49 AY2, 22 November 2026): Phase 8, the composer.
+
+**Placed** (§8.2.53 BC5, 24 November 2026): Phase 6's installed packages, after the kernel: an installed package declares its terms, corrections, shapes or solvers, and that package settles which registering names are public.
 
 ### REV-91 — About 400 tests name their requirement only in a comment
 
@@ -226,6 +234,8 @@ REV-60's factorisation reuse follows it. `/np-plan phase 6` reads this row.
 **Placed** (§8.2.49 AY3, 22 November 2026): Phase 6, the speed-up, its last package before the close.
 
 **Placed** (§8.2.50 AZ6, 22 November 2026): Phase 6's speed-up, with no fixed target. Its plan registers each threshold before it measures, on the code as the restructure leaves it; a cost over its threshold is fixed or carried.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's speed-up, its thresholds registered in its plan.
 
 ### REV-166: The Copilot hook probes are incomplete
 
@@ -349,6 +359,8 @@ selected output. The cost items remain deferred to Phase 6.
 
 **Placed** (§8.2.50 AZ6, 22 November 2026): Phase 6's speed-up, with no fixed target. Its plan registers each threshold before it measures, on the code as the restructure leaves it; a cost over its threshold is fixed or carried.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's speed-up, its thresholds registered in its plan.
+
 ### REV-180: The protonated density is refused under the SWANSON and PEOEPB force fields
 
 Stage 2 takes each atom's radius from the CHARMM set of the §5.3.1 NOTE on `geometry.density`, by residue and atom
@@ -394,6 +406,8 @@ before the protonated default is used outside the reference cases.
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the tolerances argued.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): Phase 6's tolerances and exports package.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's tolerances and exports package.
 
 ### REV-183: Fractional protonation through a customised PDB2PQR
 
@@ -445,6 +459,8 @@ it moves one of them.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): Phase 6's equations package, the model's open terms. The bound that stops its re-pin is put to the author at its plan, before any measurement.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's equations package, the model's open terms.
+
 ### REV-224: NUM-28's fluid consistency term omits the pore charge's force
 
 NUM-28's consistency terms take `∇·T_M = ρ_ion E − ½|E|²∇ε` in the fluid. PHY-16 deposits `ρ_pore` on
@@ -462,6 +478,8 @@ of `w` excludes the deposit.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): Phase 6's equations package, the model's open terms, with the step that shares the force terms with the weak form.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's equations package, the model's open terms.
+
 ### REV-225: Three numerics tolerances have no written derivation
 
 Three §6 tolerances give no derivation and no pointer: the absolute residual floor 10⁻¹² of NUM-16,
@@ -478,6 +496,8 @@ sees, and write each number's derivation beside its clause.
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the tolerances argued.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): Phase 6's tolerances and exports package.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's tolerances and exports package.
 
 ### REV-229: Three checks the knowledge base proposed without a requirement
 
@@ -510,6 +530,8 @@ file for another reason; none is named yet.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): Phase 6's equations package, the model's open terms, whose re-pin of VER-62 its comment edit rides.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's equations package, the model's open terms.
+
 ### REV-232: Three statements the physics reviewer doubted at WP5.12
 
 The physics reviewer read WP5.12's changes to `knowledge/` and §4.6 and doubted three statements that
@@ -531,6 +553,8 @@ WP5.12 did not change:
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the tolerances argued.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): Phase 6's tolerances and exports package.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's tolerances and exports package.
 
 ### REV-235: Design questions the frame's review leaves for the suites' prototype rounds
 
@@ -575,6 +599,8 @@ log wait for the Study suite's round (WP5.19).
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the polish pass.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the polish pass.
+
 ### REV-236: Chords the operating system may claim, a command that cannot be unbound, and the glossary written twice
 
 The WP5.15 review's doubts: on macOS, Option+Shift+digit types a character into a focused field, and a browser may
@@ -591,6 +617,8 @@ single source is put to the author with it.
 v0.6 ships with the gap, noted beside QR-16 (AW8).
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the polish pass.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the polish pass.
 
 ### REV-237: The author's notes on the frame's digest for the suites' prototype rounds
 
@@ -632,6 +660,8 @@ its final render shows; the palette's look and the help page stay open.
 **Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's polish pass, WP5.26 until then, and its round.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the polish pass.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the polish pass.
 
 ### REV-238: The Prepare tool's axis and membrane are not dragged by handles
 
@@ -689,6 +719,8 @@ screen's overlay is built. The variation view, the maps and the safeguards stay 
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the structure's layers, and the guided route and new models.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the structure's layers, and the guided route and new models.
+
 ### REV-241: What the final review of the Molecular tools left open
 
 The GUI review and `impeccable`'s critique of the finished tools (WP5.16 item 12, render `shell-r2` at `def8265`; no
@@ -719,6 +751,8 @@ over the frame.
 **Moved** (§8.2.47 AW1, 21 November 2026): the PQR point goes with Phase 6's guided route and new models, the first part of WP5.27 until then; the frame's points with its polish pass, WP5.26 until then.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the polish pass, and the guided route and new models.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the polish pass, and the guided route and new models.
 
 ### REV-242: What the code review of the Molecular suite left open
 
@@ -759,6 +793,8 @@ the other three stay open as ruled above.
 
 **Placed** (§8.2.50 AZ3, 22 November 2026): the fourth point, a gate error that carries its case path, is that of Phase 6's error base.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's error base, for its fourth point; Phase 8, the guided route and new models.
+
 ### REV-243: Prepare's view does not follow the typed orientation
 
 The axis and the membrane drawn in Prepare's view are those of the built, aligned structure: a typed tilt, azimuth,
@@ -774,6 +810,8 @@ would indeed be a nice feature, let's mark it as a QoL to be included before the
 **Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's layers, WP5.23 until then.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the structure's layers.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the structure's layers.
 
 ### REV-244: The author's notes on the Continuum digest that ask for a discussion
 
@@ -854,6 +892,8 @@ WP5.18 and the rest under REV-254; the scroll cue and the glossary links wait fo
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the polish pass.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the polish pass.
+
 ### REV-249: A correction a physics model does not set reads none, and is not marked
 
 Found at WP5.18's plan. A correction's schema default is `none` (`io/case.py:CorrectionChoice`), while the changed
@@ -871,6 +911,8 @@ validated corrections, or the mark read from the case the model resolves to.
 **Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's guided route and new models, the first part of WP5.27 until then; the choice is put to the author at its plan.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the guided route and new models.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the guided route and new models.
 
 ### REV-254: The stages' diagnostics and the other suites' words in ASD-STE100
 
@@ -905,6 +947,8 @@ The pane's status line says which value to correct. The rest stays with WP5.26.
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 6, the library's refusals; the suites' words Phase 7's polish pass.
 
 **Placed** (§8.2.50 AZ3, 22 November 2026): two steps. Phase 6's error base gives every library error one base that carries its case path and its file as fields, and moves the three readers of a refusal's sentence onto them. Its refusals package rewords the stages' diagnostics and the command line's messages after the restructure. The suites' own words stay Phase 7's polish pass.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's error base and its refusals reworded; the suites' words Phase 8's polish pass.
 
 ### REV-255: What the Physics suite's final review left open
 
@@ -999,6 +1043,8 @@ the view's package.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): its equations are those of Phase 6's equations package, the model's open terms.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the polish pass; the equations Phase 7's equations package, the model's open terms (§8.2.50 AZ4).
+
 ### REV-257: The blend's nearest-solid jump carries no dielectric force
 
 Found by the physics review of REV-250's fix at WP5.18's ship. Under a solid fraction, PHY-20's blend goes to the
@@ -1017,6 +1063,8 @@ blend `ε_p` smoothly. With the next package that changes PHY-23's terms.
 **Placed** (§8.2.49 AY6, 22 November 2026): Phase 6, the model's open terms.
 
 **Placed** (§8.2.50 AZ4, 22 November 2026): Phase 6's equations package, the model's open terms.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's equations package, the model's open terms.
 
 ### REV-258: The 200 ms redraw, measured on a GPU, and the front end's share fixed
 
@@ -1048,6 +1096,8 @@ read, and profiles any miss with `--trace`. The Phase 5 plan's criterion 6 goes 
 **Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's performance package, WP5.24 until then, with the 200 ms measure and the author's session on a GPU; it times the restructured views.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the performance package.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the performance package.
 
 ### REV-261: What the Study suite's final review left open
 
@@ -1103,6 +1153,8 @@ tolerance dashed in the muted grey; the chip naming what it links; the pick keye
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the polish pass.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the polish pass.
+
 ### REV-262: An exposed value's first name, and Exposed values' list as Study setup draws it
 
 An exposed value's name is an identifier (`[A-Za-z][A-Za-z0-9_]*`, §5.3.1's NOTE on model files): the library's
@@ -1122,6 +1174,8 @@ The critique asks for the field's label, *Size scale*, which the rule refuses. T
 **Moved** (§8.2.47 AW1, 21 November 2026): put to the author at the round of Phase 6's polish pass, WP5.26 until then.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the polish pass's round.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the polish pass's round.
 
 ### REV-263: What code review 060 of the Study suite left open
 
@@ -1151,6 +1205,8 @@ choice for its design round. None gives a wrong number; the offset is still refu
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the polish pass.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the polish pass.
+
 ### REV-265: A free list of the structure's layers in Meso's Mol* view
 
 At WP5.20's round the author asked for display options in Meso's Mol* view: "having some display options like
@@ -1172,6 +1228,8 @@ Molecular's View takes the same list is decided there.
 **Moved** (§8.2.47 AW1, 21 November 2026): Phase 6's layers, WP5.23 until then.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the structure's layers.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the structure's layers.
 
 ### REV-266: What the Meso suite's round left open
 
@@ -1217,6 +1275,8 @@ Outline's keyboard pick ships as a gap at v0.6, noted beside QR-16 (AW8); a vert
 the Qt shell's drag until the pass (AW7).
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the polish pass.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the polish pass.
 
 ### REV-267: What the Analysis suite's first review left open
 
@@ -1271,6 +1331,8 @@ item 14 and the one-bias I–V axis fall to WP5.22, which redraws each of those 
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the polish pass.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the polish pass.
+
 ### REV-268: Analysis as an editable tree of results, and the charts' library
 
 At WP5.21's round the author asked for Analysis to be reorganised: "a lot of screen real-estate is being given to the
@@ -1322,6 +1384,8 @@ key beside it, *Side by side* kept as a view, *Mirrored* first, a run named by s
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the tree of results.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the tree of results.
+
 ### REV-269: The workbench's wording
 
 At WP5.21's round the author asked to remove a way of wording "throughout the package": "\"Its rungs\" --> \"The
@@ -1350,6 +1414,8 @@ V", and a bare "M" after a field in Setup.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the polish pass.
 
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the polish pass.
+
 ### REV-270: A map reads its field linearly on each cell split in four
 
 The physics review at WP5.21's ship (doubt 4): `post/fields.py:field_at` reads a field at a point linearly on the four
@@ -1374,6 +1440,8 @@ to be compared near the pore wall before that package ships.
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the tree of results.
 
 **Moved** (§8.2.50 AZ2, 22 November 2026): the read by the cell's own basis is that of Phase 6's fields package, which rebuilds the reader and writes the fields file that its exports package exports; values read between nodes change at v0.7. Phase 7's tree of results keeps the explorer's own rework.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 7's fields package, for the read by the cell's own basis; Phase 8, the tree of results, for the explorer's rework.
 
 ### REV-272: Phase 5 closes early; Phase 6 opens with its scope, a cleanup and the foundations
 
@@ -1465,6 +1533,8 @@ and `np-implement/finish.md` 682. Review 078 then cut `CLAUDE.md` to 1,497, unde
 cut read 7,186 before its first edit
 ([the Outcome](../plans/phase-6/wp6.03-the-cleanup-instructions-copilot-host.md#implementation-details)).
 
+**Placed** (§8.2.53 BC7, 24 November 2026): WP6.02 and WP6.03, the cleanup, and the packages of the library's foundations, Phase 7 (§8.2.51 BA4); Phase 8, the workbench's foundations and the style.
+
 ### REV-273: The tree round's verdicts reopen where the settings stand, the views shown and the runs in Data
 
 The verdicts on the tree round's boards ([the record](../design/reviews/2026-11-21-tree.md), *The verdicts*) keep
@@ -1488,6 +1558,8 @@ tree of results', put to the author at that package's design round, on boards dr
 (REV-272). They would be ruled earlier if Phase 6's scope round needs the layout to size the foundations.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the tree of results.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the tree of results.
 
 ### REV-274: Five details the Qt panels show are carried to Phase 7
 
@@ -1514,6 +1586,8 @@ Every number is in the run's record and on the command line.
 **Accepted** (the author, 21 November 2026, §8.2.47 AW11): carried, and the Qt shell leaves without them.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, the structure's layers and the polish pass.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, the structure's layers and the polish pass.
 
 ### REV-275: What WP5.27's screen review left open
 
@@ -1548,6 +1622,8 @@ colon, and a study's own value names its default. These stay open:
 **Accepted** (the author, 21 November 2026): Phase 6 takes them as recommended; Phase 5 closes without them.
 
 **Placed** (§8.2.49 AY1, 22 November 2026): Phase 7, its forms, the tree of results and the polish pass.
+
+**Placed** (§8.2.53 BC7, 24 November 2026): Phase 8, its forms, the tree of results and the polish pass.
 
 ### REV-276: The radius set's notice names the removed bundle notice
 
@@ -1622,6 +1698,8 @@ each objection and its answer; an objection not met stands on its row.
 *Recommendation:* rule groups 1 to 6 at the round, and leave groups 7 to 10 to the rounds of their phases.
 `/np-plan amend 6` then plans what the rulings leave of Phase 6 (BA4, BA11).
 
+**Ruled** (§8.2.53, 24 November 2026): the author ruled each of the 25 proposals or carried it with its owner, BC1 to BC24. The kernel is built in Phase 6; Phase 6 is split, so that the library's foundations are Phase 7 and the workbench's rebuild, with the composer's tool, Phase 8.
+
 ### REV-281: What a direct solve of the model costs at a million unknowns is not measured
 
 Left open by WP6.04; a question only a trial settles (BA13). Two surveys of
@@ -1634,6 +1712,8 @@ offering as an option that a user registers (CON-08).
 *Recommendation:* Phase 6's speed-up package factors the model's own Jacobian at 10⁶ unknowns with UMFPACK and with
 PARDISO, on a named machine, and records seconds and gigabytes.
 
+**Placed** (§8.2.53, 24 November 2026): Phase 7's speed-up, which also gives QR-07 its seconds and gigabytes (BC12).
+
 ### REV-282: Whether compiled weak forms and a threaded assembly cut the corrections' cost is not tried
 
 Left open by WP6.04; a question only a trial settles (BA13). At 16,444 elements the full model takes 761 s on four
@@ -1643,6 +1723,8 @@ are evaluated as uncompiled expression trees: `Compile(` appears once in `src/na
 file enters the engine's `TaskManager`.
 
 *Recommendation:* Phase 6's speed-up package tries both on REV-156's case before it sets its thresholds.
+
+**Placed** (§8.2.53, 24 November 2026): Phase 7's speed-up, before it sets its thresholds.
 
 ### REV-283: Whether the corrections can switch on at the target concentration is not tried
 
@@ -1659,6 +1741,8 @@ design C names among its least sure choices.
 *Recommendation:* Phase 6's speed-up package runs the trial at the corners of FR-17's envelope and keeps NUM-18's
 ladder unless every corner converges.
 
+**Ruled** (§8.2.53 BC24, 24 November 2026): Phase 7's speed-up tries it. Its plan registers the pass marks before any run: every corner of FR-17's envelope converges, and no quantity of VER-62's walks moves beyond Newton's stopping tolerance. A full pass adopts the path and re-pins VER-62 with no further ruling; on any miss NUM-18 stands.
+
 ### REV-284: Whether Plotly pans a field map of 100,000 cells smoothly is not tried
 
 Left open by WP6.04; a question only a trial settles (BA13). The workbench draws its charts with Plotly, and two
@@ -1667,6 +1751,8 @@ reading of artefacts*) without a measurement of a production-sized field map.
 
 *Recommendation:* Phase 7's design study measures it with REV-287's trial.
 
+**Placed** (§8.2.53 BC13, 24 November 2026): Phase 8's first package, the kit's trial.
+
 ### REV-285: Whether ParaView shows a second-order field without resampling is not tried
 
 Left open by WP6.04; a question only a trial settles (BA13). IF-07 writes fields as XDMF with HDF5 at the exact
@@ -1674,6 +1760,8 @@ second-order node set. Design A writes HDF5 in the VTKHDF layout, whose specific
 walk keeps IF-07 and cannot say whether ParaView shows either file's second-order field as it is.
 
 *Recommendation:* the package of Phase 6 that argues the exports opens one field of each kind in ParaView.
+
+**Placed** (§8.2.53, 24 November 2026): Phase 7's tolerances and exports package.
 
 ### REV-286: Whether Netgen meshes a wall layer at the Debye length is not tried
 
@@ -1684,6 +1772,8 @@ Netgen's 2D boundary layers are immature.
 
 *Recommendation:* the round names the package; GU-08's mesh ladder meets the question first.
 
+**Placed** (§8.2.53 BC9, 24 November 2026): Phase 7's mesh-error package, whose ladder of finer meshes meets the question first.
+
 ### REV-287: Whether NiceGUI carries the workbench's hardest view and QR-16 is not tried
 
 Left open by WP6.04; a question only a trial settles (BA13). ADR-004 chose NiceGUI on a spike of one screen, which
@@ -1693,3 +1783,5 @@ second challenger showed that measuring after the first rebuilt suite is the ord
 
 *Recommendation:* Phase 7's design study, in the second lane, builds the workbench's hardest view in the kit and
 audits it against QR-16 before the rebuild starts.
+
+**Ruled** (§8.2.53 BC13, 24 November 2026): Phase 8's first package builds the hardest view in the kit and audits it against QR-16, on pass marks `/np-plan phase 8` registers first; the rebuild starts after the author has seen the result. It runs in no second lane.

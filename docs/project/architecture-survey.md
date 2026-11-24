@@ -10,7 +10,7 @@ agents' inferences.
 
 The author ruled on 21 November 2026 that the restructure they propose opens Phase 6, after a scope round and a
 cleanup of the records and instructions, and that Phase 5 closes as soon as it can (REV-272). For a finding's
-outcome, read REV-272 and the plans of Phase 6, for the library, and Phase 7, for the workbench (§8.2.49 AY1); the numbers below are those of `8f4b09a`.
+outcome, read REV-272 and the plans of Phase 7, for the library, and Phase 8, for the workbench (§8.2.49 AY1; §8.2.53 BC7); the numbers below are those of `8f4b09a`.
 
 ## The workbench
 

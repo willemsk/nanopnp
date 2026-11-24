@@ -11,11 +11,12 @@ chosen, in `a/`), the scripts that write them in `docs/design/generators/`, and 
 and review in `docs/design/reviews/`, and WP5.02's framework spike in `docs/design/spike/` (its report,
 `report.md`, and the two windows' pictures). The tokens are `docs/design/tokens.css`.
 
-**What is live and what is record.** Live design: *Purpose and users*, *The areas* to *The shell's
-reading of artefacts*, the *Decision log* and the *Glossary*. Record: *Today's shell*, whose capability
-list, Q01 to Q41, WP5.27 checked in the workbench before Qt was removed
-([the record](reviews/2026-11-21-qt-capabilities.md)), with the critique and the verdicts; *Restated
-clauses*, which are now the clauses' own text in the specification; and *Inherited rows*.
+**Every section is live design.** The four sections of record on the Qt shell are not in this document
+(§8.2.53 BC12): its capability list, Q01 to Q41, with the critique and the verdicts; where each Qt tab's
+capability went; the restated clauses, which are the clauses' own text in the specification; and the
+inherited rows. The tree at `9a2d773` holds them. WP5.27 checked the capability list in the workbench
+before Qt was removed ([the record](reviews/2026-11-21-qt-capabilities.md)), and the author's verdicts
+on the Qt shell are in `docs/design/reviews/2026-10-25-qt-shell.md`.
 
 ## Purpose and users
 
@@ -33,92 +34,6 @@ It serves the three personas of §2 at once, one interface with no separate mode
 | P2, collaborating computational scientists | Case files the command line runs, reproducible cases, sensible defaults | Each run writes its resolved case file with its manifest, which `nanopnp run` runs as it is (FR-25; WB-11); every value away from its default marked and counted (WB-28; WB-03) |
 | P3, experimental nanopore laboratories | No Python: select a PDB, set salt and voltage, obtain a prediction and a picture | One install command and `nanopnp gui` (S12); the guided route from a structure to a conductance (QR-10; WB-08); plain text, a refusal that says what to type, and a glossary (WB-25) |
 
-## Today's shell
-
-The Qt shell of v0.5 (`nanopnp-gui <case> [--store <dir>]`; IF-09) is one window of seven tabs over
-one case file: *Case*, *Geometry*, *Charge*, *Run*, *Convergence*, *Result* and *Fields*. The study
-pictured each tab and each of its views on example 07 (`2wcd.case.yaml`, 2WCD with its charge
-deposited) by `/np-gui render qt`: 22 pictures in four states (opened, a refused field, after
-*Build charge*, after *Run*), and the three 3D views pictured apart in a browser.
-
-### The capability list
-
-One row per control or view that does something. Before the Qt shell leaves, the browser shell
-offers each row, or the author has ruled it dropped (§8.2.17 S13). The *Source* column names the
-widget in `src/nanopnp/gui/widgets/` at the commit this list was taken from.
-
-| # | Tab | Control or view | What it does | Source |
-|---|---|---|---|---|
-| Q01 | Window | Command line `nanopnp-gui <case> [--store <dir>]` | Opens one case file for editing, over a chosen artefact store; a case that does not validate is refused with its exit code | `app.py:main` |
-| Q02 | Window | Window title | Names the open case file | `app.py:MainWindow` |
-| Q03 | Window | Status bar | Says what was last started (a build, a run) or why it was refused | `app.py:MainWindow` |
-| Q04 | Window | Closing the window | Stops the Geometry and Charge builds and their child processes | `app.py:MainWindow.closeEvent` |
-| Q05 | Case | One typed field per case path | Edits every field of the case schema: a check box for a flag, a list for a choice, a multiple selection, a whole or real number box with its bounds, or text read as YAML; a field whose section is absent is disabled with a tooltip saying why | `case_editor.py:CaseEditorWidget` |
-| Q06 | Case | Per-field staging | Checks each edit against its field as it is typed; a refused field's label turns red and the status line says why | `case_editor.py:_setter` |
-| Q07 | Case | *Add section: <name>* buttons | Writes an empty optional section, which resolves as its absence, so its fields can be edited | `case_editor.py:add_section` |
-| Q08 | Case | Commit and save | Validates the whole case and writes the case file before each build and run; a refused case stops there with each problem listed in the status line | `case_editor.py:commit`, `app.py:_saved_case` |
-| Q09 | Geometry | *Load structure…* | Picks a PDB, mmCIF or PQR file and stages it as the case's structure | `geometry.py:_pick_structure` |
-| Q10 | Geometry | *Build geometry* | Walks the saved case through stages 1 to 6 in a child process; offered only for a case whose stages 5 and 6 build its mesh | `geometry.py:build` |
-| Q11 | Geometry | *Cancel* | Cancels the build | `geometry.py:_stop` |
-| Q12 | Geometry | Stage list | One row per planned stage with its status and stored hash, updated as the walk lands; selecting a row shows that stage | `geometry.py:_show_rows` |
-| Q13 | Geometry | Stage 1 summary | The alignment record: point group, axis, chain order, the angle, orientation and spacing gates with their measured values, frames | `geometry.py:_show_row` |
-| Q14 | Geometry | Stage 2 picture | The density section at y = 0 in the stage-1 frame, with the membrane slab and the grid record | `geometry.py:GeometryCanvas.show_image` |
-| Q15 | Geometry | Stage 3 picture and quantity list | The (r, z) map, choosing *mean*, *cn_variance* or *raw_variance* | `geometry.py:_requantity` |
-| Q16 | Geometry | Stage 4 contour editor | The extracted contour over the mean map, edited by hand: drag a vertex, double-click an edge to insert one, Delete or *Delete vertex* to remove one (never below three) | `geometry.py:GeometryCanvas` |
-| Q17 | Geometry | *Undo*, *Redo* | Steps through the contour edits | `geometry.py:_step_back`, `_step_forward` |
-| Q18 | Geometry | *Measure criteria* | Measures the §5.2.1 contour criteria on the edit against the stored stages, in a child process, and marks where the first failed criterion sits | `geometry.py:measure` |
-| Q19 | Geometry | *Seed from refusal* | Recomputes a refused contour from the stored stage-3 map so it can be edited | `geometry.py:seed` |
-| Q20 | Geometry | *Save edit* | Writes the edited profile and a derived case that uses it; the original case is unchanged | `geometry.py:_save_edit` |
-| Q21 | Geometry | Stage 5 picture | The region: the model-frame profile, the membrane slab and chord, with the assembly record | `geometry.py:GeometryCanvas.show_outline` |
-| Q22 | Geometry | Stage 6 mesh view | The mesh in 3D (WebGL), with the element count, the materials, the worst SICN and gamma and where they sit, and the wall-size gate | `geometry.py:_mesh_lines` |
-| Q23 | Geometry | Details pane and status line | The selected stage's record as text; what the build is doing or why it stopped | `geometry.py` |
-| Q24 | Charge | *Build charge* | Walks the saved case through stage 7 on the Geometry tab's walk; declined, with its reason, for a case that deposits no charge | `charge.py`, `app.py:build_charge` |
-| Q25 | Charge | *Cancel* | Cancels the build | `charge.py:_control_cancel` |
-| Q26 | Charge | Stage list | Stage 7's protonation and charge assembly, with status and hash | `charge.py` |
-| Q27 | Charge | *Protonation* pane | Per titratable group: chain, residue, applied and expected charge, pKa, unapplied; a frame list with each frame's net charge; the PDB2PQR and PROPKA record and warnings | `charge.py:_show_frame` |
-| Q28 | Charge | *Charge map* pane | The areal charge density in (r, z), diverging about zero, with the worst planes of the lattice and mesh legs marked | `charge.py:ChargeCanvas` |
-| Q29 | Charge | *Deployed field* pane | The deployed charge or χ on the mesh in 3D (WebGL), with the colour range, the materials and the dielectric's source | `charge.py:_draw` |
-| Q30 | Charge | *Conservation* pane | The conservation legs (producer, consumer, quadrature, worst planes) against their tolerances, and the solid-share record | `charge.py` |
-| Q31 | Run | *Run* | Commits and saves the case, then solves it in a child process | `run_control.py`, `app.py:start_run` |
-| Q32 | Run | *Cancel* | Cancels the run | `run_control.py:_stop` |
-| Q33 | Run | Progress bar and stage line | The stage reached, of the walk's stages | `run_control.py` |
-| Q34 | Run | Log | Each stage's events and each Newton iteration's residual, as they arrive | `run_control.py` |
-| Q35 | Convergence | Live plot | Residual and relative update per Newton step on a log scale, banded by continuation rung, redrawn every 250 ms | `convergence.py:ConvergencePlot` |
-| Q36 | Convergence | Summary and rung notes | Rungs and steps; per rung, the test that ended it, the last value against its tolerance, and the smallest damping | `convergence.py:ConvergenceWidget` |
-| Q37 | Result | Run directory | Where the run's artefacts are stored | `result.py` |
-| Q38 | Result | Quantities of interest | Every scalar quantity the run extracted | `result.py:show_outcome` |
-| Q39 | Result | Deviations from the validated default | Every switch set away from the validated default, or that there is none (FR-25) | `result.py:_render_deviations` |
-| Q40 | Fields | Field list | Chooses one field of the finished run to draw | `viewer.py:_reselect` |
-| Q41 | Fields | Field view | The chosen field on the mesh in 3D (WebGL), with a colour bar; the renderer's own controls; a diagnostic in place of the view when it does not draw | `viewer.py:ViewerWidget` |
-
-Two views are absent from the list because the shell lacks them: the structure itself (stage 1
-shows its record but no picture of the molecule) and any reading of a field at a point or along a
-line.
-
-### The critique
-
-The GUI reviewer read the 22 pictures and the three browser pictures against QR-10's guided run,
-Nielsen's heuristics and WCAG 2.2 AA: 50 findings, two of them blocking the run. The Result tab
-prints each number as the store's float wrapper, so the current cannot be read (REV-134), and the
-field view opens on the whole 250 nm domain, where the pore is two pixels wide. Across the shell,
-stage records and gates are shown as raw dictionaries without a verdict, pictures carry no colour
-bar or unit, and the status bar keeps "running" after a run ends.
-
-### The author's verdicts
-
-The author marked 20 of the 22 screens *change* and 2 *keep* (the Run tab and the refusal), and
-dropped none, so every row of the capability list stays; the notes move rows, they remove none. The
-record, screen by screen and with each disposition, is
-`docs/design/reviews/2026-10-25-qt-shell.md`. In the author's words, the case editor "should not be
-the first point of entry" and may stay "as an 'overview' feature"; there should be "3 more
-independent major parts of the workbench: 1) molecular, 2) continuum, 3) analysis, each with their
-own sub-tasks and tools"; stages 1 to 5 "should be part of a protein geometry tool in the geometry
-suite"; protonation "should be moved before building the geometry"; convergence merges into a run
-suite; and the result and field views become "a fully fledged results explorer and plotter suite",
-with zooming, colour scales and the mesh on or off, "much like how COMSOL handles this today". One
-note raises a physics question, whether the density should see the protonation chosen later
-(REV-135): ruled yes, protonation moving before the geometry stages in the pipeline as well (§8.2.19 U2).
-
 ## The areas
 
 The author named the workbench's areas, the list left open (S24): "Molecular viewer/editor, geometry
@@ -134,7 +49,7 @@ later-phase banner and no working control (S7).
 | Mesh builder | Continuum | Mesh | Stage 6 and its quality report; the size scale and the per-part sizes | Refinement regions drawn by hand; boundary layers |
 | Physics assigner | Physics | Equations, Electrolyte, Conditions, Exposed values | A **physics model**: a registered model and its switches, the electrolyte and its corrections, the boundary conditions and walls, the solid permittivities, the element orders and the stabilisation (WB-34) | The composer (S3), in this suite |
 | (added by the round) | Study | Overview, Study setup, Sweep, Runs | A study pairing one molecular, one continuum and one physics model, its overrides and sweep, and its runs; its graph's charge opens Meso's Charge map on its pair (AT3) | |
-| Results analyser | Analysis | Results, the tree of results (WB-54) | The run record, the quantities of interest, the fields, the sweeps, two runs compared | Figure, field and case export (FR-28, v0.7) |
+| Results analyser | Analysis | Results, the tree of results (WB-54) | The run record, the quantities of interest, the fields, the sweeps, two runs compared | Figure, field and case export (FR-28, v0.8) |
 
 ## Organisation
 
@@ -238,35 +153,6 @@ focus rings and colour bars at 3:1, targets of at least 24 × 24 px, a keyboard 
 (a residue picked from a list as on the canvas), reduced motion honoured. The render check measures text
 contrast and targets; non-text contrast is REV-138.
 
-## Tabs or areas
-
-S2 asked for "distinct tabs for each part of the workflow"; the round answered with suites (WB-01), and
-§8.1's Phase 5 row says so. Today's seven tabs, one per stage, retire with Qt. Every row of the capability
-list has a place in the workbench before Qt leaves (S13):
-
-| Rows | Today's tab | In the workbench |
-|---|---|---|
-| Q01 to Q04 | Window | `nanopnp gui [<project>]` opens the project; the browser tab and the project rail name it (WB-36); the queue and the problems list say what runs and what was refused; closing stops the builds and their child processes |
-| Q05 to Q08 | Case | Each field in the tool that sets it, checked as it is typed and refused at the field (WB-12); the study's *Overview* shows the resolved case file; a section is added by the tool that uses it; a build or run validates and writes the case first; a setting with no field of its own is set in Study setup's *More values*, which offers every case path the study's lists do not show, by its path and a typed value, and a supplied input by import (§8.2.47 AW10) |
-| Q09 | Geometry | *Open structure…* in Molecular, Prepare structure |
-| Q10 to Q12, Q23 | Geometry | Each Continuum tool's *Build*, queued; the tool list's status per tool; *Cancel* in the queue; a tool's record under its *Checks*, the log in the bottom panel |
-| Q13 | Geometry | Prepare structure's orientation gate and its checks |
-| Q14, Q15 | Geometry | Meso's Density and Outline: the density section and the reduced maps with their colour bars, the key of the lines drawn over them; a point of the density names the residues its atoms reach first |
-| Q16 to Q20 | Geometry | Meso's Outline, *Edit outline*: move (by its typed r and z, which is the capability WP5.27 checks, §8.2.47 AW7; dragging with Phase 7's polish pass, WP5.26 before AW1, after Qt has left), insert and delete vertices, *Undo*, *Redo*, *Measure*, *Seed from the map*, *Save edit…*; the residues the edit moves into the water and into the protein |
-| Q21 | Geometry | The Region tool, each domain picked in the view |
-| Q22 | Geometry | Mesh, sizes and quality: the parts' tree, the element count, the quality gate and its histogram, the worst elements located |
-| Q24 to Q26, Q30 | Charge | Meso's *Charge map*, built by *Build charge map* over the continuum model's molecular model, with its conservation checks |
-| Q27 | Charge | Molecular, Protonation, its residue states, Q<sub>net</sub> and the PROPKA warnings |
-| Q28, Q29 | Charge | Charge map: the lattice and the deployed density in (r, z) beside the molecule, linked (S6), a residue named once with its copies |
-| Q31 to Q34 | Run | *Run study*; *Cancel* on the running entry in Study › Runs; the running entry's "stage i of N: name, rung x of N" in the queue (WB-23) and the run's lines in the log (§8.2.47 AW9) |
-| Q35, Q36 | Convergence | A run picked in Study › Runs or opened from its queue line: the convergence plot across the view, the rung table in the pane (WB-45) |
-| Q37, Q38 | Result | The results explorer: the run's folder and its quantities, in the quantities tile; *Open in Runs* (WP5.21), which WP5.27 checks. From Phase 7's tree of results (§8.2.47 AW1; §8.2.49 AY1): *Data › Shown run* names the run, its folder in the tooltip, with *Open in Runs*; its quantities in the bottom panel's *Quantities* (WB-54, WB-59, WB-63) |
-| Q39 | Result | The quantities tile's *Changed from the validated default*, from the run's manifest (WP5.21); from the tree, beside the quantities (WB-59) |
-| Q40, Q41 | Fields | The results explorer's field tile: its quantity, its colour map and range, as a map or on the solve's mesh, the renderer's message in place of a view that does not draw (WP5.21, WB-53), which WP5.27 checks. From the tree: a plot group's surface, its expression, colour map and range, *Show mesh* for the solve's mesh (WB-56, WB-57) |
-
-Five details of rows Q13, Q14, Q18, Q21, Q22, Q26, Q27, Q29 and Q30 are carried to Phase 7, and the Qt shell leaves
-without them (REV-274; §8.2.47 AW11; §8.2.49 AY1).
-
 ## Tools
 
 Each tool has its settings and its live view (S6). The mockup screen named is in `docs/design/mockups/a/`.
@@ -310,7 +196,7 @@ link the user pins (WB-06). A linked view carries a chip naming the link, with *
 3. **A field and its probes and cuts**: a click on the map places the axial cut or a probe, to 0.01 nm, and typed
    values move them; the cut's chart and the probes' rows follow, on both runs' maps in a comparison. Probes and
    cuts are nodes of the tree, shared by every plot group that draws their data (WB-54). Dragging the cut's line is
-   Phase 7's polish pass's (WP5.26 before §8.2.47 AW1; REV-267).
+   Phase 8's polish pass's (WP5.26 before §8.2.47 AW1; REV-267).
 4. **A run and its result**: a done run's *Result* in the queue, and a recorded run in Study › Runs, opens it in
    Analysis as *Data › Shown run*, as does a point of its I–V; every plot group following it redraws, and the view
    names the run and opens it in Runs (WP5.21; WB-61).
@@ -350,7 +236,7 @@ resolve, and the problems list says which do not (FR-32; AI9, AI10).
 the inputs (a linked one copied in), and each run's case file, manifest and results, never an opaque archive
 (S11). The store's intermediate
 artefacts are left out unless asked for, each being rebuilt from its case. Exporting figures and fields
-from a run is FR-28, v0.7.
+from a run is FR-28, v0.8.
 
 ## Install and start
 
@@ -381,11 +267,12 @@ the range. The route of the mockups (`docs/design/mockups/a/00-guided-route.html
 
 ## Later tools
 
-Each later tool is a library capability and a phase of its own, before validation: the composer is Phase 8, the
-structural mutator Phase 9 and the sketcher Phase 10 (S7; §8.2.49 AY2). The mockups draw where each will sit, with the later-phase banner and no working control.
+Each later tool is a library capability first, before validation: the composer's library is Phase 6's kernel
+and its tool is built with the workbench's rebuild, Phase 8; the structural mutator is Phase 9 and the sketcher
+Phase 10 (S7; §8.2.49 AY2; §8.2.53 BC1, BC6). The mockups draw where each will sit, with the later-phase banner and no working control.
 
-- **The physics composer** (S3), in the Physics suite (WB-34), composes a model from registered building blocks: a field set, weak-form
-  contributions, boundary conditions and a solve strategy (FR-20), in `physics/` with its own tests. It opens
+- **The physics composer** (S3), in the Physics suite (WB-34), composes a model from registered terms: a field set, weak-form
+  contributions, boundary conditions and a solve strategy (FR-40), in `physics/` with its own tests. It opens
   from the Equations tool, and the model it composes joins the registry that tool's list reads. Its
   architecture leaves room for equations the user types: the model list stays the registry, a composed
   model is a project item like any other, and the composer's blocks are data. Typed equations would amend
@@ -421,7 +308,7 @@ third party's.
 | Picture | Renderer | Where it is | Licence |
 |---|---|---|---|
 | The molecule in 3D | Mol*, as its standalone bundle (`molstar.js`, `molstar.css`) | `src/nanopnp/gui/web/assets/molstar/` | MIT (CON-09) |
-| Plots and (r, z) views, from Phase 7's tree of results (WP5.22 before §8.2.47 AW1) | Plotly (plotly.js 3.1.1), as NiceGUI 3.18 ships it for `ui.plotly`, unmodified, its own toolbar hidden: every chart, map, mesh and (r, z) drawing, the solve's mesh as a layer and the field turned about the axis (WB-57) | NiceGUI's `nicegui/elements/plotly/dist`, served from the server's origin | MIT (CON-09) |
+| Plots and (r, z) views, from Phase 8's tree of results (WP5.22 before §8.2.47 AW1) | Plotly (plotly.js 3.1.1), as NiceGUI 3.18 ships it for `ui.plotly`, unmodified, its own toolbar hidden: every chart, map, mesh and (r, z) drawing, the solve's mesh as a layer and the field turned about the axis (WB-57) | NiceGUI's `nicegui/elements/plotly/dist`, served from the server's origin | MIT (CON-09) |
 | Fields on the mesh, until that package | npm `webgui` 0.2.39, served at `/vendor/webgui`; a host page fetches its scene from `/api/analysis/scene` (WP5.21) | `src/nanopnp/gui/assets/webgui/` | LGPL-2.1-or-later, with three.js (MIT) and dat.gui (Apache-2.0) (CON-09) |
 | Maps and the mesh in (r, z), until that package | A canvas the page draws from the data of `plot/data.py`, the Continuum suite's mesh among them (WP5.17); a map's colours from the workbench's five maps or any of Matplotlib's (`gui/geometry.py:lookup_table`, AU2) | `src/nanopnp/gui/web/` | BSD-3-Clause |
 | Plots, until that package | uPlot 1.6.32 (`uPlot.iife.min.js`, `uPlot.min.css`), served at `/vendor/uplot`; `gui/web/chart.py`'s chart drawn by `assets/chart.js`: Electrolyte's two plots, Runs' convergence, the I–V and the cuts (AU1; the library is chosen again with REV-268's tree) | `src/nanopnp/gui/web/assets/uplot/` | MIT (CON-09) |
@@ -429,7 +316,7 @@ third party's.
 | Equations and conditions | KaTeX 0.19.1 (`katex.min.js`, `katex.min.css`, its fonts), from the LaTeX of `physics/terms.py` (WP5.18) | `src/nanopnp/gui/web/assets/katex/` | MIT (CON-09) |
 
 Until that package (WB-57), the results explorer asks four controls of its field view: zoom, a colour scale for each quantity, the mesh
-on or off, and a framed opening view (the author's verdicts on today's shell). Read from the shipped
+on or off, and a framed opening view (the author's verdicts on the Qt shell). Read from the shipped
 `webgui.js`, `webgui` serves two of them whole and the rest in part:
 
 | Control | Served by `webgui` | How |
@@ -445,39 +332,6 @@ needs about 800 ms to repaint a selection, and the front end's own share is 14 t
 on 2WCD, the markers' paint took 297 ms median and 380 ms p95, of which the server took 167 / 243 ms, and Mol*'s second
 frame 745 / 827 ms. The measurement on a GPU and the front end's fix go to a performance package (§8.2.42 AR7;
 REV-258).
-
-## Restated clauses
-
-The clauses that gated the Qt shell were restated for the browser shell, each as a NOTE beside its
-clause, and WP5.27 made each NOTE the clause's text (S17; WP5.01 D5). In brief:
-
-| Clause | Today | For the browser shell |
-|---|---|---|
-| IF-09 | A desktop graphical interface: case editing, run control, convergence, fields | A graphical workbench served locally and opened in the browser by `nanopnp gui`: the six suites, the run queue and the project folder, a thin shell over the IF-01 stage objects through a network API |
-| P3 | A desktop application | The workbench, installed with one documented command: select a PDB, set salt and voltage, obtain a prediction and a picture |
-| QR-10 | Unaided in the desktop application | Unaided in the workbench, from the install to a conductance and a field picture, by the guided route or without it |
-| VER-43 | The schema walk, registry options, refusal at the field, spawned run control, cancellation, exit classes; PySide6 and the packaging probe | Kept for the workbench's forms and the server's run control; the view-models import no front-end framework and no NGSolve; the packaging probe's part is replaced by the server's self-test of every payload the walk needs, failing naming it |
-| VER-44 | The convergence hook and the field viewer, in Qt WebEngine | Kept: the hook, its two silences, the rung reading, the renderer shipped unmodified and pinned; the scene served to the browser as a file; the self-test in place of the probe's |
-| VER-55 | The geometry pipeline in the Geometry tab | Kept for the Continuum tools: the artefact hook, the picture's orientation, the contour editor's edits and refusals, the derived case, the mesh drawn by material; the view-models import no front-end framework |
-| VER-60 | The charge pipeline in the Charge tab | Kept for Protonation, Charge edit and Meso's Charge map: the charge map, the conservation view, the protonation view, the deployed coefficient; a bounded field accepts exactly its schema bounds, a nullable one can say "unset"; the Charge map drives a continuum model's walk over its molecular model to `upto: charge` |
-| CON-09 | PySide6 under the LGPL; the renderer unmodified as a separate file | The PySide6 clause lapses; the renderer clause binds the browser shell; a front-end dependency WP5.02 chooses is permissive, or LGPL or MPL used unmodified as a separate file |
-| ADR-004's packaging NOTE | A one-dir PyInstaller bundle with its probe | Lapses with the bundle: the workbench is the package with its `gui` extra, the front end prebuilt inside it; the solver process is still spawned |
-| RSK-13 | Desktop packaging defeated by a binary dependency | The workbench's install defeated by a binary dependency: every payload a wheel; CI installs the `gui` extra on Linux, macOS and Windows and runs the self-test |
-
-The new requirements are §3's FR-31 to FR-43 and QR-16, each with its Appendix A row: the suites (FR-31),
-the project folder (FR-32), the four live links (FR-33), the changed marks and no hidden state (FR-34), the
-refusal at its field (FR-35), the guided route (FR-36), structure preparation (FR-37), the charge-level
-mutator (FR-38), the study's overrides and sweeps (FR-39), and the accessibility target (QR-16); the
-composer (FR-40), the structural mutator (FR-41), the sketcher (FR-42) and fractional protonation (FR-43)
-are tagged for later phases.
-CON-08 and CON-11 name the installed workbench in place of the bundle and the desktop path (REV-141).
-
-## Inherited rows
-
-Fourteen deferred review rows and three modularity findings waited on this document (Phase 5 open decision
-3). The author ruled them on 27 October 2026, as proposed but for MOD-09, which the author brought into v0.6:
-[§8.2.18 T1 to T5](../_generated/model/specification/history/18-the-workbench-design-studys-rulings-agreed-27-oct.md)
-holds the rulings, and the [review register](../_generated/project/review-findings.md) each row's state.
 
 ## Decision log
 
@@ -549,8 +403,8 @@ boards in `docs/design/concepts/tree/`, drawn on 2WCD's solved fields; each was 
 | WB-48 | Where a molecular or continuum model's exposed values are chosen | Asked at the Study round (REV-252), "A list tool per suite" | Molecular and Continuum each have an Exposed values tool, as Physics has, with *Expose* at its head; no field carries an *Expose* checkbox |
 | WB-49 | The Meso round: the charge map's range and dark middle, the structure's look, the overlay | The author, marking the Meso drafts (`reviews/2026-11-19-meso.md`): of Charge map, "Charges are barely visible on the map. Maybe needs adjustable ranges? On the structure: having some display options like molecular surface, sticks, spheres, etc. would be good. In cartoon mode, selecting a residue could change the style of the side-chain to sticks or spheres for example. Think about this yourself, and then give me options."; asked, "Clip, and let me change it" and "On all three Meso screens"; of a picked residue, "Solve this in a holistic way, offering the ability to change/configure the representations in a flexible way", then "A free list of layers"; of the dark theme, "middle on dark"; the other picks kept | Meso's charge map, the lattice and the deployed charge, opens its colour scale on the 99th percentile of the charge's size; a *Map range* field sets it, and the bar's ends read ≤ and ≥ where values pass them. On the dark theme the map's diverging scale runs through a dark middle. Each Meso tool sets how Mol* draws the structure (*Structure*: Cartoon, Ball and stick, Spheres, Surface), kept per tool for the window; a free list of the structure's layers, each with what it draws, its style, its colour and its opacity, comes in a package of its own (REV-265). The suite keeps its name, *Meso*, and the pair its width; the charge in 3D and its mean about the axis are kept (AT2); the residues stay a strip of buttons; the mesh's edges stay on; Outline gains no radius against z and no vertex list |
 | WB-50 | The Analysis round: the 3D view, the map's outline, *Side by side*, the rebuild and the rungs | The author, marking the Analysis drafts (`reviews/2026-11-20-analysis.md`): of the 3D view, "1) map's scale 2) on 3) not sure I understand what you mean 4) background follows theme 5) Switch is fine, but it is a very large button now. I think for these kind of switches we need a more subtle, space-efficient solution.", and asked, "Open on the pore"; of the map, "No global percentile for now", asked, "Keep as built", and "Showing the outline can be an toggled option"; of *Side by side*, "Maybe this could also be made in a \"mirrored\" configuration, with one solution on the left (mirrored), and the other one on the right, all in the same plot."; of the rebuild, "Not sure what the value of this is", and asked, "Keep, as 'Solve again'"; of Runs' rungs, "The rung descriptions look like pieces of text, while it seems it may be better shown as a table?" | The explorer's field tile switches *Map* and *3D* with a small switch in its title bar, as Comparison's views do in its pane: the frame's switch at the heading's height. The 3D view opens on the map's colour range (a component's vector on the renderer's own; a comparison's pair on the side-by-side scale), handed to the renderer high to low where positive is blue, so its signs read as the map's (WB-39), with its wireframe, on the pore's close-up, *Whole domain* on request, its background the theme's. A map's scale keeps the 99th percentile of what the close-up draws (WB-49). An *Outline* option draws the fluid's boundary off the axis over a map. Comparison gains *Mirrored*: the two runs as one map, the first reflected about the axis, on one scale, the cut and the probes on both sides. A cleaned run offers *Solve again*, which says it takes as long as the first solve; its check speaks only when a number moved (QR-08). Runs' rungs are a table, *Rungs* (WB-52); a click places the cut or a probe to 0.01 nm |
-| WB-51 | Analysis as an editable tree of results, and the charts' library | Of the explorer: "a lot of screen real-estate is being given to the \"Results\" explorer tool settings. This should be more efficiently organized. Perhaps a good way would be to organize the different views into an customizable editable tree, like it is done in COMSOL. Plots and graphs would be generated using different plotting tools (surface, scatters, etc) based on existing/newly defined variables/constants. This will likely need a new grilling and a dedicated WP."; of the probes, "Pane of their own, like in COMSOL."; of the quantities, "Make the QoIs which are shown customizable."; of uPlot, "Let's revisit the uplot choice, it seem to be rather limiting in capabilities. Given the scope of the kind of plots that we need create here, we should explore alternatives."; asked where, "New package, before speed", and which library, "Decide with the tree" | A design round puts the tree to the author, then a package of its own builds it after WP5.21 and before the performance package (WP5.24; both moved by §8.2.47 AW1, and Phase 7's since §8.2.49 AY1), which times the tree: groups of plots over a run's existing and newly defined variables and constants, probes in a pane of their own, the quantities shown chosen. The round chooses the chart library from the plot types the tree needs (AU1 restated there; NiceGUI ships Plotly and ECharts); WP5.21 ships its tiles and uPlot as they are (REV-268) |
-| WB-52 | The workbench's wording | Of Runs: "\"Its rungs\" --> \"The rungs\": I would like to remove these kind of \"way-of-wording\" throughout the package (other example: \"What the model shows.\", \"Study's Runs starts one\"). Let's discuss how."; asked how, "Examples first"; marking the examples and the draft rule, "take" on each | The words follow five rules (*Look and feel*): plain noun phrases for titles, headings and labels; no "its" where the noun reads; no clause as a heading; a pointer is a link saying what to do there; short active sentences, ASD-STE100 for messages. The sixteen strings taken are applied in WP5.21 (*Rungs*, *Physics model*, *Boundary conditions*, …); the polish package (WP5.26, moved by §8.2.47 AW1, and Phase 7's since §8.2.49 AY1) sweeps every other screen's text by the rules, with a check (REV-269) |
+| WB-51 | Analysis as an editable tree of results, and the charts' library | Of the explorer: "a lot of screen real-estate is being given to the \"Results\" explorer tool settings. This should be more efficiently organized. Perhaps a good way would be to organize the different views into an customizable editable tree, like it is done in COMSOL. Plots and graphs would be generated using different plotting tools (surface, scatters, etc) based on existing/newly defined variables/constants. This will likely need a new grilling and a dedicated WP."; of the probes, "Pane of their own, like in COMSOL."; of the quantities, "Make the QoIs which are shown customizable."; of uPlot, "Let's revisit the uplot choice, it seem to be rather limiting in capabilities. Given the scope of the kind of plots that we need create here, we should explore alternatives."; asked where, "New package, before speed", and which library, "Decide with the tree" | A design round puts the tree to the author, then a package of its own builds it after WP5.21 and before the performance package (WP5.24; both moved by §8.2.47 AW1, and Phase 8's since §8.2.53 BC7), which times the tree: groups of plots over a run's existing and newly defined variables and constants, probes in a pane of their own, the quantities shown chosen. The round chooses the chart library from the plot types the tree needs (AU1 restated there; NiceGUI ships Plotly and ECharts); WP5.21 ships its tiles and uPlot as they are (REV-268) |
+| WB-52 | The workbench's wording | Of Runs: "\"Its rungs\" --> \"The rungs\": I would like to remove these kind of \"way-of-wording\" throughout the package (other example: \"What the model shows.\", \"Study's Runs starts one\"). Let's discuss how."; asked how, "Examples first"; marking the examples and the draft rule, "take" on each | The words follow five rules (*Look and feel*): plain noun phrases for titles, headings and labels; no "its" where the noun reads; no clause as a heading; a pointer is a link saying what to do there; short active sentences, ASD-STE100 for messages. The sixteen strings taken are applied in WP5.21 (*Rungs*, *Physics model*, *Boundary conditions*, …); the polish package (WP5.26, moved by §8.2.47 AW1, and Phase 8's since §8.2.53 BC7) sweeps every other screen's text by the rules, with a check (REV-269) |
 | WB-53 | The Analysis round 2: the mesh view, the map drawn whole, the outline, charts above numbers | The author, marking the Analysis suite as it went to merge (`reviews/2026-11-20-analysis-2.md`): of the field tile, "The field should not be cut off within a small rectangle, but shown fully."; of the outline, "Outline line width is too thick. It should show the full outline."; of the cut, "Put graph at the top, values below."; of the 3D view, "This seems to be mesh and mesh Quality colouring, not 3D?" and "This is mesh view, not 3D?"; asked what the view should be, "Mesh now, 3D in tree" | A map is drawn over the whole domain, or a comparison's over the fluids' overlap, on the close-up's scale beneath the close-up, so the field fills the view past the pore; the view still opens on the pore. The outline is drawn 1 px wide with a 1 px halo, whole, to the domain's edge. The explorer's charts stand above its numbers: the field, the I–V, the axial cut, then the quantities. The view of the field on the solve's (r, z) mesh, drawn face-on by the renderer, is named *Mesh*, not *3D* (*Map · Mesh*; Comparison's *Mesh*). A true 3D view, the (r, z) field turned about the axis and cut open, is one of the plot types REV-268's design round puts to the author |
 | WB-54 | The tree's branches | Asked how the Analysis suite's tree of results is organised, over boards T1 to T3 (`concepts/tree/`; `reviews/2026-11-21-tree.md`): "COMSOL's branches (T1)" | Analysis is one tool, the tree of results: *Data* (a run, a sweep's runs, a comparison of two runs, a revolution about the axis), *Definitions*, *Probes and cuts*, *Quantities* and *Plot groups*, each plot group naming its data. A comparison is a Data node, not a tool or a project item of its own (amends WB-04; FR-32), and the tree takes the tool list's place in Analysis (WB-07) Data's single run is reopened by the verdicts (REV-273). |
 | WB-55 | Where the tree and its settings stand, and how many plot groups show | "One, or two side by side"; "Under the tree" | The selected plot group fills the view; *Split* pins a second beside it, such as a map and the line along its cut, so link 3 redraws in sight; the split is saved in the layout (WB-13). The tree and the selected node's settings stack in one 300 px column on the left of the view (WB-39) Reopened by the verdicts: an editor-like view area and a properties pane of its own (REV-273). |
@@ -558,7 +412,7 @@ boards in `docs/design/concepts/tree/`, drawn on 2WCD's solved fields; each was 
 | WB-57 | The chart library, its reach and the mesh view | Over boards L1 and L2: "Plotly"; of its reach, "Every plot and every map" (*against the recommendation*, every plot with the canvas kept for the editors), then asked which maps, "Every (r, z) view", and where, "All in WP5.22" (*against the recommendation*, each with the package that reworks it); of the mesh view, "A layer; webgui leaves" | Plotly (plotly.js 3.1.1, MIT, as NiceGUI ships it, unmodified; CON-09) draws every chart and every (r, z) view: Analysis's tree, Electrolyte's two plots, Runs' convergence, Meso's Density, Outline with its editor and Charge map, Continuum's Region and Mesh, and Physics' Conditions. uPlot (restating AU1), the shell's canvas and NGSolve's `webgui` leave, so each kind of picture has one renderer (REV-137). Plotly's own toolbar is hidden for the workbench's (WB-24); a square-root axis is drawn as its root with ticks in its own units. *Show mesh* draws the solve's mesh over a 2D group, as WB-42's does. WP5.22 moves every view, with a round of verdicts on Meso, Continuum and Physics; WP5.24 times the 200 ms line on Plotly (WB-23) |
 | WB-58 | Variables and constants | "A library list and expressions" | *Definitions* holds constants (a number with its unit) and variables, picked from a list the library registers (space charge, flow speed, each ion's current density) or typed as an expression of the fields, the constants, r, z and the run's quantities, parsed by the study variables' whitelist with units checked (AG2). The library evaluates a variable at each sampled point, each field read by its cell's P2 basis (REV-270); the shell computes nothing (QR-13; RSK-15) |
 | WB-59 | The tables and the quantities shown | "Bottom panel tabs"; "Checked and ordered in the node" | *Probes*, *Quantities* and *Cut values* are tabs of the bottom panel beside the queue and the log (amends WB-02's panel); a probe's r or z typed in its row moves it on the map. The Quantities node lists every quantity a run records, each checked and ordered by drag or by keyboard, saved with the tree; a new tree shows the current, the conductance, the transport number, each ion's current and the bias |
-| WB-60 | How the tree is saved | Asked of one file per plot group, "I option 2 more scalable?"; shown that the tree holds settings only, so either form loads at once, and that a file per group merges and copies better at the cost of a check across files, then asked again: "One results file per project" (*against the recommendation*, a results folder with a file per plot group) | One tree per project, in `results.yaml` (`nanopnp/results/v0.8`, the release that ships it: G6; §8.2.47 AW1; §8.2.49 AY1) beside the project file: its Data, Definitions, Probes and cuts, Quantities and Plot groups. A project's `comparisons/` files are read once into its Data, and the folder goes (FR-32; F4) |
+| WB-60 | How the tree is saved | Asked of one file per plot group, "I option 2 more scalable?"; shown that the tree holds settings only, so either form loads at once, and that a file per group merges and copies better at the cost of a check across files, then asked again: "One results file per project" (*against the recommendation*, a results folder with a file per plot group) | One tree per project, in `results.yaml` (`nanopnp/results/v0.9`, the release that ships it: G6; §8.2.47 AW1; §8.2.49 AY1; §8.2.53 BC7) beside the project file: its Data, Definitions, Probes and cuts, Quantities and Plot groups. A project's `comparisons/` files are read once into its Data, and the folder goes (FR-32; F4) |
 | WB-61 | The run a link opens, and the run shown | "Shown run becomes it"; "Newest, until a run is picked" | Link 4 opens a run as *Data › Shown run*: a done run's *Result*, a recorded run in Study › Runs and a point of the I–V each retarget it, and every plot group following it redraws. Shown run follows its study's newest run until a run is picked; *Follow newest* restores that Reopened by the verdicts: Data holds every run (REV-273). |
 | WB-62 | The tree before the user builds one | "Defaults from what the run provides" | On first opening, `results.yaml` is written with *Shown run*, the study's sweep if any, and a plot group for each thing the run provides: the potential, each ion's concentration, the flow if solved, the line along the axis, and the I–V when the bias is swept; then the six quantities. The defaults follow what the model declares (AH1), never its name, so QR-10's route opens on a result |
 | WB-63 | Two runs in one view, and a run's name | "Mirrored first, all three kept"; "A label, else by what differs" (*against the recommendation*, by what differs alone) | A 2D group over a comparison opens *Mirrored*: the first run reflected to r < 0, one scale, the cut and the probes on both halves; *Side by side* and *Difference* stay its other views. A Data node may carry a label the user types; otherwise a run is named by its study and the values it sets away from the study's own ("2wcd-charged, −50 mV"), told apart by its time where two are alike, the folder's digits in its tooltip and in *Open in Runs* |

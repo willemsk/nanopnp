@@ -164,10 +164,11 @@ is no version to bump.
 
 There is one minor version per phase: v0.1 is Phase 0, v0.2 Phase 1, v0.3 Phase 2, v0.4 Phase 3,
 v0.5 Phase 4 (polish and user testing), v0.6 Phase 5 (the graphical interface), v0.7 Phase 6 (the
-cleanup and the library's foundations), v0.8 Phase 7 (the workbench rebuilt), v0.9 to v0.11 Phases 8
-to 10 (the composer, the structural mutator, the sketcher), v0.12 Phase 11 (the analyte forces)
+cleanup and the kernel), v0.8 Phase 7 (the library's foundations), v0.9 Phase 8 (the workbench rebuilt,
+with the composer's tool), v0.10 and v0.11 Phases 9 and 10 (the structural mutator, the sketcher), v0.12
+Phase 11 (the analyte forces)
 and v0.13 Phase 12 (the validated release). The stable v1.0 follows, its content the author's to
-define (`SPECIFICATION.md` §8.2.6, §8.2.49, §8.2.51, OPN-08).
+define (`SPECIFICATION.md` §8.2.6, §8.2.49, §8.2.51, §8.2.53, OPN-08).
 
 - **A work package's PR writes its own [`CHANGELOG.md`](CHANGELOG.md) section** under the version
   it will be tagged, `vX.Y.Z-alpha.N`, where `vX.Y.Z` is the phase's release and N is the package's

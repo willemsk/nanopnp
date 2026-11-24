@@ -11,7 +11,7 @@ to AI14; §8.2.38 AN5; §8.2.45 AU3; WP5.19, WP5.21): a workbench
 **project** is a folder: `nanopnp-project.yaml` (`nanopnp/project/v0.6`, which holds the item index, the
 open items, the current item, each suite's layout, the project's settings and the molecular model each continuum model
 is built alone over where one was chosen (`built_with`; §5.3.1's NOTE on model files), and no physics), `models/molecular/`,
-`models/continuum/`, `models/physics/`, `studies/`, `comparisons/` (until Phase 7's tree of results, WP5.22 before §8.2.47 AW1; then `results.yaml`, below),
+`models/continuum/`, `models/physics/`, `studies/`, `comparisons/` (until Phase 8's tree of results, WP5.22 before §8.2.47 AW1; then `results.yaml`, below),
 `inputs/`, `runs/<study>/<run>/`, `sweeps/` and `store/`. An item's name is its file's stem and its `name:`, and matches `[A-Za-z0-9][A-Za-z0-9._-]{0,63}`.
 The folder is the truth: a file the index lacks is appended on opening, and an indexed name without its
 file is a problem, never a refusal to open. A run is `runs/<study>/<short key>`, and
@@ -57,7 +57,7 @@ no `run.json` is a problem at `runs`, never a refusal to open; an export copies 
 runs with it. Its difference (`post.fields.field_difference`) samples both runs onto one cell-centred
 (r, z) grid of about 10⁶ cells over the overlap of their fluids' boxes, each run on the set its quantity
 is solved on, and is NaN where either fluid lacks a cell's centre. From that package, the project's **results**
-are one file, `results.yaml` (`nanopnp/results/v0.8`, the release that ships it: §8.2.7 G6; §8.2.47 AW1; §8.2.49 AY1) beside the project file, holding no physics: the tree
+are one file, `results.yaml` (`nanopnp/results/v0.9`, the release that ships it: §8.2.7 G6; §8.2.47 AW1; §8.2.49 AY1; §8.2.53 BC7) beside the project file, holding no physics: the tree
 of results' data (a run, which may follow its study's newest, a sweep's runs, two runs compared, a
 revolution about the axis), definitions (constants with their units, and variables from the library's
 list or as expressions parsed as a study's variables are), probes and cuts, the quantities shown in their
