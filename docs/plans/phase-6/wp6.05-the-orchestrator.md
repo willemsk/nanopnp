@@ -269,7 +269,7 @@ tests are left to CI, in the summary line too.
   > November 2026 over 46 branches, the path rule would have left the browser tests out on 32 (`k`), below 34; on
   > each push's whole branch, on 23 (`k_branch`). No script is added, `gate.sh` and §7.6 are unchanged, and BC15 is
   > spent ([the count](../sessions/browser-path-count.md)).
-- [ ] 8. The clauses (D1 to D8). §8.4.4: `/np-carry wp n` beside the three commands and what it hands over; the
+- [x] 8. 9761235 The clauses (D1 to D8). §8.4.4: `/np-carry wp n` beside the three commands and what it hands over; the
   reading rule binds every helper that implements; under it a checkpoint ends a helper. §8.4.5: a helper's model
   and effort, what `usage.py` measures, item 1's facts. §8.3: a carried package is one session and its helpers.
   `CLAUDE.md`, *Implementation workflow*: one line, the file at 1,500 words or fewer. `holds-now.yaml`: BC10, BC15
