@@ -43,9 +43,9 @@ differ, so the ship never chains: the pause's prompt names Fable 5.2.
 
 | Decision | Choice | Why/source |
 |---|---|---|
-| **D1 The shape** | `/np-carry wp <n>` starts the main session of one package. It hands each step to a new `general-purpose` helper with an empty context, at high effort, on the step's model: the plan and the plan's fixes on Fable 5.2, each stretch of the implementation up to its checkpoint on the plan's implementing model, the ship on its shipping model. The main session alone asks the author, starts the review and worker agents, holds the PR's subscription and check-in, keeps the task list and measures. It edits and commits nothing. It takes `wp <n>` only: a ruling round stays a session of its own | Ruled by the author, BD2 and BD6 (BC10's fallback amended) |
+| **D1 The shape** | `/np-carry wp <n>` starts the main session of one package. It hands each step to a new `general-purpose` helper with an empty context, at high effort, on the step's model: the plan and the plan's fixes on Fable 5.2, each stretch of the implementation up to its checkpoint on the plan's implementing model, the ship on its shipping model. The main session alone asks the author, starts the review and worker agents, holds the PR's subscription and check-in, keeps the task list and measures. It commits nothing, and edits only through a review's `--fix`. It takes `wp <n>` only: a ruling round stays a session of its own | Ruled by the author, BD2 and BD6 (BC10's fallback amended) |
 | **D2 The hand-back** | A helper's last message is one block, `HANDBACK` with a kind: `ASK`, `WORKER`, `REVIEW`, `WAIT`, `DONE` or `BLOCKED`. The main session serves it and resumes the same helper with the answer (`SendMessage`); `DONE` and `BLOCKED` end the helper. A question's text and the author's answer pass unchanged in both directions | The two facts that failed; a finished helper resumes with its context; decided by the plan |
-| **D3 The files** | Two new files: `.claude/skills/np-carry/SKILL.md`, at most 900 words, and `.claude/workflow/helper.md`, at most 250, which says what a helper does where a level's file names something it cannot do. No level file, core or hook changes, so the three commands run as today. The stage is read from the branch's commit subjects and the plan's ticks, so `/np-carry` resumes in any session | BC10: the three commands stay, and the plan and the commits carry the state; decided by the plan |
+| **D3 The files** | Two new files: `.claude/skills/np-carry/SKILL.md`, at most 900 words, and `.claude/workflow/helper.md`, at most 250, which says what a helper does where a level's file names something it cannot do. The orchestrator changes no level file, core or hook, so the three commands run as today. The stage is read from the branch's commit subjects and the plan's ticks, so `/np-carry` resumes in any session | BC10: the three commands stay, and the plan and the commits carry the state; decided by the plan |
 | **D4 The reading limit** | Every helper that implements reads at most 8,000 words of project text before its first edit; the main session's reading is reported, not limited. `usage.py --reading` reports each helper's window | Ruled by the author, BD3 (open decision 13) |
 | **D5 The measure** | `usage.py` takes agent hours from the main transcript and its sub-agents' as one timeline, and its line names the count of sub-agents. Touches and sessions stay the main transcript's. §8.3 states a carried package as one session and its helpers | Today a wait on a helper of over 30 minutes is taken as the author away; decided by the plan |
 | **D6 The facts** | Item 1 checks the three facts again on the implementing host and records them with the host and version. If all three hold, or the commit gate does not run in a helper, the item stops and goes to the author: BD2 was ruled on today's result. If a helper cannot gate and push, the main session does, on a further kind `PUSH` | Criterion 11 of the phase; decided by the plan |
@@ -115,7 +115,8 @@ Facts at `8b54c5f`, on the cloud host, Claude Code 2.1.331.
 - The browser tests are `tests/tier1/test_gui_screens.py` alone: 149 tests, 468 s of the gate's 539 s (BC15). It
   imports `nanopnp.api.project` and `nanopnp.gui.web`, and starts the server through `nanopnp.cli`.
 - Importing those loads 170 of the 203 modules of `src/nanopnp`, in every subpackage; the rest are stages reached
-  through the registry. `core/paths.py` reads `data/` and `tests/data/structures`.
+  through the registry. `core/paths.py` reads `data/` and `tests/data/structures`; in a checkout
+  `gui/web/assets.py` reads `docs/design/tokens.css`, which is not prose.
 - `mcp__github__actions_list` (`list_workflow_runs`, `ci.yml`, event `pull_request`) returns each run's
   `head_branch`, `head_sha` and `created_at`; 611 such runs exist. `git fetch origin <sha>` fetched two heads of a
   branch that was merged by rebase. The clone is shallow, 50 commits.
@@ -124,14 +125,13 @@ Facts at `8b54c5f`, on the cloud host, Claude Code 2.1.331.
 
 ### Implementation details
 
-**Item 1, the facts.** Start one `general-purpose` helper on Sonnet. Its prompt: list your tools, and say whether
+**Item 1, the facts.** One `general-purpose` helper on Sonnet. Its prompt: list your tools, and say whether
 `Agent`, `AskUserQuestion` and `TaskCreate` are among them, also after `ToolSearch`; write the note, commit it, run
-the push gate in the background and wait as the core says, push, and reply with the gate log's
-last line and the push's output. Resume it once with `SendMessage` and ask for its commit's subject. The note
+the push gate in the background, wait as the core says, push, and reply with the gate log's last line and the
+push's output. Resume it once with `SendMessage` and ask for its commit's subject. The note
 marks each fact `[verified]`, with the date, the host and Claude Code's version in its footnote.
 
-**Item 2, `.claude/workflow/helper.md`.** It says: `/np-carry` started you for one step; follow the level's files,
-but for this table.
+**Item 2, `.claude/workflow/helper.md`.** `/np-carry` started you for one step; follow the level's files, but for:
 
 | Where a level's file says | A helper |
 |---|---|
@@ -139,10 +139,10 @@ but for this table.
 | give an item or a read to an agent | hands back `WORKER` |
 | call the `code-review` skill | hands back `REVIEW` |
 | subscribe to a PR, wait for CI, schedule a check-in | hands back `WAIT` |
-| keep the task list, run `usage.py` or `checkpoint.sh` | skips it |
+| keep the task list, run `usage.py` or `checkpoint.sh`, unsubscribe | skips it |
 | print a prompt, pause, report, end the turn | hands back `DONE` |
 
-Two rules follow, make your first change with an edit tool (AZ17) and go on after a resume, then the block:
+Then two rules, the first change is made with an edit tool (AZ17) and a resume goes on, and the block:
 
 ```text
 HANDBACK <kind>
@@ -172,17 +172,16 @@ next: <item k, or the step that follows>
    | the plan's commit, no `, review fixes` commit | plan-review |
    | that commit, no item ticked | approval, then implement |
    | an item unticked | implement, from the first unticked item |
-   | every item ticked, no code review's commit after the last tick | ship |
+   | every item ticked, the PR open | ship (`np-ship/wp.md` §0 resumes) |
    | the PR merged | after the merge |
 
-3. Note the time (`date -u +%FT%TZ`). Start the stage's helper in the foreground: `Agent`,
-   `subagent_type: "general-purpose"`, `effort: "high"`, `model` by D1. Its prompt, in full: `/np-<level> wp <n>[
+3. Note the time (`date -u +%FT%TZ`). Start the helper in the foreground: `Agent`,
+   `subagent_type: "general-purpose"`, `effort: "high"`, `model` by D1. Its prompt: `/np-<level> wp <n>[
    review] as a helper of /np-carry. Read .claude/workflow/helper.md, then .claude/skills/np-<level>/SKILL.md, and
    follow it with these arguments.` Where it applies, add `Start at item <k>.` or `The review has run: start at
    review.md's step 3.`
 4. Serve each hand-back, then resume the helper with `SendMessage`; a resume names no `/np-` command.
-   - `ASK`: print the brief, call `AskUserQuestion` with the questions unchanged, send the answers unchanged. Never
-     answer for the author.
+   - `ASK`: print the brief, call `AskUserQuestion` with the questions unchanged, send the answers unchanged.
    - `WORKER`: start the agent named, in the foreground, at high effort; send its reply.
    - `REVIEW`: call the skill from this session; send its final report.
    - `WAIT`: subscribe to the PR once, schedule at most one check-in, end the turn; send the event that wakes you.
@@ -194,9 +193,9 @@ next: <item k, or the step that follows>
      resume the ship helper for *7. After the merge*.
 5. While implementing, set the task list from the plan's ticks after each hand-back. After each `DONE`, run
    `uv run .claude/scripts/usage.py --label <stage> --since <the noted time>`, and after an implement helper's also
-   `--reading`; the ship helper writes the lines to the PR's **Measured**. Tell the author of a helper over 8,000
-   words.
-6. One helper at a time. Read nothing a helper wrote but the plan's ticks and its models line.
+   `--reading`; add the lines to the PR's **Measured**, where the ship helper reads them.
+   Tell the author of a helper over 8,000 words.
+6. One helper at a time. Read nothing of a helper's but the plan's ticks and models line.
 
 **Item 4, `usage.py`.**
 
@@ -205,9 +204,10 @@ next: <item k, or the step that follows>
   gap is over `AWAY_S`. Touches and sessions stay. Add `"helpers"`, the count of sub-agent transcripts in the list;
   when it is not zero the line reads `1 session, 6 sub-agents, 3.2 agent hours, …`.
 - `_main_reading()`: with neither `--transcript` nor `--pages`, add each sub-agent transcript beside the main one,
-  by its first event's time, named by its file's stem.
+  by its first event's time, named by its file's stem. The check: a Sonnet helper prompted
+  `/np-implement wp 0 as a helper of /np-carry: reply ok and stop.` has a window.
 
-**Item 6, the count.** From the scratchpad; no script is kept.
+**Item 6, the count.** No script is kept.
 
 1. `git fetch --unshallow origin main`.
 2. Page `mcp__github__actions_list` (`list_workflow_runs`, `resource_id: ci.yml`, event `pull_request`,
@@ -220,11 +220,11 @@ next: <item k, or the step that follows>
 5. `k` is how many of the 100 match nothing in item 7's pattern; `k_branch` the same on the whole-branch paths.
 
 **Item 7, the rule.** `.github/scripts/browser-paths.sh`, in the shape of `prose-only.sh`: exit 1 at the first path
-that matches `src/* | data/* | examples/* | tests/data/* | tests/conftest.py | tests/tier1/conftest.py |
+that matches `src/* | data/* | examples/* | docs/design/* | tests/data/* | tests/conftest.py | tests/tier1/conftest.py |
 tests/tier1/test_gui_screens.py | pyproject.toml | uv.lock | .claude/hooks/gate.sh | .github/scripts/*`, else
-exit 0. In `gate.sh`, before the push selection's `check`: where `base` is not empty and the paths that feed
-`docs_only` pass the script, add `--ignore=tests/tier1/test_gui_screens.py` to that call, and `say` that the browser
-tests are left to the pull request's CI, in the summary line too.
+exit 0. In `gate.sh`, before the push selection's `check`: where `base` is set and the paths that feed
+`docs_only` pass it, add `--ignore=tests/tier1/test_gui_screens.py`, and `say` that the browser
+tests are left to CI, in the summary line too.
 
 ### Work items
 
@@ -236,7 +236,7 @@ tests are left to the pull request's CI, in the summary line too.
 - [ ] 3. `.claude/skills/np-carry/SKILL.md` (D1 to D3); done when the code and review say so, at 900 words or
   fewer. **Executor:** main
 - [ ] 4. `.claude/scripts/usage.py`: the timeline and the helpers' reading (D4, D5); done when the gate passes and
-  both modes print this session's lines with its sub-agents. **Executor:** main
+  both modes print this session's lines with its sub-agents, the check helper's window among them. **Executor:** main
 - [ ] 5. Compaction checkpoint. **Executor:** main
 - [ ] 6. The count, `docs/plans/sessions/browser-path-count.md` (D7); done when the record holds the date, `main`'s
   sha, the runs paged, the shas dropped, `k`, `k_branch`, a table by branch, the commands and the verdict, `k ≥ 34`.
