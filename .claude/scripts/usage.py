@@ -6,13 +6,15 @@ of its sub-agents beside it, and prints one Markdown line for a report or a pull
     Measured (review): 2 sessions, 1.4 agent hours, 4 touches; claude-opus-5-5 0.20 M out, 43 M
     cached
 
-- **Sessions** are context windows: one, and one more for each compaction (``compact_boundary``)
-  after the window's first prompt.
-- **Agent hours** add the gaps between consecutive events of the main transcript, less the waits
-  for the author: the gap before a prompt the author typed, the time an ``AskUserQuestion`` call
-  waits for its answer, and any gap over 30 minutes, taken as the author away.
-- **Touches** are the prompts the author typed (a command, ``/compact`` or a message) and the
-  answered ``AskUserQuestion`` calls.
+- **Sessions** are the main transcript's context windows: one, and one more for each compaction
+  (``compact_boundary``) after the window's first prompt. Where sub-agents ran, the line names
+  their count after the sessions (§8.3: a carried package is one session and its helpers).
+- **Agent hours** add the gaps between consecutive events of the main transcript and its
+  sub-agents', taken as one timeline, less the waits for the author: the gap before a prompt the
+  author typed, the time an ``AskUserQuestion`` call waits for its answer, and any gap over 30
+  minutes, taken as the author away.
+- **Touches** are the main transcript's: the prompts the author typed (a command, ``/compact`` or a
+  message) and the answered ``AskUserQuestion`` calls.
 - **Tokens** count each API message once, by model, over the main transcript and its sub-agents':
   the output tokens, thinking included, and the input read from the prompt cache.
 
@@ -33,6 +35,9 @@ files gives it: ``cat``, ``head``, ``tail`` or ``sed -n``, alone or piped throug
 or ``tail``, with ``cd``, ``echo``, ``wc``, ``ls`` and ``pwd`` between; files of code printed with
 it make the result command output (AZ16). A session's first window is the one no message precedes;
 the reading limit binds it for ``/np-implement`` (AZ15).
+Without ``--transcript`` or ``--pages`` it reads the session's transcript and then each of its
+sub-agents' by its first event's time, named by its file's stem: a helper's prompt names its
+``/np-`` command, so its transcript opens a window (§8.4.4).
 ``--transcript`` names a transcript; ``--pages`` reads instead the transcripts of agents that paged
 other sessions with the session service's ``list_events`` (AZ10), one session per paged id. A page
 holds no typed prompt and no skill text, so a paged session's windows open at its first message and
@@ -146,6 +151,11 @@ def _start(events: list[dict[str, Any]], since: str | None, everything: bool) ->
     return float(typed[first]["_t"])
 
 
+def _subagents(path: Path) -> list[Path]:
+    """Return the transcripts of the sub-agents of the session ``path`` holds."""
+    return sorted((path.parent / path.stem / "subagents").glob("*.jsonl"))
+
+
 def measure(path: Path, start: float) -> dict[str, Any]:
     """Return the sessions, agent hours, touches and tokens by model of ``path`` from ``start``."""
     events = [event for event in _events(path) if event["_t"] >= start]
@@ -155,20 +165,30 @@ def measure(path: Path, start: float) -> dict[str, Any]:
         for block in _blocks(event)
         if block.get("type") == "tool_use" and block.get("name") == "AskUserQuestion"
     }
+    # The main transcript and its sub-agents' make one timeline: a wait on a helper is work.
+    helpers = [
+        [{**event, "_helper": True} for event in _events(transcript) if event["_t"] >= start]
+        for transcript in _subagents(path)
+    ]
+    timeline = sorted(
+        [*events, *(event for run in helpers for event in run)], key=lambda e: e["_t"]
+    )
     seconds, touches, sessions = 0.0, 0, 1
-    for before, event in zip([None, *events], events, strict=False):
-        answered = any(block.get("tool_use_id") in asked for block in _blocks(event))
-        touches += _typed(event) or answered
-        sessions += event.get("subtype") == "compact_boundary"
+    for before, event in zip([None, *timeline], timeline, strict=False):
+        main = not event.get("_helper")
+        answered = main and any(block.get("tool_use_id") in asked for block in _blocks(event))
+        typed = main and _typed(event)
+        touches += typed or answered
+        sessions += main and event.get("subtype") == "compact_boundary"
         gap = event["_t"] - before["_t"] if before else 0.0
-        if not (_typed(event) or answered or gap > AWAY_S):
+        if not (typed or answered or gap > AWAY_S):
             seconds += gap
     opening = next((event for event in events if _typed(event)), None)
     if opening is not None and "<command-name>/compact" in json.dumps(opening):
         sessions -= 1
     tokens: Counter[tuple[str, str]] = Counter()
     seen: set[str] = set()
-    for transcript in [path, *sorted((path.parent / path.stem / "subagents").glob("*.jsonl"))]:
+    for transcript in [path, *_subagents(path)]:
         for event in _events(transcript):
             message = event.get("message") or {}
             usage, key = message.get("usage"), message.get("id") or event.get("uuid")
@@ -181,6 +201,7 @@ def measure(path: Path, start: float) -> dict[str, Any]:
     models = sorted({model for model, _ in tokens})
     return {
         "sessions": sessions,
+        "helpers": sum(1 for run in helpers if run),
         "agent_hours": round(seconds / 3600, 1),
         "touches": touches,
         "tokens": {
@@ -507,8 +528,9 @@ def main() -> int:
         f"{model} {use['out'] / 1e6:.2f} M out, {use['cached'] / 1e6:.0f} M cached"
         for model, use in result["tokens"].items()
     )
+    helpers = f"{_count(result['helpers'], 'sub-agent')}, " if result["helpers"] else ""
     print(
-        f"Measured ({args.label}): {_count(result['sessions'], 'session')}, "
+        f"Measured ({args.label}): {_count(result['sessions'], 'session')}, {helpers}"
         f"{result['agent_hours']} agent hours, {_count(result['touches'], 'touch')}; "
         f"{spend or 'no tokens'}"
     )
@@ -532,6 +554,14 @@ def _main_reading(transcript: Path | None, pages: list[Path] | None, as_json: bo
             print("Reading: not measured, no Claude Code transcript on this host.")
             return 0
         sessions[found.stem] = [{**event, "session": found.stem} for event in _events(found)]
+        if transcript is None:
+            # A helper's prompt names its command, so its transcript opens a window of its own.
+            runs = [
+                [{**event, "session": helper.stem} for event in _events(helper)]
+                for helper in _subagents(found)
+            ]
+            for run in sorted((run for run in runs if run), key=lambda run: run[0]["_t"]):
+                sessions[run[0]["session"]] = run
     windows = [window for events in sessions.values() for window in reading(events, claude_md)]
     if as_json:
         print(json.dumps(windows, indent=2))
