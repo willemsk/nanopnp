@@ -255,7 +255,7 @@ appendices and pages the site publishes; name a clause, a plan or a review in co
 - [x] c1781b1 4. The unblinding, appended to the three designs (D3); done when each holds its tables and both lists are
   clean. **Executor:** main, with the same agents
 - [x] 5. Compaction checkpoint. **Executor:** main
-- [ ] 6. `evidence.md` (D5); done when each number names its command. **Executor:** main
+- [x] 0ca2ef0 6. `evidence.md` (D5); done when each number names its command. **Executor:** main
 - [ ] 7. `technologies.md` (D5); done when each cell names its source.
   **Executor:** main, with `general-purpose` agents on Sonnet, high effort
 - [ ] 8. Compaction checkpoint. **Executor:** main
