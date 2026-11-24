@@ -42,7 +42,10 @@ holds the alternatives, the second-backend argument and the MPI and MUMPS conseq
    MUMPS, PARDISO and MKL False
    **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts]**,
    and HYPRE False as well (ADR-001). ADR-001 records the scan of the shipped binaries for MPI symbols. The linear solvers:
-   `knowledge/06-numerics-fem/06-linear-solvers.md`.
+   `knowledge/06-numerics-fem/06-linear-solvers.md`. The wheel still carries a route to PARDISO: its
+   `ngsolve/solvers/mkl_pardiso.py` looks for the library `mkl_rt` at run time and, where it finds one, makes
+   `pardiso` the default inverse. The `mkl` package of pip would supply it on Windows and Linux x86-64 and has no
+   macOS wheel **[verified][^mklpardiso]**. MKL is closed, so it can only be an option that a user installs (CON-08).
 2. **2D boundary layers are immature.** Python API is
    `netgen.meshing.Mesh.BoundaryLayer2(domain, thicknesses, make_new_domain=True, boundaries=[])`
    (binding C++ `GenerateBoundaryLayer2`). The forum carries an unresolved Aug 2024 report of the
@@ -69,3 +72,6 @@ Status and licence as the projects' repositories showed them in August 2026 (unv
 
 ---
 
+[^mklpardiso]: Read on 24 November 2026 in the installed NGSolve 6.2.2606 and in the release metadata of `mkl`
+    2026.2.1 on PyPI (`docs/project/ground-up-review/technologies.md`, *Checked at the source*). The route was read
+    and not run: REV-281 asks for the run.

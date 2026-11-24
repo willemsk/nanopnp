@@ -24,6 +24,21 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.7.0-alpha.4]
+
+WP6.04: the ground-up review; tag `v0.7.0-alpha.4` once merged (§8.2.51 BA10 to BA13; §8.2.52 BB2 to BB6; REV-280
+to REV-287). A user of the program sees no change: the package changes no code. The
+[plan](docs/plans/phase-6/wp6.04-the-ground-up-review.md) records the work.
+
+- **Added**:
+  - [The ground-up review](docs/project/ground-up-review.md): what the program should become, the design a
+    start-over would choose, and 25 differences from today's program, `GU-01` to `GU-25`, each with a verdict and,
+    for a change, its gain, risk and cost. Its appendices hold the author's interview, three blind designs, the
+    evidence, a survey of today's alternatives, a walk of 259 requirements, methods and rules, and the challenge by
+    two agents and the physics reviewer with each answer. Every verdict is a proposal for the author's rulings
+    (REV-280).
+  - Seven questions that only a trial settles, as open items for the ruling round (REV-281 to REV-287).
+
 ## [0.7.0-alpha.3]
 
 WP6.03: the cleanup's second half, the instructions cut and the Copilot host retired; tag `v0.7.0-alpha.3` once
