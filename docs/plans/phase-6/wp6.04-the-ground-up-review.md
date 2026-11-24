@@ -35,16 +35,16 @@ long.
 peeked is redone. The review could still find the program sound: each row then shows how many blind designers chose
 the same unprompted. It could propose more than one round can rule: the proposals come ranked and grouped.
 
-**Your call.** Settled today: the guard, the interview, the report's place, and that Fable writes it and Opus checks
-it. Inside the package: the interview. After it: your rulings on its proposals. *Recommendation:* answer in your
-own words; the designers read them unedited.
+**Your call.** Settled today: the guard, the interview, the report's place, and that Fable writes it; on 24 November,
+that Fable also checks it. Inside the package: the interview. After it: your rulings on its proposals.
+*Recommendation:* answer in your own words; the designers read them unedited.
 
 ## Execution brief
 
 Scope: the phase plan's WP6.04 entry; BA10 to BA13; BB2 to BB6. It depends on nothing unmerged. It claims no
 identifier and writes no test (N1): it changes no `src/`, `tests/`, `data/`, `examples/`, case schema or public name.
-**Implementing session: Fable 5.2, high effort. Ship: Opus 5.5, high effort, in a new session; `NANOPNP_AUTO_SHIP`
-never chains it** (BB5; §8.4.5). The report and its appendices are `docs/project/ground-up-review.md` and
+**Implementing session: Fable 5.2, high effort. Ship: Fable 5.2, high effort, in the implementing session after its
+compaction** (BB5, as BB7 amends it; §8.4.5). The report and its appendices are `docs/project/ground-up-review.md` and
 `docs/project/ground-up-review/`, called *the report* and *the appendices* below.
 
 ### Decisions

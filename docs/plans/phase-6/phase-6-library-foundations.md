@@ -146,7 +146,7 @@ The round's input, in order:
 | 6 | What AM2's "moves one of them" means, and the drift that stops the re-pin | **Author**, at the equations package's plan, before any measurement |
 | 7 | A run above order 2; the speed-up's thresholds; the names after `Project` splits | Their packages' plans |
 | 8 | What comes first after the review; what the review designs for | **Settled by the author, 23 November 2026** (BB1, BB2) |
-| 9 | How the review guards against reasoning from the program as it is; where its report lives; its two models | **Settled by the author, 23 November 2026**: blind designs from the program's purpose, then rule by rule; the project's pages; Fable 5.2, then Opus 5.5 (BB3 to BB5) |
+| 9 | How the review guards against reasoning from the program as it is; where its report lives; its two models | **Settled by the author, 23 November 2026**: blind designs from the program's purpose, then rule by rule; the project's pages; Fable 5.2 writes and ships (BB3 to BB5, BB7) |
 | 10 | The review's proposals, which may reopen any ruling | **Author**, at `/np-plan project` after WP6.04 (BA13) |
 | 11 | What §5.2's two limits become if the fix moves 2WCD's measured axis (REV-239) | **Author**, at WP6.05's plan, before the fix is measured |
 | 12 | The provisional packages' numbers and grouping | `/np-plan amend 6`, after the round on the review (BA4) |

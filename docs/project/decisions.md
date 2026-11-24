@@ -2,11 +2,11 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,623. By source: history ruling 439; plan decision row 788; REV row 287; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 5.
+Rows: 1,624. By source: history ruling 440; plan decision row 788; REV row 287; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 5.
 
-By decider: author 749; open 5; session, own call 866; session, put to the author 3.
+By decider: author 750; open 5; session, own call 866; session, put to the author 3.
 
-This page lists the 509 that bind now. The 1,114 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
+This page lists the 510 that bind now. The 1,114 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -379,8 +379,9 @@ This page lists the 509 that bind now. The 1,114 of a delivered plan, fixed, spe
 | §8.2.52 BB2 | author | `specification/history/52-phase-6-amended-the-ground-up-review-planned.md` | 2026-11-23 | phase ruling | The review designs for the whole program as it is specified today, what is built and what is planned.** BA10 asks how the program would be built "given what the program is now", and BA12 opens the requirements to it; ne… | §2.7; §8.1's Phase 6 row; the Phase 6 plan; open: WP6.04 | in force |
 | §8.2.52 BB3 | author | `specification/history/52-phase-6-amended-the-ground-up-review-planned.md` | 2026-11-23 | WP6.04 | Added 23 November 2026, at WP6.04's plan.* **The review is guarded by blind designs that start from the program's purpose, then by a review rule by rule.** Open decision 9 of the Phase 6 plan asked how the review guards… | §8.4.5; §8.1's Phase 6 row; §8.3; the Phase 6 plan; its estimate amended by BB6; open: WP6.04 (*Its estimate is amended by BB6.*) | in force |
 | §8.2.52 BB4 | author | `specification/history/52-phase-6-amended-the-ground-up-review-planned.md` | 2026-11-23 | WP6.04 | Added 23 November 2026, at WP6.04's plan.* **The review's report is one report on the project's pages.** Open decision 9 left its place to WP6.04's plan. The session offered one report on the project's pages (*the recom… | open: WP6.04 | open |
-| §8.2.52 BB5 | author | `specification/history/52-phase-6-amended-the-ground-up-review-planned.md` | 2026-11-23 | WP6.04 | Added 23 November 2026, at WP6.04's plan.* **Fable 5.2 implements WP6.04 and Opus 5.5 ships it.** AZ20 and AZ21 have each plan propose both models. The session offered Fable 5.2 for both, the ship in a new session (*the… | open: WP6.04 | open |
+| §8.2.52 BB5 | author | `specification/history/52-phase-6-amended-the-ground-up-review-planned.md` | 2026-11-23 | phase ruling | Its shipping model and session are amended by BB7.* *Added 23 November 2026, at WP6.04's plan.* **Fable 5.2 implements WP6.04 and Opus 5.5 ships it.** AZ20 and AZ21 have each plan propose both models. The session offere… | its ship amended by BB7; open: WP6.04 | in force |
 | §8.2.52 BB6 | author | `specification/history/52-phase-6-amended-the-ground-up-review-planned.md` | 2026-11-23 | WP6.04 | Added 23 November 2026, at the review of WP6.04's plan.* **The review opens with an interview of the author.** WP6.04's plan took the author's view in one call of three questions with fixed options. At the plan's approv… | §8.1's Phase 6 row; §8.3; the Phase 6 plan; open: WP6.04 | in force |
+| §8.2.52 BB7 | author | `specification/history/52-phase-6-amended-the-ground-up-review-planned.md` | 2026-11-24 | WP6.04 | Added 24 November 2026, at WP6.04's ship.* **Fable 5.2 ships WP6.04, in the session that implemented it.** BB5 put the ship on Opus 5.5 in a new session. The author started `/np-ship wp 6.04` in the implementing session… | open: WP6.04 | open |
 | REV-35 | author | `docs/project/review-findings.md` |  |  | _second_crossings loops in Python | §8.2.9 I3 | post-1.0 |
 | REV-41 | author | `docs/project/review-findings.md` |  |  | No prepare command, upto on reproduce, or region export | §8.2.18 T3; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4: Phase 6's tolerances and exports package | deferred |
 | REV-45 | author | `docs/project/review-findings.md` |  |  | The derived χ field has no export | §8.2.18 T3; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4: Phase 6's tolerances and exports package | deferred |
