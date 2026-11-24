@@ -246,3 +246,157 @@ These are the pack's inputs; the program itself does not exist yet.
 - <pack>/author.md
 - <pack>/b-comsol-settings.md
 - <pack>/02-electrokinetics-background/09-quantities-the-software-must-compute.md
+
+---
+
+## After the unblinding
+
+Designer C then read §2.6 and §2.7 of `specification/02-product-overview.md`, `specification/03-requirements.md` and
+`specification/05-software-design/06-architecture-decisions.md`, and nothing else, and returned the judgement below. It
+is unedited, and the design above was not revised.
+
+I judged each identifier against the design I already handed back, without revising that design. I read only the three files named. Most rows are keep. The changes cluster in four places:
+- **Composable physics comes too late.** FR-40, FR-20, ADR-005 and N1 put it at v0.9 and fence it, while my design ranks it first.
+- **Error bars on results come too late.** FR-29 is post-1.0, but trust in a reported number needs them.
+- **Some requirements are written as designs.** FR-30(b), FR-31, FR-33 and IF-09 fix screens and drawings, which change faster than requirements should.
+- **N1 contradicts the author.** He wants to change the equations.
+
+## IF
+
+| ID | Verdict | Reason |
+|---|---|---|
+| IF-01 | keep | The scriptable, introspectable API is P1's first need. |
+| IF-02 | keep | P2's route; the exit-code contract makes job arrays reliable. |
+| IF-03 | change | Require a versioned schema with migrations, rather than naming one version string in a requirement. |
+| IF-04 | keep | Covers the formats MD users actually have. |
+| IF-05 | change | Make OpenDX/CCP4 an optional export; it is interchange, not core. |
+| IF-06 | keep | A lossless archival mesh with region tags is right. |
+| IF-07 | change | Keep the exact P2 node set and the separate fluid file; let the container be any ParaView-readable format. |
+| IF-08 | keep | A record with every result is the reproducibility promise. |
+| IF-09 | change | Keep "thin shell over IF-01 through a network API"; move the six suites to the design document. |
+
+## FR
+
+| ID | Verdict | Reason |
+|---|---|---|
+| FR-01 | keep | Ensembles are an input the physics needs. |
+| FR-02 | keep | A general way to find the axis. |
+| FR-03 | change | Take the expected oligomer from the case, not a built-in list of pores. |
+| FR-04 | change | State the resolution as a gate the contour must pass, not a fixed grid range. |
+| FR-05 | keep | Correct symmetry reduction. |
+| FR-06 | keep | Honest reporting of what the 2D reduction costs. |
+| FR-07 | keep | Automates the manual step. |
+| FR-08 | keep | Gates catch bad geometry before the solve. |
+| FR-09 | keep | Matches the reference domain. |
+| FR-10 | keep | Needed. |
+| FR-11 | keep | Rightly optional. |
+| FR-12 | keep | Needed. |
+| FR-13 | keep | Same construction as my design. |
+| FR-14 | keep | Conservation by construction, with a check that can fail. |
+| FR-15 | keep | Needed. |
+| FR-16 | keep | Level-1 extension. |
+| FR-17 | change | "No negative concentration at any iterate" prescribes a method; require detection and recovery, or the log-variable form. |
+| FR-18 | keep | Models are named compositions. |
+| FR-19 | keep | Needed. |
+| FR-20 | change | Make it term-level composition, not one class per whole model. |
+| FR-21 | keep | Needed; the scheduled release is fine. |
+| FR-22 | keep | Needed. |
+| FR-23 | keep | Two current routes are central to trust. |
+| FR-24 | keep | Matches my study layer. |
+| FR-25 | keep | Needed. |
+| FR-26 | keep | Asserted on meaning, not text: correct. |
+| FR-27 | keep | Full introspection for P1. |
+| FR-28 | keep | Needed. |
+| FR-29 | change | Bring a refinement ladder with an error bar on each QoI before v0.13; DWR adaptivity can follow. |
+| FR-30 | change | Keep (a), (c) and (d); colour-scale rules in (b) belong in the design. |
+| FR-31 | change | Screen layout is design; state the tasks a user must complete instead. |
+| FR-32 | keep | A plain-folder project that exports to readable files serves openness. |
+| FR-33 | drop | Interaction detail; move it to the workbench design. |
+| FR-34 | keep | Visible deviations are trust, shown in the interface. |
+| FR-35 | keep | Refusal at the field, with a remedy. |
+| FR-36 | keep | Serves the laboratory user, QR-10. |
+| FR-37 | keep | General, not tied to one pore. |
+| FR-38 | keep | First step of design work. |
+| FR-39 | change | Split it; part (d)'s expression language is scope risk. Keep (a)–(c), (e) and (f). |
+| FR-40 | change | My design ranks composable physics first; at v0.9 it comes too late. Bring it to v0.2–v0.4 and reconcile with N1. |
+| FR-41 | keep | The designer's core action. |
+| FR-42 | drop | A hand-drawn (r, z) sketcher costs a lot; scripted parametric geometry serves P1. |
+| FR-43 | keep | A switchable variant, rightly behind a switch. |
+| FR-44 | keep | Cheap and useful. |
+
+## QR
+
+| ID | Verdict | Reason |
+|---|---|---|
+| QR-01 | keep | The analytic-limit gate the author asked for. |
+| QR-02 | keep | Bands with attribution, not exact digits: matches "extensible over exact". |
+| QR-03 | keep | Needed. |
+| QR-04 | keep | Needed. |
+| QR-05 | keep | Proper validation. |
+| QR-06 | keep | Job-level scaling. |
+| QR-07 | keep | Needs a number in place of "acceptable". |
+| QR-08 | keep | Reproducibility. |
+| QR-09 | keep | Fixed from outside. |
+| QR-10 | keep | Serves the laboratory user. |
+| QR-11 | drop | A GUI at every release produced a Qt shell that was later discarded; build the workbench once the API is stable. |
+| QR-12 | keep | Diagnostics that name gate, quantity and location. |
+| QR-13 | keep | Limits the cost of changing the engine. |
+| QR-14 | change | Add two things: external packages register through entry points, and every term ships its own MMS case. |
+| QR-15 | keep | Needed. |
+| QR-16 | keep | Accessibility is part of good design. |
+
+## CON
+
+| ID | Verdict | Reason |
+|---|---|---|
+| CON-01 | keep | Matches the author's "base first". |
+| CON-02 | keep | Follows from CON-01. |
+| CON-03 | keep | Follows from CON-01. |
+| CON-04 | keep | Honest about the reduction. |
+| CON-05 | change | Keep the documented limitation; make the driver a plug-in so ion-specific drivers can replace it. |
+| CON-06 | keep | Same engine choice as mine. |
+| CON-07 | keep | Fixed from outside. |
+| CON-08 | change | A fact about today's wheels, not a constraint; move it to ADR-001 behind a linear-solver adapter. |
+| CON-09 | keep | Open throughout. |
+| CON-10 | keep | Licence hygiene. |
+| CON-11 | keep | States the GPL obligation honestly; the default rests on a measurement. |
+| CON-12 | keep | Licence hygiene. |
+| CON-13 | keep | Fixed from outside. |
+| CON-14 | keep | Supports citation. |
+
+## N1 to N7
+
+| ID | Verdict | Reason |
+|---|---|---|
+| N1 | change | The author wants to "change the equations". Allow terms the user writes within electrolyte transport, under the MMS contract; exclude only unrelated multiphysics. |
+| N2 | keep | Exchange with MD, not MD itself. |
+| N3 | keep | Steady state is justified by the timescale separation. |
+| N4 | keep | Leave room for 3D, do not ship it. |
+| N5 | keep | Follows from CON-01. |
+| N6 | keep | For v1; record it as the planned molecular link. |
+| N7 | keep | COMSOL is an oracle only. |
+
+## ADR
+
+| ID | Verdict | Reason |
+|---|---|---|
+| ADR-001 | keep | Same choice and reasoning as mine. Its 3D mitigation path is sound. |
+| ADR-002 | keep | Adapter with a permissive default. |
+| ADR-003 | keep | BSD core, honest about the GPL default. |
+| ADR-004 | keep | NiceGUI was chosen on a measured spike, so I would not overturn it. Freeze the renderer: it has moved from webgui to uPlot to Plotly. |
+| ADR-005 | change | Add a third level, terms composed into models, and registration from outside packages. Two levels cannot express "swap a term" or "compare models". |
+
+## What the lists lack
+
+- **An error estimate on every reported QoI.** The reference model had no mesh-convergence study, and FR-29 is post-1.0. A number without an error bar cannot be compared across models.
+- **A verification report published with each release.** The author's success criterion is "matches the limits, shown openly". QR-01 gates the limits in CI but publishes nothing a reader can point to.
+- **Model comparison as a first-class product.** Same pore and mesh, several models, the differences as a dataset. FR-39(b) only implies it.
+- **Extension by others without the author.** There is no requirement for outside packages to register parts through entry points, and no plugin test contract.
+- **The physics-first order of work as a requirement.** No list makes a new capability wait until the existing one holds against its analytic limits; the author ticked "proven over new" only in spirit, through the order of the work.
+- **Preparation for inverse design.** There are no adjoint sensitivities of QoIs to atomic charges, though they are the cheap path to ranking mutations.
+- **Preparation for the molecular link.** Nothing exports fields or PMFs for MD or BD; only imports exist.
+- **Idealised and solid-state pores beyond the cylinder.** They sit in the post-1.0 backlog, against the author's "devices beyond pores".
+- **A single-solve time target on a laptop.** QR-07 says "acceptable"; P3 needs a number.
+- **A cluster distribution path.** There is no container or HPC install requirement.
+- **Requirements on the process.** The author's one complaint, too many sessions started per package, has no measurable target.
+- **Balance.** Workbench detail (FR-30 to FR-39, QR-16) outweighs physics extensibility. That inverts the author's order: developer over ease.

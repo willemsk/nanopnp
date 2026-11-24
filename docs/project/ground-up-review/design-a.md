@@ -127,3 +127,150 @@ A from-nothing design has no source files yet; the plan rests on these inputs:
 - <pack>/author.md
 - <pack>/purpose.md
 - <pack>/b-comsol-settings.md
+
+---
+
+## After the unblinding
+
+Designer A then read §2.6 and §2.7 of `specification/02-product-overview.md`, `specification/03-requirements.md` and
+`specification/05-software-design/06-architecture-decisions.md`, and nothing else, and returned the judgement below. It
+is unedited, and the design above was not revised.
+
+Judged against my design as delivered. I read only the three files named: the product overview from its section 2.6 to the end, the requirements, and the architecture decisions.
+
+## IF
+
+| ID | Verdict | Reason |
+|---|---|---|
+| IF-01 | keep | Stage-wise Python API is my service layer. |
+| IF-02 | keep | Command line over the same layer; the exit-code contract is sound. |
+| IF-03 | change | One YAML case stays; its schema must express a model as term and closure diffs. |
+| IF-04 | keep | Same readers. |
+| IF-05 | keep | Also carries the outward molecular link. |
+| IF-06 | change | Mesh is archived in the run's HDF5 file; MSH becomes interchange only. |
+| IF-07 | change | VTKHDF plus raw coefficient vectors replaces XDMF. |
+| IF-08 | keep | It is the run manifest. |
+| IF-09 | change | Local server and network API stay; three workspaces, not six suites. |
+
+## FR
+
+| ID | Verdict | Reason |
+|---|---|---|
+| FR-01 | keep | Scene ingestion. |
+| FR-02 | keep | The axis also defines 3D wedges. |
+| FR-03 | change | Oligomer declared per case; no built-in pore list. |
+| FR-04 | keep | The density is the source of the level set. |
+| FR-05 | keep | The axisymmetric consumer of the level set. |
+| FR-06 | keep | Honest measure of what the reduction costs. |
+| FR-07 | keep | Automatic conditioning replaces hand cleaning. |
+| FR-08 | keep | Gates as designed. |
+| FR-09 | change | Regions derive from the level set in any dimension. |
+| FR-10 | change | Size follows closure length as well as Debye length. |
+| FR-11 | change | Wall layers become necessary for 3D; promote from MAY. |
+| FR-12 | keep | Charge source as designed. |
+| FR-13 | keep | Given physics; conserving deposit. |
+| FR-14 | keep | Evidence carried by every run. |
+| FR-15 | keep | One density field for both surfaces. |
+| FR-16 | keep | Closures as named, data-backed objects. |
+| FR-17 | keep | The admissibility line search delivers the positivity clause. |
+| FR-18 | keep | Variants by name, one code path. |
+| FR-19 | keep | Equilibrium relatives are in the kernel. |
+| FR-20 | change | A model is composed terms and a variant a diff, not one class. |
+| FR-21 | keep | Same analyte. |
+| FR-22 | keep | Same quantities. |
+| FR-23 | keep | Two routes, the reaction functional first. |
+| FR-24 | keep | Warm-started chains of points. |
+| FR-25 | keep | Add the verification status of each term. |
+| FR-26 | keep | Resolved-case identity. |
+| FR-27 | keep | Content-hashed stage artefacts. |
+| FR-28 | keep | Export from the record. |
+| FR-29 | change | The adjoint is core in my design; promote from MAY. |
+| FR-30 | change | Figures from stored artefacts stay; views shared with the workbench. |
+| FR-31 | change | Three workspaces; keep the default count and queue on screen. |
+| FR-32 | change | Plain folder stays; three model kinds reduce to case plus diffs. |
+| FR-33 | keep | Linked views. |
+| FR-34 | keep | Matches my deviation badges. |
+| FR-35 | keep | Refusal at the field. |
+| FR-36 | keep | The guided route is my laboratory mode. |
+| FR-37 | keep | Pore-agnostic preparation. |
+| FR-38 | keep | Variant as parent plus difference. |
+| FR-39 | change | Fold into one study planner over content-addressed points. |
+| FR-40 | change | The composer is the kernel: first, not ninth release. |
+| FR-41 | keep | Mutation through an optional vetted dependency. |
+| FR-42 | change | Parametric geometry producers first; free sketching later. |
+| FR-43 | keep | Optional, recorded deviation. |
+| FR-44 | keep | Figures from the command line. |
+
+## QR
+
+| ID | Verdict | Reason |
+|---|---|---|
+| QR-01 | keep | Extend to one analytic limit per term. |
+| QR-02 | change | Keep the published bands; drop the commercial field-comparison clause. |
+| QR-03 | keep | Conservation by construction. |
+| QR-04 | keep | Two-route agreement. |
+| QR-05 | keep | The right bar: no worse than the source. |
+| QR-06 | keep | Job-level scaling. |
+| QR-07 | keep | It measures my open solver question. |
+| QR-08 | keep | Rebuildable results. |
+| QR-09 | keep | Wheels only. |
+| QR-10 | keep | The laboratory test. |
+| QR-11 | change | Fights base-first; prototypes until the base holds. |
+| QR-12 | keep | Failures name gate, quantity, location. |
+| QR-13 | change | State forms once per model and per dimension, behind a coordinate facade. |
+| QR-14 | change | Registration from an outside package; terms, not one class. |
+| QR-15 | keep | Documentation and archive. |
+| QR-16 | keep | An accessibility bar my design omitted. |
+
+## CON
+
+| ID | Verdict | Reason |
+|---|---|---|
+| CON-01 | change | 2D steady for the base; 3D must be prepared for, not merely unprecluded. |
+| CON-02 | keep | Holds until 3D. |
+| CON-03 | keep | Holds until 3D. |
+| CON-04 | keep | Follows FR-06. |
+| CON-05 | drop | A property of one closure driver, not a product constraint. |
+| CON-06 | keep | Same engine, bounded reach. |
+| CON-07 | keep | No compiler. |
+| CON-08 | keep | A desktop fact that settles my wheel doubt. |
+| CON-09 | change | Permissive core stays; renderer clauses leave with that renderer. |
+| CON-10 | keep | Gmsh optional. |
+| CON-11 | keep | A GPL obligation my design missed. |
+| CON-12 | keep | My 3D choice respects it. |
+| CON-13 | keep | Three systems, Linux for clusters. |
+| CON-14 | keep | Citation. |
+
+## N1 to N7
+
+| ID | Verdict | Reason |
+|---|---|---|
+| N1 | change | Developers do write terms; keep only the ban on unrelated problems. |
+| N2 | keep | No MD engine of its own; maps outward remain allowed. |
+| N3 | keep | Room is left. |
+| N4 | drop | 3D is a scheduled capability, not an exclusion. |
+| N5 | change | Off-axis follows 3D; flexible analytes stay out. |
+| N6 | drop | MD-derived closures are a planned capability. |
+| N7 | keep | No commercial file formats. |
+
+## ADR
+
+| ID | Verdict | Reason |
+|---|---|---|
+| ADR-001 | keep | Same choice on the same grounds; its consequences settle my wheel doubts. |
+| ADR-002 | keep | Same; a 3D tetrahedraliser joins later. |
+| ADR-003 | keep | Permissive core; it records the solver obligation I missed. |
+| ADR-004 | change | I chose a React application; its spike is evidence I lack: my weakest verdict. |
+| ADR-005 | change | Three levels: closures as data, terms as functions, models as compositions. |
+
+## What the lists lack
+
+- **A verification ledger.** QR-01 names benchmarks, but nothing requires each term and closure to map to an analytic limit, the map to be published, or a run record to say which of its terms are unverified. That is the author's first success measure.
+- **A measure of rapid new physics.** QR-14 counts files touched. Nothing requires that a new term or equation set be written, verified and compared side by side by an outside developer unaided, from a package of their own.
+- **A discretisation error statement per result.** No requirement gives a quantity an error bar; mesh adaptivity is optional and late.
+- **Sensitivities.** No adjoint, per-residue sensitivity or design requirement exists, though inverse design is a three-year aim.
+- **Dimension independence as a requirement.** 3D appears only as an exclusion and a backlog line; nothing obliges geometry and forms to be written so that 3D changes a consumer and not the pipeline.
+- **The outward molecular link.** Grids can be written, but no requirement states what MD or Brownian dynamics receives.
+- **Generality the author asked for.** Solid-state shapes, more than two species and solid regions with carriers are backlog, not requirements on the kernel.
+- **Heavy work.** No requirement covers a cluster distribution with MPI, or a workbench serving other machines; the server is loopback only.
+- **Economy.** Requirements carry delivered detail, review numbers and file names, so they are long to rule on.
