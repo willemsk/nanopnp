@@ -83,8 +83,8 @@ Under `physics.inertia` the left side gains `+ ∫ ϱ (u·∇)u·v r dr dz` (`ϱ
 
 NOTE (NUM-04, PHY-07; §8.2.37 AM2): PHY-07's density continuity, the reference's hand-added
 `∫ (u·∇ϱ) q r dr dz`, is not assembled, so the assembled `ϱ (u·∇)u` is PHY-07's `(u·∇)(ϱu)` only where
-`u·∇ϱ = 0`. REV-223: Phase 6's equations package, measured against the published results in Phase 12
-(§8.2.49 AY6; §8.2.51 BA5).
+`u·∇ϱ = 0`. REV-223: Phase 7's equations package, measured against the published results in Phase 12
+(§8.2.49 AY6; §8.2.51 BA5; §8.2.53 BC7).
 
 **NUM-05.** The cylindrical hoop-strain term `2η u_r v_r / r²` SHALL be assembled. After
 multiplication by the `r` weight it appears as `2η u_r v_r / r`, which is integrable because
@@ -316,7 +316,7 @@ increment cap is NUM-16's damping cut.
 
 NOTE (NUM-08, NUM-16, NUM-17; §8.2.37 AM2): three tolerances have no written derivation: the absolute
 residual floor 10⁻¹², the increment cap `V_T`, and NUM-08's deviation from the analytic value, which
-names no tolerance. REV-225, Phase 6.
+names no tolerance. REV-225, Phase 7.
 
 **NUM-18.** The solve SHALL proceed along the continuation ladder below, each rung warm-started
 from the converged state of the previous one.
@@ -342,6 +342,14 @@ record a deviation the solve never carried, which §5.3.3 exists to make impossi
 to `physics.model: pnp`, whose flow-free transport no rung above 6 carries. Single-rung runs
 (`numerics.continuation: none`) take all four switches as given; that is how an ablation asks for a
 configuration the ladder cannot express.
+
+NOTE (NUM-18, the trial of another path; §8.2.53 BC24; REV-283): Phase 7's speed-up package tries a path that
+ramps the salt in the classical model and switches the corrections on at the target concentration, at the
+corners of FR-17's envelope. Its plan registers the pass marks before any run: every corner converges, and no
+quantity of VER-62's walks moves beyond Newton's stopping tolerance. On a full pass the package amends this
+clause and re-pins VER-62; on any miss the ladder above stands. It is the largest jump of the coefficients,
+and a classical state at high salt may pass the packing limit near a charged wall, where the steric rung is
+refused (PHY-05, PHY-06).
 
 NOTE (NUM-18, FR-24, a member warm-started from a neighbour): a sweep member that starts from the converged
 state of a neighbouring operating point SHALL solve the target rung alone rather than re-climbing the
@@ -390,6 +398,8 @@ measurement RSK-10 asked for. CON-11 and ADR-003 carry the consequence.
 NOTE (NUM-21): the reference used PARDISO with pivoting perturbation 1 × 10⁻¹³ and sparsity-pattern reuse.
 PARDISO is likewise absent from the NGSolve wheel, so the reference linear solver cannot be
 reproduced on the default path. The converged solution does not depend on this choice; timings do.
+The engine's code loads PARDISO from pip's `mkl` on Windows and Linux x86-64, read and not run; MKL is
+closed, so it is at most a solver a user registers (CON-08; REV-281; §8.2.53 BC12).
 
 **NUM-22.** An iterative fallback SHALL be implemented before any 3D capability: multiplicative
 `PCFIELDSPLIT` over the blocks `{(φ, c_i), (u, p)}`, algebraic multigrid per scalar block, and a
@@ -536,7 +546,7 @@ themselves — while leaving the total almost unaffected, which is exactly the p
 RSK-04 describes.
 
 NOTE (NUM-28; §8.2.37 AM2): where PHY-16 deposits charge in the fluid, `∇·T_M` also carries `ρ_pore E`,
-which the consistency terms omit. REV-224, Phase 6.
+which the consistency terms omit. REV-224, Phase 7.
 
 NOTE (NUM-28): the two consistency terms cancel in the sum only when the momentum equation carries every
 force the Maxwell tensor implies, that is when `f = f_ion + f_KH`. The validated model omits `f_KH`
@@ -607,6 +617,11 @@ clause allows.
 **NUM-32.** Goal-oriented dual-weighted-residual adaptivity targeting the ionic current (Becker &
 Rannacher, *Acta Numerica* **10**, 1, 2001) MAY be provided as an optional refinement loop. It
 SHALL NOT be a v1 default.
+
+NOTE (NUM-32; §8.2.53 BC9): an estimate of a quantity's mesh error comes before any adaptivity, as
+FR-46: a ladder of finer meshes, the observed order and an error bar. The ladder has four meshes or a
+safety factor, takes its ratio from the element counts, since Netgen's meshes are not nested, and
+reads only differences above Newton's stopping floor. The bar is the mesh error on the given contour.
 
 **NUM-33.** Where the loop of NUM-32 is provided, the error estimator SHOULD be built from the
 linear Poisson–Boltzmann surrogate rather than the full coupled adjoint.

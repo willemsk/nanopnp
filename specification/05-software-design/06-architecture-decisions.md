@@ -29,7 +29,7 @@ backend for the desktop path, so the weak forms would be maintained twice indefi
 | Consequence | Detail and mitigation |
 |---|---|
 | MPI | Pip wheels are serial-only (verified on 6.2.2606: NGSolve's shared objects reference no MPI symbol and mpi4py is not installed; `netgen-mesher` ships two optional MPI plugins, `ng_openmpi.so` and `ng_mpich.so`, whose MPI symbols only a system MPI library resolves); parallel mesh generation, adaptive refinement and multigrid are unsupported. This costs v1 nothing: 2D axisymmetric solves are direct-solver territory and sweeps parallelise at the job level |
-| No MUMPS in the wheel | The wheel reports `USE_MUMPS: False` (also `USE_HYPRE`, `USE_PARDISO`, `USE_MKL`), and `inverse="mumps"` raises `SparseMatrix::InverseMatrix: no inverse available for type mumps`. MUMPS needs a source build with MPI, reintroducing the compiler dependency this decision exists to avoid. The desktop path uses UMFPACK or scipy SuperLU (CON-08); the reference COMSOL model used PARDISO, equally absent from the wheel |
+| No MUMPS in the wheel | The wheel reports `USE_MUMPS: False` (also `USE_HYPRE`, `USE_PARDISO`, `USE_MKL`), and `inverse="mumps"` raises `SparseMatrix::InverseMatrix: no inverse available for type mumps`. MUMPS needs a source build with MPI, reintroducing the compiler dependency this decision exists to avoid. The desktop path uses UMFPACK or scipy SuperLU (CON-08); the reference COMSOL model used PARDISO, which the wheel does not ship. The engine's code loads PARDISO from pip's `mkl` on Windows and Linux x86-64, which was read and not run (REV-281); MKL is closed, so it is at most an option a user registers (§8.2.53 BC12) |
 | Direct-solver performance | Whether UMFPACK factorises the coupled five-field system at production mesh size in acceptable time and memory is a Phase 0 exit criterion (§8.2, QR-07) |
 | 3D phase | Mitigations in order: prototype 3D scaling before committing; route parallel solves through ngsPETSc to reach PETSc fieldsplit and AMG; if 3D scaling proves fatal, add a DOLFINx backend for HPC only, through the interface shape of §5.4.1, taking EchemFEM (LLNL, MIT, Firedrake) as the reference implementation of SUPG-stabilised Nernst–Planck |
 
@@ -101,9 +101,8 @@ server's event loop and its already-imported numerical libraries.
 
 Consequences: every pipeline stage must be independently invocable, cancellable, progress-reporting
 and introspectable (FR-27), which §5.1 requires on scientific grounds in any case, so the interface
-is a thin shell over the stage objects the CLI drives (IF-09). Each release from v0.2 onward ships
-a usable graphical surface over the functionality existing at that release (QR-11); the per-phase
-increments are in §8.1.
+is a thin shell over the stage objects the CLI drives (IF-09). A capability is built and tested in
+the library first and the workbench follows it (§8.2.53 BC11); the increments are in §8.1.
 
 NOTE (the desktop wrapper, v0.6). The browser shell SHALL NOT preclude a desktop wrapper, such as
 Electron, that spawns its server and loads its address; no wrapper is built before 1.0 (§8.2.17 S12;
@@ -118,7 +117,7 @@ per-launch token of the address it printed nor the cookie that token sets.
 NOTE (the front end, v0.6). The workbench's front end SHALL be written in Python with NiceGUI, on the
 FastAPI server of the desktop-wrapper NOTE; it has no build step, and NiceGUI's own Vue layer ships
 prebuilt (CON-07). JavaScript SHALL be the bridge to a renderer and nothing else. The renderers are Mol*
-for the molecule, as its unmodified standalone bundle served as separate files (CON-09), and, from the tree of results' package (WP5.22 before §8.2.47 AW1; Phase 7's since
+for the molecule, as its unmodified standalone bundle served as separate files (CON-09), and, from the tree of results' package (WP5.22 before §8.2.47 AW1; Phase 8's since
 §8.2.49 AY1),
 Plotly (plotly.js, MIT) as NiceGUI ships it, unmodified, for every plot of y against x and every (r, z) view:
 maps, meshes, drawings and the field turned about the axis, each axis linear or logarithmic, a
@@ -146,3 +145,9 @@ Consequences: a new electrolyte or surface is a data file rather than a code cha
 result records which correction version produced it (FR-25); PNP-NS is a configuration of ePNP-NS
 rather than separate code (FR-18, PHY-21); Poisson–Boltzmann is a distinct model rather than the
 PNP solver at zero bias (PHY-24); correction-by-correction differential testing is a sweep (§7.4).
+
+NOTE (§8.2.53 BC1, BC2, BC5): the kernel of Phase 6 adds a third level between these two, the
+registered term, with a physics model as a composition of terms and a term found in any installed
+package (FR-40). The kernel's design package rewrites this decision, §5.4 and §5.5 once the author
+has ruled its design. A term is written within electrolyte transport, so the alternative rejected
+as N1 stays rejected.

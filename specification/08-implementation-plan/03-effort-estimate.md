@@ -22,19 +22,21 @@ transcript (§8.4.5; AM11), never from a developer's days. Measured from the fir
 last on `main`, waits for the author included, Phase 5's library steps WP5.03 to WP5.06 took 1 to 3
 hours each, and WP5.07, WP5.08 and WP5.10, which add a mechanism, a screen or the rules, 7 to 11.
 
-Estimate to the validated release (v0.13, Phase 12; §8.2.5 E2, §8.2.6 F1; §8.2.49 AY1, AY2; §8.2.51 BA5), from 23 November
-2026, after the rescoping round. Phase 5's last thirteen packages were estimated on 9 November at about 74 sessions,
+Estimate to the validated release (v0.13, Phase 12; §8.2.5 E2, §8.2.6 F1; §8.2.49 AY1, AY2; §8.2.51 BA5), from 24 November
+2026, after the rulings on the ground-up review (§8.2.53). Phase 5's last thirteen packages were estimated on 9 November at about 74 sessions,
 66 to 132 agent hours and 122 touches (AM12), and its measured packages give the rates: a text or clean-up package
 about 5 sessions, 3 to 6 agent hours and 8 touches, and a shell package about 6 sessions, 6 to 12 agent hours and 10
-touches. Each phase's own round estimates it again:
+touches. Each phase's own round estimates it again. The rates are those of before the orchestrator (§8.2.53
+BC10); a target for the author's touches a package is set from the first two packages it carries:
 
 | Work | Sessions | Agent hours | Touches |
 |---|---|---|---|
-| Phase 6, the cleanup and the library's foundations, after WP6.01 to WP6.03: the ground-up review with its ruling round (12 sessions, 7 to 13 agent hours, 19 touches); the axis package (4, 2 to 4, 6); and, provisional until that round rules, the drafted content in about ten packages at the text and clean-up rate, its agent hours those of the 15 drafted packages whose content is kept: the restructure, the model's open terms, the tolerances with the exports, the refusals, the speed-up and the close (50, 45 to 90, 80) (§8.2.49 AY1, AY3, AY4, AY6; §8.2.50 AZ4; §8.2.51 BA4, BA8, BA10, BA11; §8.2.52 BB3, BB6) | 66 | 54 to 107 | 105 |
-| Phase 7, the workbench rebuilt: about 14 packages at the shell rate, its foundations and the packages Phase 5's seventh amendment moved (§8.2.47 AW1), and the author's design rounds | 85 | 85 to 170 | 140 |
-| Phases 8 to 10, the composer, the structural mutator with fractional protonation, and the sketcher: not estimated; each round sets its own (§8.2.17 S7; §8.2.49 AY2; §8.2.51 BA1, BA9) | — | — | — |
+| Phase 6, the cleanup and the kernel, after WP6.04: the orchestrator (5 sessions, 3 to 6 agent hours, 8 touches); the axis package (4, 2 to 4, 6); the numbers stored for the switches off their default (3, 2 to 3, 4); the kernel's design (5, 3 to 6, 8); the kernel in about four packages, the ground-up review's draft count, which its challenge found low and the design package sets (20, 12 to 24, 32); the installed packages (3, 2 to 3, 4); the close (3, 2 to 3, 4) (§8.2.51 BA8; §8.2.53 BC1 to BC5, BC7, BC10) | 43 | 26 to 49 | 66 |
+| Phase 7, the library's foundations: the drafted content in about ten packages at the text and clean-up rate, its agent hours those of the 15 drafted packages whose content is kept (50, 45 to 90, 80); the ledger and the mesh-error estimate (10, 6 to 12, 16); unequal reservoirs, not estimated, at least one package (5, 3 to 6, 8); Python 3.12 (3, 2 to 3, 4); and the machine time of the comparison at its close (§8.2.49 AY1, AY3, AY4, AY6; §8.2.50 AZ4; §8.2.51 BA4; §8.2.53 BC7 to BC9, BC21, BC22) | 68 | 56 to 111 | 108 |
+| Phase 8, the workbench rebuilt: the kit's trial (3, 2 to 3, 4); about 14 packages at the shell rate, its foundations and the packages Phase 5's seventh amendment moved (§8.2.47 AW1), and the author's design rounds; the composer's tool, not estimated (§8.2.53 BC6, BC13) | 88 | 87 to 173 | 144 |
+| Phases 9 and 10, the structural mutator with fractional protonation and the sensitivity to each atomic charge, and the sketcher: not estimated; each round sets its own (§8.2.17 S7; §8.2.49 AY2; §8.2.51 BA1, BA9; §8.2.53 BC14, BC17) | — | — | — |
 | Phase 11, the analyte forces: about four packages at the text and clean-up rate, until its round estimates it (§8.2.51 BA5) | 20 | 12 to 24 | 32 |
-| Phase 12, validation and release: about four packages, and the machine time of its Tier 3 and Tier 4 runs (the datum below) | 23 | 20 to 40 | 40 |
+| Phase 12, validation and release: about four packages, the class of each run against the validated range (§8.2.53 BC19), and the machine time of its Tier 3 and Tier 4 runs (the datum below) | 26 | 22 to 43 | 44 |
 
 A ruling round, a plan and a ship session on Fable 5.2 cost about a quarter to a half more in model spend than on
 Opus 5.5 (§8.2.49 AY7); the units above do not change.

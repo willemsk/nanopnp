@@ -6,10 +6,11 @@ Every notable change to nanopnp, newest first. The format follows
 
 - a **release** `vX.Y.Z` closes a phase, one minor version per phase: v0.1 is Phase 0, v0.2 is
   Phase 1, v0.3 is Phase 2, v0.4 is Phase 3, v0.5 is Phase 4 (polish and user testing), v0.6 is
-  Phase 5 (the graphical interface), v0.7 is Phase 6 (the cleanup and the library's foundations),
-  v0.8 is Phase 7 (the workbench rebuilt), v0.9 to v0.11 are Phases 8 to 10 (the composer, the
-  structural mutator, the sketcher), v0.12 is Phase 11 (the analyte forces) and v0.13 is Phase 12
-  (the validated release), before the stable v1.0 (§8.2.6; §8.2.49; §8.2.51);
+  Phase 5 (the graphical interface), v0.7 is Phase 6 (the cleanup and the kernel),
+  v0.8 is Phase 7 (the library's foundations), v0.9 is Phase 8 (the workbench rebuilt, with the
+  composer's tool), v0.10 and v0.11 are Phases 9 and 10 (the structural mutator, the sketcher),
+  v0.12 is Phase 11 (the analyte forces) and v0.13 is Phase 12 (the validated release), before the
+  stable v1.0 (§8.2.6; §8.2.49; §8.2.51; §8.2.53);
 - a **work-package pre-release** `vX.Y.Z-alpha.N` marks the merge of the N-th work package toward
   that release; from Phase 5, the package `WP5.N` (`WP5.02` is `v0.6.0-alpha.2`). A package merged
   before the previous release takes no tag, and its entry waits under `## [Unreleased]` (§8.4.1).
