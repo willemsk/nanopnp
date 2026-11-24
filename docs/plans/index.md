@@ -8,12 +8,12 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 
 ## Phase 6
 
-- [Phase 6 (Cleanup and the library's foundations): a library the workbench and the tools can build on](phase-6/phase-6-library-foundations.md): in progress. Delivered: WP6.01, WP6.02, WP6.03. Amended 23 November 2026 (§8.2.51; §8.2.52): WP6.04, the ground-up review, and WP6.05, the axis fix, are planned; the rest is provisional until the author rules on the rev…
-- [Phase 6 plan: the record](phase-6/phase-6-record.md): a record of replaced text, last added to on 23 November 2026 (§8.2.52 BB3 to BB5); it states nothing that holds now.
+- [Phase 6 (Cleanup and the library's foundations): a library the workbench and the tools can build on](phase-6/phase-6-library-foundations.md): in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04. Amended 23 November 2026 (§8.2.51; §8.2.52): WP6.05, the axis fix, is planned; the rest is provisional until the author rules on the ground-up review (REV-280). Re…
+- [Phase 6 plan: the record](phase-6/phase-6-record.md): a record of replaced text, last added to on 23 November 2026 (§8.2.52 BB6); it states nothing that holds now.
 - [WP6.01 — The Windows leg: the stall named and bounded, the failures fixed](phase-6/wp6.01-the-windows-leg.md): delivered, 22 November 2026.
 - [WP6.02 — The cleanup: the reading measured, the instructions audited, the records cut](phase-6/wp6.02-the-cleanup-measure-audit-records.md): delivered, 22 November 2026.
 - [WP6.03 — The cleanup: the instructions cut, the Copilot host retired](phase-6/wp6.03-the-cleanup-instructions-copilot-host.md): delivered, 23 November 2026.
-- [WP6.04 — The ground-up review](phase-6/wp6.04-the-ground-up-review.md): planned, not started.
+- [WP6.04 — The ground-up review](phase-6/wp6.04-the-ground-up-review.md): delivered, 24 November 2026.
 
 ## Phase 5
 

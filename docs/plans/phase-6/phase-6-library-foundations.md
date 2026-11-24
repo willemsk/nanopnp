@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the library's foundations): a library the workbench and the tools can build on
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03. Amended 23 November 2026 (§8.2.51; §8.2.52): WP6.04, the ground-up review, and WP6.05, the axis fix, are planned; the rest is provisional until the author rules on the review. Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04. Amended 23 November 2026 (§8.2.51; §8.2.52): WP6.05, the axis fix, is planned; the rest is provisional until the author rules on the ground-up review (REV-280). Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -59,7 +59,7 @@ Phase 12 (BA5); the structure pipeline's loose ends, Phase 9; a converter for v0
 
 | Decision | Choice | Why |
 |---|---|---|
-| The ground-up review | WP6.04, next: a report and no code; everything open but §4's physics | The survey took every constraint as given; after the restructure the answer could no longer shape it (BA10 to BA13) |
+| The ground-up review | WP6.04, delivered: a report and no code; everything open but §4's physics | The survey took every constraint as given; after the restructure the answer could no longer shape it (BA10 to BA13) |
 | What the review designs for | The whole of §3, what is built and what is planned up to v0.13 | The tools stay before validation, so the design must carry them (BA1; BB2) |
 | Order | The review, the author's rulings, a further amendment, the axis fix, then what that amendment plans | A proposal on how an axis is found is ruled before the fix is built (BA11; BB1) |
 | Order of the provisional content | The error base, the restructure, the equations, the exports, the rewording, the speed-up, the close | A step that moves no number is reviewed alone (AY3, AY4; AZ4; BA4) |
@@ -95,28 +95,9 @@ WP6.04 takes `v0.7.0-alpha.4` and WP6.05 `v0.7.0-alpha.5`; the close takes `v0.7
 
 ### WP6.04 — The ground-up review (BA10 to BA13; BB2 to BB6)
 
-*Planned 23 November 2026.* [The plan](wp6.04-the-ground-up-review.md). A study. It changes no `src/`, no `tests/`, no case schema and no public name, and BA7 gives it no
-licence to (BA13).
-
-- **The question:** given what the program is now, how would it be built if it were started over?
-- **Given:** the physical model of §4 alone, under §1.6's precedence.
-- **Open:** the code's structure in the library and the workbench; every technology, the backend, the front end, the
-  store and the file formats among them; the constraints of §3.4 and the decisions of §5.6; the numerical methods of §6;
-  the requirements and exclusions of §3; the process of §8.4; and every ruling behind them, those of §8.2.51 and
-  §8.2.52 included (BA12).
-- **The design's reach:** the whole of §3, what v0.6 delivers and what §2.7 plans up to v0.13 (BB2).
-- **The guard, in order:** the author's interview (BB6); three blind designs from the program's purpose, not from §3; their
-  judgement of §3; a walk of every open item; a challenge (BB3). It may propose a new requirement.
-- **It delivers one report,** on the project's pages (BB4): the design it would choose today; a table of each difference from the program as it is,
-  marked keep, change now, change later, drop or add; for each change its gain, its risk and its cost in packages, sessions
-  and touches, and the clause or ruling it would change. A proposal that changes a numerical method says which
-  benchmarks are argued again before anything is built on it (VER-62; G10).
-- **It reads** the survey, the modularity register, WP6.02's Outcome and Phase 5's end-of-phase report, and may run the
-  program and measure it.
-
-It proposes no `VER-` and no `VAL-`, and has no test. It is done when the report is merged and each item it leaves
-open is a `REV-nn` row. About 10 sessions, 7 to 13 agent hours and 16 touches (BB6). Fable 5.2 implements it and
-Opus 5.5 ships it (BB5).
+*Delivered 24 November 2026.* [The plan](wp6.04-the-ground-up-review.md). Live: each verdict of the report is a
+proposal until the ruling round (BA11, BA13); REV-280 holds the proposals and REV-281 to REV-287 seven questions
+for a trial; AZ1 to AZ6 and BA1 to BA9 hold until the round rules (BA4).
 
 ### The ruling round on the review (BA11, BA13)
 
