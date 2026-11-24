@@ -249,9 +249,9 @@ appendices and pages the site publishes; name a clause, a plan or a review in co
 - [x] 3547056, ea377ff 3. The pack and the three blind designs, in `design-a.md` to `design-c.md` and `method.md`
   (D2); done when each transcript's list holds no path outside the pack. **Executor:** main, with `Plan` agents on
   Fable 5.2 and Opus 5.5
-- [ ] 4. The unblinding, appended to the three designs (D3); done when each holds its tables and both lists are
+- [x] c1781b1 4. The unblinding, appended to the three designs (D3); done when each holds its tables and both lists are
   clean. **Executor:** main, with the same agents
-- [ ] 5. Compaction checkpoint. **Executor:** main
+- [x] 5. Compaction checkpoint. **Executor:** main
 - [ ] 6. `evidence.md` (D5); done when each number names its command. **Executor:** main
 - [ ] 7. `technologies.md` (D5); done when each cell names its source.
   **Executor:** main, with `general-purpose` agents on Sonnet, high effort
