@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04. Amended 24 November 2026 (§8.2.53; §8.2.54): WP6.05 to WP6.08 are planned by scope and numbered in build order; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04. Amended 24 November 2026 (§8.2.53; §8.2.54): WP6.05 is planned and WP6.06 to WP6.08 are planned by scope and numbered in build order; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -14,8 +14,8 @@ Packages are numbered in the order they are built.
 **Cost.** About 43 sessions, 26 to 49 agent hours and 66 times you act, at today's rates. Your ruling round on the
 design adds about 2 sessions and 3.
 
-**What could go wrong.** The helpers may be unable to run the commit checks or to ask you a question: the first
-package tests that first, and falls back to separate sessions. The prototype may miss the stored numbers: that comes
+**What could go wrong.** A helper cannot ask you a question or start its own helper, so the session you start does
+both; the next two packages show whether that holds. The prototype may miss the stored numbers: that comes
 to you before any kernel package is planned. The kernel is checked in full only at its last package, so a moved
 result may be found late; the nightly run would show it. Its size is a draft count that the review found low.
 
@@ -81,17 +81,19 @@ WP6.05 to WP6.08 take `v0.7.0-alpha.5` to `v0.7.0-alpha.8`; the close takes `v0.
 | [WP6.03](wp6.03-the-cleanup-instructions-copilot-host.md), the instructions (AZ18 to AZ21), 23 November 2026 | The limit is 8,000 words, measured at 7,186; each plan proposes its two models |
 | [WP6.04](wp6.04-the-ground-up-review.md), the ground-up review (BA10 to BA13), 24 November 2026 | Its 25 proposals are ruled or carried (§8.2.53); REV-281 to REV-287 are Phase 7's and Phase 8's |
 
-### WP6.05 — The orchestrator (BC10, BC15)
+### WP6.05 — The orchestrator (BC10, BC15; BD2 to BD6)
 
-*Planned by scope; next.* One session that the author starts carries a package: it hands the plan, its review, each
-stretch of the implementation and the ship to a sub-agent with an empty context, and brings the author the rulings,
-the plan's approval and the merge. The three commands stay, and a ruling round stays a session of its own.
+*Planned; next.* [The plan](wp6.05-the-orchestrator.md). `/np-carry wp <n>` starts one session that carries a
+package: it hands the plan, the fixes after its review, each stretch of the implementation and the ship to a helper
+with an empty context, and brings the author the rulings, the plan's approval and the merge. The three commands
+stay, and a ruling round stays a session of its own.
 
-It first checks three facts: that the commit gate runs inside a sub-agent, that a sub-agent can start its own, and
-that it can put a question to the author. If one fails it builds separate sessions. It counts how many of the last
-100 pushes a safe path rule for the browser tests would have skipped, and applies the rule above a third; a pull
-request's CI still runs every browser test. §8.4.4 and §8.4.5 change with it, and §7.6 if the count passes. Its plan settles open decision 13.
-About 5 sessions, 3 to 6 agent hours and 8 touches.
+Of BC10's three facts the plan found one true: the commit gate runs inside a helper. A helper cannot start its own
+or ask the author, so the main session does both (BD2); the package records the facts again. The reading limit
+binds every helper that implements (BD3). It counts how many of the last 100 pushes that ran tests a safe path rule
+for the browser tests would have skipped, and applies the rule above a third (BD4); a pull request's CI still runs
+every browser test. §8.3, §8.4.4 and §8.4.5 change with it, and §7.6 if the count passes. About 5 sessions, 3 to 6
+agent hours and 8 touches.
 
 ### WP6.06 — The channel's axis at a ragged rim (REV-279; VER-48; BA8; BB1)
 
@@ -145,17 +147,15 @@ Input to that round, in order; none is numbered before it:
 | 6, 7 | AM2's drift bound; a run above order 2; the speed-up's thresholds; the names after `Project` splits | **Moved to Phase 7** (BC7); the input note carries them |
 | 11 | What §5.2's two limits become if the fix moves 2WCD's measured axis (REV-239) | **Author**, at WP6.06's plan, before the fix is measured |
 | 12 | The numbers of the packages after the review | **Settled by the author, 24 November 2026**: in build order (BD1) |
-| 13 | What the reading limit counts once an orchestrator carries a package | **Author**, at WP6.05's plan, before any measurement (AZ18; criterion 4) |
+| 13, 17 | What the reading limit counts under the orchestrator; helpers or separate sessions | **Settled by the author, 24 November 2026**: every helper that implements; helpers (BD2, BD3). The browser tests' rule waits for WP6.05's count (BD4) |
 | 14 | Which walk carries each switch off its default; the guard numbers' identifier in §7; whether the nightly run holds them | WP6.07's plan (BC3) |
 | 15 | The target for the author's touches a package | **Author**, at the round after WP6.08, from WP6.06's and WP6.07's measured lines (BC10) |
 | 16 | The kernel's design; the number and order of its packages; whether the 3D benchmark is built, on its price | **Author**, at the round after WP6.08 (BC2, BC5) |
-| 17 | Helpers inside one session or separate sessions; the browser tests chosen by path | WP6.05, by its three checks and its count (BC10, BC15) |
 
 ## What the author supplies
 
 | Item | Needed by | If it does not arrive |
 |---|---|---|
-| What the reading limit counts under the orchestrator | WP6.05's plan | The plan waits; nothing is measured against a limit not ruled |
 | §5.2's two limits, if the fix moves 2WCD's axis | WP6.06's plan | The fix is not measured |
 | The kernel's design ruled; the 3D benchmark; the touches target | The round after WP6.08 | No kernel package is planned (BC2) |
 | Merges; tags a session cannot push | Each package | The session dispatches `tag.yml` and prints the commands |
@@ -185,8 +185,8 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
    VER-12 to VER-22, VER-31, VER-42 and VER-77 pass unchanged** (BC4). Prediction: it holds where each flux is
    integrated once (the physics reviewer, at BC2). A miss is fixed or
    reverted, and re-pinned only by ruling (G10).
-4. **A fresh package session starts under the reading limit** of 8,000 words (`usage.py`; AZ18), counted as open
-   decision 13 rules. A miss continues the cleanup.
+4. **A fresh package session starts under the reading limit** of 8,000 words (`usage.py`; AZ18), by every helper
+   that implements (BD3). A miss continues the cleanup.
 5. **The author rules the kernel's design before its packages are planned**; the prototype holds example 01's walk
    to 10⁻⁸, or the miss is put to the author (BC2).
 6. **The kernel's own Tier 1 and Tier 2 tests pass** (FR-40), **and a term an installed package registers is found
@@ -201,8 +201,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
     plan measures first. A move, of it or of the farthest centre's 0.0148 nm, amends VER-48 and §5.2's NOTE in the
     fix's commit and goes to the author (open decision 11).
 11. **The orchestrator's three facts are recorded, and WP6.06 and WP6.07 are reported with their sessions, agent
-    hours and touches** (BC10). A fact that fails builds separate sessions; a package it cannot carry goes back to
-    the three commands.
+    hours and touches** (BC10; BD2). A package it cannot carry goes back to the three commands.
 12. **The guard numbers are stored** after the check of VER-62's coverage (BC3). Prediction: the walks cover the
     default switches alone; if not, WP6.07 stores only what is missing.
 
