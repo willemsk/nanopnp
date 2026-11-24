@@ -299,28 +299,92 @@ Asked "Is this summary of your picture complete?", with the options *Complete*, 
 ## The purpose pack
 
 What a blind designer could read: a folder outside the repository, `<pack>`, built in the session's scratchpad by
-`sed`, `cp` and `awk` from the tree at `2085983`. It holds no code, no requirement list and no design text.
+`sed`, `cp` and `awk` from the tree at `3547056`. It holds no code, no requirement list and no design text.
 
 | File of the pack | Taken from | Words |
 |---|---|---|
-| `purpose.md` | `specification/01-introduction.md`, §1.1 to §1.3 less §1.3's closing paragraph; `specification/02-product-overview.md`, §2.1 to §2.5 | 975 |
-| `04-physics.md` | `specification/04-physics.md`, whole | 6,201 |
+| `purpose.md` | `specification/01-introduction.md`, §1.1 to §1.3 less §1.3's closing paragraph; `specification/02-product-overview.md`, §2.1 to §2.5 | 962 |
+| `04-physics.md` | `specification/04-physics.md`, whole but for one name (below) | 6,202 |
 | `b-comsol-settings.md` | `specification/b-comsol-settings.md`, whole | 465 |
 | `02-electrokinetics-background/`, 11 files | `knowledge/02-electrokinetics-background/`, whole | 3,430 |
 | `03-nanopore-biology/`, 10 files | `knowledge/03-nanopore-biology/`, whole | 3,360 |
 | `author.md` | *The author's view* above, from its heading to the interview's close | 2,528 |
-| **26 files** | `find . -type f \| xargs wc -w` in `<pack>` | **16,959** |
+| **25 files** | `find . -type f \| xargs cat \| wc -w` in `<pack>` | **16,947** |
 
-The pack names some of today's choices, and a designer who chose the same was prompted, not independent. They are
-Python (§1.1, §2.5), a 2D-axisymmetric finite-element mesh and the pipeline's steps (§1.2), a YAML case file (§1.3),
-the browser workbench (P3, §2.5) and a sparse direct solve (§2.5). The interview names the graphical interface as a
-goal. The report's guard table marks each as prompted.
+Each file, by `find . -type f | sort | xargs wc -w` in `<pack>`:
+
+```text
+   122 02-electrokinetics-background/00-overview.md
+   504 02-electrokinetics-background/01-the-electrical-double-layer.md
+   337 02-electrokinetics-background/02-poissonboltzmann-and-debyehuckel.md
+   277 02-electrokinetics-background/03-pb-vs-pnp-equilibrium-vs-non-equilibrium.md
+   592 02-electrokinetics-background/04-electro-osmosis.md
+   322 02-electrokinetics-background/05-electrophoresis-and-the-force-on-a.md
+   233 02-electrokinetics-background/06-selectivity-transport-number-reversal.md
+   196 02-electrokinetics-background/07-ionic-current-rectification.md
+   297 02-electrokinetics-background/08-access-resistance-and-conductance.md
+   299 02-electrokinetics-background/09-quantities-the-software-must-compute.md
+   251 02-electrokinetics-background/index.md
+    95 03-nanopore-biology/00-overview.md
+   374 03-nanopore-biology/01-biological-vs-solid-state-nanopores.md
+   444 03-nanopore-biology/02-the-pores-that-appear-in-this-work.md
+   696 03-nanopore-biology/03-clya-in-depth-the-reference-system.md
+   249 03-nanopore-biology/04-the-lipid-bilayer.md
+   503 03-nanopore-biology/05-single-channel-electrophysiology.md
+   138 03-nanopore-biology/06-what-nanopores-are-used-for.md
+   212 03-nanopore-biology/07-why-accurate-modelling-matters-for-pore.md
+   436 03-nanopore-biology/08-glossary.md
+   213 03-nanopore-biology/index.md
+  6202 04-physics.md
+  2528 author.md
+   465 b-comsol-settings.md
+   962 purpose.md
+ 16947 total
+```
+
+**One name was taken out of the physics text.** A NOTE of §4 names today's simulation engine once, in the sentence
+"NGSolve's own estimate for the source was order 3". The pack's copy reads "The engine's own estimate". No equation,
+number or requirement differs: `diff` of the two files prints that line alone.
+
+The pack still names some of today's choices, and a designer who chose the same was prompted, not independent. They
+are Python (§1.1, §2.5), a 2D-axisymmetric finite-element mesh and the pipeline's steps (§1.2), a YAML case file
+(§1.3), the browser workbench (P3, §2.5), a sparse direct solve (§2.5), and PDB2PQR with PROPKA, which §4 prescribes
+for the charges. §4 also names one file of today's program, `io/defaults.py`, and the reference model's settings name
+PARDISO. The interview names the graphical interface as a goal. The report's guard table marks each as prompted.
+
+## The first run, set aside
+
+The pack was first built with two faults, both the main session's, found when designer A's text used "the workbench's
+own nouns":
+
+- `purpose.md` kept the first line of §1.3's closing paragraph, which lists the workbench's terms: suite, project,
+  molecular, continuum and physics model, study, variant, exposed value. The plan cuts that paragraph. The cut ended
+  two lines early.
+- `04-physics.md` was the whole file, as the plan says, and so held the engine's name. The plan's grounding had counted
+  the file's eight lines with an implementation word and had not seen that one of them names the engine.
+
+Three designers ran on that pack. None peeked: the same check as below found no path or address outside the pack in
+25, 21 and 11 calls. All three designs were set aside because the pack had prompted them, and three new agents
+designed again from the corrected pack. Nothing of the first run is used in the report but this record of what it
+chose, kept so that the second run can be read against it:
+
+| Choice | A, first run | B, first run | C, first run |
+|---|---|---|---|
+| Engine | NGSolve; runner-up FEniCSx | NGSolve; runner-up FEniCSx | NGSolve; runner-up DOLFINx |
+| Transport unknowns | Log-concentrations, order 2, no artificial diffusion | Log-concentrations, order 2 | Concentrations, order 2, no stabilisation by default |
+| Flow elements | Taylor–Hood, the osmotic pressure split off, grad-div | Hybridised H(div) velocity, discontinuous pressure | Taylor–Hood |
+| Geometry and mesh | A smooth spline on OpenCascade, Netgen, curved elements; runner-up Gmsh | The same | Shapely and contourpy polygons, Netgen; runner-up Gmsh |
+| Linear solve | Direct, behind an own interface; MUMPS or SuperLU | Direct, behind an own interface; UMFPACK, MUMPS or SuperLU | The engine's direct solvers |
+| Structure and charges | gemmi, PDBFixer, PDB2PQR with PROPKA, MDAnalysis | The same | The same, with Numba for the deposit |
+| Front end | FastAPI and a TypeScript and React application; runner-up trame | A TypeScript and React application; runner-up NiceGUI or Panel | FastAPI and a TypeScript and React application; runner-up trame |
+| Case and record | YAML with a generated schema; HDF5, NetCDF, SQLite | YAML with a generated schema; a capsule, Parquet, HDF5, SQLite | YAML with Pydantic; VTKHDF, Parquet |
+| Many runs | Continuation chains in shards; a Slurm helper | Continuation chains; a process pool, Slurm arrays | Continuation chains; a process pool, Slurm arrays |
 
 ## The blind designers
 
-Three agents of the type `Plan`, which starts without the repository's `CLAUDE.md` and without its git status. They
-were launched together, in one message, each at high effort, before the main session had read any design text
-(*The main session's calls*, below).
+Three agents of the type `Plan`, which starts without the repository's `CLAUDE.md` and without its git status. In
+each run they were launched together, in one message, each at high effort, before the main session had read any
+design text (*The main session's calls*, below). The second run's agents are new: none saw the first run.
 
 | Designer | Model | Lens, the one sentence added to the brief |
 |---|---|---|
@@ -328,7 +392,7 @@ were launched together, in one message, each at high effort, before the main ses
 | B | Fable 5.2 | "Design first for the experimental laboratory, P3 of `purpose.md`." |
 | C | Opus 5.5 | "Design first for the method developer, P1 of `purpose.md`." |
 
-The brief, the same for each but its lens, which stood where `[Lens.]` stands:
+The brief, the same for each but its lens, which stood where `[Lens.]` stands, and the same in both runs:
 
 > You design a program from nothing. Read only the files under `<pack>`, and give each search that path. Open no other
 > file on this machine and no page of the project `nanopnp`. The physics in `04-physics.md` is given; a file, library or
@@ -340,3 +404,114 @@ The brief, the same for each but its lens, which stood where `[Lens.]` stands:
 > storage, file formats and the record of a run; distribution to the three kinds of user; many runs at once. 4 The
 > numerical method and how its results are trusted. 5 How it is developed: process, tests, records. 6 The three choices
 > you are least sure of.
+
+## The guard's check of the three designs
+
+Each designer's transcript was read by a script kept in the scratchpad, not committed, which lists every `tool_use`
+block and flags a call that could reach outside the pack: a `Read`, `Grep`, `Glob` or `Bash` input that names a path
+outside `<pack>`; a `Grep` or `Glob` with no path; a relative path; a `Bash` command that names no path; a query or
+an address holding `nanopnp`; and a tool beyond `Read`, `Grep`, `Glob`, `Bash`, `WebSearch` and `WebFetch`. Each
+transcript also names the model that served every turn. The table is the second run's, the designs the appendices
+hold.
+
+| Designer | Model that served it | Calls | Flagged | A path or address outside the pack | Design, words |
+|---|---|---|---|---|---|
+| A | `claude-fable-5-2`, 26 turns | 21 | 3 | None | 2,908 |
+| B | `claude-fable-5-2`, 36 turns | 26 | 3 | None | 2,762 |
+| C | `claude-opus-5-5`, 23 turns | 15 | 3 | None | 3,436 |
+
+**No design peeked, and none was redone for a peek.** The nine flagged calls were read one by one, and none opens a
+file of the tree or a page of the project:
+
+- `ToolSearch`, once by each designer, with a query that selects `WebSearch` and `WebFetch`. It loads the two web
+  tools, which the agent type holds deferred.
+- `SubagentHandback`, once by each designer. It is how an agent returns its last message, here the design.
+- One `Bash` command of A and one of B, which hold the designer's own draft and print its word count. They name no
+  file.
+- One `Bash` command of C, which fetches three addresses with `curl`: the package index's records of `ngsolve`,
+  `fenics-dolfinx` and `trame`. It names no file.
+
+The plan's grounding counted any tool beyond the six as a peek. The two tools of the harness are the exception, and
+the plan is corrected with this item. A web call is allowed by the brief, which lets a designer look up libraries: the
+27 searches and fetches, and C's `curl`, ask for wheels, licences, solvers and installers; none names `nanopnp`, and
+none asks for the model's equations. Design C holds 3,436 words against the brief's 3,000 and is kept whole.
+
+The lists, in the order of the calls. A `Bash` command that pipes the designer's draft to a word count is shortened
+to its first line, and a long command ends in `...`.
+
+**Designer A**
+
+```text
+ 1  Bash             ls -la <pack> && wc -w <pack>/*
+ 2  Read             <pack>/purpose.md
+ 3  Read             <pack>/author.md
+ 4  Read             <pack>/b-comsol-settings.md
+ 5  Read             <pack>/04-physics.md
+ 6  Bash             ls -la <pack>/02-electrokinetics-background <pack>/03-nanopore-biology; wc -w <pack>/0[23]-*/*
+ 7  Bash             cd <pack>/02-electrokinetics-background && for f in *.md; do echo "=== $f"; cat "$f"; done
+ 8  Bash             cd <pack>/03-nanopore-biology && for f in *.md; do echo "=== $f"; cat "$f"; done
+ 9  ToolSearch       select:WebSearch,WebFetch
+10  WebFetch         https://pypi.org/pypi/ngsolve/json
+11  WebFetch         https://pypi.org/pypi/fenics-dolfinx/json
+12  WebSearch        'DOLFINx Windows conda-forge install JIT compilation requires C compiler Visual Studio FFCx'
+13  WebFetch         https://pypi.org/pypi/pdbfixer/json
+14  WebFetch         https://pypi.org/pypi/gmsh/json
+15  WebFetch         https://pypi.org/pypi/ngsolve/6.2.2608/json
+16  WebFetch         https://pypi.org/pypi/xfem/json
+17  WebFetch         https://pypi.org/pypi/pytetwild/json
+18  WebSearch        'NGSolve pip wheels MPI support mpi4py PARDISO MKL UMFPACK included direct solver wheel macOS'
+19  WebFetch         https://pypi.org/pypi/openmm/json
+20  Bash             printf '%s' ' Basis: the pack texts only. Library facts were checked on 24 November 2026 against the public package index and the projects own documentation. ## 1 What the program should become, for whom, its capabilities in ra...
+21  SubagentHandback [the design, returned]
+```
+
+**Designer B**
+
+```text
+ 1  Bash             ls -la <pack>; wc -w <pack>/*
+ 2  Read             <pack>/purpose.md
+ 3  Read             <pack>/author.md
+ 4  Read             <pack>/b-comsol-settings.md
+ 5  Read             <pack>/04-physics.md
+ 6  Bash             ls -la <pack>/02-electrokinetics-background <pack>/03-nanopore-biology; wc -w <pack>/02-electrokinetics-background/* <pack>/03-nanopore-biology/*
+ 7  Bash             cd <pack>/02-electrokinetics-background && for f in index.md 00-overview.md 01-*.md 02-*.md 03-*.md 04-*.md 05-*.md; do echo "=== $f"; cat "$f"; done
+ 8  Bash             cd <pack>/02-electrokinetics-background && for f in 06-*.md 07-*.md 08-*.md 09-*.md; do echo "=== $f"; cat "$f"; done
+ 9  Bash             cd <pack>/03-nanopore-biology && for f in index.md 00-*.md 01-*.md 02-*.md 03-*.md 04-*.md 05-*.md 06-*.md 07-*.md 08-*.md; do echo "=== $f"; cat "$f"; done
+10  ToolSearch       select:WebSearch,WebFetch
+11  WebFetch         https://pypi.org/pypi/ngsolve/json
+12  WebSearch        'DOLFINx Windows conda-forge install JIT compiler requirement Visual Studio 2026'
+13  WebSearch        'NGSolve pip wheels direct solvers available umfpack pardiso mumps macOS arm64 sparsecholesky nonsymmetric'
+14  WebFetch         https://forum.ngsolve.org/t/umfpack-not-available-in-pip-install/3091
+15  WebFetch         https://pypi.org/simple/ngsolve/
+16  WebFetch         https://pypi.org/project/ngsolve-openblas/
+17  WebFetch         https://pypi.org/simple/ngsolve/
+18  WebSearch        'NGSolve 2026 release notes wheels OpenBLAS instead of MKL sparse direct solver umfpack included pip'
+19  WebFetch         https://pypi.org/pypi/python-mumps/json
+20  WebFetch         https://pypi.org/pypi/scikit-umfpack/json
+21  WebFetch         https://pypi.org/pypi/scikit-fem/json
+22  WebFetch         https://pypi.org/pypi/scikit-sparse/json
+23  WebFetch         https://raw.githubusercontent.com/FEniCS/dolfinx/main/README.md
+24  WebSearch        'NGSolve forum pip wheel 2026 "sparsecholesky" OR "umfpack" OR "pardiso" default inverse after switch to OpenBLAS "mkl" optional install'
+25  Bash             wc -w <<'EOF' [the designer's own draft, 2767 words, piped to a word count; no file named]
+26  SubagentHandback [the design, returned]
+```
+
+**Designer C**
+
+```text
+ 1  Bash             ls -la <pack>; wc -w <pack>/*
+ 2  Bash             cd <pack> && ls -la 02-electrokinetics-background 03-nanopore-biology && wc -w 02-electrokinetics-background/* 03-nanopore-biology/*
+ 3  Read             <pack>/purpose.md
+ 4  Read             <pack>/author.md
+ 5  Read             <pack>/b-comsol-settings.md
+ 6  Read             <pack>/04-physics.md
+ 7  Bash             cd <pack>/02-electrokinetics-background && cat index.md 00-overview.md 03-pb-vs-pnp-equilibrium-vs-non-equilibrium.md 05-electrophoresis-and-the-force-on-a.md 06-selectivity-transport-number-reversal.md 07-ionic-current-rectifi...
+ 8  Bash             cd <pack>/03-nanopore-biology && cat index.md 01-biological-vs-solid-state-nanopores.md 02-the-pores-that-appear-in-this-work.md 03-clya-in-depth-the-reference-system.md 05-single-channel-electrophysiology.md 06-what-nanopores-...
+ 9  Bash             cd <pack> && sed -n '/^## /,$p' 02-electrokinetics-background/01-the-electrical-double-layer.md 02-electrokinetics-background/02-poissonboltzmann-and-debyehuckel.md 02-electrokinetics-background/04-electro-osmosis.md 03-nanopor...
+10  ToolSearch       select:WebFetch,WebSearch
+11  WebFetch         https://pypi.org/project/ngsolve/#files
+12  Bash             curl -s https://pypi.org/pypi/ngsolve/json | python3 -c "import json,sys;d=json.load(sys.stdin);v=d['info']['version'];print(v);print(sorted({u['filename'].split(v)[-1] for u in d['urls']}));print(d['info'].get('requires_dist')...
+13  WebSearch        'ngsolve pip wheel inverse "pardiso" OR "umfpack" available direct solver 2025'
+14  WebSearch        'fenics-dolfinx conda-forge Windows support win-64 release'
+15  SubagentHandback [the design, returned]
+```
