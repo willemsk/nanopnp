@@ -263,9 +263,9 @@ appendices and pages the site publishes; name a clause, a plan or a review in co
 - [x] af8ee8c 10. The walk of the design, the methods, the verification, the process and the workbench (D4).
   **Executor:** main
 - [x] 11. Compaction checkpoint. **Executor:** main
-- [ ] 12. The report: the design, the differences and the proposals (D5, D6); done when each fact a card rests on is
+- [x] d5ebeb0 12. The report: the design, the differences and the proposals (D5, D6); done when each fact a card rests on is
   checked at its source. **Executor:** main
-- [ ] 13. Compaction checkpoint. **Executor:** main
+- [x] 13. Compaction checkpoint. **Executor:** main
 - [ ] 14. The challenge, in `challenge.md`, and the report answered (D7). **Executor:** main, with two
   `general-purpose` agents on Sonnet and the physics reviewer
 - [ ] 15. The records: REV-280 and its like, `CHANGELOG.md`, the knowledge notes corrected (D8); the no-code check.
