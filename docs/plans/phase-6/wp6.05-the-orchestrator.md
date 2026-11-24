@@ -229,7 +229,7 @@ tests are left to CI, in the summary line too.
 
 ### Work items
 
-- [ ] 1. The facts checked again and recorded: `knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md`,
+- [x] 1. 0212383, a35faa6 The facts checked again and recorded: `knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md`,
   its `index.md`, `knowledge/log.md`, and an Outcome here (D6); done when the code and review say so.
   **Executor:** main
 
