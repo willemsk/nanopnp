@@ -246,12 +246,17 @@ tests are left to CI, in the summary line too.
 - [x] 4. 3cb2ef4 `.claude/scripts/usage.py`: the timeline and the helpers' reading (D4, D5); done when the gate passes and
   both modes print this session's lines with its sub-agents, the check helper's window among them. **Executor:** main
 - [x] 5. Compaction checkpoint. **Executor:** main
-- [ ] 6. The count, `docs/plans/sessions/browser-path-count.md` (D7); done when the record holds the date, `main`'s
+- [x] 6. 3f141e7 The count, `docs/plans/sessions/browser-path-count.md` (D7); done when the record holds the date, `main`'s
   sha, the runs paged, the shas dropped, `k`, `k_branch`, a table by branch, the commands and the verdict, `k ≥ 34`.
   **Executor:** `general-purpose` on Sonnet, high effort
-- [ ] 7. On a pass alone: `.github/scripts/browser-paths.sh`, `.claude/hooks/gate.sh` and a sentence in §7.6's
+- [x] 7. Not built, k = 32 < 34. On a pass alone: `.github/scripts/browser-paths.sh`, `.claude/hooks/gate.sh` and a sentence in §7.6's
   NOTE on the per-push selection (D8); done when `gate.sh run` passes on a tree that changes `src/`, and leaves the browser tests out on one that does not. On a
   miss: tick it with the verdict. **Executor:** main
+
+  > **Outcome — the count missed: the rule is not built.** Of the last 100 pushes that ran tests, from 4 to 24
+  > November 2026 over 46 branches, the path rule would have left the browser tests out on 32 (`k`), below 34; on
+  > each push's whole branch, on 23 (`k_branch`). No script is added, `gate.sh` and §7.6 are unchanged, and BC15 is
+  > spent ([the count](../sessions/browser-path-count.md)).
 - [ ] 8. The clauses (D1 to D8). §8.4.4: `/np-carry wp n` beside the three commands and what it hands over; the
   reading rule binds every helper that implements; under it a checkpoint ends a helper. §8.4.5: a helper's model
   and effort, what `usage.py` measures, item 1's facts. §8.3: a carried package is one session and its helpers.

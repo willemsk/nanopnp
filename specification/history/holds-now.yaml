@@ -454,7 +454,7 @@ BC11: 'QR-11, withdrawn; ADR-004''s Consequences; §7.2''s five rows that cited 
 BC12: 'FR-03; CON-08; ADR-001; NUM-21''s NOTE; §2.7''s post-1.0 row; docs/design/workbench.md; open: Phase 7''s speed-up, for QR-07''s numbers'
 BC13: '§8.1''s Phase 8 row and gate; REV-284, REV-287; open: Phase 8''s first package'
 BC14: 'open: /np-plan phase 10'
-BC15: 'open: WP6.05, the orchestrator (§7.6)'
+BC15: 'spent; WP6.05''s count missed, k = 32 < 34 (docs/plans/sessions/browser-path-count.md)'
 BC16: IF-09, FR-31
 BC17: 'FR-47; §2.7; §8.1''s Phase 9 row; open: /np-plan phase 9'
 BC18: 'FR-22; open: /np-plan phase 11'
@@ -467,6 +467,6 @@ BC24: '§8.1''s Phase 7 gate; NUM-18''s NOTE; REV-283; open: Phase 7''s speed-up
 BD1: 'the Phase 6 plan; the input note; REV-279'
 BD2: 'the Phase 6 plan; open: WP6.05, the orchestrator (§8.4.4, §8.4.5)'
 BD3: 'open: WP6.05, the orchestrator (§8.4.4, §8.4.5)'
-BD4: 'open: WP6.05, the orchestrator (§7.6)'
+BD4: 'spent; WP6.05 counted, k = 32 < 34'
 BD5: the WP6.05 plan
 BD6: 'open: WP6.05, the orchestrator (§8.4.4)'
