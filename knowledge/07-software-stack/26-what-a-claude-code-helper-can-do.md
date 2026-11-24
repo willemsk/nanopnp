@@ -44,8 +44,8 @@ in the foreground by a main session on Opus 5.5. [verified][^probe]
   `SubagentHandback` tool.
 - **Reach the session service.** It has the `mcp__claude-code-remote__*` tools, `send_message`,
   `create_session` and `subscribe_pr_activity` among them, and, deferred, `SendMessage` and the
-  `mcp__github__*` tools. A PR event still wakes the main conversation, which holds the subscription
-  (`np-ship/wp.md` §4).
+  `mcp__github__*` tools. Not probed: which conversation a PR event wakes when a helper
+  subscribes. `/np-carry` has its main session hold the subscription (`SPECIFICATION.md` §8.4.4).
 
 ### The main session's `Agent` tool
 

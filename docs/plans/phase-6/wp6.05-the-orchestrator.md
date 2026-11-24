@@ -5,8 +5,8 @@
 §8.2.37 AM10 and AM11, and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.5`
 (§8.4.1).
 
-**Delivered.** `/np-carry wp <n>` (`.claude/skills/np-carry/SKILL.md`, 804 words) and `.claude/workflow/helper.md`
-(246 words): one main session hands each step to a fresh helper and serves its `HANDBACK` blocks. The facts were
+**Delivered.** `/np-carry wp <n>` (`.claude/skills/np-carry/SKILL.md`, 881 words) and `.claude/workflow/helper.md`
+(249 words): one main session hands each step to a fresh helper and serves its `HANDBACK` blocks. The facts were
 checked again on Claude Code 2.1.331
 ([the note](../../../knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md)): a helper has no `Agent`
 and no `AskUserQuestion`, and gates, pushes and resumes; it now keeps the task list, so D1 gives it that. `usage.py`
@@ -275,6 +275,16 @@ tests are left to CI, in the summary line too.
   `CLAUDE.md`, *Implementation workflow*: one line, the file at 1,500 words or fewer. `holds-now.yaml`: BC10, BC15
   and BD2 to BD6 name their clauses; `decisions.py`. `CHANGELOG.md`: `## [0.7.0-alpha.5]`. Done when
   `uv run just docs` passes and the code and review say so. **Executor:** main
+
+> **Outcome — review 086 changed the two files, and one question is left open.** The
+> [review](../../code_reviews/CODE_REVIEW_086.md) gave 23 findings; 21 are fixed, one cannot be (item 4's code and
+> its clause are in two pushed commits), and one is REV-288, the model of a carried package's main session, which
+> the author left open until the round after WP6.08. A ship helper no longer stops to subscribe, the main session
+> waits for a hand-back and commits nothing on a stop hook's word, the plan's review is measured and its report
+> reaches the helper, and a carried package's cost reaches its Outcome as one line. So `helper.md`'s table and the
+> skill's steps now differ from *Implementation details*, items 2 and 3, which stay as planned. Measured, the
+> implementation and the ship to this commit: 3 sessions, 0.9 agent hours and 5 touches, beside the In brief's 5
+> sessions, 3 to 6 agent hours and 8 touches for the whole package.
 
 ### Verification
 

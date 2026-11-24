@@ -2,11 +2,11 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,664. By source: history ruling 470; plan decision row 796; REV row 287; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
+Rows: 1,665. By source: history ruling 470; plan decision row 796; REV row 288; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 7.
 
-By decider: author 785; open 5; session, own call 871; session, put to the author 3.
+By decider: author 786; open 5; session, own call 871; session, put to the author 3.
 
-This page lists the 533 that bind now. The 1,131 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
+This page lists the 534 that bind now. The 1,131 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -466,6 +466,7 @@ This page lists the 533 that bind now. The 1,131 of a delivered plan, fixed, spe
 | REV-285 | author | `docs/project/review-findings.md` |  |  | Whether ParaView shows a second-order field without resampling is not tried | §8.2.53: Phase 7's tolerances and exports package | accepted |
 | REV-286 | author | `docs/project/review-findings.md` |  |  | Whether Netgen meshes a wall layer at the Debye length is not tried | §8.2.53 BC9: Phase 7's mesh-error package, whose ladder meets it first | accepted |
 | REV-287 | author | `docs/project/review-findings.md` |  |  | Whether NiceGUI carries the workbench's hardest view and QR-16 is not tried | §8.2.53 BC13: Phase 8's first package, the kit's trial, before the rebuild | accepted |
+| REV-288 | author | `docs/project/review-findings.md` |  | WP6.08 | Nothing names the model of a carried package's main session | ruled by the author, 24 November 2026: left open until the round after WP6.08, with WP6.06's and WP6.07's measured lines (§8.2.53 BC10) | deferred |
 | MOD-08 | author | `docs/project/modularity-findings.md` |  |  | Five registries in four shapes | §8.2.8 H5; brought forward by REV-272 and §8.2.50 AZ4; §8.2.53 BC3, BC7: Phase 7's library-shape package, its switches as data Phase 6's kernel | post-1.0 |
 | MOD-10 | author | `docs/project/modularity-findings.md` |  | WP6.08 | The backend interface of section 5.4.1 does not exist | §8.2.8 H3; §8.2.50 AZ1; §8.2.53 BC2; §8.2.54 BD1: WP6.08, the kernel's design | deferred |
 | MOD-17 | author | `docs/project/modularity-findings.md` |  |  | The validated correction set is a default in eight signatures | §8.2.8 H5 | post-1.0 |

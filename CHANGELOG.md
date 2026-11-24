@@ -28,8 +28,8 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 ## [0.7.0-alpha.5]
 
 WP6.05: the orchestrator; tag `v0.7.0-alpha.5` once merged (§8.2.53 BC10, BC15; §8.2.54 BD2 to BD6). A user of the
-program sees no change: the package changes no code. The [plan](docs/plans/phase-6/wp6.05-the-orchestrator.md)
-records the work.
+program sees no change: the package changes no `src/` and no `tests/`. The
+[plan](docs/plans/phase-6/wp6.05-the-orchestrator.md) records the work.
 
 - **Added**:
   - `/np-carry wp <n>`: one session carries a work package from its plan to the merge, and hands each step to a
