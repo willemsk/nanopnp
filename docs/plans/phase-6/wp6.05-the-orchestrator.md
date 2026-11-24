@@ -241,7 +241,7 @@ tests are left to CI, in the summary line too.
   > ([the note](../../../knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md)).
 - [x] 2. 11c5a90 `.claude/workflow/helper.md` (D2, D3); done when the code and review say so, at 250 words or fewer.
   **Executor:** main
-- [ ] 3. `.claude/skills/np-carry/SKILL.md` (D1 to D3); done when the code and review say so, at 900 words or
+- [x] 3. d0ca274 `.claude/skills/np-carry/SKILL.md` (D1 to D3); done when the code and review say so, at 900 words or
   fewer. **Executor:** main
 - [ ] 4. `.claude/scripts/usage.py`: the timeline and the helpers' reading (D4, D5); done when the gate passes and
   both modes print this session's lines with its sub-agents, the check helper's window among them. **Executor:** main
