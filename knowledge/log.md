@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-24
+* **Record**: A general-purpose helper has no tool to ask the author or start an agent; the main session serves both for it (WP6.05). ([26. What a Claude Code helper can do](07-software-stack/26-what-a-claude-code-helper-can-do.md))
 * **Update**: NGSolve's wheel carries a route to PARDISO through pip's `mkl` on Windows and Linux x86-64, read and not run (WP6.04; REV-281). ([1. FEM backend: NGSolve/Netgen](07-software-stack/01-fem-backend-ngsolvenetgen.md))
 
 ## 2026-11-23

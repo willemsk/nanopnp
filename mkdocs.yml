@@ -370,6 +370,7 @@ nav:
               - "23. Pinning a protonation state through PDB2PQR's apply_pka_values (WP5.04)": _generated/model/knowledge/07-software-stack/23-pinning-a-protonation-state-through-apply-pka-values.md
               - "24. pint with a Fraction registry converts exactly, and formats nothing (WP5.07)": _generated/model/knowledge/07-software-stack/24-pint-with-a-fraction-registry-exact-units.md
               - "25. xenon and import-linter beside ruff's C901 and VER-61 (WP5.10)": _generated/model/knowledge/07-software-stack/25-complexity-and-import-contract-tools.md
+              - "26. What a Claude Code helper can do (WP6.05)": _generated/model/knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md
           - "Validation and verification — the benchmark ladder":
               - _generated/model/knowledge/08-validation-benchmarks/index.md
               - "Validation and verification — the benchmark ladder (overview)": _generated/model/knowledge/08-validation-benchmarks/00-overview.md
