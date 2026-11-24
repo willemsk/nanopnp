@@ -588,7 +588,7 @@ workbench design. Its own transcript was listed by the same script, before this 
 | `AskUserQuestion` | 6 | The interview |
 | Others | 27 | The task list, two tool look-ups, one list of the open pull requests |
 
-**None of the 57 `Read`, `Write`, `Edit` and `Bash` calls opens one of the guarded paths**: `src/`,
+**None of the 66 `Read`, `Write`, `Edit` and `Bash` calls opens one of the guarded paths**: `src/`,
 `specification/05-software-design/`, `specification/06-numerics.md`, `docs/project/architecture-survey.md`,
 `docs/project/modularity*.md`, `docs/_generated/` and `docs/design/workbench.md`. Four `Bash` commands hold such a
 path as text and read nothing at it: a `grep` over the pack whose pattern holds `src/`; the two scratchpad scripts

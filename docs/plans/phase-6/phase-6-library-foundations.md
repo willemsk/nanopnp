@@ -93,7 +93,7 @@ WP6.04 takes `v0.7.0-alpha.4` and WP6.05 `v0.7.0-alpha.5`; the close takes `v0.7
 
 *Delivered 23 November 2026.* [The plan](wp6.03-the-cleanup-instructions-copilot-host.md). Live: the 8,000 words of AZ18 bind every `/np-implement` session's first window (§8.4.4), measured at 7,186; each plan proposes its two models (AZ20, AZ21); the tag `copilot-host` is pushed (AZ19).
 
-### WP6.04 — The ground-up review (BA10 to BA13; BB2 to BB6)
+### WP6.04 — The ground-up review (BA10 to BA13; BB2 to BB7)
 
 *Delivered 24 November 2026.* [The plan](wp6.04-the-ground-up-review.md). Live: each verdict of the report is a
 proposal until the ruling round (BA11, BA13); REV-280 holds the proposals and REV-281 to REV-287 seven questions

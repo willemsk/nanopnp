@@ -1,10 +1,11 @@
 # WP6.04 — The ground-up review
 
 **Status: delivered, 24 November 2026.** Written 23 November 2026, grounded in the tree at `efda55e`.
-Inherits §8.2.51 BA7 and BA10 to BA13, §8.2.52 BB1 to BB6 (BB3 to BB6 ruled at this plan), §8.4.4's sentence on a
-study package and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.4` (§8.4.1).
+Inherits §8.2.51 BA7 and BA10 to BA13, §8.2.52 BB1 to BB7 (BB3 to BB6 ruled at this plan, BB7 at its ship),
+§8.4.4's sentence on a study package and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes
+`v0.7.0-alpha.4` (§8.4.1).
 
-**Delivered.** One report, `docs/project/ground-up-review.md` (5,499 words), and eight appendices under
+**Delivered.** One report, `docs/project/ground-up-review.md` (5,497 words), and eight appendices under
 `docs/project/ground-up-review/`: the author's interview and the method, three blind designs with their unblinding,
 the evidence, today's alternatives, a walk of 259 rows (209 keep, 22 change now, 16 change later, one drop, 9 add,
 2 not added) and the challenge with each answer. The report holds 25 differences, `GU-01` to `GU-25`, in twelve
@@ -35,13 +36,13 @@ long.
 peeked is redone. The review could still find the program sound: each row then shows how many blind designers chose
 the same unprompted. It could propose more than one round can rule: the proposals come ranked and grouped.
 
-**Your call.** Settled today: the guard, the interview, the report's place, and that Fable writes it; on 24 November,
-that Fable also checks it. Inside the package: the interview. After it: your rulings on its proposals.
+**Your call.** Settled: the guard, the interview, the report's place, that Fable writes it and, since
+24 November, checks it. Inside the package: the interview. After it: your rulings on its proposals.
 *Recommendation:* answer in your own words; the designers read them unedited.
 
 ## Execution brief
 
-Scope: the phase plan's WP6.04 entry; BA10 to BA13; BB2 to BB6. It depends on nothing unmerged. It claims no
+Scope: the phase plan's WP6.04 entry; BA10 to BA13; BB2 to BB7. It depends on nothing unmerged. It claims no
 identifier and writes no test (N1): it changes no `src/`, `tests/`, `data/`, `examples/`, case schema or public name.
 **Implementing session: Fable 5.2, high effort. Ship: Fable 5.2, high effort, in the implementing session after its
 compaction** (BB5, as BB7 amends it; §8.4.5). The report and its appendices are `docs/project/ground-up-review.md` and
@@ -291,8 +292,16 @@ appendices and pages the site publishes; name a clause, a plan or a review in co
 > guards the default switches alone. The report now keeps the kernel in Phase 8 (AZ1) and asks for about three
 > packages. Eleven verdicts of the walk changed; `challenge.md` holds each objection and its answer.
 
-> **Outcome — the first run of the designers was set aside.** One line of the pack's §4 named the engine; the pack
-> was corrected and three new agents designed again (`method.md`, *The first run, set aside*).
+> **Outcome — the first run of the designers was set aside.** One line of the pack's §4 named the engine and one of
+> its purpose text listed the workbench's terms; the pack was corrected and three new agents designed again
+> (`method.md`, *The first run, set aside*).
+
+> **Outcome — the package cost about four and a half agent hours, under the estimate.** Implementing: 4 sessions,
+> 3.8 agent hours and 14 touches. Shipping, up to the review's commit: 1 session, 0.6 agent hours and 3 touches.
+> Together 5 sessions, 4.4 agent hours and 17 touches, beside the estimate of about 10 sessions, 7 to 13 agent hours
+> and 16 touches (§8.4.5). The ship ran on Fable 5.2 in the implementing session (BB7).
+> [Review 082](../../code_reviews/CODE_REVIEW_082.md) found fifteen things, four of them important, and all are
+> fixed: GU-13 rested on a wrong fact about CI, and its objection is now shown as not met.
 
 Items 2 to 4, 6, 7, 9, 10, 12, 14 and 15 are outside the test scope: done when the code and review say so, and
 `uv run just docs` passes.

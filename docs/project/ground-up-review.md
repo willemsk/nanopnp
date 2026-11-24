@@ -1,7 +1,7 @@
 # The ground-up review
 
 **Status: complete, awaiting the author's rulings.** WP6.04 of Phase 6 (`§8.2.51` BA10 to BA13; `§8.2.52` BB2 to
-BB6), written 24 November 2026. The review changes no code. Each verdict is a proposal: nothing changes until the
+BB7), written 24 November 2026. The review changes no code. Each verdict is a proposal: nothing changes until the
 author has ruled.
 
 ## In brief
@@ -124,9 +124,9 @@ against them. A *small package* is `§8.3`'s rate for a text or clean-up package
 | GU-11 | Parametric shapes in the sketcher's place | change later: Phase 10's round | Most of a tool phase saved | About 2 packages | FR-42, BA1, §2.7 |
 | GU-05 | Terms from another group's installed package | change later: Phase 8 | Others extend it without the author | Half a small package | QR-14, §5.5, REV-67 |
 | GU-14 | N1 allows terms; 3D checked by a benchmark | change later: Phase 8 | Two clauses that can fail | Priced at Phase 8's round | N1, CON-01, §7.3 |
-| GU-15 | A quantity's sensitivity to each atomic charge | add later: Phase 9 | The mutator gets ranked charge changes | 1 large package | FR-29 |
+| GU-15 | A quantity's sensitivity to each atomic charge | add later: Phase 9 | The mutator gets ranked charge changes | 1 large package | FR-41 |
 | GU-12 | The workbench's layout left to its design document | change later: Phase 7's round | A design round changes one record | Text | IF-09, FR-31 |
-| GU-13 | Browser tests in CI; in the gate by path | change later: Phase 7 | Not measured | Within the rebuild | §7.6 |
+| GU-13 | The gate runs the browser tests by path | change later: Phase 7 | Not measured | A few lines | §7.6 |
 | GU-10 | Python from 3.12 | change later: when a dependency forces it | One lock line a dependency | Half a small package | QR-09, §8.4.2 (4) |
 | GU-16 | The residual current with the forces | change later: Phase 11 | What an experiment records | Within its package | FR-22 |
 | GU-17 | A validated range stated; a second pore | add later: Phase 12 | One-pore tuning is tested | Not known | §7.5 |
@@ -222,7 +222,7 @@ objection that is not met.
 - *Limits, from the physics reviewer.* The ladder goes finer than the case's mesh, because the gates refuse coarser
   ones, so it costs seven to twenty times the run. Netgen's meshes are not nested: the ratio comes from the element
   counts. Three meshes cannot show the asymptotic range: four, or a safety factor. The differences must stand above
-  Newton's stopping floor, about 4 × 10⁻⁶. The bar is the mesh error on the given contour and nothing more.
+  Newton's stopping floor, about 4 × 10⁻⁶. The bar is the mesh error on the given contour alone.
 - *Cost.* One small package. It adds a method and changes none. VER-16 (an exact current), VER-14 (a flow), VER-17
   (corners) and VER-18 argue it. The reported value stays the case mesh's, so VER-62 is not re-pinned.
 - *Depends on* Phase 6's quantity catalogue.
@@ -311,16 +311,16 @@ objection that is not met.
 - *Objected.* The author ruled the layout on concept boards, and the gain beyond GU-07's deletion is small.
 - *Cost.* Text, in Phase 7's planning.
 
-**GU-13 The browser tests run in CI, and in the gate by path.**
+**GU-13 The gate runs the browser tests by path.**
 
-- *Today.* The 149 browser tests take 468 s of the push gate's 539 s on every change of code. CI's legs install no
-  browser and skip 142 of them.
-- *Start over.* CI runs them, and the gate runs them when a push touches the workbench.
+- *Today.* The 149 browser tests take 468 s of the push gate's 539 s on every change of code. A pull request's CI
+  runs them too, on Linux; the platform legs skip 142.
+- *Start over.* The gate runs them when a push touches the workbench.
 - *Gain.* Not measured. `gui` and the packages that feed it changed in 13 to 18 of 20 packages, so a safe rule may
   skip few pushes.
-- *Why later.* The gate can skip the tests only once CI runs them, and Phase 7 rebuilds them. The second challenger
-  asks for it in Phase 6.
-- *Cost.* Within Phase 7's rebuild of those tests.
+- *Why later.* Phase 7 rebuilds those tests.
+- *Objected.* CI runs them already, so the gate could choose by path in Phase 6 (the second challenger).
+- *Cost.* A few lines of the gate.
 
 GU-21 belongs to this round. The kit is kept and tried before the rebuild: Phase 7's design study builds its
 hardest view in the kit and audits it against QR-16. The draft measured after the first rebuilt suite, the order
@@ -370,14 +370,14 @@ tried before the rebuild; GU-22's trial has a place. Not met, for the author to 
 - **GU-24.** "Built" is a sunk cost. The parts are small: 798 lines for the expression language and the forecast,
   716 for the stabilised mode.
 - **GU-25, the records.** "Read on demand" counts reading alone. Since v0.5.0, 317 of 473 commits touch the plans
-  and 176 the source, and the three newest plans hold 3,885 to 4,779 words against a cap of 3,500. The keep rests
-  on the author's "same process form".
+  and 176 the source. Net of their Outcome annotations the three newest plans hold 3,623 to 4,099 words against a
+  cap of 3,850. The keep rests on the author's "same process form".
 - **GU-25, CI's platforms.** A red Windows leg cost one package (WP6.01). The keep rests on AZ8, ruled on
   22 November with that cost known.
 - **GU-25, validation last.** Each design validates before its workbench; GU-09 is the least of that.
 - **Five more keeps** whose reason argues a change of text: §8.4.4 (15), FR-30, §5.3.1, FR-33 and IF-06.
 
-The trials are listed under *What stays open*.
+The trials: *What stays open*.
 
 ## What the guard showed
 
@@ -402,14 +402,14 @@ All three designers chose today's in five of the eleven unprompted rows, and all
 kernel, the proof, the kit, the reader and the ladder. The designs share one pack and one interview, and two ran on
 one model, so their agreement is less than three independent votes.
 
-A first run was set aside, because one line of the pack still named the engine. A check of every call in each
-designer's transcript found no file or address outside the pack.
+A first run was set aside, because the pack still named the engine and the workbench's terms. A check of every
+call in each designer's transcript found no file or address outside the pack.
 
 After the unblinding all three kept ADR-001 and changed FR-40, ADR-005 and N1; two dropped QR-11.
 
 ## What stays open
 
-**Seven questions for a trial**, each to become a row of the review register, owned by the round:
+**Seven questions for a trial**, REV-281 to REV-287 of the review register, owned by the round:
 
 1. What a direct solve of the model costs at 10⁶ unknowns, with UMFPACK and with PARDISO.
 2. Whether compiled weak forms and a threaded assembly cut the corrections' cost: they make a Newton step six
@@ -443,8 +443,9 @@ The order was the guard (`wp6.04`'s D1), and each step was committed before the 
 
 **Limits.**
 
-- The main session wrote the report and knows the program. `CLAUDE.md` loads at a session's start and names the
-  subpackages, so only the designers were blind. Until the unblinding the main session read no source file.
+- The main session wrote the report, knows the program and checked the report at its ship (BB7). `CLAUDE.md`
+  loads at a session's start and names the subpackages, so only the designers were blind. Until the unblinding the
+  main session read no source file.
 - Where the designers did not judge a row, their marks are read from each design's text.
 - Each cost is an estimate at a measured rate, and no measurement of the work it names.
 
