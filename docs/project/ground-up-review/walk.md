@@ -11,20 +11,22 @@ what the three blind designs chose, a verdict and a reason. An appendix of
   [today's alternatives](technologies.md) or by the main session. "None better found" means that nobody proposed one.
 - **A, B and C** are the three blind designers. `=` means that the designer kept the row after the unblinding, or that
   its design chose the same; `≠` that it changed or dropped the row, or chose otherwise; `–` that it did not say. For
-  the requirements, the constraints and the exclusions the marks are the designers' own tables, in
-  [design A](design-a.md), [design B](design-b.md) and [design C](design-c.md). The designers did not judge the
-  dependencies, the releases and the rulings row by row, so those marks are read from each design's text.
+  the requirements, the constraints, the exclusions and the architecture decisions the marks are the designers' own
+  tables, in [design A](design-a.md), [design B](design-b.md) and [design C](design-c.md). The designers did not
+  judge the other rows one by one, so those marks are read from each design's text.
 - **Verdict** is the main session's: keep, change now (in Phase 6), change later (in the phase named), drop or add.
   A phase's number is today's, from §2.7.
 - **Reason** names the evidence. A number without a source here is from [the evidence](evidence.md). The reason behind
   a ruling or a knowledge note counts as evidence and not as authority (`wp6.04`'s D4).
 
-A verdict is a proposal. Nothing changes until the author has ruled on the report.
+A verdict is a proposal. Nothing changes until the author has ruled on the report. The walk holds 259 rows: 207 are
+kept, 24 change now, 16 change later, one is dropped, 9 are added and 2 lacks are not added. A keep means that a
+start-over would choose the same, unless its reason says otherwise.
 
 ## The requirements, the releases and the rulings
 
 The 141 rows of this part hold 109 verdicts of keep, 13 of change now, 9 of change later, one of drop, 7 of add and 2
-lacks that are not added. A keep means that a start-over would choose the same, unless its reason says otherwise.
+lacks that are not added.
 
 Seven rows go against all three designers. FR-39, the two structure readers of §2.6, NiceGUI, and the places of the
 workbench's rebuild and of validation in §2.7 are kept although no designer chose them; QR-09's floor changes
@@ -57,7 +59,7 @@ although each designer kept it. Each row says why.
 | FR-07 | Extracts the pore surface as a contour at isolevel 0.25, conditioned to a polyline. | A smooth spline with curved elements (B) | = | ≠ | = | keep | B argues that each corner of a polygon is a field singularity. The refinement ladder of FR-29's row measures the observed order on a structure's polygon and settles it; no result supports a change yet. |
 | FR-08 | Gates the contour: validity, simplicity, spacing, feature size, one loop, radius profile. | None better found | = | = | = | keep | All three keep the gates. |
 | FR-09 | Assembles the (r, z) region from contour, membrane and reservoirs, with conformal interfaces. | Regions from a level set in any dimension (A) | ≠ | = | = | keep | A's level set earns its cost only in 3D, which is after version 1. |
-| FR-10 | Graded triangular mesh that resolves the wall's Debye length; aborts on a quality gate. | Size from the correction's own length (A); refinement towards the quantity (B) | ≠ | ≠ | = | keep | The size rule is a judgement nobody has measured. The refinement ladder of FR-29's row measures it. |
+| FR-10 | Graded triangular mesh that resolves the wall's Debye length; aborts on a quality gate. | Size from the correction's own length (A); refinement towards the quantity (B) | ≠ | ≠ | = | keep | NUM-30 already caps the wall size at 0.05 nm for the wall function's decay length, which is A's rule. The refinement ladder of FR-29's row tests the rule by measurement. |
 | FR-11 | May build structured boundary layers at the wall; after version 1. | Required for 3D (A); dropped under adaptivity (B) | ≠ | ≠ | = | keep | A MAY costs nothing. Whether Netgen meshes a wall layer at the Debye length needs a trial. |
 | FR-12 | Derives protonation and partial charges at a pH and force field; records the net charge. | None better found | = | = | = | keep | All three keep it; the pack named the route, so the choice is prompted. |
 | FR-13 | Assembles the fixed charge from 3D Gaussians, averaged exactly, conserved on the mesh. | None; the physics of §4 | = | = | = | keep | Given physics, outside the review's reach (BA12). |
@@ -71,7 +73,7 @@ although each designer kept it. Each row says why.
 | FR-21 | A rigid analyte of revolution on the axis; planned for v0.12. | None better found | = | = | = | keep | All three designs hold the same analyte. |
 | FR-22 | Electric and hydrodynamic force and their potential over axial positions; v0.12. | The same series also reports the residual current (B) | = | ≠ | = | change later: Phase 11 | The residual current is what an experiment records. Each analyte position is solved already and FR-23 reads the current from any solve, so it costs no new physics. |
 | FR-23 | Current, transport numbers, rectification and flow rate by two checked routes. | None better found | = | = | = | keep | Each design names two routes and never a cross-section integral of the flux, unprompted. |
-| FR-24 | Sweeps any case field as independent jobs, warm-started from a converged neighbour. | The unit of work is a continuation chain (B; A and C design so) | = | ≠ | = | keep | All three plan chains. 85 to 92 % of a timed solve is in the six rungs that carry the corrections; whether a warm start skips them is §5's row. |
+| FR-24 | Sweeps any case field as independent jobs, warm-started from a converged neighbour. | The unit of work is a continuation chain (B; A and C design so) | = | ≠ | = | keep | All three plan chains, and NUM-18's note has one: a member that starts from a converged neighbour solves its target rung alone. |
 | FR-25 | A manifest with hashes, versions, solver settings and every switch off its default. | The same, with each term's verification status (A) | = | = | = | keep | All three keep it. A's addition is the ledger's row below. |
 | FR-26 | A case file read back gives the same run configuration. | None better found | = | = | = | keep | All three keep the test on meaning and not on text. |
 | FR-27 | Every stage runs alone, can be cancelled and emits a typed, hashed artefact. | None better found | = | = | = | keep | The same staged, content-addressed artefacts in all three designs. |
@@ -218,5 +220,173 @@ although each designer kept it. Each row says why.
 
 In the last table `≠` marks a designer who named the lack. Lacks that fall under a row above are not repeated: the
 registration from another package is QR-14's, records that open again IF-03's, the residual current FR-22's, a
-number for the solve's time QR-07's, and room for 3D CON-01's. Three lacks are of the next part: a second pore in
-validation, a self-check that computes numbers on the user's machine, and a measurable target for the process.
+number for the solve's time QR-07's, room for 3D CON-01's, and a check that computes numbers on the user's machine
+add-1's. Two lacks are of the next part: a second pore in validation and a measurable target for the process.
+
+## The design, the methods, the verification, the process and the workbench
+
+The 118 rows of this part hold 98 verdicts of keep, 11 of change now, 7 of change later and 2 of add.
+
+Four rows go against all three designers. NUM-18's fixed ladder is kept until a trial, and the platforms of a pull
+request's CI are kept as AZ8 ruled them, although each designer chose otherwise. §7.3 gains a manufactured solution
+for each term, and the Python floor of §8.4.2 moves, although each designer kept them.
+
+The eleven verdicts of change now are five proposals: the composed kernel (ADR-005, §5.4, §7.3), registration from
+installed packages (§5.5), the error estimate (NUM-32), the Python floor (§8.4.2), and one command that carries a
+package (§8.4.4 (1), (8), (14), (16) and §8.4.5 (1)).
+
+### The architecture decisions, ADR-001 to ADR-005
+
+| ID | Today, in 15 words | Best alternative | A | B | C | Verdict | Reason |
+|---|---|---|---|---|---|---|---|
+| ADR-001 | NGSolve is the one production backend; the weak forms are stated once against it. | FEniCSx, each designer's runner-up | = | = | = | keep | Three of three, unprompted, on the grounds the decision records. Its consequence row calls PARDISO absent, which CON-08's row corrects. |
+| ADR-002 | Netgen is the default mesher; Gmsh an optional one behind an adapter. | Netgen alone (B) | = | ≠ | = | keep | As §2.6's Gmsh row. |
+| ADR-003 | BSD-3-Clause core; extras may be GPL-compatible. | Apache-2.0 (A, B) | = | = | = | keep | All three keep it after the unblinding. |
+| ADR-004 | The workbench is NiceGUI on FastAPI, written in Python, with no build step. | A React application over a JSON interface (A, B); trame (C) | ≠ | ≠ | = | keep | The author chose it on a measured spike of one screen: 169 lines against 246, redraw 22 ms against 14 ms. At 18,183 lines a like paint takes 315 ms (REV-258). Phase 7's rebuild is the one cheap moment to measure again on a rebuilt suite, before the rest follows. |
+| ADR-005 | Two levels of extension: corrections as data files, physics models as classes. | Three levels: corrections as data, terms as registered functions, models as compositions; from any installed package | ≠ | ≠ | ≠ | change now: with FR-40 | Each designer adds the same third level. Two levels cannot say "swap one term" or "compare two models" (C). Its rejected alternative cites N1, whose row changes. |
+
+### The software design of §5, but §5.6
+
+| File | Today, in 15 words | Best alternative | A | B | C | Verdict | Reason |
+|---|---|---|---|---|---|---|---|
+| §5 index | The index page of the software design. | None | – | – | – | keep | A list of its pages. |
+| §5.1 | A linear pipeline of twelve cacheable stages in twenty subpackages. | Seven to eleven components with the same content-addressed stages | = | = | = | keep | Each design has the same pure, hashed stages. The median package changed 7 to 8 of the 20 subpackages and `pipeline/run.py` changed in 12 of 20; Phase 6's typed run record and stages that take their upstream answer that, and nothing here adds to it. |
+| §5.2 | The contract of each stage, in 8,742 words and 19 notes. | An implicit geometry first (A); a spline profile and adaptive mesh (B) | ≠ | ≠ | = | keep | The rows FR-04 to FR-10 hold each particular; none is supported by a measurement yet. |
+| §5.3.1 | The case file key by key, in 10,164 words and 29 notes. | The reference generated from the schema, whose fields carry their descriptions | = | = | = | keep | Prompted: the pack names a YAML case. All three generate forms and reference from the schema. The clause says in prose what the schema's field descriptions also say; trimming it waits for an amendment. |
+| §5.3.2 | Artefacts keyed by a content hash; the interchange formats. | None better found | = | = | = | keep | The same content-addressed store in every design. |
+| §5.3.3 | The provenance manifest's fields. | The same, with each term's verification status | = | = | = | keep | As FR-25's row. |
+| §5.3.4 | The sweep document and the collected dataset. | Continuation chains as the planner's unit (B) | = | ≠ | = | keep | NUM-18's note already has a member that starts from a neighbour solve its target rung alone, so a chain exists wherever a neighbour is stored. |
+| §5.3.5 | The project folder: named models, studies, runs, a project file with no physics. | A case plus differences (A) | ≠ | = | = | keep | As FR-32's row. |
+| §5.4 | The backend interface, not built; the correction and physics-model interfaces. | The term as the unit: its weak form, its equation as text, its switches and its analytic case in one object | ≠ | ≠ | ≠ | change now: with FR-40 | AZ1 hands §5.4.1 and the size of `physics/models.py` to Phase 8's round. Eleven of twenty subpackages import the engine, where each design confines it to two or three layers; `gui` leaves that list when NGSolve's viewer does. |
+| §5.5 | The extension points: two levels, and registries added by one registration. | Registrations found in installed packages, each with its analytic case | ≠ | ≠ | ≠ | change now | As QR-14's row. REV-67 already asks whether the registering functions are public. |
+
+### The numerical methods, NUM-01 to NUM-34
+
+| ID | Today, in 15 words | Best alternative | A | B | C | Verdict | Reason |
+|---|---|---|---|---|---|---|---|
+| NUM-01 | Continuous Galerkin on triangles: second order, Taylor–Hood for the flow. | Hybridised discontinuous Galerkin (A's runner-up) | = | = | = | keep | Three of three chose the same elements unprompted; the reference's linear flow pair was in the pack. |
+| NUM-02 | Primitive concentrations by default; a log branch behind a flag. | Log-concentrations by default (B) | = | ≠ | = | keep | A and C choose primitive variables, C with the log form as a registered alternative, which the program has. Both timed cases converge in primitive variables with no negative concentration. |
+| NUM-03 | The velocity–pressure pair is configurable; equal order only with stabilisation. | None better found | – | – | – | keep | No designer speaks to it. |
+| NUM-04 | The axisymmetric weak forms, each integral with the r weight. | A grad-div term on the flow (A) | = | = | = | keep | The forms follow from §4. A's worry, that Taylor–Hood is not pressure-robust against a body force that is mostly a gradient, is what VER-14's capillary flow tests; it passes. |
+| NUM-05 | The hoop-strain term is assembled. | None; it is the equation | – | – | – | keep | Part of the form. |
+| NUM-06 | On the axis only the radial velocity is essential; the rest is natural. | None better found | – | = | = | keep | B and C state the same condition. |
+| NUM-07 | Every form with a 1/r factor is assembled at order three or above, asserted. | None better found | – | – | – | keep | A trap found by implementing; a start-over would meet it again. |
+| NUM-08 | A unit test integrates a 1/r-weighted quantity on an axis-touching mesh. | None better found | – | – | – | keep | It guards NUM-07. |
+| NUM-09 | The equations are solved in nondimensional variables: nm, thermal voltage, bulk concentration. | None better found | = | – | – | keep | A scales the same way. |
+| NUM-10 | Row scaling after nondimensionalisation, done by the direct solvers. | None better found | – | – | – | keep | No designer speaks to it. |
+| NUM-11 | The production solve runs without stabilisation; SUPG behind a flag. | None better found | = | = | = | keep | Three of three, each by the cell Péclet argument. Measured: the largest cell Péclet of the two timed cases is 0.074 and 0.334. |
+| NUM-12 | The cell Péclet number is evaluated on each converged state, with a warning. | None better found | = | – | = | keep | A computes the same per-run gate. |
+| NUM-13 | The stabilisation mode is recorded with each run. | None better found | = | – | = | keep | A and C record it. |
+| NUM-14 | An optional stabilised mode reproduces the reference's settings. | No such mode (A, B) | ≠ | ≠ | – | keep | A start-over would not build it: it reproduces settings and not an operator, and the author puts extension above exact digits. It is built, off by default, and Phase 12 may still want the like-for-like run, so deleting it gains little. |
+| NUM-15 | Integration orders of the stabilised mode's terms. | None better found | – | – | – | keep | It follows NUM-14. |
+| NUM-16 | Monolithic damped Newton on the coupled system with a direct solve. | A segregated iteration, each designer's runner-up | = | = | = | keep | Three of three chose a fully coupled Newton with the exact Jacobian, unprompted. |
+| NUM-17 | Positivity and packing fraction asserted at every Newton step. | None better found | = | = | = | keep | Each design asserts the same, B beside its log variables. |
+| NUM-18 | A fixed ladder of nine stages; corrections on before the salt ramp. | Adaptive steps (A, B, C); the salt ramp in the classical model, before the corrections | ≠ | ≠ | ≠ | keep | Kept until a trial. The corrections make a Newton step six to thirteen times dearer (the timed cases; REV-156), and six of a run's rungs carry them, four of those the salt ramp. Whether the corrections switch on at the target concentration over FR-17's envelope only a run can say. |
+| NUM-19 | The mesh adapts between rungs only. | None better found | – | – | – | keep | No adaptivity is built. |
+| NUM-20 | Fallbacks, in order: pseudo-transient, hybrid segregated, a PB start, backtracking. | None better found | = | = | = | keep | Each design keeps a segregated or pseudo-time fallback. |
+| NUM-21 | A sparse direct solve by default: UMFPACK, or SuperLU. | PARDISO where installed | = | = | = | keep | Prompted: the pack names a sparse direct solve. The factorisation is not the cost: 24 % of the measured solve, against 62 % for the Jacobian's assembly on one thread (REV-156). |
+| NUM-22 | An iterative fallback before any 3D capability. | None better found | = | = | = | keep | Each design names block-preconditioned Krylov methods for 3D. |
+| NUM-23 | The current is never a cross-section integral of the flux. | None better found | = | = | = | keep | Three of three, unprompted. |
+| NUM-24 | The current and flow rate by the domain-indicator form. | None better found | = | = | = | keep | Each design's volume functional. |
+| NUM-25 | The variational reaction flux as the second route. | None better found | = | – | = | keep | A's and C's first route. |
+| NUM-26 | The two routes agree to 10⁻³ relative, checked in CI. | None better found | = | = | = | keep | Each design cross-checks two routes. |
+| NUM-27 | Transport number, rectification, conductance and flow rate from the same integrals. | None better found | – | – | – | keep | It follows NUM-24. |
+| NUM-28 | The force on an analyte in domain form, each part with its consistency term. | None better found | = | = | = | keep | Each design evaluates forces as volume functionals. |
+| NUM-29 | Each force part resolved below 1 pN; the routes agree to 0.1 pN. | None better found | – | – | – | keep | No designer speaks to it. |
+| NUM-30 | First wall layer min(0.05 nm, a fifth of the Debye length); graded outwards. | Refinement towards the quantity from a coarse start (B) | = | ≠ | – | keep | A's rule, a third of the wall function's length and a quarter of the Debye length, gives the same 0.05 nm. The refinement ladder of FR-29's row tests the rule by measurement. |
+| NUM-31 | The wall-distance field, mollified where the physics allows. | None better found | – | – | – | keep | PHY-02's field; each design computes it its own way. |
+| NUM-32 | Goal-oriented adaptivity may be provided; never a default in version 1. | An error estimate for each quantity first, from a refinement ladder | ≠ | ≠ | ≠ | change now: with FR-29 | As FR-29's row. NUM-33's own note says the published results carry no error bar, so the convergence study is new work that validation needs. |
+| NUM-33 | The estimator should use a linear PB surrogate, not the full adjoint. | The full adjoint: one transposed solve with the factors Newton already holds | ≠ | ≠ | ≠ | change later: Phase 9 | The surrogate's reason is cost. With a direct solver the factors exist, and the engine solves the transposed system with them (checked), so the full adjoint costs one back-substitution. |
+| NUM-34 | The wall-distance field is gated at −10⁻³ nm where a wall correction is on. | None better found | – | – | – | keep | A gate with its tolerance argued; a start-over would need it. |
+
+### Verification: §7.1 to §7.6, VER-61, VER-62 and VER-65
+
+| ID | Today, in 15 words | Best alternative | A | B | C | Verdict | Reason |
+|---|---|---|---|---|---|---|---|
+| §7.1 | Four tiers, analytic benchmarks before any whole-model comparison; a narrow test scope. | None better found | = | = | = | keep | Each design builds the same ladder of trust in the same order. |
+| §7.2 | Tier 1: 61 rows of unit and property tests, on every push. | The browser grid nightly (A) | = | = | = | keep | The grid of 149 browser tests takes 468 s of the push gate's 539 s; §7.6's row holds that. |
+| §7.3 | Tier 2: eleven analytic benchmarks and a manufactured solution of the coupled system. | The same, with one manufactured solution for each registered term, derived by the harness (B, C) | = | = | = | change now: with FR-40 | The benchmarks stand. A term from another package is trusted only if it brings its own case, and the program holds SymPy already, so the harness can derive a term's source. |
+| §7.4 | Tier 3: comparison with the reference model, APBS and the published results; not gated. | The same, earlier (BA3's row) | = | = | = | keep | Each design holds the same cross-code rung, as bands. |
+| §7.5 | Tier 4: reproduction of experiments before a release; no job yet. | The same, with a second pore (B) | = | = | = | keep | Each design's last rung. The second pore is a row below. |
+| §7.6 | A pull request tests on Linux; three platforms on `main`, nightly and at a release. | Three systems on every change (A, B, C); the browser grid chosen by the paths a push changes | ≠ | ≠ | ≠ | change later: Phase 7 | AZ8 keeps the platforms off a pull request for their cost, and nothing measured argues against it. The browser grid runs in the push gate alone, on every change of code, and CI's legs skip it; when Phase 7 rebuilds those tests, CI's Linux leg can run them and the gate choose them by path. |
+| VER-61 | The import relation of the subpackages equals a recorded file, both ways. | None better found | – | – | – | keep | It is what makes BA7's freedom safe. A start-over would hold the same guard. |
+| VER-62 | The numbers of seven walks are held at 10⁻⁸ against stored values. | None better found | – | = | – | keep | B holds the same golden bundles. Every proposal on a numerical method names its re-pin against it. |
+| VER-65 | The subpackages that import the engine equal a recorded list of eleven. | The same guard over two or three layers | = | = | = | keep | Each design confines the engine and would guard it. The list is long; §5.4's row says where it shrinks. |
+
+### The process: the 41 rules of §8.4
+
+| Rule | Today, in 15 words | Best alternative | A | B | C | Verdict | Reason |
+|---|---|---|---|---|---|---|---|
+| §8.4.1 (1) | A version is a git tag, never a number in the package. | None better found | – | – | – | keep | No cost found. |
+| §8.4.1 (2) | Each merged package takes an alpha tag, pushed by a workflow. | None better found | – | – | – | keep | It gave the evidence its 24 ranges; a package's cost can be read from the tags. |
+| §8.4.1 (3) | A phase's close takes the release tag alone. | None better found | – | – | – | keep | No cost found. |
+| §8.4.1 (4) | A package merged before the previous release takes no tag. | None better found | – | – | – | keep | No cost found. |
+| §8.4.2 (1) | The push gate passes on the tree before a push. | The browser grid chosen by path | – | – | – | keep | §7.6's row holds the one change. |
+| §8.4.2 (2) | How the gate refuses, and git's own pre-push hook. | None better found | – | – | – | keep | Mechanism. |
+| §8.4.2 (3) | The session-start hook brings `main` up to date. | None better found | – | – | – | keep | Mechanism. |
+| §8.4.2 (4) | Python 3.14 is the default and 3.11 the minimum. | 3.12 the minimum | = | = | = | change now: with QR-09 | As QR-09's row. |
+| §8.4.2 (5) | One rule for prose in code: docstrings on public names, few comments. | None better found | – | – | – | keep | No cost found. |
+| §8.4.3 (1) | A test names the silent failure it catches; a plan commits none. | None better found | – | – | – | keep | C asks the same of a requirement: one without a test is a wish. |
+| §8.4.3 (2) | The ship deletes tests outside the scope. | None better found | – | – | – | keep | It keeps the gate's time down. |
+| §8.4.4 (1) | Three commands with levels: plan, implement, ship. | One command that carries a package from its brief to its pull request | ≠ | ≠ | ≠ | change now | The author's one complaint is the sessions he must start. A package takes at least four windows, each ended by a compaction he runs, and about eight touches, most of them a command or a compaction and not a judgement. Each designer keeps the form and cuts the starts. |
+| §8.4.4 (2) | A pull request's CI tests on Linux; the close reads three platforms. | None better found | ≠ | ≠ | ≠ | keep | §7.6's row. |
+| §8.4.4 (3) | `/np-gui` renders screens for the author's verdicts; a suite opens with prototypes. | None better found | = | = | = | keep | Each design puts mockups and the author's verdicts before the code. |
+| §8.4.4 (4) | The workflow runs on Claude Code alone. | None better found | – | – | – | keep | Ruled at WP6.03; no cost found. |
+| §8.4.4 (5) | A package is named by phase and number. | None better found | – | – | – | keep | No cost found. |
+| §8.4.4 (6) | A plan lives in its phase's folder. | None better found | – | – | – | keep | No cost found. |
+| §8.4.4 (7) | A commit that changes a decision regenerates the decisions pages. | The register generated from the tests and the rulings alone (B) | – | ≠ | – | keep | Generated already; the cost is one command a commit. |
+| §8.4.4 (8) | One package, one pull request; implement pauses before the ship. | No pause where the author has nothing to judge | ≠ | ≠ | ≠ | change now: with (1) | The pause before the ship is a compaction and a command. The switch that removes it exists and is off by default. |
+| §8.4.4 (9) | A session may restructure what it works with while the gate passes. | None better found | – | – | – | keep | BA7's row. |
+| §8.4.4 (10) | At most two lanes; the second is the next phase's design study. | None better found | – | – | – | keep | A study beside the build is how each design starts its workbench early. |
+| §8.4.4 (11) | Each plan and pull request opens with a brief a non-coder can read. | None better found | = | = | = | keep | B's one-page brief and one-page result. |
+| §8.4.4 (12) | A package's plan is grounded in the code, within 3,500 words. | A plan as one issue with executable acceptance tests (A) | ≠ | – | – | keep | The plans hold 453,720 words in 104 files. The caps were set at the cleanup, two packages ago, and their effect is not yet measured. |
+| §8.4.4 (13) | Each work item names its executor; one commit an item. | None better found | – | – | – | keep | It let this package resume after each compaction from the plan's ticks alone. |
+| §8.4.4 (14) | Each plan pauses for a compaction, then a review in a new window. | The review chained to the plan | ≠ | ≠ | ≠ | change now: with (1) | Two of a package's four windows are its plan and the plan's review. |
+| §8.4.4 (15) | A choice put to the author carries what a non-coder needs to judge it. | Batched rulings, each with a default that applies unless overruled (A, B) | ≠ | ≠ | – | keep | The form is the author's. A default that applies unanswered would change who decides, which the author did not ask for. |
+| §8.4.4 (16) | A compaction checkpoint is a work item that ends the turn, unless switched off. | The switch set by default | ≠ | ≠ | ≠ | change now: with (1) | This package pauses at four checkpoints, each a compaction and a command with nothing for the author to judge. |
+| §8.4.4 (17) | A phase plan states each package's current scope. | None better found | – | – | – | keep | No cost found. |
+| §8.4.4 (18) | A phase plan holds 2,500 words. | None better found | – | – | – | keep | As (12). |
+| §8.4.4 (19) | Every ruling lands in a current clause. | None better found | – | – | – | keep | It is why a clause could be walked here without its history. |
+| §8.4.4 (20) | No ruling leaves the history. | A decision log of half-page entries (A, C) | ≠ | – | ≠ | keep | The history holds 72,141 words and is read on demand, so its weight costs a session nothing. |
+| §8.4.4 (21) | An implementing session's first window reads at most 8,000 words. | None better found | – | – | – | keep | Two packages old; not yet measured against a later phase. |
+| §8.4.5 (1) | The model follows the session's kind; the author picks it at each start. | A level whose model differs runs as a sub-agent of the one session | – | – | – | change now: with (1) | A change of model is what forces a new session between implement and ship. This package's designers ran on two models as sub-agents of one session. |
+| §8.4.5 (2) | Three agents and eight scripts are kept. | None better found | – | – | – | keep | Cut to these at WP6.03. |
+| §8.4.5 (3) | Each level's report ends with its measured usage. | None better found | – | – | – | keep | The measure a target for touches would be read from. |
+| §8.4.5 (4) | Mechanical batches go item by item to sub-agents. | None better found | – | – | – | keep | No cost found. |
+| §8.4.6 (1) | An open item is a row of the review register. | None better found | – | – | – | keep | 279 rows gave the evidence its count by area. |
+| §8.4.6 (2) | Closed rows move to an archive at a phase's close. | None better found | – | – | – | keep | No cost found. |
+| §8.4.6 (3) | A phase closes when each row it owns is fixed or ruled. | None better found | – | – | – | keep | No cost found. |
+| §8.4.6 (4) | User-testing findings come only from the author's sessions. | None better found | – | – | – | keep | No cost found. |
+| §8.4.6 (5) | Review reports are numbered files. | None better found | – | – | – | keep | 115 reports hold 413,493 words and are read on demand, so no session pays for them. |
+
+### The workbench design, by its 17 sections
+
+| Section | Today, in 15 words | Best alternative | A | B | C | Verdict | Reason |
+|---|---|---|---|---|---|---|---|
+| Purpose and users | One workbench for three personas; a thin shell that computes no number. | None better found | = | = | = | keep | Each design's workbench is a client that holds no physics. |
+| Today's shell | The retired Qt shell's capabilities, in 1,634 words. | Out of the design document | – | – | – | change later: Phase 7's round | It describes a shell removed at v0.6. With *Tabs or areas*, *Restated clauses* and *Inherited rows* it is spent: about 3,000 of the document's 16,450 words. |
+| The areas | The author's areas placed in six suites. | None better found | – | – | – | keep | The author's own list. |
+| Organisation | Suites in a project: four build models, two use them. | Three workspaces (A); one route first (B) | ≠ | ≠ | – | keep | The author ruled it over concept boards, in his own words. No blind designer saw a board, and a verdict on a picture outweighs a design made without one. The laboratory's route is the guided route. |
+| Look and feel | One token set; each suite borrows the idiom of a tool the author named. | None better found | – | – | – | keep | The author's taste, ruled on tiles. |
+| Tabs or areas | Where each Qt tab's capability went. | Out of the design document | – | – | – | change later: Phase 7's round | Spent, as *Today's shell*. |
+| Tools | Each tool's settings and live view, by suite. | None better found | – | – | – | keep | What Phase 7 rebuilds on its foundations. |
+| The four live links | Four pairs linked both ways until unlinked. | None better found | = | = | ≠ | keep | As FR-33's row. |
+| The project folder | A plain folder, readable without the workbench. | None better found | ≠ | = | = | keep | As FR-32's row. |
+| Install and start | One `uv` command; a local server; the browser speaks through a network interface. | A documented interface that a script or another front end could drive | ≠ | ≠ | = | keep | The interface that exists serves pictures and scenes: 21 GET routes, and none starts a build. The boundary that holds is the view-models over the `Session`. "A remote server later without a redesign" is untested. |
+| The guided route | A layer over the one interface, from a clean project. | The first surface built (B) | = | ≠ | = | keep | As FR-36's row. |
+| Later tools | Composer, mutator and sketcher, each a later phase. | As FR-40's and FR-42's rows | ≠ | ≠ | ≠ | change later: Phase 7's round | It follows those rows. |
+| The shell's reading of artefacts | The server reads artefacts through the library; Mol\* and Plotly draw. | vtk.js or an own renderer for fields (A, B) | ≠ | ≠ | = | keep | Three of three chose Mol\* unprompted, and C chose Plotly. The shell computes numbers at 12 sites today, which Phase 6 moves into the library. Whether Plotly pans a field map of 10⁵ cells needs a trial. |
+| Restated clauses | How the Qt shell's clauses were restated. | Out of the design document | – | – | – | change later: Phase 7's round | Spent, as *Today's shell*. |
+| Inherited rows | Seventeen rows that waited on the document. | Out of the design document | – | – | – | change later: Phase 7's round | Spent, as *Today's shell*. |
+| Decision log | The 63 rulings WB-01 to WB-63, in the author's words. | None better found | – | – | – | keep | Each is the author's verdict on something seen. The review found no evidence against one; 28 open items of the interface are Phase 7's to close. |
+| Glossary | One glossary for the workbench's own terms. | None better found | – | – | – | keep | C's records include one. |
+
+### What these lists lack
+
+| ID | Today, in 15 words | Best alternative | A | B | C | Verdict | Reason |
+|---|---|---|---|---|---|---|---|
+| add-10 | Validation is planned on ClyA alone. | A second pore, with published conductances, in validation (B) | – | ≠ | – | add later: Phase 12 | The pipeline claims no rule specific to one pore (FR-37), and B notes that the protein permittivity, the exclusion offset and the isolevel were set on ClyA. One other pore tests the claim. |
+| add-11 | The process has no target for what it asks of the author. | A target for the author's touches a package, read from the measured usage (C) | – | – | ≠ | add now | §8.3 measures about eight touches a package and nothing says how many are wanted. With a number, the change of §8.4.4 (1) can be seen to work or not. |
+
+A rule of §8.4 is named by its subsection and its place in it: §8.4.4 (8) is the eighth bullet of §8.4.4. In the last
+table `≠` marks the designer who named the lack.
