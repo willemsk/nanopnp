@@ -122,6 +122,9 @@ never chains it** (BB5; §8.4.5). The report and its appendices are `docs/projec
 
 - Today: 80,973 lines of Python in the 20 subpackages of `src/nanopnp/`, `gui/` 21,422 and `validation/` 8,560, with
   15,296 lines of JavaScript and CSS; Tier 1 has 115 test files and 32,563 lines, Tier 2 60 and 12,025.
+- Corrected at item 6: 11,802 of those 15,296 lines are bundles shipped unmodified (Mol\*, NGSolve's `webgui`, KaTeX,
+  uPlot); the workbench's own are 1,700 of JavaScript and 1,794 of CSS. `v0.6.0-alpha.1` does not exist, so the
+  first range starts at `v0.5.0`.
 - The clone is shallow, 50 commits: history needs `git fetch --unshallow origin` and `git fetch --tags origin`. A
   package is the range between two `-alpha.N` tags (§8.4.1).
 - The register's rows are `| REV-n | Area | Severity | Status | Ruling | Finding |`, 59 in
