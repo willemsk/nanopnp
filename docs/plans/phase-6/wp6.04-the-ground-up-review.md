@@ -260,9 +260,9 @@ appendices and pages the site publishes; name a clause, a plan or a review in co
   **Executor:** main, with `general-purpose` agents on Sonnet, high effort
 - [x] 8. Compaction checkpoint. **Executor:** main
 - [x] 2b6db6d 9. The walk of the requirements, the releases and the rulings, in `walk.md` (D4). **Executor:** main
-- [ ] 10. The walk of the design, the methods, the verification, the process and the workbench (D4).
+- [x] af8ee8c 10. The walk of the design, the methods, the verification, the process and the workbench (D4).
   **Executor:** main
-- [ ] 11. Compaction checkpoint. **Executor:** main
+- [x] 11. Compaction checkpoint. **Executor:** main
 - [ ] 12. The report: the design, the differences and the proposals (D5, D6); done when each fact a card rests on is
   checked at its source. **Executor:** main
 - [ ] 13. Compaction checkpoint. **Executor:** main
