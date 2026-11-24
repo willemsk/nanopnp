@@ -256,9 +256,9 @@ appendices and pages the site publishes; name a clause, a plan or a review in co
   clean. **Executor:** main, with the same agents
 - [x] 5. Compaction checkpoint. **Executor:** main
 - [x] 0ca2ef0 6. `evidence.md` (D5); done when each number names its command. **Executor:** main
-- [ ] 7. `technologies.md` (D5); done when each cell names its source.
+- [x] 1307b9e 7. `technologies.md` (D5); done when each cell names its source.
   **Executor:** main, with `general-purpose` agents on Sonnet, high effort
-- [ ] 8. Compaction checkpoint. **Executor:** main
+- [x] 8. Compaction checkpoint. **Executor:** main
 - [ ] 9. The walk of the requirements, the releases and the rulings, in `walk.md` (D4). **Executor:** main
 - [ ] 10. The walk of the design, the methods, the verification, the process and the workbench (D4).
   **Executor:** main
