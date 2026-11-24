@@ -243,9 +243,9 @@ tests are left to CI, in the summary line too.
   **Executor:** main
 - [x] 3. d0ca274 `.claude/skills/np-carry/SKILL.md` (D1 to D3); done when the code and review say so, at 900 words or
   fewer. **Executor:** main
-- [ ] 4. `.claude/scripts/usage.py`: the timeline and the helpers' reading (D4, D5); done when the gate passes and
+- [x] 4. 3cb2ef4 `.claude/scripts/usage.py`: the timeline and the helpers' reading (D4, D5); done when the gate passes and
   both modes print this session's lines with its sub-agents, the check helper's window among them. **Executor:** main
-- [ ] 5. Compaction checkpoint. **Executor:** main
+- [x] 5. Compaction checkpoint. **Executor:** main
 - [ ] 6. The count, `docs/plans/sessions/browser-path-count.md` (D7); done when the record holds the date, `main`'s
   sha, the runs paged, the shas dropped, `k`, `k_branch`, a table by branch, the commands and the verdict, `k ≥ 34`.
   **Executor:** `general-purpose` on Sonnet, high effort
