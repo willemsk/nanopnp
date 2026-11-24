@@ -1,8 +1,8 @@
 # WP6.04 — The ground-up review
 
-**Status: in progress, started 24 November 2026.** Written 23 November 2026, grounded in the tree at `efda55e`. Inherits §8.2.51 BA7
-and BA10 to BA13, §8.2.52 BB1 to BB6 (BB3 to BB6 ruled at this plan), §8.4.4's sentence on a study package and the
-test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.4` (§8.4.1).
+**Status: in progress, started 24 November 2026.** Written 23 November 2026, grounded in the tree at `efda55e`.
+Inherits §8.2.51 BA7 and BA10 to BA13, §8.2.52 BB1 to BB6 (BB3 to BB6 ruled at this plan), §8.4.4's sentence on a
+study package and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.7.0-alpha.4` (§8.4.1).
 
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.04 entry sets this scope; `SPECIFICATION.md` governs, and
 where it and this plan disagree this plan is wrong. Identifiers are pointers into it.
@@ -81,11 +81,19 @@ never chains it** (BB5; §8.4.5). The report and its appendices are `docs/projec
   calls: a `Grep` or `Glob` with no `path`, which searches the tree; a relative path; a `WebSearch`, which has a query
   and no address; and a tool beyond `Read`, `Grep`, `Glob`, `Bash`, `WebSearch` and `WebFetch`. The pack's own path
   holds `-home-user-nanopnp`.
+- Corrected at item 3: two tools beyond the six open no file and no address, and each designer calls both.
+  `ToolSearch` loads the web tools, which the `Plan` type holds deferred; `SubagentHandback` returns the design. A
+  `Bash` command with no path can also be a word count of the designer's own draft. Such a call is listed and read,
+  and is no peek.
 - §8.4.5 puts a scoped item on Sonnet; BB3 excepts this package's blind designers, and §8.4.5 says so.
 - Implementation words (`ngsolve`, a `.py` path, a package number), counted by `grep -ciE`:
   `knowledge/02-electrokinetics-background/` 0 in 3,430 words; `knowledge/03-nanopore-biology/` 0 in 3,360;
   `specification/b-comsol-settings.md` 0; `specification/04-physics.md` 8 lines; `knowledge/01-physics-epnpns/` 22
   and `knowledge/05-analyte-and-forces/` 30, so both stay out of the pack.
+- Corrected at item 3: one of §4's eight lines names the engine, "NGSolve's own estimate for the source", and a
+  first run of the three designers, all of whom chose it, was set aside for that and for a line of §1.3's closing
+  paragraph the cut had left. The pack's copy of §4 reads "The engine's own estimate" and differs in nothing else.
+  §4 also prescribes PDB2PQR with PROPKA (PHY-16) and names `io/defaults.py`; both stay and are marked prompted.
 - `specification/02-product-overview.md` holds §2.1 to §2.5 (context, the reference model, S1 to S4, P1 to P3, the
   operating environment), then §2.6, the dependencies, and §2.7, the releases. `specification/01-introduction.md`
   holds §1.1 to §1.3 (purpose, scope, definitions), then §1.4 to §1.6.
@@ -173,7 +181,7 @@ open; a ticked suggestion alone is asked why. The interview ends only when the a
 words complete. Write each round and the summary, unedited, into `method.md`.
 
 **Item 3.** Build the pack in the session's scratchpad, `<scratch>/pack/`: §1.1 to §1.3, less §1.3's closing paragraph,
-and §2.1 to §2.5 cut by their headings into `purpose.md`; `specification/04-physics.md`;
+and §2.1 to §2.5 cut by their headings into `purpose.md`; `specification/04-physics.md`, less the engine's name;
 `specification/b-comsol-settings.md`; the two knowledge folders of D2; the interview as `author.md`. Record each
 file's word count in `method.md`. Launch the three `Plan` agents in one message, each with the same brief but its lens.
 A has none. B: "Design first for the experimental laboratory, P3 of `purpose.md`." C: "Design first for the method
@@ -191,8 +199,8 @@ developer, P1 of `purpose.md`."
 > you are least sure of.
 
 For each agent, list the `tool_use` inputs of its transcript. A `Read`, `Grep`, `Glob` or `Bash` input that names a
-path outside `<pack>`, a query or an address holding `nanopnp`, or one of the four calls D2's grounding lists,
-discards the design. Write each design unedited into its file, and the brief, the lens, the model and the list's
+path outside `<pack>`, a query or an address holding `nanopnp`, or one of the four calls D2's grounding lists that
+could reach the tree, discards the design; D2's grounding names the calls that cannot. Write each design unedited into its file, and the brief, the lens, the model and the list's
 result into `method.md`.
 
 **Item 4.** Continue each agent: it now reads `specification/02-product-overview.md` from §2.6,
@@ -236,7 +244,7 @@ appendices and pages the site publishes; name a clause, a plan or a review in co
 
 - [x] 9e27418 1. The report's skeleton, its appendices, `mkdocs.yml` and `docs/project/index.md` (D6); done when
   `uv run just docs` passes. **Executor:** main
-- [ ] 2. The author's view, in `method.md` (D1); done when the author has called the summary complete. **Executor:**
+- [x] 2085983 2. The author's view, in `method.md` (D1); done when the author has called the summary complete. **Executor:**
   main
 - [ ] 3. The pack and the three blind designs, in `design-a.md` to `design-c.md` and `method.md` (D2); done when each
   transcript's list holds no path outside the pack. **Executor:** main, with `Plan` agents on Fable 5.2 and Opus 5.5
