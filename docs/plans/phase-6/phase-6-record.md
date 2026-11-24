@@ -4,7 +4,7 @@ The amended text of [the Phase 6 plan](phase-6-library-foundations.md), quoted a
 restated it to its current scope (§8.2.16 R4). Read it on demand; the plan states what holds now. A later amendment
 appends a dated section below.
 
-**Status: a record of replaced text, last added to on 23 November 2026 (§8.2.52 BB6); it states nothing that holds now.**
+**Status: a record of replaced text, last added to on 24 November 2026 (§8.2.52 BB7); it states nothing that holds now.**
 
 ---
 
@@ -209,3 +209,18 @@ review read "13 times you act"; the WP6.04 entry was headed "(BA10 to BA13; BB2 
 author's view;", and it closed:
 
 > About 10 sessions, 7 to 13 agent hours and 13 touches (BB3).
+
+## Amended 24 November 2026 (§8.2.52 BB7)
+
+At WP6.04's ship the author ruled that Fable 5.2 ships the package in the implementing session. Open decision 9 ended:
+
+> blind designs from the program's purpose, then rule by rule; the project's pages; Fable 5.2, then Opus 5.5 (BB3 to
+> BB5) |
+
+WP6.04's plan read, in its In brief and its Execution brief:
+
+> **Your call.** Settled today: the guard, the interview, the report's place, and that Fable writes it and Opus checks
+> it.
+>
+> **Implementing session: Fable 5.2, high effort. Ship: Opus 5.5, high effort, in a new session; `NANOPNP_AUTO_SHIP`
+> never chains it** (BB5; §8.4.5).

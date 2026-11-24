@@ -33,7 +33,8 @@ proposals. *Recommendation:* read the report's first section before that round; 
 - **WP6.04, the ground-up review, is implemented and its pull request open**
   ([its plan](phase-6/wp6.04-the-ground-up-review.md)). Its
   proposals are REV-280 and its seven trials REV-281 to REV-287. WP6.05 follows the rulings; the rest is provisional.
-- **Next:** `/np-ship wp 6.04` on Opus 5.5 in a new session. After its merge: `/np-plan project`, then
+- **In ship:** `/np-ship wp 6.04`, on Fable 5.2 in the implementing session (BB7). After its merge:
+  `/np-plan project`, then
   `/np-plan amend 6` and `/np-plan wp 6.05`.
 
 ## Not to be re-decided
