@@ -43,7 +43,7 @@ differ, so the ship never chains: the pause's prompt names Fable 5.2.
 
 | Decision | Choice | Why/source |
 |---|---|---|
-| **D1 The shape** | `/np-carry wp <n>` starts the main session of one package. It hands each step to a new `general-purpose` helper with an empty context, at high effort, on the step's model: the plan and the plan's fixes on Fable 5.2, each stretch of the implementation up to its checkpoint on the plan's implementing model, the ship on its shipping model. The main session alone asks the author, starts the review and worker agents, holds the PR's subscription and check-in, keeps the task list and measures. It commits nothing, and edits only through a review's `--fix`. It takes `wp <n>` only: a ruling round stays a session of its own | Ruled by the author, BD2 and BD6 (BC10's fallback amended) |
+| **D1 The shape** | `/np-carry wp <n>` starts the main session of one package. It hands each step to a new `general-purpose` helper with an empty context, at high effort, on the step's model: the plan and the plan's fixes on Fable 5.2, each stretch of the implementation up to its checkpoint on the plan's implementing model, the ship on its shipping model. The main session alone asks the author, starts the review and worker agents, holds the PR's subscription and check-in, and measures; a helper keeps the task list, which it shares with the main session (item 1). It commits nothing, and edits only through a review's `--fix`. It takes `wp <n>` only: a ruling round stays a session of its own | Ruled by the author, BD2 and BD6 (BC10's fallback amended) |
 | **D2 The hand-back** | A helper's last message is one block, `HANDBACK` with a kind: `ASK`, `WORKER`, `REVIEW`, `WAIT`, `DONE` or `BLOCKED`. The main session serves it and resumes the same helper with the answer (`SendMessage`); `DONE` and `BLOCKED` end the helper. A question's text and the author's answer pass unchanged in both directions | The two facts that failed; a finished helper resumes with its context; decided by the plan |
 | **D3 The files** | Two new files: `.claude/skills/np-carry/SKILL.md`, at most 900 words, and `.claude/workflow/helper.md`, at most 250, which says what a helper does where a level's file names something it cannot do. The orchestrator changes no level file, core or hook, so the three commands run as today. The stage is read from the branch's commit subjects and the plan's ticks, so `/np-carry` resumes in any session | BC10: the three commands stay, and the plan and the commits carry the state; decided by the plan |
 | **D4 The reading limit** | Every helper that implements reads at most 8,000 words of project text before its first edit; the main session's reading is reported, not limited. `usage.py --reading` reports each helper's window | Ruled by the author, BD3 (open decision 13) |
@@ -62,8 +62,9 @@ Facts at `8b54c5f`, on the cloud host, Claude Code 2.1.331.
   `hook development 51 … passed` to `<git dir>/nanopnp-gate.log`, which did not exist before. The helper saw no
   message of the hook on a pass.
 - The helper had `Bash`, `Edit`, `Write`, `Read`, `Skill`, `ToolSearch` and, deferred, `SendMessage` and the
-  `mcp__github__*` tools. It had no `Agent`, `AskUserQuestion` or `TaskCreate`, and `ToolSearch` returned no schema
-  for them.
+  `mcp__github__*` tools. It had no `Agent` or `AskUserQuestion`, and `ToolSearch` returned no schema for them.
+  *Corrected at item 1:* it has `TaskCreate`, `TaskList` and `TaskUpdate`, deferred, and its `TaskList` returns the
+  main session's list.
 - `SendMessage` to the finished helper's id resumed it, and it answered from its earlier output.
 - The main session's `Agent` tool takes `model` (`sonnet`, `opus`, `haiku`, `fable`) and `effort`; it says to set
   `effort` only where an instruction asks, so `np-carry/SKILL.md` asks.
@@ -139,7 +140,7 @@ marks each fact `[verified]`, with the date, the host and Claude Code's version 
 | give an item or a read to an agent | hands back `WORKER` |
 | call the `code-review` skill | hands back `REVIEW` |
 | subscribe to a PR, wait for CI, schedule a check-in | hands back `WAIT` |
-| keep the task list, run `usage.py` or `checkpoint.sh`, unsubscribe | skips it |
+| run `usage.py` or `checkpoint.sh`, unsubscribe | skips it |
 | print a prompt, pause, report, end the turn | hands back `DONE` |
 
 Then two rules, the first change is made with an edit tool (AZ17) and a resume goes on, and the block:
@@ -191,7 +192,7 @@ next: <item k, or the step that follows>
      decision, and send a change to that helper in the author's words. After an implement `DONE`, start a new
      helper. After the ship's `DONE`, print its report and stay subscribed; on the merge, or the author's word,
      resume the ship helper for *7. After the merge*.
-5. While implementing, set the task list from the plan's ticks after each hand-back. After each `DONE`, run
+5. After each `DONE`, run
    `uv run .claude/scripts/usage.py --label <stage> --since <the noted time>`, and after an implement helper's also
    `--reading`; add the lines to the PR's **Measured**, where the ship helper reads them.
    Tell the author of a helper over 8,000 words.
@@ -231,6 +232,13 @@ tests are left to CI, in the summary line too.
 - [ ] 1. The facts checked again and recorded: `knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md`,
   its `index.md`, `knowledge/log.md`, and an Outcome here (D6); done when the code and review say so.
   **Executor:** main
+
+  > **Outcome — two facts hold, one moved: a helper keeps the task list.** A Sonnet helper on Claude Code 2.1.331
+  > still has no `Agent` and no `AskUserQuestion`, so D6's stop does not apply and `PUSH` is not needed: its commit
+  > ran the commit gate (206 s), it ran the push gate in the background (480 s) and pushed `0212383`, and a resume
+  > answered from its context. It now loads `TaskCreate`, and its `TaskList` returned this session's eight tasks, so
+  > D1 gives the task list to the helper and `helper.md` and `/np-carry` drop it
+  > ([the note](../../../knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md)).
 - [ ] 2. `.claude/workflow/helper.md` (D2, D3); done when the code and review say so, at 250 words or fewer.
   **Executor:** main
 - [ ] 3. `.claude/skills/np-carry/SKILL.md` (D1 to D3); done when the code and review say so, at 900 words or

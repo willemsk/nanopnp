@@ -20,14 +20,41 @@ tested_with:
 ## 26. What a Claude Code helper can do (WP6.05)
 
 A *helper* is a `general-purpose` agent that a session's `Agent` tool starts with an empty context.
-`/np-carry` gives each step of a package to one (`SPECIFICATION.md` §8.4.4). Probed on the cloud host
-with a helper on Sonnet at high effort. [verified][^probe]
+`/np-carry` gives each step of a package to one, and its main session serves what a helper cannot do
+(`SPECIFICATION.md` §8.4.4). Probed on the cloud host with a helper on Sonnet at high effort, started
+in the foreground by a main session on Opus 5.5. [verified][^probe]
 
-### Its tools
+### What it cannot do
 
-- It has `Artifact`, `Bash`, `Edit`, `Glob`, `Grep`, `ListAgents`, `Read`, `ReportFindings`, `SearchPlugins`, `SendUserFile`, `ShowOnboardingRolePicker`, `Skill`, `SuggestPluginInstall`, `SuggestSkills`, `ToolSearch`, `Write`, `SubagentHandback`, `mcp__ccd_session__dismiss_task`, `mcp__ccd_session__spawn_task`, `mcp__Claude_Docs__batch`, `mcp__Claude_Docs__guide`, `mcp__Claude_Docs__update` and the `mcp__claude-code-remote__*` session tools, and, deferred, `TaskCreate`, `TaskGet`, `TaskList`, `TaskStop`, `TaskUpdate`, `SendMessage`, `Monitor`, `CronCreate`, `CronDelete`, `CronList`, `WebFetch`, `WebSearch`, `ArtifactComments`, `ArtifactData`, `EnterWorktree`, `ExitWorktree`, `NotebookEdit`, `ListSkills`, `ListPlugins`, `ListConnectors`, the `mcp__github__*`, `mcp__Context7__*`, `mcp__Claude_Docs__*` and other `mcp__*` tools that a system message names.
-- It has no `Agent` and no `AskUserQuestion`, and `ToolSearch` returns no schema for `Agent` or `AskUserQuestion`.
-- `TaskCreate`, `TaskGet`, `TaskList` and `TaskUpdate` are deferred, and `ToolSearch` loads their schemas.
-- Its `TaskList` returns the main session's 8 tasks (#1 in progress, #2 to #8 pending), which are the 8 items of WP6.05.
+- It has no `Agent` and no `AskUserQuestion`, and `ToolSearch` returns no schema for either. It
+  cannot start an agent or ask the author: the main session does both for it.
 
-[^probe]: Probe of 2026-11-24: the helper listed its tools and called `ToolSearch` with `select:Agent,AskUserQuestion,TaskCreate`; the result held one schema, for `TaskCreate`.
+### What it can do
+
+- **Keep the task list.** `TaskCreate`, `TaskGet`, `TaskList` and `TaskUpdate` are deferred and
+  load. Its `TaskList` returned the main session's eight tasks: a helper and its main session share
+  one task list, the one the app shows.
+- **Commit under the commit gate.** Its `git commit` ran `.claude/hooks/gate.sh`, which wrote
+  `hook development 206 … passed` to `<git dir>/nanopnp-gate.log`, a file that did not exist before.
+- **Run the push gate and push.** It started `gate.sh run` with `run_in_background`, waited on the
+  log in the foreground (`gate: passed, 480 s.`, `exit 0`) and pushed the branch.
+- **Resume.** `SendMessage` to a finished helper's id resumes it with its context: asked after it had
+  finished, it gave its commit's subject from memory, without a tool.
+- **Hand back.** Its last message reaches the main session as a message from its id, through its
+  `SubagentHandback` tool.
+- **Reach the session service.** It has the `mcp__claude-code-remote__*` tools, `send_message`,
+  `create_session` and `subscribe_pr_activity` among them, and, deferred, `SendMessage` and the
+  `mcp__github__*` tools. A PR event still wakes the main conversation, which holds the subscription
+  (`np-ship/wp.md` §4).
+
+### The main session's `Agent` tool
+
+It takes `model` (`sonnet`, `opus`, `haiku`, `fable`) and `effort`. Its description asks that
+`effort` be set only where an instruction asks for it, so `/np-carry` asks for `high`. [verified][^probe]
+
+[^probe]: Probe of 24 November 2026 for WP6.05's item 1, on the claude.ai cloud host (Linux), Claude
+    Code 2.1.331, at commit `0212383`. The helper listed its tools, called `ToolSearch` with
+    `select:Agent,AskUserQuestion,TaskCreate` (one schema came back, for `TaskCreate`) and
+    `select:TaskList,TaskGet,TaskUpdate` (three), called `TaskList` once, wrote this note's first
+    version, committed it, ran the push gate and pushed. It was resumed twice by `SendMessage`. A
+    probe of the same day at `8b54c5f` found no task tools in a helper (the plan's *Grounding*).
