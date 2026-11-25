@@ -1,6 +1,6 @@
 # Decisions register, closed
 
-The 1,131 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
+The 1,132 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1119,6 +1119,7 @@ The 1,131 decisions of [the register](decisions.md) that bind nothing now, writt
 | REV-167 | author | `docs/project/review-findings.md` |  | WP6.03 | Six Copilot app behaviours the substitutes assume are unchecked | §8.2.25 AA6; §8.2.46 AV6; §8.2.49 AY5; §8.2.50 AZ4: WP6.03, which retires the Copilot host | declined |
 | REV-168 | author | `docs/project/review-findings.md` |  | WP6.03 | The Copilot host has not been verified live | §8.2.25 AA6; §8.2.46 AV6; §8.2.49 AY5; §8.2.50 AZ4: WP6.03, which retires the Copilot host | declined |
 | REV-278 | author | `docs/project/review-findings.md` |  | WP6.03 | `/np-plan project` as written cannot hold the rescoping round | §8.2.50 AZ7; proposed by review 073; fixed by WP6.03 | fixed |
+| REV-279 | author | `docs/project/review-findings.md` |  | WP6.06 | At a ragged rim the channel's axis can lock about 0.6° off, as rounding decides | fixed by WP6.06 (§8.2.55 BE1, BE2, BE4); ruled by the author, 22 November 2026, at WP6.01; placed by §8.2.51 BA8 and §8.2.52 BB1 | fixed |
 | REV-280 | author | `docs/project/review-findings.md` |  |  | The ground-up review's proposals wait for the author's rulings | ruled by the author, 24 November 2026 (§8.2.53 BC1 to BC24): each of the 25 proposals is ruled or carried with its owner | fixed |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |

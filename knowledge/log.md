@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-25
+* **Update**: The channel's axis locked off its line at a flat rim because the Voronoi edges beside a tetrahedron that fixes no centre were dropped, not because of the rim's tie; 17 of 24 trial draws locked, up to 0.84° (1.05° in one more), and none does once the edges run on. A refused triangulation is joggled; a lumen with atoms on its axis still reads 7° to 8° off (WP6.06; REV-279). ([The channel's axis of 2WCD against its ring axis](04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md))
+
 ## 2026-11-24
 * **Record**: A general-purpose helper has no tool to ask the author or start an agent; the main session serves both for it (WP6.05). ([26. What a Claude Code helper can do](07-software-stack/26-what-a-claude-code-helper-can-do.md))
 * **Update**: NGSolve's wheel carries a route to PARDISO through pip's `mkl` on Windows and Linux x86-64, read and not run (WP6.04; REV-281). ([1. FEM backend: NGSolve/Netgen](07-software-stack/01-fem-backend-ngsolvenetgen.md))

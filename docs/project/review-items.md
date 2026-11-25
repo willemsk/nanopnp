@@ -1683,6 +1683,17 @@ places it.
 
 **Numbered** (§8.2.52 BB1, 23 November 2026; §8.2.54 BD1, 24 November 2026): WP6.06, in build order after the orchestrator's package, which carries it (§8.2.53 BC3, BC10). Its plan is written after the author's ruling round on the ground-up review's proposals, which ruled no proposal on how a pore's axis is found (§8.2.53).
 
+**Fixed** (WP6.06, 25 November 2026): the cause was not the tie this item names, and the bound was not 0.6°. Where the
+atoms of a rim lie exactly in one plane, many tetrahedra there fix no centre, and `structure/cavity.py:_voids` dropped
+the Voronoi edge of each face beside one; the rim's last plane then held no candidate on the axis, and the first,
+tilted cut took one of the spaces beside it. On walls tilted 12°, 17 of 24 draws of the C7 and C8 walls locked, up to
+0.84°, and one further draw read 1.05°. An edge now runs on past such a tetrahedron as it does past the hull, a
+candidate is kept only where its clearance is its nearest atom's distance, and a triangulation Qhull refuses for
+precision is joggled once (§8.2.55 BE4). None of 261 trial draws locks, 2WCD's axis moves by no bit, its limits stay
+(BE1), and a channel case's stored first stage runs again once (BE2). The gate test tilts the wall with its rim again
+(VER-48). A lumen with atoms on its axis still reads 7° to 8° off, with the straightness warning (§8.2.39 AO4;
+[knowledge 04/15](../../knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md)).
+
 ### REV-280: The ground-up review's proposals wait for the author's rulings
 
 Left open by WP6.04 (§8.2.51 BA13). [The ground-up review](ground-up-review.md) holds 25 differences between today's program and a design from nothing,
