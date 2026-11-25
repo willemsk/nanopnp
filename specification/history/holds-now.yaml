@@ -416,8 +416,8 @@ AZ16: '§8.4.5; usage.py'
 AZ17: '§8.4.5; usage.py'
 AZ18: '§8.4.4'
 AZ19: 'the git tag copilot-host; open: the author''s push after WP6.03''s merge'
-AZ20: '§8.4.4, §8.4.5'
-AZ21: '§8.4.4, §8.4.5'
+AZ20: superseded by BF1
+AZ21: superseded by BF1
 BA1: 'RSK-15; its composer phase amended by BC6; open: each tool phase''s round'
 BA2: 'open: /np-plan phase 8'
 BA3: 'RSK-15; amended by BC8'
@@ -465,7 +465,7 @@ BC22: '§2.7''s v0.8 row; §8.1''s Phase 7 row; open: Phase 7''s Python package 
 BC23: 'spent; the keeps stand'
 BC24: '§8.1''s Phase 7 gate; NUM-18''s NOTE; REV-283; open: Phase 7''s speed-up'
 BD1: 'the Phase 6 plan; the input note; REV-279'
-BD2: 'the Phase 6 plan; §8.4.4; §8.4.5'
+BD2: 'the Phase 6 plan; §8.4.4; §8.4.5; its resume superseded by BF2'
 BD3: '§8.4.4; §8.4.5'
 BD4: 'spent; WP6.05 counted, k = 32 < 34'
 BD5: the WP6.05 plan
@@ -476,3 +476,10 @@ BE3: the WP6.06 plan
 BE4: '§5.2''s NOTE on stage 1; VER-48'
 BE5: '§5.2''s NOTE on stage 1; VER-48'
 BE6: '§5.2''s NOTE on stage 1; IF-02''s NOTE on preparation; VER-48'
+BF1: 'open: WP6.09'
+BF2: 'open: WP6.09'
+BF3: 'open: WP6.09'
+BF4: 'open: WP6.09'
+BF5: 'open: WP6.09'
+BF6: 'open: WP6.09'
+BF7: the WP6.09 plan
