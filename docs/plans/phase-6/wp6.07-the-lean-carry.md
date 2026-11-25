@@ -150,6 +150,8 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
   > ([CODE_REVIEW_090](../../code_reviews/CODE_REVIEW_090.md)), fixed nine findings in `f8ebc52` and left REV-290 to
   > REV-293 open. Measured in all: 2 sessions, 1 sub-agent, 0.9 agent hours, 7 touches, all on Opus 5.5 (0.13 M
   > tokens out, 30 M cached), beside the estimate of 1 session and 2 to 3 agent hours.
+  > The author pulled in the four rows, now fixed: REV-290 in `ac4fb37`, REV-291 in `ac4fb37` and `5806145`,
+  > REV-292 in `f9f4554`, which renumbers this package WP6.07 (§8.2.56 BF10), and REV-293 in `5806145`.
 
 ### Verification
 
