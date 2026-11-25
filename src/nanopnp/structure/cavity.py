@@ -49,6 +49,10 @@ EMPTY_TOL = 1e-6
 # infinity that a simplex then indexes.
 JOGGLE_OPTIONS = "QJ Qbb Qc Q12"
 
+# Bumped by a change that moves a channel's axis, so stage 1's stored channel results run again:
+# SPECIFICATION.md §5.3.2 NOTE on the solution payload.
+CHANNEL_AXIS_REVISION = 1
+
 HYDROGENS: frozenset[str] = frozenset({"H", "D"})
 
 

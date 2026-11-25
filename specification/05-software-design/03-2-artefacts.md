@@ -79,8 +79,10 @@ another route, or a stale cache entry would read as a hit whose payload the load
 built-in stage's artefact schema other than the case is pinned at its release's identifier (§8.2.7
 G6), so a schema bump is not that route: stage
 10's key carries an `algorithm_revision` (`SOLVE_ALGORITHM_REVISION`, in the case provenance and the
-manifest), which a change that moves a converged number or this payload SHALL bump (REV-71). The
-other stages' payloads have no such counter; a change to one is the author's ruling on a store
+manifest), which a change that moves a converged number or this payload SHALL bump (REV-71). Stage
+1's key carries a `channel_axis_revision` (`CHANNEL_AXIS_REVISION`) where the channel gives the axis,
+under `symmetry.axis: cavity` and under `C1`, and nowhere else; a change that moves a channel's axis
+SHALL bump it (§8.2.55 BE2). The other stages' payloads have no such counter; a change to one is the author's ruling on a store
 invalidation (REV-77).
 
 NOTE (warm start from a neighbour, FR-24): the gate above is stated for reloading a run's *own*

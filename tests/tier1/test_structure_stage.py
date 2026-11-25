@@ -674,3 +674,44 @@ def test_ver48_2wcd_channel_axis_agrees_with_its_ring_axis(
     assert routed.header["axis"]["method"] == "channel"
     assert routed.header["axis"]["file_frame"] == axis["file_frame"]
     assert np.array_equal(routed.positions_nm, cavity.positions_nm)
+
+
+def test_ver48_the_channel_revision_keys_only_the_channel(
+    prepared: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A channel case stored before its axis moved would be a cache hit on the old axis, and a
+    # ring case re-keyed by the channel's revision would run again for nothing.
+    from nanopnp.io.artefact import StructureArtefact
+    from nanopnp.structure import cavity, stage
+
+    ring = {
+        "ring-auto": _block(prepared),
+        "ring-z": _block(prepared, axis="z"),
+    }
+    channel = {
+        "channel-cavity": _block(prepared, axis="cavity"),
+        "channel-c1": _block(prepared, point_group="C1"),
+        "channel-c1-z": _block(prepared, point_group="C1", axis="z"),
+    }
+
+    def keys() -> dict[str, tuple[dict[str, object], str]]:
+        found = {}
+        for name, block in {**ring, **channel}.items():
+            structure = resolve(load_case(_case(tmp_path, block, name=name))).structure
+            assert structure is not None
+            parameters = stage.structure_parameters(structure)
+            found[name] = (parameters, StructureArtefact(parameters=parameters).hash)
+        return found
+
+    before = keys()
+    for name in ring:
+        assert "channel_axis_revision" not in before[name][0], name
+    for name in channel:
+        assert before[name][0]["channel_axis_revision"] == cavity.CHANNEL_AXIS_REVISION, name
+
+    monkeypatch.setattr(stage, "CHANNEL_AXIS_REVISION", 2)
+    after = keys()
+    for name in ring:
+        assert after[name][1] == before[name][1], name
+    for name in channel:
+        assert after[name][1] != before[name][1], name
