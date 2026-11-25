@@ -29,7 +29,8 @@ decision, update the In brief.
 
 Each level ends with the report its file names, then stops. `/np-implement` pauses after its report
 for a compaction; `/np-ship` then runs in that session or a fresh one, and a finding against a decision
-the implementing session took goes to the author (§8.2.33 AI4). A level of `/np-plan` pauses after its report for a compaction,
+the implementing session took, which the review leaves, is an open `REV` row for the author (§8.2.33
+AI4; §8.2.56 BF5). A level of `/np-plan` pauses after its report for a compaction,
 and `/np-plan <level> [n] review` then reviews the plan and summarises it for approval
 (`np-plan/review.md`).
 

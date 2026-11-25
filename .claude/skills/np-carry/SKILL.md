@@ -27,7 +27,7 @@ subjects, the plan's ticks and the hand-off note, `docs/plans/phase-<p>/wp<n>-ha
 
 | The branch shows | Stage |
 |---|---|
-| no plan of the package | plan; a hand-off note of the plan goes on from its **Next** |
+| no plan of the package, or only its draft (`docs: WP<n> plan draft`) | plan; a hand-off note of the plan goes on from its **Next** |
 | the commit `docs: WP<n> implementation plan`, no item ticked | approval, then implement |
 | an item unticked | implement, from the first unticked item |
 | every item ticked, the PR open | ship (`np-ship/wp.md` §0 resumes) |
@@ -76,15 +76,15 @@ of the same agent with the answer, as §3 says. Never resume a helper with `Send
   carry`'s line taken with no `--since`: the package's cost so far, which the plan's Outcome takes
   whole, not summed (§8.3).
 - `WAIT`: subscribe to the PR once (`subscribe_pr_activity`), schedule a check-in at the delay it
-  gives in place of an earlier one, and end the turn. Start a fresh `np-shipper` with the event that
-  wakes you, unchanged.
+  gives in place of an earlier one, and end the turn. Start a fresh `np-shipper` with §3's first
+  prompt and the event that wakes you, unchanged: a `WAIT` leaves no note.
 - `BLOCKED`: tell the author the reason and the command that continues, and stop.
 - `DONE`: go on by its stage:
   - **plan**: print the manager's summary it carries and ask the author, with `AskUserQuestion`, to
     approve the plan or name the decision to change. A change goes to a fresh `np-planner`, on the
     planning model, in the author's words; on approval, start implement.
-  - **implement**: a `DONE` at a checkpoint starts a new helper at the next item; the last `DONE`
-    starts the ship.
+  - **implement**: a `DONE` at a checkpoint starts a fresh `np-builder` with §3's prompt after a
+    hand-back, its note and `Start at item <k>.` for the next item; the last `DONE` starts the ship.
   - **ship**: print its report, cancel the check-in and stay subscribed. On the merge, or on the
     author's word, start a fresh `np-shipper`, whose `np-ship/wp.md` §0 goes to *7. After the merge*.
 

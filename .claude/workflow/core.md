@@ -96,8 +96,8 @@ by hand where `land` cannot:
    merge. Where the branch carries commits that `main` took in another form, as a plan's PR merged
    before its implementation, rebuild it on `origin/main` from its own new commits
    (`git cherry-pick`). Push a rewritten branch with
-   `git push --force-with-lease=<branch>:<the sha last pushed>`, on the package's own branch only. A
-   tick names its commit's sha, so the next commit corrects the ticks a rewrite moved.
+   `git push --force-with-lease=<branch>:<the sha last pushed>`, on the package's own branch only, or
+   land it with `uv run just land <log> --lease <the sha last pushed>`, the log first. A tick names its commit's sha, so the next commit corrects the ticks a rewrite moved.
 
 ## Finishing
 

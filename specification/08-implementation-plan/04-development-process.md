@@ -174,8 +174,8 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   compaction that comes when the context fills; `NANOPNP_AUTO_SHIP=1` does the same for the pause
   before `/np-ship`, where the session runs on the ship's model. Where it does not, the session
   pauses and its prompt names the model to switch to. Under `/np-carry`, a checkpoint or a pause
-  ends a helper instead, and the next step goes to a new one. (§8.2.11 L7; §8.2.16 R11; §8.2.50
-  AZ21; §8.2.53 BC10; the WP5.10 plan, D10)
+  ends a helper instead, and the next step goes to a new one. (§8.2.11 L7; §8.2.16 R11; §8.2.53
+  BC10; §8.2.56 BF1; the WP5.10 plan, D10)
 * A phase plan states each package's current scope. The text of each amendment goes to the phase's
   record, read on demand. (§8.2.16 R4)
 * A phase plan holds 2,500 words, up to 10% over, without its end-of-phase report; review checks it.

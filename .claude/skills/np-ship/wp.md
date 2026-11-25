@@ -19,8 +19,8 @@ Run `.claude/hooks/checkpoint.sh clear`: an automatic pause that led here is spe
 2. If no PR is found and the branch has no commits beyond `origin/main`, stop. A plan on `main` does
    not show that the package was implemented.
 3. **Resuming after a review.** Suppose the PR's **Verification** records a completed review, and
-   the only commits after its reviewed head are the reviewer's commits and `docs: WP<n> review
-   recorded`. Then subscribe to the PR's activity (§4) and go to §5. A review adds its own commits, so
+   the only commits after its reviewed head are a helper's `docs: WP<n> hand-off, …`, the
+   reviewer's commits and `docs: WP<n> review recorded`. Then subscribe to the PR's activity (§4) and go to §5. A review adds its own commits, so
    the current head is never the reviewed head.
 
 ## 1. Preflight
@@ -54,12 +54,11 @@ the package's commits. This section starts no review and no monitoring.
 Subscribe to the PR's activity (`subscribe_pr_activity`), so that CI results and review comments wake
 this session; a helper of `/np-carry` skips it, as its main session holds the subscription.
 
-**Test scope first.** Before the review, read the tests that the PR adds or changes
-(`git diff origin/main...HEAD -- tests/`) against the test scope (`CLAUDE.md`, *Testing*;
-`SPECIFICATION.md` §8.2.13 N1). Delete each test outside the scope in its own commit, `test: drop
-tests outside the test scope`, with the identifiers in the body (N5). The gate runs before each commit.
+**The test scope is the reviewer's.** A test the PR adds or changes outside the test scope
+(`CLAUDE.md`, *Testing*; `SPECIFICATION.md` §8.2.13 N1) is a finding of its first axis, and the
+reviewer drops it as a fix, with the identifiers in the body (N5); this session deletes no test.
 
-Push each pre-review commit, the test drops included (the core's *Gate and push*). Then write the PR's
+Push each pre-review commit (the core's *Gate and push*). Then write the PR's
 head and base SHAs under its **Verification**. The review covers that head, and the record stays after
 a compaction.
 
@@ -74,7 +73,8 @@ prompt and ends; a fresh helper goes on with the reply. The prompt:
 
 ```text
 Review PR #<number> of WP<n>, base <sha>, head <sha>; its plan is <path>. The clauses it cites:
-<identifiers>. Run no benchmark, sweep, gate.sh or pytest --nightly.
+<identifiers>. Drop each test outside the test scope in its own commit, `test: drop tests outside
+the test scope`. Run no benchmark, sweep, gate.sh or pytest --nightly.
 ```
 
 **The reply must show that the pass completed**: the reviewed base and head, which match the SHAs
