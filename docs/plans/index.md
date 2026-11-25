@@ -15,6 +15,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP6.03 — The cleanup: the instructions cut, the Copilot host retired](phase-6/wp6.03-the-cleanup-instructions-copilot-host.md): delivered, 23 November 2026.
 - [WP6.04 — The ground-up review](phase-6/wp6.04-the-ground-up-review.md): delivered, 24 November 2026.
 - [WP6.05 — The orchestrator](phase-6/wp6.05-the-orchestrator.md): delivered, 24 November 2026.
+- [WP6.06 — The channel's axis at a ragged rim](phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md): planned, not started.
 
 ## Phase 5
 
