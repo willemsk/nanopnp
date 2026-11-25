@@ -4,19 +4,20 @@ Updated 25 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-**What changes.** The orchestrator is merged and carries its first package, the fix for the pore's axis, whose plan is
-reviewed. It found the fault larger than recorded, about one degree, not 0.6, and its cause elsewhere: a space lost at
-a flat rim, not a broken tie. The fix cures every trial wall, and the real pore keeps its axis to the last digit. You
-ruled that the two limits stay, that a channel case runs again once, that a wrongly refused structure is retried, and
-the models. Fresh helpers build and ship it; the stored reference numbers for the optional switches follow.
+**What changes.** The fix for the pore's axis is built and awaits review. Where the atoms of a rim lie exactly in one
+plane, the program lost the open space on the axis and could settle on a line up to about one degree off; no trial
+wall does now. The real pore keeps its axis exactly and its two limits stay. A wrongly refused structure is
+tried once more; a case taking its axis from the channel runs again once.
 
-**Cost.** This package: about 4 sessions, 2 to 4 agent hours and 7 times you act. The rest of the phase with it: about
-38 sessions, 23 to 43 agent hours and 59 times you act.
+**Cost.** This package: about 4 sessions, 2 to 4 agent hours and 7 times you act. The rest of the phase: about 34
+sessions, 21 to 39 agent hours and 52 times you act.
 
-**What could go wrong.** The session you started may fill up from the reviews it runs; this package and the next
-measure it; the three commands remain the way back.
+**What could go wrong.** A structure the trials did not cover could still settle off its axis; the new test sees only
+its own walls. A lumen with atoms on its axis still reads several degrees off, warned of. The session you started may
+fill up from the reviews it runs; this package and the next measure it.
 
-**Your call.** Approve the reviewed axis plan. *Recommendation:* approve; your four rulings are in it.
+**Your call.** Merge the axis fix once its review passes. *Recommendation:* merge; it moves no number of the real
+pore.
 
 ## Position
 
@@ -26,10 +27,8 @@ measure it; the three commands remain the way back.
 - **Phase 6 is amended** ([§8.2.54](../../specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md),
   BD1): WP6.06 the axis fix, WP6.07 the guard numbers, WP6.08 the kernel's design; the rest is numbered at the round
   on the design. Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
-- **WP6.06 is planned** ([the plan](phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md);
-  [§8.2.55](../../specification/history/55-wp606s-plan-the-channel-axis-limits-stored-results-and-models.md), BE1 to
-  BE4), **reviewed** ([the report](../code_reviews/CODE_REVIEW_087.md)).
-- **Next:** `/np-implement wp 6.06` on Opus 5.5, then `/np-ship wp 6.06` on Fable 5.2; then `/np-carry wp 6.07`.
+- **WP6.06 is implemented** ([the plan](phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md); PR #218), REV-279 fixed.
+- **Next:** `/np-ship wp 6.06` on Fable 5.2; then `/np-carry wp 6.07`.
 
 ## Not to be re-decided
 

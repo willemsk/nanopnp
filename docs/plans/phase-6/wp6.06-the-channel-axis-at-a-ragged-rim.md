@@ -1,8 +1,18 @@
 # WP6.06 — The channel's axis at a ragged rim
 
-**Status: in progress.** Written 25 November 2026, grounded in the code at `7ebfd4f`. Inherits §8.2.51 BA8,
+**Status: delivered, 25 November 2026.** Written 25 November 2026, grounded in the code at `7ebfd4f`. Inherits §8.2.51 BA8,
 §8.2.52 BB1, §8.2.54 BD1, §8.2.39 AO1 and AO4, the rulings of this plan (§8.2.55 BE1 to BE4), REV-279 and the test
 scope (§8.2.13 N1). Its last commit on `main` takes `v0.7.0-alpha.6` (§8.4.1).
+
+**Delivered.** `structure/cavity.py:_voids` runs a Voronoi edge on past a tetrahedron that fixes no centre, as past the
+hull; `_sections` keeps a candidate only where its clearance is its nearest atom's distance to 1e-6; a triangulation
+Qhull refuses for precision is joggled once (`JOGGLE_OPTIONS`, BE4). The 24 draws of VER-48's new test, 17 of which
+locked before, recover the axis to 1e-6 rad; the gate test tilts the wall with its rim again. 2WCD's test passes
+unchanged, so no number and no limit moved (BE1). Stage 1's key carries `channel_axis_revision` where the channel
+gives the axis (BE2). §5.2's and §5.3.2's NOTEs and VER-48 say so; REV-279 is fixed, its cause and bound corrected
+([the note](../../../knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md)). Live: a change that moves
+a channel's axis bumps `CHANNEL_AXIS_REVISION` (BE2); a lumen with atoms on its axis reads 7° to 8° off, warned of
+(AO4).
 
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.06 entry sets this scope; `SPECIFICATION.md` governs, and
 where it and this plan disagree this plan is wrong. Identifiers are pointers into it.
@@ -270,7 +280,7 @@ number passes its limit.
   `specification/07-verification/02-tier-1.md`: the revision in a channel case's key (D5); done when `test_ver48_the_channel_revision_keys_only_the_channel` passes.
   **Executor:** main
 - [x] 3. Compaction checkpoint. **Executor:** main
-- [ ] 4. `knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md`, `knowledge/log.md`, `CHANGELOG.md`,
+- [x] 1b2ef63 4. `knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md`, `knowledge/log.md`, `CHANGELOG.md`,
   `docs/project/review-findings.md`, `docs/project/review-items.md`, `specification/history/holds-now.yaml`: the
   records (D7); done when the code and review say so. **Executor:** main
 
