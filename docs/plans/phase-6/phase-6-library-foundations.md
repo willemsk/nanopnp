@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05. Amended 24 November 2026 (§8.2.53; §8.2.54): WP6.06 to WP6.08 are planned by scope and numbered in build order; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06. Amended 24 November 2026 (§8.2.53; §8.2.54): WP6.06 to WP6.08 are planned by scope and numbered in build order; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -34,9 +34,8 @@ library's foundations and the workbench are built on it?** Its gate is §8.1's.
 
 True of the codebase today:
 
-- **A pore's axis found from its channel can lock off the true one.** `structure/cavity.py` `channel_axis` holds a
-  second fixed point at a ragged rim, up to about 1° off (REV-279; WP6.06's plan measured 1.05°). `structure/stage.py` `align` takes that axis
-  only under C1 or `axis: cavity`; every walk of VER-62 takes the ring's.
+- **A pore's axis found from its channel holds at a flat rim** (WP6.06; REV-279 fixed). `structure/stage.py` `align`
+  takes that axis only under C1 or `axis: cavity`; every walk of VER-62 takes the ring's.
 - **A model is assembled in one class.** `physics/models.py` `CoupledModel` assembles the weak forms, and
   `physics/terms.py` holds a `Term` for each, for display alone (GU-01).
 - **A switch is code.** `physics/models.py` `SWITCHES` is a closed tuple; `post/forces.py` `_domain_force` assembles
@@ -89,12 +88,9 @@ count missed, 32 < 34, so the push gate keeps the browser tests (BC15 spent).
 
 ### WP6.06 — The channel's axis at a ragged rim (REV-279; VER-48; BA8; BB1)
 
-*Planned 25 November 2026.* [The plan](wp6.06-the-channel-axis-at-a-ragged-rim.md) found the cause in the edges the
-diagram drops at a flat rim and fixes it there, the tie rule kept (its D1), and measures 2WCD's channel axis again.
-A structure with a ragged rim may get an axis up to about 1° different from v0.6's (the plan measured 1.05°; BA8 gave
-0.6°), the one number a user sees that Phase 6 changes (BA8); `CHANGELOG.md` says so. VER-48's gate test tilts the wall with the ragged rim again; the perturbed draws read
-`cavity.channel_axis` itself, since the gate's refusal prints 0.01°. The oracle is the axis the test wall is built
-about. §5.2's NOTE on stage 1 takes the new method. No Tier 3 leg. Its plan settled open decision 11: the limits stay (BE1); a stored channel case runs again once (BE2). At its review the author ruled that a triangulation refused for precision is tried once more (BE4). About 4 sessions, 2 to 4 agent hours and 7 touches.
+*Delivered 25 November 2026.* [The plan](wp6.06-the-channel-axis-at-a-ragged-rim.md). Live: a channel's axis
+no longer locks at a flat rim, and may differ by up to about 1° from v0.6's (BA8); a change that moves it bumps
+stage 1's `channel_axis_revision` (BE2); the two limits stay (BE1); a lumen with atoms on its axis is warned of (AO4).
 
 ### WP6.07 — The guard numbers (BC3)
 
