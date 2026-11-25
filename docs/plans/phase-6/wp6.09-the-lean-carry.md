@@ -137,6 +137,9 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
   confirms, `REV` by default, red CI to Opus (D4, D5). Done when the code and review say so. **Executor:** main
 - [x] 624ef01 5. `justfile`, `.claude/scripts/land.sh`, the core's *Gate and push*; `.claude/settings.json`'s
   `enabledPlugins` (D6, D7). Done when `just land` pushes a no-op branch and the code and review say so.
+  > **Outcome — the plugins are the account's.** A session started after `enabledPlugins` was pushed still loaded the
+  > account's plugins, so the block did nothing and is removed. The tool lists alone keep them out of a helper; the
+  > main session keeps them until the author disables them in the account.
   **Executor:** main
 - [x] 903ca78 6. §8.4.4, §8.4.5, `CLAUDE.md` *Models*, `holds-now.yaml` (AZ20, AZ21, BD2 superseded), `CHANGELOG.md`,
   the plan's Outcome. Done when `uv run just docs` and `decisions.py --check` pass. **Executor:** main

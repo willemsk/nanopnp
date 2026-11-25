@@ -76,6 +76,10 @@ It takes `model` (`sonnet`, `opus`, `haiku`, `fable`) and `effort`. Its descript
   | `np-reviewer` | `claude-opus-5-5` | high | 12,644 tokens |
 
   A `general-purpose` helper started at 73k to 76k tokens (WP6.06's post-mortem, §8.2.56).
+- **A project's settings do not disable an account's plugins.** With `enabledPlugins` setting twelve
+  of the claude.ai account's plugins `false` in `.claude/settings.json`, a session started on that
+  tree still loaded them: the PDF viewer plugin's tools came back from `ToolSearch`. A helper's tool
+  list keeps them out; the main session keeps them until the account disables them. [verified][^plugins]
 
 [^probe]: Probe of 24 November 2026 for WP6.05's item 1, on the claude.ai cloud host (Linux), Claude
     Code 2.1.331, at commit `0212383`. The helper listed its tools, called `ToolSearch` with
@@ -91,5 +95,8 @@ It takes `model` (`sonnet`, `opus`, `haiku`, `fable`) and `effort`. Its descript
     Claude Code 2.1.332 on the cloud host: each agent started once in the foreground with a one-line
     task, and its sub-agent transcript read for `message.model`, the first call's input, cache-read and
     cache-write tokens, and the `effort` its entries record.
+[^plugins]: WP6.09, 25 November 2026, Claude Code 2.1.332 on the cloud host: the session restarted on
+    `659983c`'s tree, whose settings held the block, and `ToolSearch` `+pdf display` returned
+    `mcp__plugin_pdf-viewer_pdf__display_pdf`.
 [^api]: The Claude API skill bundled with Claude Code 2.1.332, its *Thinking & Effort* table: Opus 5.5's
     effort defaults to `medium`, Sonnet 5.5's to `high`.
