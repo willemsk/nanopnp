@@ -1,6 +1,6 @@
 # Decisions register, closed
 
-The 1,146 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
+The 1,150 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1135,6 +1135,10 @@ The 1,146 decisions of [the register](decisions.md) that bind nothing now, writt
 | REV-280 | author | `docs/project/review-findings.md` |  |  | The ground-up review's proposals wait for the author's rulings | ruled by the author, 24 November 2026 (§8.2.53 BC1 to BC24): each of the 25 proposals is ruled or carried with its owner | fixed |
 | REV-288 | author | `docs/project/review-findings.md` |  | WP6.07 | Nothing names the model of a carried package's main session | fixed by WP6.07 (§8.2.56 BF1, BF4); ruled by the author, 24 November 2026: left open until the round after WP6.09 | fixed |
 | REV-289 | session, own call | `docs/project/review-findings.md` |  | WP6.07 | The four helper agents of WP6.07 are not probed | fixed by WP6.07, the probe in the next session | fixed |
+| REV-290 | session, own call | `docs/project/review-findings.md` |  | WP6.07 | The builder and the planner agents list no GitHub tool | fixed by WP6.07 in `ac4fb37`; left by its review, CODE_REVIEW_090 | fixed |
+| REV-291 | author | `docs/project/review-findings.md` |  | WP6.07 | A red CI that is neither a test nor a gate has no owner | fixed by WP6.07 in `5806145` (§8.2.56 BF1, the author's ruling); left by its review, CODE_REVIEW_090 | fixed |
+| REV-292 | author | `docs/project/review-findings.md` |  | WP6.07 | The lean carry's tag number conflicts with §8.4.1 | fixed by WP6.07 in `f9f4554` (§8.2.56 BF10, the author's ruling); left by its review, CODE_REVIEW_090 | fixed |
+| REV-293 | session, own call | `docs/project/review-findings.md` |  | WP6.07 | Hand-off notes enter the plans index | fixed by WP6.07 in `5806145`; left by its review, CODE_REVIEW_090 | fixed |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |

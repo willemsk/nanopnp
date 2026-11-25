@@ -1841,6 +1841,8 @@ fails at its PR step. The reviewer's edit of the tool lists was refused by the p
 *Recommendation:* add `mcp__github__list_pull_requests`, `mcp__github__pull_request_read`,
 `mcp__github__create_pull_request` and `mcp__github__update_pull_request` to both files, before WP6.08's carry.
 
+**Fixed** (WP6.07, 25 November 2026, `ac4fb37`): `np-builder.md` and `np-planner.md` list the four PR tools.
+
 ### REV-291: A red CI that is neither a test nor a gate has no owner
 
 Left by WP6.07's review ([CODE_REVIEW_090](../code_reviews/CODE_REVIEW_090.md)). §8.2.56 BF1's consequence sends
@@ -1850,6 +1852,11 @@ then belongs to no one.
 
 *Recommendation:* follow BF1's consequence: the ship runs `ruff format` and `ruff check --fix` and reruns a flaky
 runner once; every other failure goes to `np-builder`.
+
+**Fixed** (WP6.07, 25 November 2026, `ac4fb37` and `5806145`): the author ruled for BF1's consequence. The ship
+fixes only format and lint, with `ruff format` and `ruff check --fix`, and reruns a flaky runner once; every other
+red CI goes to `np-builder` with its classified log. `np-shipper.md`, `np-builder.md`, `np-ship/wp.md` §5, §8.4.4,
+§8.4.5 and `CLAUDE.md` say so.
 
 ### REV-292: The lean carry's tag number conflicts with §8.4.1
 
@@ -1863,6 +1870,10 @@ both, and they cannot both hold.
 `CONTRIBUTING.md`, or the lean carry takes `alpha.9` and the guard numbers, merged after it, take none.
 `/np-ship`'s *After the merge* waits for it.
 
+**Fixed** (WP6.07, 25 November 2026, `f9f4554`): the author renumbered the record (§8.2.56 BF10). As §8.2.54 BD1
+has it, the packages are numbered in build order: the lean carry is WP6.07 and takes `v0.7.0-alpha.7`, the guard
+numbers are WP6.08 and the kernel's design WP6.09. §8.4.1 is unchanged.
+
 ### REV-293: Hand-off notes enter the plans index
 
 Left by WP6.07's review ([CODE_REVIEW_090](../code_reviews/CODE_REVIEW_090.md)). `index_records.py` lists every
@@ -1870,3 +1881,5 @@ Markdown file under `docs/plans/phase-<p>/`, so a hand-off note shows in the pla
 each hand-off rewrites the index.
 
 *Recommendation:* `index_records.py` skips `*-handoff.md`.
+
+**Fixed** (WP6.07, 25 November 2026, `5806145`): `index_records.py` skips `*-handoff.md` under `docs/plans/`.
