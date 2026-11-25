@@ -120,7 +120,8 @@ choice put to the author follows `.claude/workflow/author.md`.
 
 **Models:** by role, fixed in `.claude/agents/` (§8.4.5). `/np-plan` asks first, and plans on Fable 5.2
 at high effort, or on Opus 5.5 at xhigh when Fable's quota is spent. Opus 5.5 at high builds and
-reviews; Sonnet 5.5 at medium ships and runs `/np-carry`'s main session. Every session and agent names
+reviews; Sonnet 5.5 at medium ships, fixing a red CI's format and lint alone, and runs `/np-carry`'s
+main session. Every session and agent names
 its effort. A scoped item goes to a Sonnet 5.5 sub-agent; Haiku 5.5 takes only mechanical, repetitive
 work that is fully specified and needs under 100k tokens of context.
 

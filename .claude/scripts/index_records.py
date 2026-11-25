@@ -1,6 +1,7 @@
 """Write an index for each record folder, one line per file with its own status line.
 
-Reads the Markdown files of ``docs/plans/`` (``current.md`` and the phase and session folders),
+Reads the Markdown files of ``docs/plans/`` (``current.md`` and the phase and session folders,
+without a helper's ``*-handoff.md``),
 ``docs/code_reviews/`` and ``docs/design/reviews/``:
 each file's title (its first ``#`` heading) and its own status line, which is the first bold
 ``**Status: …**`` span of a plan, the dated header line under a code review's title, and the
@@ -99,7 +100,12 @@ def _rebase(text: str, link: str) -> str:
 
 
 def _files(directory: Path) -> list[Path]:
-    return [p for p in sorted(directory.glob("*.md")) if p.name != "index.md"]
+    plans = directory.is_relative_to(ROOT / "docs/plans")
+    return [
+        p
+        for p in sorted(directory.glob("*.md"))
+        if p.name != "index.md" and not (plans and p.name.endswith("-handoff.md"))
+    ]
 
 
 def render(folder: str) -> str:

@@ -3,7 +3,8 @@
 `/np-ship [wp <n>]` runs the review and the CI watch after `/np-implement` as one sequence, without a
 stop. It runs on Sonnet 5.5 at medium effort (§8.2.56 BF1): in a fresh session, in the implementing
 session after its compaction where that runs on the same model (§8.2.33 AI4), or as `np-shipper`
-under `/np-carry`. It writes no fix to code or tests: the reviewer and `np-builder` do.
+under `/np-carry`. Of code and tests it fixes only a red CI's format and lint: the reviewer and
+`np-builder` write every other fix.
 Usually `/np-implement` has opened the PR: reuse it. If there is no PR and the author names the branch,
 this invocation authorises you to open the PR without asking again. The review, the fixes and the CI
 watch need no further prompt.
@@ -100,10 +101,12 @@ of code the package works with, which changes no behaviour, is neither (§8.4.4)
 
 ## 5. Drive to green
 
-Follow `.claude/skills/steward/SKILL.md`. It also applies when a PR event wakes the session later. A failure
-the CI-log classifier classes as a test or a numerical gate, not lint, format or a flaky runner, goes
-to `np-builder` with the classified log (a helper hands back `WORKER`, `agent: np-builder`); this
-session fixes no code (§8.2.56 BF1). Its
+Follow `.claude/skills/steward/SKILL.md`. It also applies when a PR event wakes the session later. Of a
+red CI this session fixes only format and lint, with `uv run ruff format .` and `uv run ruff check --fix .`,
+and reruns a job that failed on a flaky runner once, the steward's infrastructure failure. Every other
+failure, the docs, a stale lock, `mypy`, a lint that `--fix` leaves, a test or a numerical gate, goes to
+`np-builder` with the log the CI-log classifier classed (a helper hands back `WORKER`,
+`agent: np-builder`); this session writes no other fix (§8.2.56 BF1). The steward's
 *Bounded wakes* set the polling, the fallback check-ins and what counts as a new failure. Never wait on
 CI with `sleep`. Report a missing subscription or scheduler as an automation limit.
 
