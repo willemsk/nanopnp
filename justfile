@@ -1,8 +1,8 @@
 # The commands people and agents run, in one place (CLAUDE.md, Commands). `uv sync` installs just
 # with the dev tools; `uv run just` lists the recipes and `uv run just <recipe>` runs one.
 #
-# No recipe commits or pushes: the gate hook judges the command as typed, so `git commit` and
-# `git push` stay commands of their own.
+# No recipe commits or pushes but `land`: the gate hook judges the command as typed, so `git commit`
+# and `git push` stay commands of their own, and `land` runs the push gate itself before it pushes.
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 set positional-arguments
@@ -61,6 +61,11 @@ clause id:
 # The push gate into a log that ends in "exit <status>"; an agent starts it in the background
 gate log=(env("TMPDIR", "/tmp") / "nanopnp-gate.log"):
     status=0; .claude/hooks/gate.sh run > "$1" 2>&1 || status=$?; echo "exit $status" >> "$1"; exit $status
+
+# The core's Gate and push, steps 1 to 6, into a log whose last lines are "land: …" and "exit <status>";
+# an agent starts it in the background. `--lease <sha>` pushes a branch rewritten on main
+land log=(env("TMPDIR", "/tmp") / "nanopnp-land.log") *args:
+    status=0; .claude/scripts/land.sh "${@:2}" > "$1" 2>&1 || status=$?; echo "exit $status" >> "$1"; exit $status
 
 # The commit gate by hand, to reproduce a refusal
 commit-gate:
