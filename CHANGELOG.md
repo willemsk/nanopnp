@@ -25,6 +25,24 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.7.0-alpha.6]
+
+WP6.06: the channel's axis at a ragged rim; tag `v0.7.0-alpha.6` once merged (§8.2.51 BA8; §8.2.55 BE1, BE2, BE4;
+REV-279; VER-48). The [plan](docs/plans/phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md) records the work.
+
+- **Fixed**:
+  - A pore's axis found from its channel no longer depends on rounding. Where the atoms of a rim lay exactly in one
+    plane, the Voronoi diagram the axis is read from lost the open space on the axis, and the search could hold a line
+    off it: 17 of 24 trial walls did, by up to about 1°. A structure with coplanar or exactly symmetric atoms whose axis
+    comes from the channel may get an axis up to about 1° different from v0.6's. 2WCD's axis does not move, and the
+    channel's two limits stay (§5.2's NOTE on stage 1; FR-02, FR-37; BE1).
+  - A structure whose triangulation Qhull refused for precision, reported as atoms that "span no volume", is
+    triangulated once more from joggled input and gets its axis (IF-04, QR-12; BE4).
+- **Changed**:
+  - Stage 1's key carries `channel_axis_revision` where the channel gives the axis, under C1 or
+    `symmetry.axis: cavity`, so such a case's stored first stage and the stages after it run again once. A ring's key
+    and stored results do not move (§5.3.2's NOTE on the solution payload; BE2).
+
 ## [0.7.0-alpha.5]
 
 WP6.05: the orchestrator; tag `v0.7.0-alpha.5` once merged (§8.2.53 BC10, BC15; §8.2.54 BD2 to BD6). A user of the
