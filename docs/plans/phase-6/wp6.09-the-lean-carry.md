@@ -137,7 +137,7 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
 - [x] 624ef01 5. `justfile`, `.claude/scripts/land.sh`, the core's *Gate and push*; `.claude/settings.json`'s
   `enabledPlugins` (D6, D7). Done when `just land` pushes a no-op branch and the code and review say so.
   **Executor:** main
-- [ ] 6. §8.4.4, §8.4.5, `CLAUDE.md` *Models*, `holds-now.yaml` (AZ20, AZ21, BD2 superseded), `CHANGELOG.md`,
+- [x] 903ca78 6. §8.4.4, §8.4.5, `CLAUDE.md` *Models*, `holds-now.yaml` (AZ20, AZ21, BD2 superseded), `CHANGELOG.md`,
   the plan's Outcome. Done when `uv run just docs` and `decisions.py --check` pass. **Executor:** main
   > **Outcome — the workflow is lean; its saving is measured on WP6.07.** `just land` pushed this branch end to end
   > (`624ef01`; the push gate 486 s). REV-288 is fixed by BF1 and BF4; REV-289 holds the agents' probe. Measured
