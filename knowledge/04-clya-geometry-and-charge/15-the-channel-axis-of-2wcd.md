@@ -51,16 +51,28 @@ one against the other.
   aside. On walls tilted 12°, four draws at each of 1e-14, 1e-12 and 1e-10, the C7 and C8 walls locked in 17 of 24,
   the worst 0.84°; one further C8 draw read 1.05°. The C12 wall locked in none. **[verified][^wp606]**
 - An edge now runs on past the hull and past a tetrahedron that fixes no centre, and a candidate is kept only where
-  its clearance is its nearest atom's distance to a relative 1e-6, since such a ray can pass its edge's true end. None
-  of the 24 draws locks, the worst 5.4e-11 rad, and none of 225 draws at 1e-14 over C7, C8 and C12 at 8°, 12° and
-  35°, the worst 5.7e-14 rad. Two narrower rules fail: rays past flat tetrahedra alone still lock 14 of 18 draws at
-  1e-12, and a tie weighted over 0.02 nm without the rays locks 11 of 21 C7 draws. On 2WCD the rule adds 182 rays and
-  moves no bit of its axis, its centroid or its 28 centres.
+  its clearance is its nearest atom's distance, to 1e-6 of the larger of that distance and 1 nm, since such a ray can
+  pass its edge's true end. None of those 36 draws locks, the worst 5.4e-11 rad, and none of 225 draws at 1e-14 over
+  C7, C8 and C12 at 8°, 12° and 35°, the worst 5.6e-14 rad. Two narrower rules fail: rays past flat tetrahedra alone
+  still lock 14 of 18 draws at 1e-12, and a tie weighted over 0.02 nm without the rays locks 11 of 21 C7 draws. On
+  2WCD the rule adds 182 rays and moves no bit of its axis, its centroid or its 28 centres.
   **[tested: tests/tier1/test_structure_axis.py::test_ver48_the_channel_axis_is_not_locked_by_rounding]**
+  **[verified][^wp606]**
+- A flat tetrahedron that takes a neighbour's centre has its own fourth atom in its faces' plane, so that atom cannot
+  sign the edges that run on from it: rounding did, and gave some no length. On 45 trial walls (C7, C8 and C12,
+  upright and tilted 12° and 35°, without a draw and in two draws at each of 1e-14 and 1e-10), 23 held such a ray, up
+  to 10 a wall: 22 rays had no length and 92 left the diagram within 0.001 nm of their start. Signed away from the
+  fourth atom of the neighbour whose centre was taken, which lies off that plane, none does, and the draws above
+  recover as they did (§8.2.55 BE5). The candidate check then has little left to remove: with it off, 1 of 63 trial
+  walls holds a false candidate (the C12 wall tilted 12° in a draw at 1e-10, 18 points), where before the sign was
+  exact the undrawn C8 wall tilted 12° held 51, all on the axis. 2WCD has no flat tetrahedron.
+  **[tested: tests/tier1/test_structure_axis.py::test_ver48_a_ray_of_the_diagram_starts_along_a_true_edge]**
+  **[tested: tests/tier1/test_structure_axis.py::test_ver48_a_channel_candidate_has_no_atom_nearer_than_its_clearance]**
   **[verified][^wp606]**
 - Qhull refuses some draws for precision (`QH6417`, 2 of 360 trial walls, C7 at 8° and C8 at 35°). The atoms are then
   triangulated again with `QJ Qbb Qc Q12`, which gives the same simplices on every run, and both walls recover their
-  axis to 1.7e-14 rad. `Qz` beside `QJ` leaves a simplex that indexes the point at infinity, so it is left out.
+  axis to 1.9e-14 rad. `Qz` beside `QJ` leaves a simplex that indexes the point at infinity, so it is left out. The
+  record says that the retry was taken, and stage 1 and a prepared pore report it as a warning (§8.2.55 BE6).
   **[tested: tests/tier1/test_structure_axis.py::test_ver48_a_refused_triangulation_is_joggled]**
   **[verified][^wp606]**
 - A lumen with atoms on its axis is a weakness that remains. A wall with atoms 0.1 nm to 0.3 nm from its axis over its
@@ -70,4 +82,4 @@ one against the other.
 
 [^wp516]: `docs/plans/phase-5/wp5.16-the-molecular-suite.md`, the Outcome under D2 (measured at item 2 on `tests/data/structures/2wcd.pdb.gz` and on synthetic walls).
 [^wp601]: `docs/plans/phase-6/wp6.01-the-windows-leg.md`, item 1's Outcome and D9 (run 851's Windows leg; the perturbed walls measured at item 2).
-[^wp606]: `docs/plans/phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md`, the Grounding of D1, D3, D4 and D7 (measured at `7ebfd4f` on SciPy 1.18.0 and NumPy 2.5.2, Linux) and item 1's Outcome.
+[^wp606]: `docs/plans/phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md`, the Grounding of D1, D3, D4 and D7 (measured at `7ebfd4f` on SciPy 1.18.0 and NumPy 2.5.2, Linux), item 1's Outcome, and item 4's for the ship's repairs (the same libraries).

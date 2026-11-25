@@ -6,8 +6,8 @@
 
 **What changes.** First comes a package that changes how a package is carried: one session that you start hands the
 plan, its review, the building and the shipping to fresh helpers, and comes to you only for rulings, the plan's
-approval and the merge. It is tried on the next two packages: the fix for the pore's axis, which rounding can lock
-0.6 degrees off, and stored reference numbers for the model's optional switches. Then a design package writes how the physics will be rebuilt from small
+approval and the merge. It is tried on the next two packages: the fix for the pore's axis, which rounding could lock
+about one degree off, and stored reference numbers for the model's optional switches. Then a design package writes how the physics will be rebuilt from small
 registered terms, with a throwaway prototype. You rule that design; only then are the kernel's packages planned.
 Packages are numbered in the order they are built.
 
@@ -90,7 +90,8 @@ count missed, 32 < 34, so the push gate keeps the browser tests (BC15 spent).
 
 *Delivered 25 November 2026.* [The plan](wp6.06-the-channel-axis-at-a-ragged-rim.md). Live: a channel's axis
 no longer locks at a flat rim, and may differ by up to about 1° from v0.6's (BA8); a change that moves it bumps
-stage 1's `channel_axis_revision` (BE2); the two limits stay (BE1); a lumen with atoms on its axis is warned of (AO4).
+stage 1's `channel_axis_revision` (BE2); the two limits stay (BE1); an axis found from joggled input is warned of
+(BE6); a lumen with atoms on its axis is warned of (AO4).
 
 ### WP6.07 — The guard numbers (BC3)
 

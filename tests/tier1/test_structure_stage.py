@@ -709,7 +709,7 @@ def test_ver48_the_channel_revision_keys_only_the_channel(
     for name in channel:
         assert before[name][0]["channel_axis_revision"] == cavity.CHANNEL_AXIS_REVISION, name
 
-    monkeypatch.setattr(stage, "CHANNEL_AXIS_REVISION", 2)
+    monkeypatch.setattr(stage, "CHANNEL_AXIS_REVISION", cavity.CHANNEL_AXIS_REVISION + 1)
     after = keys()
     for name in ring:
         assert after[name][1] == before[name][1], name

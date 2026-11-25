@@ -81,7 +81,7 @@ class PreparationRecord(BaseModel):
     warnings: tuple[str, ...] = Field(
         default=(),
         description="What the preparation went on despite: the channel's straightness where "
-        "over its limit; empty when nothing was.",
+        "over its limit, and a triangulation of joggled input; empty when nothing was.",
     )
 
 
@@ -107,11 +107,11 @@ def _distinct_axis(values: np.ndarray, vectors: np.ndarray) -> np.ndarray | None
 
 def _channel_line(
     heavy: np.ndarray, vectors: np.ndarray, values: np.ndarray
-) -> tuple[np.ndarray, np.ndarray, str | None]:
+) -> tuple[np.ndarray, np.ndarray, tuple[str, ...]]:
     # The channel's line, in the file's ångströms, from the start whose planes' centres lie
-    # straightest among those that converge and cover the structure, with the straightness
-    # warning where even that start is over the limit; the orientation gate does not apply,
-    # since the file is not oriented yet.
+    # straightest among those that converge and cover the structure, with its warnings: the
+    # straightness where even that start is over the limit, and a joggled triangulation. The
+    # orientation gate does not apply, since the file is not oriented yet.
     import numpy as np
 
     atoms_nm = heavy / _ANGSTROM_PER_NM
@@ -143,7 +143,11 @@ def _channel_line(
     return (
         np.asarray(best.axis),
         np.asarray(best.centroid_nm) * _ANGSTROM_PER_NM,
-        cavity.straightness_warning(best),
+        tuple(
+            note
+            for note in (cavity.straightness_warning(best), cavity.joggle_warning(best))
+            if note is not None
+        ),
     )
 
 
@@ -277,11 +281,11 @@ def orient_pore(
             heavy = protein.positions.astype(np.float64)[
                 ~np.isin(elements, sorted(cavity.HYDROGENS))
             ]
-            found, point, bent = _channel_line(heavy, vectors, values)
+            found, point, warned = _channel_line(heavy, vectors, values)
             method = "channel"
-            if bent is not None:
-                logger.warning("%s", bent)
-                notes.append(bent)
+            for note in warned:
+                logger.warning("%s", note)
+                notes.append(note)
     axis_used = _signed(calpha, found, cis_end)
     tilt = float(np.degrees(np.arccos(min(1.0, abs(float(axis_used[2]))))))
     logger.info(

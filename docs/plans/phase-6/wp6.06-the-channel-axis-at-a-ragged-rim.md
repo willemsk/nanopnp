@@ -1,7 +1,7 @@
 # WP6.06 — The channel's axis at a ragged rim
 
 **Status: delivered, 25 November 2026.** Written 25 November 2026, grounded in the code at `7ebfd4f`. Inherits §8.2.51 BA8,
-§8.2.52 BB1, §8.2.54 BD1, §8.2.39 AO1 and AO4, the rulings of this plan (§8.2.55 BE1 to BE4), REV-279 and the test
+§8.2.52 BB1, §8.2.54 BD1, §8.2.39 AO1 and AO4, the rulings of this plan (§8.2.55 BE1 to BE6), REV-279 and the test
 scope (§8.2.13 N1). Its last commit on `main` takes `v0.7.0-alpha.6` (§8.4.1).
 
 **Delivered.** `structure/cavity.py:_voids` runs a Voronoi edge on past a tetrahedron that fixes no centre, as past the
@@ -9,7 +9,7 @@ hull; `_sections` keeps a candidate only where its clearance is its nearest atom
 Qhull refuses for precision is joggled once (`JOGGLE_OPTIONS`, BE4). The 24 draws of VER-48's new test, 17 of which
 locked before, recover the axis to 1e-6 rad; the gate test tilts the wall with its rim again. 2WCD's test passes
 unchanged, so no number and no limit moved (BE1). Stage 1's key carries `channel_axis_revision` where the channel
-gives the axis (BE2). §5.2's and §5.3.2's NOTEs and VER-48 say so; REV-279 is fixed, its cause and bound corrected
+gives the axis (BE2). The ship added two repairs the author ruled in (D9, D10). §5.2's and §5.3.2's NOTEs and VER-48 say so; REV-279 is fixed, its cause and bound corrected
 ([the note](../../../knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md)). Live: a change that moves
 a channel's axis bumps `CHANNEL_AXIS_REVISION` (BE2); a lumen with atoms on its axis reads 7° to 8° off, warned of
 (AO4).
@@ -59,6 +59,8 @@ a fresh helper and never chains from the implementing one (`NANOPNP_AUTO_SHIP`).
 | **D6 Every draw recovers the axis** | 24 draws of the C7 and C8 walls with the rim, tilted 12°, each checked for direction, offset, convergence and straightness; the gate test tilts the wall with the rim again; the joggled path is forced once | VER-48's 1e-6 rad and 1e-6 nm, unchanged; the oracle is the axis the wall is built about. Decided by the plan |
 | **D7 The records say what was measured** | The changelog and the knowledge note give "about 1°" and the cause found; a lumen with atoms on its axis is recorded under AO4 and gets no row | Measured here: 1.05°, not 0.6°; AO4 rules a channel that is not straight. Decided by the plan |
 | **D8 The models** | Opus 5.5 implements; Fable 5.2 ships | Ruled by the author, BE3 |
+| **D9 A flat tetrahedron's ray** | A ray from a flat tetrahedron that took a neighbour's centre runs away from that neighbour's fourth atom | Rounding signed it. Ruled by the author at the ship, BE5 |
+| **D10 The retry is named** | An axis found from joggled input carries a warning, as the straightness does | Ruled by the author at the ship, BE6 |
 
 ### Grounding
 
@@ -76,6 +78,7 @@ than 1e-6 rad from the wall's.
   direction, away from the apex, is exact where the owner is `sound` by itself: the far tetrahedron's centre lies
   further that way. A flat owner that took a neighbour's centre has its apex in the face's plane, so rounding signs
   its ray: at most 12 of about 2,300 rays in a draw (the review's count), and D2 keeps only true points of them.
+  The ship signs such a ray by the fourth atom of the neighbour whose centre was taken (D9).
 - `_wall(8)` tilted 12° about x has 50 unsound tetrahedra of 27,644; a draw at 1e-14 has 2,146 of 29,741, of which
   1,161 lie wholly in the top rim plane. Its last plane then holds no candidate within 0.36 nm of the axis: without
   the draw it holds one on the axis at 2.018 nm clearance, eight 0.106 nm aside at 1.921 nm and eight 0.364 nm aside
@@ -283,6 +286,16 @@ number passes its limit.
 - [x] 1b2ef63 4. `knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md`, `knowledge/log.md`, `CHANGELOG.md`,
   `docs/project/review-findings.md`, `docs/project/review-items.md`, `specification/history/holds-now.yaml`: the
   records (D7); done when the code and review say so. **Executor:** main
+  > **Outcome — the ship's review changed the method twice, by the author's rulings (BE5, BE6).**
+  > [`CODE_REVIEW_088.md`](../../code_reviews/CODE_REVIEW_088.md) fixed 10 of its 13 findings; the author ruled two
+  > of the rest into the package. With D9, of 45 trial walls (C7, C8, C12; upright, 12° and 35°; undrawn and four
+  > draws) none holds a ray without a length or off the diagram, where 23 did, up to 10 a wall. The 36 draws recover
+  > to 5.4e-11 rad and the 225 at 1e-14 to 5.6e-14 rad, in 2 to 4 iterations; the two walls Qhull refuses recover to
+  > 1.9e-14 rad and their records say so (D10). 2WCD's test passes unchanged. With D9 the candidate check of D2
+  > removes a point on 1 of 63 trial walls, so its test cuts a ray built by hand. Measured at the ship's review:
+  > 1 session, 8 sub-agents, 2.6 agent hours, 4 touches (claude-fable-5-2 0.42 M out, 57 M cached; claude-opus-5-5
+  > 0.10 M out, 14 M cached), beside the In brief's about 4 sessions, 2 to 4 agent hours and 7 touches; the ship's
+  > two rulings were a fifth touch.
 
 ### Verification
 
@@ -290,6 +303,8 @@ number passes its limit.
 |---|---|---|---|---|---|
 | `test_structure_axis.py::test_ver48_the_channel_axis_is_not_locked_by_rounding`, 6 cases of 4 draws | 1 | VER-48 | The axis each wall is built about: per draw its direction, its offset, `converged`, and the straightness. Today 17 of the 24 draws fail | VER-48: 1e-6 rad, 1e-6 nm | `uv run pytest tests/tier1/test_structure_axis.py -q` |
 | `test_structure_axis.py::test_ver48_a_refused_triangulation_is_joggled` | 1 | VER-48 | The same axis and limits, through the joggled path; the options asked | VER-48 | the same |
+| `test_structure_axis.py::test_ver48_a_channel_candidate_has_no_atom_nearer_than_its_clearance`, added at the ship (`CODE_REVIEW_088.md`, finding 1) | 1 | VER-48 | A ray built by hand past its edge's true end at z = 4/3 nm: candidates at 0, 0.5 and 1.0 nm alone | exact, to 1e-12 nm | the same |
+| `test_structure_axis.py::test_ver48_a_ray_of_the_diagram_starts_along_a_true_edge`, added at the ship (D9) | 1 | VER-48 | Each ray of the C8 wall, upright and tilted 35°, has a length and starts on the diagram; 6 fail on each without D9 | §5.2's NOTE: 1e-6 | the same |
 | `test_structure_axis.py::test_ver48_the_channel_axis_gates_fire`, the wall with its rim | 1 | VER-48, QR-12 | The 12° the wall is tilted by, read from the refusal | 12 ± 0.005°, the refusal's two printed decimals (WP6.01) | the same |
 | `test_structure_axis.py::test_ver48_the_channel_axis_recovers_a_known_axis`, unchanged | 1 | VER-48 | The known axis | VER-48 | the same |
 | `test_structure_stage.py::test_ver48_2wcd_channel_axis_agrees_with_its_ring_axis`, unchanged | 1 | VER-48 | 2WCD's stored numbers; prediction: unmoved | VER-48: 1e-4 nm | `uv run pytest tests/tier1/test_structure_stage.py -q` |
@@ -305,4 +320,4 @@ number passes its limit.
 
 ### Open questions
 
-None. The four choices that were the author's are ruled (BE1 to BE4).
+None. The six choices that were the author's are ruled (BE1 to BE6).

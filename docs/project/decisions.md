@@ -2,11 +2,11 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,678. By source: history ruling 474; plan decision row 804; REV row 288; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 8.
+Rows: 1,682. By source: history ruling 476; plan decision row 806; REV row 288; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 8.
 
-By decider: author 795; open 5; session, own call 875; session, put to the author 3.
+By decider: author 799; open 5; session, own call 875; session, put to the author 3.
 
-This page lists the 538 that bind now. The 1,140 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
+This page lists the 540 that bind now. The 1,142 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -408,6 +408,8 @@ This page lists the 538 that bind now. The 1,140 of a delivered plan, fixed, spe
 | §8.2.55 BE2 | author | `specification/history/55-wp606s-plan-the-channel-axis-limits-stored-results-and-models.md` | 2026-11-25 | WP6.06 | A stored first stage whose axis came from the channel is computed again once.** Stage 1's key carries a revision of the channel's method where the channel gives the axis, under C1 or `symmetry.axis: cavity`, and nowhere… | §5.3.2's NOTE on the solution payload; VER-48 | in force |
 | §8.2.55 BE3 | author | `specification/history/55-wp606s-plan-the-channel-axis-limits-stored-results-and-models.md` | 2026-11-25 | WP6.06 | Opus 5.5 implements WP6.06 and Fable 5.2 ships it**, each at high effort. Offered that pair (*the recommendation*), Fable 5.2 for both, and Sonnet 5.5 to implement, the author chose "Opus 5.5 builds, Fable 5.2 ships (Re… | the WP6.06 plan | in force |
 | §8.2.55 BE4 | author | `specification/history/55-wp606s-plan-the-channel-axis-limits-stored-results-and-models.md` | 2026-11-25 | WP6.06 | Added 25 November 2026, at WP6.06's plan.* Ruled at the plan's review. **Atoms that Qhull refuses for precision are triangulated once more, from joggled input.** Today any refusal of the triangulation reads "the atoms s… | §5.2's NOTE on stage 1; VER-48 | in force |
+| §8.2.55 BE5 | author | `specification/history/55-wp606s-plan-the-channel-axis-limits-stored-results-and-models.md` | 2026-11-25 | WP6.06 | Added 25 November 2026, at WP6.06's ship.* Ruled at the code's review. **A flat tetrahedron's edges take their direction from the neighbour whose centre it took, in this package.** Where four atoms lie on one circle, th… | §5.2's NOTE on stage 1; VER-48 | in force |
+| §8.2.55 BE6 | author | `specification/history/55-wp606s-plan-the-channel-axis-limits-stored-results-and-models.md` | 2026-11-25 | WP6.06 | Added 25 November 2026, at WP6.06's ship.* Ruled at the code's review. **An axis found from joggled input is reported as a warning.** BE4's retry left no trace: nothing in a result said which triangulation gave its axis… | §5.2's NOTE on stage 1; VER-48 | in force |
 | REV-35 | author | `docs/project/review-findings.md` |  |  | _second_crossings loops in Python | §8.2.9 I3 | post-1.0 |
 | REV-41 | author | `docs/project/review-findings.md` |  |  | No prepare command, upto on reproduce, or region export | §8.2.18 T3; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4; §8.2.53 BC7: Phase 7's tolerances and exports package | deferred |
 | REV-45 | author | `docs/project/review-findings.md` |  |  | The derived χ field has no export | §8.2.18 T3; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4; §8.2.53 BC7: Phase 7's tolerances and exports package | deferred |

@@ -70,6 +70,7 @@ class ChannelRecord:
     turn_rad: float
     move_nm: float
     carried: tuple[np.ndarray, ...]
+    joggled: bool
 
     @property
     def coverage(self) -> float:
@@ -110,6 +111,7 @@ class _Voids:
     edges: np.ndarray
     edge_atom: np.ndarray
     reach_nm: float
+    joggled: bool
 
 
 def circumcentres(points: np.ndarray, simplices: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -133,9 +135,11 @@ def _voids(atoms: np.ndarray) -> _Voids:
 
     centre = atoms.mean(axis=0)
     local = atoms - centre
+    joggled = False
     try:
         mesh = Delaunay(local)
     except QhullError:
+        joggled = True
         try:
             mesh = Delaunay(local, qhull_options=JOGGLE_OPTIONS)
         except QhullError:
@@ -148,7 +152,10 @@ def _voids(atoms: np.ndarray) -> _Voids:
     neighbours = np.asarray(mesh.neighbors, dtype=np.int64)
     # Atoms on one sphere, as the images of an atom under an exact symmetry are, triangulate
     # into tetrahedra some of which are flat. A flat one takes the centre of a neighbour whose
-    # sphere holds its four atoms, so the Voronoi edges through it stay joined.
+    # sphere holds its four atoms, so the Voronoi edges through it stay joined. Its own fourth
+    # atom lies in its faces' plane and says nothing of where its edges end: the neighbour's
+    # fourth atom does, the one off that plane, and is kept as its ``ender``.
+    ender = np.full(len(simplices), -1, dtype=np.int64)
     flat = np.flatnonzero(~sound)
     while len(flat):
         taken = np.zeros(len(flat), dtype=bool)
@@ -160,6 +167,11 @@ def _voids(atoms: np.ndarray) -> _Voids:
             on_sphere = np.ptp(span, axis=1) <= 1e-9 * np.maximum(1.0, span.max(axis=1))
             adopt = usable & on_sphere
             centres[flat[adopt]] = centre_beside[adopt]
+            source = beside[adopt]
+            facing = np.argmax(neighbours[source] == flat[adopt][:, None], axis=1)
+            ender[flat[adopt]] = np.where(
+                ender[source] >= 0, ender[source], simplices[source, facing]
+            )
             taken |= adopt
         if not taken.any():
             break
@@ -189,7 +201,8 @@ def _voids(atoms: np.ndarray) -> _Voids:
     corners = np.stack(
         [simplices[owner[open_face], (opposite[open_face] + k) % 4] for k in (1, 2, 3)], axis=1
     )
-    apex = atoms[simplices[owner[open_face], opposite[open_face]]]
+    fourth = simplices[owner[open_face], opposite[open_face]]
+    apex = atoms[np.where(ender[owner[open_face]] >= 0, ender[owner[open_face]], fourth)]
     base = atoms[corners[:, 0]]
     normal = np.cross(atoms[corners[:, 1]] - base, atoms[corners[:, 2]] - base)
     length = np.linalg.norm(normal, axis=1)
@@ -214,6 +227,7 @@ def _voids(atoms: np.ndarray) -> _Voids:
             [simplices[owner[keep], (opposite[keep] + 1) % 4], corners[whole, 0]]
         ),
         reach_nm=reach,
+        joggled=joggled,
     )
 
 
@@ -414,6 +428,7 @@ def channel_axis(
         turn_rad=turn,
         move_nm=move,
         carried=carried,
+        joggled=voids.joggled,
     )
 
 
@@ -458,6 +473,16 @@ def straightness_warning(record: ChannelRecord) -> str | None:
     return (
         f"channel straightness: a plane's centre lies {record.straightness_nm:.3f} nm from the "
         f"axis, over the {STRAIGHTNESS_NM:.3f} nm limit; the channel is treated as straight"
+    )
+
+
+def joggle_warning(record: ChannelRecord) -> str | None:
+    """Return the warning for an axis found from a joggled triangulation, else None."""
+    if not record.joggled:
+        return None
+    return (
+        "channel triangulation: Qhull refused the atoms as they stand, so the channel's axis is "
+        "found from a triangulation of joggled input"
     )
 
 
