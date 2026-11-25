@@ -265,11 +265,11 @@ number passes its limit.
   `tests/tier1/test_structure_axis.py` and `tests/tier1/test_structure_stage.py` pass. **Executor:** main
   > **Outcome — the prediction held.** The six new cases fail on the code at `7ebfd4f` and pass with D1 to D3;
   > 2WCD's test passes unchanged, so no measured number and no limit moved (D4).
-- [ ] 2. `src/nanopnp/structure/cavity.py`, `src/nanopnp/structure/stage.py`,
+- [x] d9c5427 2. `src/nanopnp/structure/cavity.py`, `src/nanopnp/structure/stage.py`,
   `tests/tier1/test_structure_stage.py`, `specification/05-software-design/03-2-artefacts.md`,
   `specification/07-verification/02-tier-1.md`: the revision in a channel case's key (D5); done when `test_ver48_the_channel_revision_keys_only_the_channel` passes.
   **Executor:** main
-- [ ] 3. Compaction checkpoint. **Executor:** main
+- [x] 3. Compaction checkpoint. **Executor:** main
 - [ ] 4. `knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md`, `knowledge/log.md`, `CHANGELOG.md`,
   `docs/project/review-findings.md`, `docs/project/review-items.md`, `specification/history/holds-now.yaml`: the
   records (D7); done when the code and review say so. **Executor:** main
