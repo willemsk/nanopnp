@@ -78,7 +78,12 @@ taken whatever their number, their coverage or their residue names. The channel'
 among the ensemble-mean heavy atoms. Planes 0.5 nm apart, counted from the atoms' centroid, cut the
 structure across the current line, which starts as the file's z through that centroid. In a plane,
 the candidate centres are the points where it cuts an edge of the atoms' Voronoi diagram, each with
-its clearance, its distance to the nearest atom, of at least 0.2 nm. A candidate is *enclosed* when
+its clearance, its distance to the nearest atom, of at least 0.2 nm. An edge runs on from its
+tetrahedron's centre along its face's normal past the atoms' hull, and past a tetrahedron that fixes
+no centre, so that atoms of a rim lying in one plane do not empty the axis there. A candidate whose
+clearance is not its nearest atom's distance to a relative 10⁻⁶ is left out: a ray can pass its
+edge's true end. Atoms Qhull refuses for precision are triangulated again from joggled input, and
+are refused only if that fails too (§8.2.55 BE4). A candidate is *enclosed* when
 the atoms within 0.25 nm of the plane and within 1.0 nm of its sphere leave no gap of 90° or more
 around it. The channel starts at the widest enclosed candidate of any plane and is followed plane
 by plane in both directions: a plane's centre is the centroid of its enclosed candidates within
@@ -94,7 +99,7 @@ header's `warnings` where one fired, and printed by `nanopnp run` (§8.2.39 AO4;
 extent, 0.042° from it, with a centre in each of its 28 planes and the farthest centre 0.0148 nm
 from the line; the straightness limit is twice that distance and the budget below twice that
 displacement (WP5.16; `knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md`). Both
-rest on one near-symmetric pore. A pore whose rim or lumen is ragged may exceed the straightness
+rest on one near-symmetric pore, and neither follows a later measurement of 2WCD (§8.2.55 BE1). A pore whose rim or lumen is ragged may exceed the straightness
 limit and is warned of, and may be refused by the budget under `axis: z` (REV-239).
 
 The axis carries no sign of its own. It is signed to agree with the file's +z. A detected axis more

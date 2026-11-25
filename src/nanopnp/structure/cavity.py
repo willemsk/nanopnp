@@ -42,6 +42,13 @@ STRAIGHTNESS_NM = 0.03
 
 CAVITY_BUDGET_NM = 0.015
 
+# The relative tolerance to which a point's clearance must be its nearest atom's distance.
+EMPTY_TOL = 1e-6
+
+# The retry for atoms Qhull refuses for precision. Qz is left out: beside QJ it adds a point at
+# infinity that a simplex then indexes.
+JOGGLE_OPTIONS = "QJ Qbb Qc Q12"
+
 HYDROGENS: frozenset[str] = frozenset({"H", "D"})
 
 
@@ -125,10 +132,13 @@ def _voids(atoms: np.ndarray) -> _Voids:
     try:
         mesh = Delaunay(local)
     except QhullError:
-        raise SymmetryGateError(
-            f"channel gate: the {len(atoms)} heavy atoms span no volume to triangulate, so they "
-            "enclose no channel"
-        ) from None
+        try:
+            mesh = Delaunay(local, qhull_options=JOGGLE_OPTIONS)
+        except QhullError:
+            raise SymmetryGateError(
+                f"channel gate: the {len(atoms)} heavy atoms span no volume to triangulate, so "
+                "they enclose no channel"
+            ) from None
     simplices = np.asarray(mesh.simplices, dtype=np.int64)
     centres, sound = circumcentres(local, simplices)
     neighbours = np.asarray(mesh.neighbors, dtype=np.int64)
@@ -159,17 +169,19 @@ def _voids(atoms: np.ndarray) -> _Voids:
     tree = cKDTree(atoms)
     # A sliver of nearly cospherical atoms solves to a sphere that is not empty.
     nearest, _ = tree.query(centres[valid])
-    valid[np.flatnonzero(valid)] = np.abs(nearest - radius[valid]) <= 1e-6 * np.maximum(
+    valid[np.flatnonzero(valid)] = np.abs(nearest - radius[valid]) <= EMPTY_TOL * np.maximum(
         1.0, radius[valid]
     )
     # A Voronoi edge joins the circumcentres of two tetrahedra that share a face, and every
     # point of it is as far from that face's three atoms as from no other atom nearer. Past a
-    # face of the hull the edge runs on from its tetrahedron's centre along the face's normal.
+    # face of the hull, and past a face whose far tetrahedron fixes no centre, the edge runs on
+    # from its tetrahedron's centre along the face's normal; dropped, it would empty the axis
+    # where the atoms of a rim lie in one plane.
     owner = np.repeat(np.arange(len(simplices)), 4)
     other = neighbours.reshape(-1)
     opposite = np.tile(np.arange(4), len(simplices))
     keep = (other > owner) & valid[owner] & valid[np.maximum(other, 0)]
-    open_face = (other < 0) & valid[owner]
+    open_face = ((other < 0) | ~valid[np.maximum(other, 0)]) & valid[owner]
     corners = np.stack(
         [simplices[owner[open_face], (opposite[open_face] + k) % 4] for k in (1, 2, 3)], axis=1
     )
@@ -252,6 +264,13 @@ def _sections(voids: _Voids, axis: np.ndarray, point: np.ndarray) -> list[_Secti
         points = start + fraction[:, None] * (voids.centres[voids.edges[crossing, 1]] - start)
         clearance = np.linalg.norm(points - voids.atoms[voids.edge_atom[crossing]], axis=1)
         wide = (clearance >= MIN_CLEARANCE_NM) & (clearance <= voids.reach_nm)
+        # A ray can pass its edge's true end, and a point past it has an atom nearer than its
+        # face's: it is no point of the diagram.
+        if wide.any():
+            nearest, _ = voids.tree.query(points[wide])
+            wide[np.flatnonzero(wide)] = np.abs(
+                nearest - clearance[wide]
+            ) <= EMPTY_TOL * np.maximum(1.0, clearance[wide])
         order = np.flatnonzero(wide)[np.argsort(-clearance[wide], kind="stable")]
         sections.append(
             _Section(
