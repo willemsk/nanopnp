@@ -111,17 +111,18 @@ One work package per PR, green on tiers 1–2 before the next one in its lane (a
 - `/np-plan <project | phase n | amend n | wp n>` puts the decisions to the author and commits the
   plan; with `review` after the level it reviews the plan and summarises it for approval.
 - `/np-implement [wp <n>]` executes the plan, gates, pushes and opens the PR.
-- `/np-ship [wp <n> | phase <n>]` reviews the package, drives CI to green and prints the tag
-  commands. A phase's close also tags the release.
+- `/np-ship [wp <n> | phase <n>]` has `np-reviewer` review and fix the package once, drives CI to
+  green and prints the tag commands. A phase's close also tags the release.
 - `/np-carry wp <n>` runs all three in one session through fresh helpers.
 
 §8.4.4 holds the workflow's rules and pauses; §8.4.5 the agents, the models and the kept scripts. A
 choice put to the author follows `.claude/workflow/author.md`.
 
-**Models:** `/np-plan` and its review run on Fable 5.2. A work package's plan names the models that
-implement and ship it, as the author ruled them: Opus 5.5 and Fable 5.2 by default. Each session runs
-at high effort, set explicitly. A scoped item goes to a Sonnet 5.5 sub-agent; Haiku 5.5 takes only
-mechanical, repetitive work that is fully specified and needs under 100k tokens of context (§8.4.5).
+**Models:** by role, fixed in `.claude/agents/` (§8.4.5). `/np-plan` asks first, and plans on Fable 5.2
+at high effort, or on Opus 5.5 at xhigh when Fable's quota is spent. Opus 5.5 at high builds and
+reviews; Sonnet 5.5 at medium ships and runs `/np-carry`'s main session. Every session and agent names
+its effort. A scoped item goes to a Sonnet 5.5 sub-agent; Haiku 5.5 takes only mechanical, repetitive
+work that is fully specified and needs under 100k tokens of context.
 
 **Code review reports** go to `docs/code_reviews/CODE_REVIEW_NNN.md`, with NNN one above the highest
 present.

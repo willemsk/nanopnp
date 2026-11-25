@@ -25,6 +25,22 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.7.0-alpha.7]
+
+WP6.09: the lean carry; tag `v0.7.0-alpha.7` once merged (§8.2.56 BF1 to BF9; REV-288). The
+[plan](docs/plans/phase-6/wp6.09-the-lean-carry.md) records the work. Nothing changes for a user of the program.
+
+- **Changed** (the workflow, §8.4.4, §8.4.5):
+  - Each role has its model and effort in a project agent: Fable 5.2 at high plans, or Opus 5.5 at xhigh where the
+    author picks it when asked at every plan's start; Opus 5.5 at high builds and reviews; Sonnet 5.5 at medium ships
+    and runs `/np-carry`'s main session. A plan no longer proposes models.
+  - A helper of `/np-carry` is never resumed: it ends with a committed hand-off note, and a fresh helper reads it.
+  - A work-package plan checks itself against a fixed list; it has no review run.
+  - The ship has one review, `np-reviewer`, which fixes what it confirms; a finding it leaves is an open item and the
+    pull request merges as reviewed.
+  - `just land` runs the registers, the docs build, the rebase, the push gate and the push in one command.
+  - The project's settings disable the account plugins it never uses.
+
 ## [0.7.0-alpha.6]
 
 WP6.06: the channel's axis at a ragged rim; tag `v0.7.0-alpha.6` once merged (§8.2.51 BA8; §8.2.55 BE1, BE2, BE4 to
