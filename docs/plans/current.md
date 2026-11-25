@@ -1,34 +1,36 @@
 # Current work
 
-Updated 24 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged branch is not shipped.
+Updated 25 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-**What changes.** The orchestrator is built and waits for its review. One session that you start now carries a
-package: fresh helpers write the plan, build it and ship it, and your session asks you the questions and starts the
-reviews they cannot. It is tried on the next two packages: the fix for the pore's axis, and stored reference
-numbers for the model's optional switches. The count of past pushes found too few that could skip the browser
-tests, so the local check keeps them.
+**What changes.** The orchestrator is merged and carries its first package, the fix for the pore's axis, whose plan
+is written. It found the fault larger than recorded, about one degree and not 0.6, and its cause elsewhere: a
+space lost at a flat rim, not a broken tie. The fix cures every trial wall, and the real pore keeps its axis to the
+last digit. You ruled that the two limits stay, that a case on a channel's axis runs again once, and the models.
+Fresh helpers now review, build and ship it; the stored reference numbers for the optional switches follow.
 
-**Cost.** The rest of the phase: about 38 sessions, 23 to 43 agent hours and 58 times you act.
+**Cost.** This package: about 4 sessions, 2 to 4 agent hours and 6 times you act. The rest of the phase with it:
+about 38 sessions, 23 to 43 agent hours and 58 times you act.
 
-**What could go wrong.** The session you start may fill up from the reviews it runs; the next two packages measure
-it, and the three commands remain the way back.
+**What could go wrong.** The session you started may fill up from the reviews it runs; this package and the next
+measure it; the three commands remain the way back.
 
-**Your call.** Ship the orchestrator's package: switch to Fable 5.2 and run its review. *Recommendation:* ship it;
-nothing in it waits for you.
+**Your call.** Approve the axis plan after its review. *Recommendation:* approve; your three rulings are in it.
 
 ## Position
 
 - Phases 1 to 5 **closed**, `v0.2.0` to `v0.6.0` ([Phase 5's report](phase-5/phase-5-workbench.md#end-of-phase-report)).
-- **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.04 merged**
-  and tagged, to `v0.7.0-alpha.4`.
+- **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.05 merged**,
+  tagged to `v0.7.0-alpha.4`; `v0.7.0-alpha.5` is not published yet.
 - **Phase 6 is amended** ([§8.2.54](../../specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md),
-  BD1): then WP6.06 the axis fix, WP6.07 the guard numbers, WP6.08 the kernel's design; the rest is numbered at the
-  round on the design. Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
-- **WP6.05 is built**, its pull request open ([the plan](phase-6/wp6.05-the-orchestrator.md); BD2 to BD6); the
-  browser-path count missed, so BC15 is spent.
-- **Next:** `/np-ship wp 6.05` on Fable 5.2; then `/np-carry wp 6.06`.
+  BD1): WP6.06 the axis fix, WP6.07 the guard numbers, WP6.08 the kernel's design; the rest is numbered at the round
+  on the design. Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
+- **WP6.06 is planned** ([the plan](phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md);
+  [§8.2.55](../../specification/history/55-wp606s-plan-the-channel-axis-limits-stored-results-and-models.md), BE1 to
+  BE3).
+- **Next:** `/np-plan wp 6.06 review` on Fable 5.2; then `/np-implement wp 6.06` on Opus 5.5 and `/np-ship wp 6.06`
+  on Fable 5.2; then `/np-carry wp 6.07`.
 
 ## Not to be re-decided
 
@@ -45,6 +47,7 @@ nothing in it waits for you.
   nothing** (BC8).
 - **The kernel follows the axis fix and a design the author rules; its full check runs at its last package** (BC1
   to BC4).
+- **The channel axis's two limits stay; a stored channel case runs again once** (BE1, BE2).
 - **An orchestrator carries a package; the three commands stay** (BC10; BD2). **The continuation trial adopts its path
   on a full pass of marks registered first** (BC24).
 

@@ -24,7 +24,7 @@ and the target for how often a package needs you. *Recommendation:* approve; it 
 
 ## Context
 
-`SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 to §8.2.54 (AY to BD). The
+`SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 to §8.2.55 (AY to BE). The
 text each amendment replaced is in [the record](phase-6-record.md). This file keeps its first name: the library's
 foundations are Phase 7 (BC7), in [the input note](../sessions/phases-6-to-11.md).
 
@@ -89,11 +89,12 @@ count missed, 32 < 34, so the push gate keeps the browser tests (BC15 spent).
 
 ### WP6.06 — The channel's axis at a ragged rim (REV-279; VER-48; BA8; BB1)
 
-*Firm; planned after WP6.05 merges, since the orchestrator carries it (BC10).* It makes a plane's centre robust to a
-broken tie at a ragged rim, and measures 2WCD's channel axis again. A structure with a ragged rim may get an axis up
-to about 0.6° different from v0.6's, the one number a user sees that Phase 6 changes (BA8); `CHANGELOG.md` says so. VER-48's gate test tilts the wall with the ragged rim again; the perturbed draws read
+*Planned 25 November 2026.* [The plan](wp6.06-the-channel-axis-at-a-ragged-rim.md) found the cause in the edges the
+diagram drops at a flat rim and fixes it there, the tie rule kept (its D1), and measures 2WCD's channel axis again.
+A structure with a ragged rim may get an axis up to about 1° different from v0.6's (the plan measured 1.05°; BA8 gave
+0.6°), the one number a user sees that Phase 6 changes (BA8); `CHANGELOG.md` says so. VER-48's gate test tilts the wall with the ragged rim again; the perturbed draws read
 `cavity.channel_axis` itself, since the gate's refusal prints 0.01°. The oracle is the axis the test wall is built
-about. §5.2's NOTE on stage 1 takes the new method. No Tier 3 leg. Its plan settles open decision 11. About 4 sessions, 2 to 4 agent hours and 6 touches.
+about. §5.2's NOTE on stage 1 takes the new method. No Tier 3 leg. Its plan settled open decision 11: the limits stay (BE1); a stored channel case runs again once (BE2). About 4 sessions, 2 to 4 agent hours and 6 touches.
 
 ### WP6.07 — The guard numbers (BC3)
 
@@ -137,7 +138,7 @@ Input to that round, in order; none is numbered before it:
 |---|---|---|
 | 1 to 5, 8 to 10 | The cleanup's limits, the Copilot tag, the Windows leg, the project's scope, the review and its proposals | **Settled by the author, 22 to 24 November 2026** (AZ, BA, BB, BC); the record holds the rows |
 | 6, 7 | AM2's drift bound; a run above order 2; the speed-up's thresholds; the names after `Project` splits | **Moved to Phase 7** (BC7); the input note carries them |
-| 11 | What §5.2's two limits become if the fix moves 2WCD's measured axis (REV-239) | **Author**, at WP6.06's plan, before the fix is measured |
+| 11 | What §5.2's two limits become if the fix moves 2WCD's measured axis (REV-239) | **Settled by the author, 25 November 2026**, at WP6.06's plan, before the fix was measured: the limits stay (BE1) |
 | 12 | The numbers of the packages after the review | **Settled by the author, 24 November 2026**: in build order (BD1) |
 | 13, 17 | What the reading limit counts under the orchestrator; helpers or separate sessions | **Settled by the author, 24 November 2026**: every helper that implements; helpers (BD2, BD3). The browser tests' rule is not built: WP6.05's count missed, 32 < 34 (BD4; BC15 spent) |
 | 14 | Which walk carries each switch off its default; the guard numbers' identifier in §7; whether the nightly run holds them | WP6.07's plan (BC3) |
@@ -149,7 +150,6 @@ Input to that round, in order; none is numbered before it:
 
 | Item | Needed by | If it does not arrive |
 |---|---|---|
-| §5.2's two limits, if the fix moves 2WCD's axis | WP6.06's plan | The fix is not measured |
 | The kernel's design ruled; the 3D benchmark; the touches target | The round after WP6.08 | No kernel package is planned (BC2) |
 | Merges; tags a session cannot push | Each package | The session dispatches `tag.yml` and prints the commands |
 
