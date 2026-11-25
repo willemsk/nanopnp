@@ -30,7 +30,7 @@ pore.
 - **WP6.06 merged** ([the plan](phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md); PR #218), REV-279 fixed; its
   tag `v0.7.0-alpha.6` is the author's to push.
 - **WP6.07, the lean carry, is built** ([the plan](phase-6/wp6.07-the-lean-carry.md);
-  [§8.2.56](../../specification/history/56-wp607s-plan-the-lean-carry.md) BF1 to BF10), after WP6.06's post-mortem, and
+  [§8.2.56](../../specification/history/56-wp607s-plan-the-lean-carry.md) BF1 to BF11), after WP6.06's post-mortem, and
   numbered in build order (BF10).
 - **Next:** ship WP6.07; then `/np-carry wp 6.08`, started on Sonnet 5.5 at medium effort.
 

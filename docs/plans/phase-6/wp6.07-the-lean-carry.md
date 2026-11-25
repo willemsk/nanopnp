@@ -152,6 +152,9 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
   > tokens out, 30 M cached), beside the estimate of 1 session and 2 to 3 agent hours.
   > The author pulled in the four rows, now fixed: REV-290 in `ac4fb37`, REV-291 in `ac4fb37` and `5806145`,
   > REV-292 in `f9f4554`, which renumbers this package WP6.07 (§8.2.56 BF10), and REV-293 in `5806145`.
+  > The author then ruled BF11: a helper commits and hands back and the main session runs `just land`, as the push
+  > gate's 466 to 506 s outlast a helper's 5-minute prompt cache; and a change confined to `.claude/`, but
+  > `decisions.py`, is prose to `prose-only.sh`, so it skips the lock check, `mypy` and the suite.
 
 ### Verification
 

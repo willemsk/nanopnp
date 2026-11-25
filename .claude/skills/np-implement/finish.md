@@ -7,7 +7,8 @@ item is done.
 
 A compaction checkpoint is a work item (§8.2.16 R11):
 
-1. Tick it in its own commit. Gate and push (the core).
+1. Tick it in its own commit, and land it (the core). A helper of `/np-carry` commits and hands back
+   `DONE` with `land: yes` instead: the main session lands (§8.2.56 BF11).
 2. Write a prompt. It holds `/compact`, the package, the number of the next item, the values that later
    items need and that the plan and `git log` do not hold, the model of the next step (the core's
    *Models and executors*), and "resume with `/np-implement wp <n>`".
@@ -43,11 +44,12 @@ Confirm these yourself:
 - The specification, the knowledge base and the Outcome annotations are committed.
 - Both **Status** lines and `current.md` are updated.
 - `CHANGELOG.md` carries the package's entry as `CONTRIBUTING.md`'s *Versions and releases* says.
-- Gate and push (the core).
+- The branch is landed (the core). Run directly, the session lands now; a helper of `/np-carry`
+  lands nothing, and its `DONE` carries `land: yes`.
 
 Then read `.claude/workflow/finish.md`, and open or reuse the PR by its *PR contract*, its In brief as
 `.claude/workflow/author.md` says. A new PR states under **Verification** that the review waits for
-`/np-ship`.
+`/np-ship`. A helper does this before its hand-back, as `helper.md` says.
 
 Report the PR link, the identifiers discharged, the tag that the last commit gets after the merge
 (or that it gets none), and that the package is ready for `/np-ship`. Do not start the review or

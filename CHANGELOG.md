@@ -27,7 +27,7 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [0.7.0-alpha.7]
 
-WP6.07: the lean carry; tag `v0.7.0-alpha.7` once merged (§8.2.56 BF1 to BF10; REV-288 to REV-293). The
+WP6.07: the lean carry; tag `v0.7.0-alpha.7` once merged (§8.2.56 BF1 to BF11; REV-288 to REV-293). The
 [plan](docs/plans/phase-6/wp6.07-the-lean-carry.md) records the work. Nothing changes for a user of the program.
 
 - **Changed** (the workflow, §8.4.4, §8.4.5):
@@ -45,6 +45,9 @@ WP6.07: the lean carry; tag `v0.7.0-alpha.7` once merged (§8.2.56 BF1 to BF10; 
     kernel's design WP6.09 (BF10).
   - Of a red CI the ship fixes only format and lint and reruns a flaky runner once; `np-builder`, on Opus 5.5, fixes
     every other failure (BF1). A helper's hand-off note no longer enters the plans index.
+  - A helper of `/np-carry` commits and hands back; the main session runs `just land` and waits, and a helper waits on
+    nothing over about 4 minutes. A change confined to Markdown and `.claude/`, but `decisions.py`, skips the lock
+    check, `mypy` and the tests in the gate and in CI, where ruff now runs on every change (BF11).
 
 ## [0.7.0-alpha.6]
 

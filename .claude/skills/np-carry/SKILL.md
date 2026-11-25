@@ -8,8 +8,9 @@ argument-hint: "wp n"
 
 This session is the package's main session (§8.4.4). The author starts it on Sonnet 5.5 at medium
 effort (`/model sonnet`, `/effort medium`; §8.2.56 BF1). It asks the author, starts the helpers, the
-review and the workers, holds the PR's subscription and check-in, and measures. A helper keeps the
-task list. This session commits nothing and edits nothing. Each step runs in a helper:
+review and the workers, lands what they commit, holds the PR's subscription and check-in, and
+measures. A helper keeps the task list. This session edits nothing, and commits only what `just land`
+commits itself: the registers and the navigation. Each step runs in a helper:
 `.claude/workflow/helper.md` says what a helper hands back. The three commands stay the way back.
 
 ## 1. The package
@@ -62,10 +63,27 @@ first item. A helper that follows a hand-back gets instead:
 continue at its Next with: <the answer>
 ```
 
+Either prompt, after a land, ends with the land's last line, `land: pushed <sha>` (§4).
+
 ## 4. Its hand-backs
 
 A helper ends with one `HANDBACK` block, and the hand-back ends it. Serve it, then start a fresh helper
 of the same agent with the answer, as §3 says. Never resume a helper with `SendMessage` (§8.2.56 BF2).
+
+**Land first** (§8.2.56 BF11). A hand-back whose `land:` is not `no`, an `np-builder` worker's
+included, is landed before it is served: this session holds the 1-hour prompt cache, a helper the
+5-minute one. Run `uv run just land <log>`, with `--lease <sha>` for `lease <sha>`, and wait as the
+core's *Gate and push* says. On `land: pushed <sha>`, serve the hand-back; where a `REVIEW` prompt
+names another head than that sha, give it that sha, as the land's own commits or its rebase moved
+it. On `land: failed at <step>`, keep the hand-back and start a fresh `np-builder` in the foreground:
+
+```text
+Fix the failed land of WP<n>, at <step>; its log is <log>. Read .claude/workflow/helper.md, fix that
+failure and nothing else, commit, and hand back DONE.
+```
+
+Land its commits, then serve the hand-back you kept. A failure at the push itself is retried once
+first; a second failure at the same step is `BLOCKED`.
 
 - `ASK`: print the brief, call `AskUserQuestion` with the questions unchanged, and pass the answers
   unchanged, free text included.
@@ -78,6 +96,8 @@ of the same agent with the answer, as §3 says. Never resume a helper with `Send
 - `WAIT`: subscribe to the PR once (`subscribe_pr_activity`), schedule a check-in at the delay it
   gives in place of an earlier one, and end the turn. Start a fresh `np-shipper` with §3's first
   prompt and the event that wakes you, unchanged: a `WAIT` leaves no note.
+- `RUN`: start its command with Bash `run_in_background` and wait on its log in the foreground, as
+  the core waits on a land. Start a fresh helper with §3's prompt after a hand-back and the log's path.
 - `BLOCKED`: tell the author the reason and the command that continues, and stop.
 - `DONE`: go on by its stage:
   - **plan**: print the manager's summary it carries and ask the author, with `AskUserQuestion`, to
@@ -90,7 +110,7 @@ of the same agent with the answer, as §3 says. Never resume a helper with `Send
 
 ## 5. The measures
 
-After each `DONE` or `BLOCKED`, run
+After each `DONE` or `BLOCKED`, and the land before it, run
 `uv run .claude/scripts/usage.py --label <stage> --since <the noted time>`; the session's first
 measure takes no `--since`, so that the `/np-carry` prompt counts. After an implement helper's, also
 run `uv run .claude/scripts/usage.py --reading` and take the line named `agent-<its id>`. Pass the
@@ -101,6 +121,7 @@ implement helper that read over 8,000 words of project text before its first edi
 
 - One helper at a time.
 - A helper may run on after `Agent` returns: end the turn and wait for its hand-back. If a stop hook
-  then asks for a commit or a push, make neither: the tree is the helper's.
+  then asks for a commit or a push, make neither: the tree is the helper's until it hands back.
 - Read nothing of a helper's but its hand-backs, its note and the plan's ticks.
-- The core's *Gate and push* binds the helpers; this session pushes nothing.
+- The helpers commit and this session lands (§8.2.56 BF11): it runs `just land` and waits, and
+  starts no helper or agent while a land or a `RUN` runs.

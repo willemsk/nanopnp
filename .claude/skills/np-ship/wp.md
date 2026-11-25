@@ -4,7 +4,9 @@
 stop. It runs on Sonnet 5.5 at medium effort (§8.2.56 BF1): in a fresh session, in the implementing
 session after its compaction where that runs on the same model (§8.2.33 AI4), or as `np-shipper`
 under `/np-carry`. Of code and tests it fixes only a red CI's format and lint: the reviewer and
-`np-builder` write every other fix.
+`np-builder` write every other fix. Where this file says to gate and push, a session run directly
+lands as the core says; `np-shipper` commits, goes on to its next hand-back and gives it `land: yes`,
+or `lease <sha>` after a rebase on `main`, and the main session lands (§8.2.56 BF11).
 Usually `/np-implement` has opened the PR: reuse it. If there is no PR and the author names the branch,
 this invocation authorises you to open the PR without asking again. The review, the fixes and the CI
 watch need no further prompt.
@@ -21,7 +23,8 @@ Run `.claude/hooks/checkpoint.sh clear`: an automatic pause that led here is spe
    not show that the package was implemented.
 3. **Resuming after a review.** Suppose the PR's **Verification** records a completed review, and
    the only commits after its reviewed head are a helper's `docs: WP<n> hand-off, …`, the
-   reviewer's commits and `docs: WP<n> review recorded`. Then subscribe to the PR's activity (§4) and go to §5. A review adds its own commits, so
+   reviewer's commits, `just land`'s own (`docs: the decisions page and the indexes`, `docs: the
+   navigation`) and `docs: WP<n> review recorded`. Then subscribe to the PR's activity (§4) and go to §5. A review adds its own commits, so
    the current head is never the reviewed head.
 
 ## 1. Preflight
@@ -44,6 +47,7 @@ If the branch is `main` or equals `origin/main`, stop and ask. If it is behind `
 ## 2. Push
 
 If §1 changed the tree, or `<head>` is ahead of `origin/<head>`, gate and push to `<head>` (the core).
+`np-shipper` goes on: its `REVIEW` hand-back carries the land.
 
 ## 3. Open or reuse the PR
 
@@ -59,7 +63,8 @@ this session; a helper of `/np-carry` skips it, as its main session holds the su
 (`CLAUDE.md`, *Testing*; `SPECIFICATION.md` §8.2.13 N1) is a finding of its first axis, and the
 reviewer drops it as a fix, with the identifiers in the body (N5); this session deletes no test.
 
-Push each pre-review commit (the core's *Gate and push*). Then write the PR's
+Push each pre-review commit (the core's *Gate and push*); `np-shipper` gives its `REVIEW` hand-back
+`land: yes`, and the main session lands before it starts the reviewer. Then write the PR's
 head and base SHAs under its **Verification**. The review covers that head, and the record stays after
 a compaction.
 
@@ -92,7 +97,8 @@ still lacks it, stop before §5 and report it. Then, in this session:
 3. Commit the rows, the deletion and the plan's Outcome as `docs: WP<n> review recorded`, with the
    identifiers in the body. The Outcome takes the package's measured cost: the PR's **Measured**
    lines and this session's so far, summed, beside the In brief's estimate (§8.4.5). Gate and push
-   (the core).
+   (the core); `np-shipper` gives its `WAIT` of §5 `land: yes`, which pushes the reviewer's commits
+   with this one.
 
 Then record the pass under **Verification**: the reviewer's report, how many findings it fixed and how
 many it left, the reviewed base and head SHAs, and its fix commits. Give the user each finding that
@@ -106,7 +112,9 @@ red CI this session fixes only format and lint, with `uv run ruff format .` and 
 and reruns a job that failed on a flaky runner once, the steward's infrastructure failure. Every other
 failure, the docs, a stale lock, `mypy`, a lint that `--fix` leaves, a test or a numerical gate, goes to
 `np-builder` with the log the CI-log classifier classed (a helper hands back `WORKER`,
-`agent: np-builder`); this session writes no other fix (§8.2.56 BF1). The steward's
+`agent: np-builder`); this session writes no other fix (§8.2.56 BF1). A helper's format or lint fix
+goes out with its `WAIT`, `land: yes`; the builder's fix is landed before its reply comes back
+(§8.2.56 BF11). The steward's
 *Bounded wakes* set the polling, the fallback check-ins and what counts as a new failure. Never wait on
 CI with `sleep`. Report a missing subscription or scheduler as an automation limit.
 

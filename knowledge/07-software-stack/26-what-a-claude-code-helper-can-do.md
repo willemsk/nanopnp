@@ -80,6 +80,12 @@ It takes `model` (`sonnet`, `opus`, `haiku`, `fable`) and `effort`. Its descript
   of the claude.ai account's plugins `false` in `.claude/settings.json`, a session started on that
   tree still loaded them: the PDF viewer plugin's tools came back from `ToolSearch`. A helper's tool
   list keeps them out; the main session keeps them until the account disables them. [verified][^plugins]
+- **A helper's prompt cache lives 5 minutes; the main session's 1 hour.** Each request of a sub-agent
+  asks for the 5-minute cache, and its cache writes are all 5-minute ones; each of the main session's
+  asks for the 1-hour cache. A helper that waits longer than 5 minutes between two calls, as on the
+  push gate's 466 to 506 s, writes its whole context to the cache again, where the main session
+  reads it; so the main session lands and a helper never waits on the push gate (§8.2.56 BF11).
+  [verified][^cache]
 
 [^probe]: Probe of 24 November 2026 for WP6.05's item 1, on the claude.ai cloud host (Linux), Claude
     Code 2.1.331, at commit `0212383`. The helper listed its tools, called `ToolSearch` with
@@ -98,5 +104,12 @@ It takes `model` (`sonnet`, `opus`, `haiku`, `fable`) and `effort`. Its descript
 [^plugins]: WP6.07, 25 November 2026, Claude Code 2.1.332 on the cloud host: the session restarted on
     `659983c`'s tree, whose settings held the block, and `ToolSearch` `+pdf display` returned
     `mcp__plugin_pdf-viewer_pdf__display_pdf`.
+[^cache]: The two sub-agent transcripts of 25 November 2026 under WP6.07, Claude Code 2.1.332 on the
+    cloud host: `np-reviewer`'s review of PR #219 (90 requests) and `np-builder`'s fix of REV-291 to
+    REV-293 (109 requests). Every entry records `promptCacheRequested: "5m"`, and the
+    `cache_creation` fields sum to 542,944 and 859,940 tokens of `ephemeral_5m_input_tokens` and none
+    of `ephemeral_1h_input_tokens`. The main session's 481 requests of the same transcript record
+    `promptCacheRequested: "1h"`. The push gate's times are `<git dir>/nanopnp-gate.log`'s `run push`
+    lines of that day.
 [^api]: The Claude API skill bundled with Claude Code 2.1.332, its *Thinking & Effort* table: Opus 5.5's
     effort defaults to `medium`, Sonnet 5.5's to `high`.

@@ -45,7 +45,10 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 **The gate.** The commit hook, `.claude/hooks/gate.sh`, runs lint, format, types and Tier 1 before each
 `git commit` that Claude Code makes. Do not run them by hand first: a manual run writes no stamp, so
 the hook runs them again. A push needs `.claude/hooks/gate.sh run` to pass on its tree, as the core's
-*Gate and push* says (`.claude/workflow/core.md`).
+*Gate and push* says (`.claude/workflow/core.md`); a main session runs it, through `just land`, and a
+helper of `/np-carry` only commits (§8.2.56 BF11). A change confined to Markdown and `.claude/`, but
+`.claude/scripts/decisions.py`, runs only ruff, the decisions check and the `records` tests
+(`.github/scripts/prose-only.sh`).
 
 ## Project structure
 
@@ -113,7 +116,8 @@ One work package per PR, green on tiers 1–2 before the next one in its lane (a
 - `/np-implement [wp <n>]` executes the plan, gates, pushes and opens the PR.
 - `/np-ship [wp <n> | phase <n>]` has `np-reviewer` review and fix the package once, drives CI to
   green and prints the tag commands. A phase's close also tags the release.
-- `/np-carry wp <n>` runs all three in one session through fresh helpers.
+- `/np-carry wp <n>` runs all three in one session through fresh helpers, which commit; the main
+  session lands each hand-back's commits with `just land`.
 
 §8.4.4 holds the workflow's rules and pauses; §8.4.5 the agents, the models and the kept scripts. A
 choice put to the author follows `.claude/workflow/author.md`.

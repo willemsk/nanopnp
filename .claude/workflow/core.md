@@ -66,12 +66,17 @@ returns before you use it. Physics and numerics decisions stay in this session.
 
 ## Gate and push
 
+**A main session lands; a helper commits** (§8.2.56 BF11). `/np-carry`'s main session, or the
+session that runs `/np-plan`, `/np-implement` or `/np-ship` itself, runs `just land` and waits on it.
+A helper of `/np-carry`, the reviewer and a worker commit under the commit hook and land nothing: a
+helper hands back with `land: yes` (`helper.md`). Steps 1 and 7 are the committer's.
+
 **`just land` runs steps 1 to 6** and stops at the first failure (§8.2.56; `.claude/scripts/land.sh`).
 Start it with Bash `run_in_background`, `uv run just land <log>`, then wait in the same turn, in the
 foreground, `until grep -q '^exit ' <log>; do sleep 10; done`, waiting again if the 10-minute limit
 ends the wait. Its last lines are `land: pushed <sha>` or `land: failed at <step>`, and `exit <status>`.
-Fix a failure and run it again; end the turn only on a push. The steps it runs, which a session runs
-by hand where `land` cannot:
+Fix a failure and run it again, or under `/np-carry` give it to a fresh `np-builder`; end the turn
+only on a push. The steps it runs, which a session runs by hand where `land` cannot:
 
 1. Before a commit that adds or changes a decision (a ruling, a plan's `Dn` row, a `REV`, `MOD`,
    `OPN` or `WB` row), run `uv run .claude/scripts/decisions.py`; before one that adds a plan or a

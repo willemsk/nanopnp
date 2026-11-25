@@ -17,7 +17,8 @@
 #                  per-push selection (Tier 1, Tier 2 without `nightly` or `slow`), with the Gmsh, APBS and browser requirements set. One
 #                  run at a time: a second waits for the first. It stamps the tree
 #                  `push` only on a pass, and only if the tree did not change meanwhile.
-#                  What the skills start in the background before they push.
+#                  What a main session starts in the background before it pushes,
+#                  through `just land`; a helper never waits on it (section 8.2.56 BF11).
 #   gate.sh check-push
 #                  git's pre-push hook (.githooks/pre-push), for pushes no agent hook sees: reads
 #                  git's ref lines on stdin and refuses, exit 1, a branch whose tree lacks the
@@ -34,7 +35,9 @@
 # reaches this hook before the `add` has run. A tree state that already passed is not re-run:
 # the stamp is the tree id of the working copy and the selection that passed, so any edit
 # invalidates it, and a commit-hook pass never stands in for `run`. When every changed path is
-# prose (.github/scripts/prose-only.sh, which CI uses too), only ruff runs.
+# prose (.github/scripts/prose-only.sh, which CI uses too: Markdown, and the workflow under
+# .claude/ but the one script a test loads), only ruff, the decisions page's check and the
+# `records` tests run.
 #
 # pytest runs as CI runs it: -n auto --dist loadfile, one BLAS thread per worker.
 #
@@ -446,8 +449,9 @@ fi
 # commit whose tree passed `run`, or else since it left main, as CI's pull_request range
 # does: against HEAD alone the clean tree the skills run it on would read as prose and the
 # `push` tests would never run. A prose-only change since a pass reruns only the `records`
-# tests, the few that read Markdown, so a plan or a record pushed after code is checked in
-# seconds. With no merge base found the whole gate runs.
+# tests, the few that read Markdown, so a plan, a record or a change to the workflow under
+# .claude/ pushed after code is checked in seconds (section 8.2.56 BF11). With no merge base
+# found the whole gate runs.
 base=HEAD
 if [[ $mode == run ]]; then
     base=$(git merge-base HEAD origin/main 2>/dev/null) ||
@@ -585,7 +589,7 @@ if $docs_only; then
     # accepted edge names, section 5.1's module rows); a prose edit can break them, and they
     # take seconds.
     check "pytest (records)" uv run pytest -q -rsfE -m records
-    say "gate: only prose changed; lock check, mypy and the rest of pytest skipped."
+    say "gate: only prose or the workflow changed; lock check, mypy and the rest of pytest skipped."
 else
     check "mypy --strict"   uv run mypy src/
     if [[ $mode == run ]]; then

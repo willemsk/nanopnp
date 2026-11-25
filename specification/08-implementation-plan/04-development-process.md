@@ -32,9 +32,14 @@ here once.
 
 #### 8.4.2 The loop
 
-* Before a push, `.claude/hooks/gate.sh run` passes on the tree being pushed. The session starts it in
-  the background and waits for it in the same turn, and the push guard refuses a tree it has not
-  passed. A pass of the commit hook never stands in for it. (§7.6; §8.2.11 L2, L3)
+* Before a push, `.claude/hooks/gate.sh run` passes on the tree being pushed. The session that pushes
+  starts it in the background and waits for it in the same turn, and the push guard refuses a tree
+  it has not passed. A pass of the commit hook never stands in for it. (§7.6; §8.2.11 L2, L3)
+* A prose-only change, one confined to Markdown, `holds-now.yaml` and the workflow under `.claude/`
+  but `.claude/scripts/decisions.py`, which a test loads, skips the lock check, `mypy` and the tests
+  in the commit hook, the push gate and CI alike; ruff and the decisions page's check still run, and
+  the gate's `records` tests. `.github/scripts/prose-only.sh` is the one definition. (§7.6; §8.2.56
+  BF11)
 * The gate refuses with its reason on standard error and one JSON object carrying the deny
   top-level and as `hookSpecificOutput`, exit 0; failing to print it exits 2. Once a
   clone sets `core.hooksPath .githooks`, git's `pre-push` (`gate.sh check-push`) also refuses a push
@@ -75,10 +80,15 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   the same agent that reads the note; no helper is resumed (`.claude/workflow/helper.md`). The main
   session asks the author, passing the questions and the answers on unchanged, starts the review and
   the agents a helper asks for, holds the pull request's subscription and check-in, and measures. A
-  helper keeps the task list, which the two share, and commits, gates and pushes; the main session
-  commits and edits nothing. The stage is read from the branch's commit subjects, the plan's ticks
-  and the note, so the three commands stay the way back. A phase, an amendment or a ruling round is
-  not carried. (§8.2.53 BC10; §8.2.54 BD2, BD6; §8.2.56 BF1, BF2; `.claude/skills/np-carry/`)
+  helper keeps the task list, which the two share, and commits under the commit hook. A helper
+  runs on the 5-minute prompt cache and the main session on the 1-hour one, so a helper waits in the
+  foreground on nothing longer than about four minutes: it hands back, the main session lands each
+  hand-back's commits with `just land` before it serves it, and runs a longer command a helper hands
+  back; a failed land goes to a fresh `np-builder` with its log. The main session edits nothing and
+  commits only what `just land` commits itself. The stage is read from the branch's commit subjects,
+  the plan's ticks and the note, so the three commands stay the way back. A phase, an amendment or a
+  ruling round is not carried. (§8.2.53 BC10; §8.2.54 BD2, BD6; §8.2.56 BF1, BF2, BF11;
+  `.claude/skills/np-carry/`)
 * A pull request's CI tests on Linux, and a package's `/np-ship` reads no platform leg. `/np-ship phase`
   dispatches `ci.yml` on the close's head and stops while a `platforms` leg on ubuntu, macOS or Windows is
   not `success`. (§7.6; §8.2.49 AY4; §8.2.50 AZ8; `.claude/skills/np-ship/phase.md`)
@@ -115,7 +125,8 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   BF4, BF5, BF8; `.claude/workflow/finish.md`)
 * `just land` runs the push's mechanics in one command: the registers and their commit, the
   documentation build where a source changed, the rebase, the push gate and the push with retries
-  (`.claude/scripts/land.sh`; `.claude/workflow/core.md`, *Gate and push*). (§8.2.56 BF1)
+  (`.claude/scripts/land.sh`; `.claude/workflow/core.md`, *Gate and push*). A main session runs it,
+  `/np-carry`'s or one that runs a command itself; a helper never does. (§8.2.56 BF1, BF11)
 * An implementing session may restructure any code it works with, beyond what its plan names, as long
   as every test of the push gate passes: Tiers 1 and 2 as a push selects them, without the `nightly`
   and `slow` tests (§7.6), with the number-stability golden's per-push walks (VER-62), the layering
@@ -220,10 +231,11 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   plan the author put on it. The review is `np-reviewer`, on Opus 5.5 at high effort: one pass over
   standards, the specification and the physics and numerics, which fixes and commits what it
   confirms, and reviews a pulled-in finding's diff at medium. A helper can start no agent and ask the
-  author nothing, so the main session does both for it; it keeps the task list, commits under the
-  commit gate, runs the push gate and pushes. An agent file is loaded when a session starts. The note
+  author nothing, so the main session does both for it; it keeps the task list and commits under the
+  commit gate, and the main session, on the longer prompt cache, runs the push gate and pushes
+  (§8.4.4). An agent file is loaded when a session starts. The note
   `knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md` holds what was measured, and
-  on which version of Claude Code. (§8.2.54 BD2; §8.2.56 BF1, BF2, BF4, BF6, BF8)
+  on which version of Claude Code. (§8.2.54 BD2; §8.2.56 BF1, BF2, BF4, BF6, BF8, BF11)
 * Seven agents are kept: the three helpers and the reviewer above; the physics reviewer and the GUI
   reviewer, both read-only and on Opus at high effort (§8.2.38 AN9); and the CI-log classifier, on
   Haiku. A plugin of the author's account is the author's to disable: a project's settings do not
