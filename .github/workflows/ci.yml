@@ -90,9 +90,11 @@ jobs:
   # event is the caller's, so `full` is read before the event.
   #
   # `code` is false for a prose-only change (the rule is
-  # .github/scripts/prose-only.sh, which the commit gate uses too): the jobs below
-  # still run and report success, and only their steps are skipped. A schedule, a
-  # dispatch, a call or a push with no usable base is always code.
+  # .github/scripts/prose-only.sh, which the commit gate uses too: Markdown, and
+  # the workflow under .claude/ but the one script a test loads): the jobs below
+  # still run and report success, and only their steps are skipped, but ruff's,
+  # which run on every change as the gate's do (section 8.2.56 BF11). A schedule,
+  # a dispatch, a call or a push with no usable base is always code.
   #
   changes:
     name: changes
@@ -149,9 +151,10 @@ jobs:
           fi
           echo "code=$code" | tee -a "$GITHUB_OUTPUT"
 
-  # Lint and types. The `apbs` group is a test dependency only. A job that syncs
-  # less than the default groups runs `uv run --no-sync`, or `uv run` would sync
-  # them back.
+  # Lint and types. Ruff runs on every change, prose-only ones included, so that a
+  # change to the workflow's scripts is linted as the gate lints it; mypy only on
+  # code. The `apbs` group is a test dependency only. A job that syncs less than
+  # the default groups runs `uv run --no-sync`, or `uv run` would sync them back.
   lint:
     name: lint
     needs: changes
@@ -166,16 +169,12 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
-        if: env.CODE == 'true'
         with:
           enable-cache: true
           python-version: "3.14"
-      - if: env.CODE == 'true'
-        run: uv sync --all-extras --no-group apbs
-      - if: env.CODE == 'true'
-        run: uv run --no-sync ruff check .
-      - if: env.CODE == 'true'
-        run: uv run --no-sync ruff format --check .
+      - run: uv sync --all-extras --no-group apbs
+      - run: uv run --no-sync ruff check .
+      - run: uv run --no-sync ruff format --check .
       - if: env.CODE == 'true'
         run: uv run --no-sync mypy src/
 

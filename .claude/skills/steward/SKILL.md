@@ -13,7 +13,8 @@ failures are evidence rather than chores.
 `uv` owns it (`CLAUDE.md`, *Setup*).
 
 Gate and push each committed fix in full as the core's *Gate and push* says
-(`.claude/workflow/core.md`). `--no-verify` exists. Do not use it.
+(`.claude/workflow/core.md`); a helper of `/np-carry` commits it and its hand-back carries the land.
+`--no-verify` exists. Do not use it.
 
 ## Bounded wakes
 

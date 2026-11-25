@@ -53,7 +53,9 @@ conventional prefix, and put the requirement identifier in the body. Tick each i
 `[x] <short sha>` in the next commit. A checkpoint ticks itself and the item before it. A later
 session then resumes from the first unticked item. Set an item's task `in_progress` when you start it
 and `completed` when its commit lands; a deferred item's task is `deleted`, its reason in the plan. The gate hook refuses a failing commit and
-remembers a pass, so you can split a gated tree into several commits.
+remembers a pass, so you can split a gated tree into several commits. Where this file or
+`finish.md` says to gate and push, a session run directly lands as the core says; a helper of
+`/np-carry` commits and hands back with `land: yes`, and the main session lands (§8.2.56 BF11).
 
 An item that changes a screen (`src/nanopnp/gui/`, the front end, `docs/design/`) runs `/np-gui render
 <target>` and reads each changed screen before its commit; before it builds the screen it reads the
@@ -74,4 +76,5 @@ in the commit of the item that made them.
 
 Run the measurements the plan asks for: timings, convergence rates, minimum damping, route-agreement
 figures, memory at the reference mesh size. Record each number with its mesh, configuration and
-stabilisation mode, where the plan asks.
+stabilisation mode, where the plan asks. A helper hands back `RUN` for one that takes over about 4
+minutes (`.claude/workflow/helper.md`).

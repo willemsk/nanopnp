@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-25
+* **Update**: A helper's prompt cache lives 5 minutes and the main session's 1 hour, so a helper that waits on the push gate writes its context again; the main session lands (WP6.07; §8.2.56 BF11). ([26. What a Claude Code helper can do](07-software-stack/26-what-a-claude-code-helper-can-do.md))
 * **Update**: The four helper agents run on their files' models and efforts and start at about 13k tokens, beside 73k to 76k; a project's settings do not disable an account's plugins (WP6.07). ([26. What a Claude Code helper can do](07-software-stack/26-what-a-claude-code-helper-can-do.md))
 * **Update**: A project agent file sets its agent's model, effort and tools, and is loaded only when a session starts, so a new agent is probed from the next session (WP6.07). ([26. What a Claude Code helper can do](07-software-stack/26-what-a-claude-code-helper-can-do.md))
 * **Update**: A flat tetrahedron that takes a neighbour's centre signs its rays by that neighbour's fourth atom, not its own, which rounding decided: 23 of 45 trial walls held a ray with no length or off the diagram, and none does. An axis found from joggled input is reported as a warning (WP6.06's ship; §8.2.55 BE5, BE6). ([The channel's axis of 2WCD against its ring axis](04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md))

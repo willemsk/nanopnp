@@ -93,7 +93,7 @@ no longer locks at a flat rim, and may differ by up to about 1° from v0.6's (BA
 stage 1's `channel_axis_revision` (BE2); the two limits stay (BE1); an axis found from joggled input is warned of
 (BE6); a lumen with atoms on its axis is warned of (AO4).
 
-### WP6.07 — The lean carry (BF1 to BF10)
+### WP6.07 — The lean carry (BF1 to BF11)
 
 *Planned and built 25 November 2026* ([the plan](wp6.07-the-lean-carry.md)); reviewed, awaiting its merge; numbered in build order between WP6.06 and the guard numbers (BF10). WP6.08 is the first
 package carried the lean way and measures it (BF7). After WP6.06's post-mortem: Fable 5.2 only plans, or Opus 5.5 at the author's pick, Sonnet 5.5
