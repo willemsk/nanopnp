@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Land the current branch: the core's *Gate and push*, steps 1 to 6, in order, stopping at the
-# first failure (`.claude/workflow/core.md`; WP6.09 D7, §8.2.56 BF1).
+# first failure (`.claude/workflow/core.md`; WP6.07 D7, §8.2.56 BF1).
 #
 #   land.sh [--lease <sha>]
 #

@@ -25,14 +25,14 @@ pore.
 - **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.05 merged**,
   tagged to `v0.7.0-alpha.4`; `v0.7.0-alpha.5` is not published yet.
 - **Phase 6 is amended** ([§8.2.54](../../specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md),
-  BD1): WP6.06 the axis fix, WP6.07 the guard numbers, WP6.08 the kernel's design; the rest is numbered at the round
-  on the design. Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
+  BD1; §8.2.56 BF10): WP6.06 the axis fix, WP6.07 the lean carry, WP6.08 the guard numbers, WP6.09 the kernel's
+  design; the rest is numbered at the round on the design. Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
 - **WP6.06 merged** ([the plan](phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md); PR #218), REV-279 fixed; its
   tag `v0.7.0-alpha.6` is the author's to push.
-- **WP6.09, the lean carry, is built** ([the plan](phase-6/wp6.09-the-lean-carry.md);
-  [§8.2.56](../../specification/history/56-wp609s-plan-the-lean-carry.md) BF1 to BF9), after WP6.06's post-mortem, and
-  is built before WP6.07.
-- **Next:** ship WP6.09; then `/np-carry wp 6.07`, started on Sonnet 5.5 at medium effort.
+- **WP6.07, the lean carry, is built** ([the plan](phase-6/wp6.07-the-lean-carry.md);
+  [§8.2.56](../../specification/history/56-wp607s-plan-the-lean-carry.md) BF1 to BF10), after WP6.06's post-mortem, and
+  numbered in build order (BF10).
+- **Next:** ship WP6.07; then `/np-carry wp 6.08`, started on Sonnet 5.5 at medium effort.
 
 ## Not to be re-decided
 
@@ -57,7 +57,7 @@ pore.
 
 ## Somebody else's
 
-- **The ruling on the kernel's design**, after WP6.08 (BC2); **the boundary conditions of unequal reservoirs** (BC21); **the paper's figure data**, by Phase 7's close (D6; BC8); **verdicts at each design round and on the kit's trial**
+- **The ruling on the kernel's design**, after WP6.09 (BC2); **the boundary conditions of unequal reservoirs** (BC21); **the paper's figure data**, by Phase 7's close (D6; BC8); **verdicts at each design round and on the kit's trial**
   (AJ8; BC13); **whether shapes replace the sketcher**, at Phase 10's round (BC14).
 - E1's ensemble legs; Read the Docs; `$NANOPNP_REFERENCE_DATA` on the nightly runner; the 200 ms redraw's GPU run
   (REV-258); rulings on a cycle (H6) or drift (I4).
