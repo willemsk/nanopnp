@@ -84,7 +84,8 @@ the test scope`. Run no benchmark, sweep, gate.sh or pytest --nightly.
 ```
 
 **The reply must show that the pass completed**: the reviewed base and head, which match the SHAs
-recorded above, its commits, the report's path and each finding with its outcome. Zero findings is
+recorded above, or under `/np-carry` a head whose commits after the recorded one are `just land`'s
+own, as the land before the review may add them (§8.2.56 BF11), its commits, the report's path and each finding with its outcome. Zero findings is
 valid. If the reply lacks that evidence, start the reviewer once more, never two at a time; if it
 still lacks it, stop before §5 and report it. Then, in this session:
 
@@ -114,7 +115,9 @@ failure, the docs, a stale lock, `mypy`, a lint that `--fix` leaves, a test or a
 `np-builder` with the log the CI-log classifier classed (a helper hands back `WORKER`,
 `agent: np-builder`); this session writes no other fix (§8.2.56 BF1). A helper's format or lint fix
 goes out with its `WAIT`, `land: yes`; the builder's fix is landed before its reply comes back
-(§8.2.56 BF11). The steward's
+(§8.2.56 BF11). A helper that has committed since the last land, as after §4, reads no CI: the PR's
+checks are still those of the head before its commits, so it hands back `WAIT`, `land: yes`, first,
+and the helper the event wakes reads CI on the landed head. The steward's
 *Bounded wakes* set the polling, the fallback check-ins and what counts as a new failure. Never wait on
 CI with `sleep`. Report a missing subscription or scheduler as an automation limit.
 

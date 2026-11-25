@@ -2,7 +2,7 @@
 
 **Status: built and reviewed, awaiting its merge.** Written 25 November 2026 on Opus 5.5 at high effort, grounded in
 the workflow at `5946602`; built the same day on the same model. Inherits §8.2.53
-BC10, §8.2.54 BD2 to BD6, the rulings of this plan (§8.2.56 BF1 to BF10) and WP6.06's measured cost. WP6.08 is the first package carried the
+BC10, §8.2.54 BD2 to BD6, the rulings of this plan (§8.2.56 BF1 to BF11) and WP6.06's measured cost. WP6.08 is the first package carried the
 lean way and measures it. Its last commit on `main` takes `v0.7.0-alpha.7` (§8.4.1; BF10).
 
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.07 entry sets this scope; `SPECIFICATION.md` governs, and
