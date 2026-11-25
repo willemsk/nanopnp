@@ -35,7 +35,7 @@ library's foundations and the workbench are built on it?** Its gate is §8.1's.
 True of the codebase today:
 
 - **A pore's axis found from its channel can lock off the true one.** `structure/cavity.py` `channel_axis` holds a
-  second fixed point at a ragged rim, up to about 0.6° off (REV-279). `structure/stage.py` `align` takes that axis
+  second fixed point at a ragged rim, up to about 1° off (REV-279; WP6.06's plan measured 1.05°). `structure/stage.py` `align` takes that axis
   only under C1 or `axis: cavity`; every walk of VER-62 takes the ring's.
 - **A model is assembled in one class.** `physics/models.py` `CoupledModel` assembles the weak forms, and
   `physics/terms.py` holds a `Term` for each, for display alone (GU-01).
@@ -94,7 +94,7 @@ diagram drops at a flat rim and fixes it there, the tie rule kept (its D1), and 
 A structure with a ragged rim may get an axis up to about 1° different from v0.6's (the plan measured 1.05°; BA8 gave
 0.6°), the one number a user sees that Phase 6 changes (BA8); `CHANGELOG.md` says so. VER-48's gate test tilts the wall with the ragged rim again; the perturbed draws read
 `cavity.channel_axis` itself, since the gate's refusal prints 0.01°. The oracle is the axis the test wall is built
-about. §5.2's NOTE on stage 1 takes the new method. No Tier 3 leg. Its plan settled open decision 11: the limits stay (BE1); a stored channel case runs again once (BE2). About 4 sessions, 2 to 4 agent hours and 6 touches.
+about. §5.2's NOTE on stage 1 takes the new method. No Tier 3 leg. Its plan settled open decision 11: the limits stay (BE1); a stored channel case runs again once (BE2). At its review the author ruled that a triangulation refused for precision is tried once more (BE4). About 4 sessions, 2 to 4 agent hours and 7 touches.
 
 ### WP6.07 — The guard numbers (BC3)
 
@@ -188,11 +188,13 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 8. **Each row the phase owns is `fixed` or ruled** (AM4): REV-279, REV-67, MOD-10.
 9. **Each proposal of the ground-up review is ruled or carried with its owner** (BA13). Met by §8.2.53.
 10. **The wall with a ragged rim recovers its known axis to VER-48's 10⁻⁶ rad** on every perturbed draw, and on the
-    three platforms at the close. Today 3 of 8 draws lock 0.22° to 0.62° off; prediction: none locks. A draw that
+    three platforms at the close. Today 3 of 8 draws lock 0.22° to 0.62° off, and 17 of the 24 of WP6.06's plan up
+    to 0.84°; prediction: none locks. A draw that
     still locks is investigated, and the tolerance stands. **2WCD's channel axis is measured again** against its
     0.0073 nm. Prediction: unmoved within VER-48's 10⁻⁴ nm if none of its planes holds a split tie, which WP6.06's
     plan measures first. A move, of it or of the farthest centre's 0.0148 nm, amends VER-48 and §5.2's NOTE in the
-    fix's commit and goes to the author (open decision 11).
+    fix's commit and is reported; the limits stay, and the package stops for the author only if 2WCD would pass one
+    (BE1).
 11. **The orchestrator's three facts are recorded, and WP6.06 and WP6.07 are reported with their sessions, agent
     hours and touches** (BC10; BD2). A package it cannot carry goes back to the three commands.
 12. **The guard numbers are stored** after the check of VER-62's coverage (BC3). Prediction: the walks cover the

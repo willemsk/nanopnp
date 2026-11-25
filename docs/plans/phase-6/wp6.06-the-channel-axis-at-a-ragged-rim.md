@@ -1,7 +1,7 @@
 # WP6.06 — The channel's axis at a ragged rim
 
 **Status: planned, not started.** Written 25 November 2026, grounded in the code at `7ebfd4f`. Inherits §8.2.51 BA8,
-§8.2.52 BB1, §8.2.54 BD1, §8.2.39 AO1 and AO4, the rulings of this plan (§8.2.55 BE1 to BE3), REV-279 and the test
+§8.2.52 BB1, §8.2.54 BD1, §8.2.39 AO1 and AO4, the rulings of this plan (§8.2.55 BE1 to BE4), REV-279 and the test
 scope (§8.2.13 N1). Its last commit on `main` takes `v0.7.0-alpha.6` (§8.4.1).
 
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.06 entry sets this scope; `SPECIFICATION.md` governs, and
@@ -9,23 +9,23 @@ where it and this plan disagree this plan is wrong. Identifiers are pointers int
 
 ## In brief
 
-**What changes.** A pore's axis found from its channel no longer depends on rounding. The cause was found at this
-plan, and it is not the one on record: where the atoms of a rim lie exactly in one plane, the program lost the open
-space on the axis in the end slice, and its first, tilted cut picked one of the equal spaces beside it. On 36 trial
-walls today's method ends off the axis in 17, by up to 0.84 degrees; one further wall read 1.05. The fix restores the
-lost space: none of 261 trial walls ends off its axis. The real pore in the repository keeps its axis to the last
-digit, so its two limits are not touched.
+**What changes.** A pore's axis found from its channel no longer depends on rounding. The cause is not the one on
+record: where the atoms of a rim lie exactly in one plane, the program lost the open space on the axis in the end
+slice, and its first, tilted cut picked one of the equal spaces beside it. On 36 trial walls today's method ends off
+the axis in 17, by up to 0.84 degrees; one further wall read 1.05. The fix restores the lost space: none of 261 trial
+walls ends off it. The real pore keeps its axis to the last digit; its two limits stay. A structure wrongly refused
+when rounding defeats the first step is tried once more.
 
-**Cost.** About 4 sessions, 2 to 4 agent hours and 6 times you act, one of them done. A user with a symmetric or
-idealised structure may get an axis up to about one degree different from the last release, and a case that takes
-its axis from the channel runs again once.
+**Cost.** About 4 sessions, 2 to 4 agent hours and 7 times you act, two of them done. A symmetric or idealised
+structure may get an axis up to about one degree different from the last release, and a case that takes its axis from
+the channel runs again once.
 
-**What could go wrong.** A structure the trials did not cover could still end off its axis; the new test sees only
-its own walls. A channel with atoms on its axis still reads several degrees off, with the warning you ruled. The
-real pore was measured on a trial copy of the fix; the building session repeats it, and a move comes back to you.
+**What could go wrong.** A structure the trials did not cover could still end off its axis; the new test sees only its
+own walls. A channel with atoms on its axis still reads several degrees off, with the warning you ruled. The real pore
+was measured on a trial copy; the build repeats it, and a move comes back to you.
 
-**Your call.** Settled today: the limits stay; channel cases run again once; Opus 5.5 builds and Fable 5.2 ships.
-Still yours: approve this plan after its review. *Recommendation:* approve.
+**Your call.** Settled today: the limits stay; channel cases run again once; a wrongly refused structure is tried once
+more; Opus 5.5 builds and Fable 5.2 ships. Still yours: approve this reviewed plan. *Recommendation:* approve.
 
 ## Execution brief
 
@@ -43,7 +43,7 @@ a fresh helper and never chains from the implementing one (`NANOPNP_AUTO_SHIP`).
 |---|---|---|
 | **D1 The cause is fixed, not the tie** | `_voids` continues an edge of the diagram as a ray past a face whose far tetrahedron is not `valid`, as it does past the hull. The tie rule and `TIE_NM` stay | The dropped edges are what empties the axis at a flat rim; the fix cures 261 of 261 draws, and neither a narrower ray rule nor a tie-robust centre does (*Grounding*). The NOTE already defines the candidates by the whole diagram. Decided by the plan |
 | **D2 A candidate is a point of the diagram** | `_sections` keeps a candidate only where its clearance is its nearest atom's distance, to the 1e-6 of `_voids`' own check | A ray can pass its edge's true end, and a point past it is no space; the NOTE calls the clearance "its distance to the nearest atom". Decided by the plan |
-| **D3 A refused triangulation is joggled** | On `QhullError`, `_voids` triangulates again with `QJ Qbb Qc Q12`; today's refusal stands only if that fails too | Qhull refuses 2 of 360 draws for precision, which the code reports as "no volume"; every draw must recover (criterion 10). Decided by the plan |
+| **D3 A refused triangulation is joggled** | On `QhullError`, `_voids` triangulates again with `QJ Qbb Qc Q12`; today's refusal stands only if that fails too | Qhull refuses 2 of 360 draws for precision, which the code reports as "no volume"; every draw must recover (criterion 10). Ruled by the author, BE4 ("Try once more") |
 | **D4 The limits stay** | 0.015 nm and 0.03 nm are not edited. 2WCD is measured again by its test. A moved number re-pins the test's measured constants and the NOTE's numbers, and is reported; 2WCD over a limit stops the package for the author | Ruled by the author, BE1 ("The limits stay") |
 | **D5 Stored channel results run again once** | Stage 1's key carries `channel_axis_revision`, 1, where the channel gives the axis, and nowhere else | Ruled by the author, BE2 ("Recompute those cases once") |
 | **D6 Every draw recovers the axis** | 24 draws of the C7 and C8 walls with the rim, tilted 12°, each checked for direction, offset, convergence and straightness; the gate test tilts the wall with the rim again; the joggled path is forced once | VER-48's 1e-6 rad and 1e-6 nm, unchanged; the oracle is the axis the wall is built about. Decided by the plan |
@@ -63,7 +63,9 @@ than 1e-6 rad from the wall's.
   is `sound & (radius <= reach)`, less a tetrahedron whose solved sphere is not empty to 1e-6; a flat tetrahedron
   becomes `sound` only by taking the centre of a neighbour whose sphere holds its four atoms.
 - The change adds to `open_face` each face of a `valid` owner whose neighbour exists and is not `valid`. The ray's
-  direction, away from the apex, is exact: the far tetrahedron's centre lies further that way.
+  direction, away from the apex, is exact where the owner is `sound` by itself: the far tetrahedron's centre lies
+  further that way. A flat owner that took a neighbour's centre has its apex in the face's plane, so rounding signs
+  its ray: at most 12 of about 2,300 rays in a draw (the review's count), and D2 keeps only true points of them.
 - `_wall(8)` tilted 12° about x has 50 unsound tetrahedra of 27,644; a draw at 1e-14 has 2,146 of 29,741, of which
   1,161 lie wholly in the top rim plane. Its last plane then holds no candidate within 0.36 nm of the axis: without
   the draw it holds one on the axis at 2.018 nm clearance, eight 0.106 nm aside at 1.921 nm and eight 0.364 nm aside
@@ -101,8 +103,9 @@ than 1e-6 rad from the wall's.
   `circumcentres` raises `IndexError`. SciPy's tutorial names `QJ` for degenerate input.
 - Forced on the 35° walls with `OFFSET_NM` (C7, C8, C12; no draw, and `seed` 0 and 1), the joggled path recovers to
   4.1e-14 rad.
-- Atoms Qhull refuses twice, fewer than five, keep today's message. Coplanar atoms joggle into a triangulation that
-  encloses nothing, and `channel_axis`'s coverage refusal takes them.
+- Atoms Qhull refuses twice, fewer than four, keep today's message. Coplanar, collinear and coincident atoms joggle
+  into a triangulation that encloses nothing, and `channel_axis`'s coverage refusal takes them, as "0 of the n planes"
+  in place of today's "span no volume".
 
 **D4**
 
@@ -121,6 +124,8 @@ than 1e-6 rad from the wall's.
 - `structure/stage.py:structure_parameters` returns the block's dump with each file as its digest;
   `StructureStage.key` and `StructureStage.run` both call it. `align` computes `channel = axis_mode == "cavity" or
   n == 1` for itself. Only `_digest` reads the parameters by key (`source.path`, `ensemble.trajectory`).
+  `validation/comsol.py:_stage7_recipe` copies the whole mapping into a deposited charge's recipe; every Tier 3 case
+  is C12, so no stored recipe moves.
 - The change: a private `_takes_channel(structure)` holds that test for both, and where it is true
   `structure_parameters` sets `parameters["channel_axis_revision"]`. `axis: z` under C1 carries it too: its refusal
   is measured against the channel's axis.
@@ -211,7 +216,7 @@ than 1e-6 rad from the wall's.
 **Item 1, the clauses.** In `specification/05-software-design/02-pipeline-stages.md`, the NOTE on stage 1, after the
 sentence that defines the candidates, say in the NOTE's own voice: that an edge runs on past the hull and past a
 tetrahedron that fixes no centre; that a candidate whose clearance is not its nearest atom's distance to 10⁻⁶ is left
-out; that atoms Qhull refuses for precision are triangulated again from joggled input; and, beside the two limits,
+out; that atoms Qhull refuses for precision are triangulated again from joggled input (§8.2.55 BE4); and, beside the two limits,
 that they do not follow a later measurement of 2WCD (§8.2.55 BE1). In `specification/07-verification/02-tier-1.md`,
 VER-48's row gains, after "the axis being its fixed line", the 24 draws with their three sizes, and the forced retry.
 Run `uv run pytest tests/tier1/test_structure_axis.py tests/tier1/test_structure_stage.py -q`. If 2WCD's test fails,
@@ -221,16 +226,19 @@ number passes its limit.
 **Item 2.**
 
 - `structure/cavity.py`: `CHANNEL_AXIS_REVISION = 1`, its comment citing §5.3.2's NOTE.
-- `structure/stage.py`: `_takes_channel(structure: ResolvedStructure) -> bool`, true where
+- `structure/stage.py`: import `CHANNEL_AXIS_REVISION` by name with its other names of `cavity`, so that the
+  test's patch of the module's name is read; `_takes_channel(structure: ResolvedStructure) -> bool`, true where
   `structure.spec.symmetry.axis == "cavity" or structure.n == 1`; `align` uses it for `channel`;
   `structure_parameters` sets the key last, where it is true.
 - `tests/tier1/test_structure_stage.py`: `test_ver48_the_channel_revision_keys_only_the_channel(prepared, tmp_path,
-  monkeypatch)`. Build three cases with `_case` and `_block(prepared)`, `_block(prepared, axis="cavity")` and
-  `_block(prepared, point_group="C1")`; take `structure_parameters(resolve(load_case(case)).structure)` and
-  `StructureArtefact(parameters=...).hash` for each. Assert that the ring's parameters hold no
-  `channel_axis_revision` and the other two hold `cavity.CHANNEL_AXIS_REVISION`. Then set
-  `nanopnp.structure.stage.CHANNEL_AXIS_REVISION` to 2 with `monkeypatch` and assert that the ring's hash is the
-  same and the other two moved. No stage runs.
+  monkeypatch)`. Build five cases with `_case`, each under its own `name`: the ring's two, `_block(prepared)` and
+  `_block(prepared, axis="z")`, and the channel's three, `_block(prepared, axis="cavity")`,
+  `_block(prepared, point_group="C1")` and `_block(prepared, point_group="C1", axis="z")`. Take
+  `structure_parameters(resolve(load_case(case)).structure)` and `StructureArtefact(parameters=...).hash` for each.
+  Assert that the ring's two hold no `channel_axis_revision` and the channel's three hold
+  `nanopnp.structure.cavity.CHANNEL_AXIS_REVISION`. Then set `nanopnp.structure.stage.CHANNEL_AXIS_REVISION` to 2
+  with `monkeypatch`, take the five again and assert that the ring's two hashes are the same and the channel's
+  three moved. No stage runs.
 - `specification/05-software-design/03-2-artefacts.md`, the NOTE on the solution payload: before "The other stages'
   payloads have no such counter", say that stage 1's key carries `channel_axis_revision` where the channel gives the
   axis, which a change that moves a channel's axis SHALL bump (§8.2.55 BE2). In
@@ -246,7 +254,7 @@ number passes its limit.
   to about 1° different for a structure with coplanar or exactly symmetric atoms, and the refused triangulation;
   **Changed**, the key of a channel case, so its stored first stage runs again once.
 - `docs/project/review-findings.md`: REV-279 `fixed`, with a **Fixed** paragraph in `review-items.md` that corrects
-  the cause and the bound. `specification/history/holds-now.yaml`: BA8, BE1 and BE2 name their clauses. Run
+  the cause and the bound. `specification/history/holds-now.yaml`: BA8, BE1, BE2 and BE4 name their clauses. Run
   `uv run .claude/scripts/decisions.py` and `uv run just docs`, and commit what they write.
 
 ### Work items
@@ -273,7 +281,7 @@ number passes its limit.
 | `test_structure_axis.py::test_ver48_the_channel_axis_gates_fire`, the wall with its rim | 1 | VER-48, QR-12 | The 12° the wall is tilted by, read from the refusal | 12 ± 0.005°, the refusal's two printed decimals (WP6.01) | the same |
 | `test_structure_axis.py::test_ver48_the_channel_axis_recovers_a_known_axis`, unchanged | 1 | VER-48 | The known axis | VER-48 | the same |
 | `test_structure_stage.py::test_ver48_2wcd_channel_axis_agrees_with_its_ring_axis`, unchanged | 1 | VER-48 | 2WCD's stored numbers; prediction: unmoved | VER-48: 1e-4 nm | `uv run pytest tests/tier1/test_structure_stage.py -q` |
-| `test_structure_stage.py::test_ver48_the_channel_revision_keys_only_the_channel` | 1 | VER-48 | The ring's hash does not move with the revision; a channel case's does | exact | the same |
+| `test_structure_stage.py::test_ver48_the_channel_revision_keys_only_the_channel` | 1 | VER-48 | Neither ring case's hash, `auto` or `z`, moves with the revision; each channel case's does: `cavity`, C1, and C1 with `z` | exact | the same |
 
 ### Out of scope
 
@@ -285,4 +293,4 @@ number passes its limit.
 
 ### Open questions
 
-None. The three choices that were the author's are ruled (BE1 to BE3).
+None. The four choices that were the author's are ruled (BE1 to BE4).
