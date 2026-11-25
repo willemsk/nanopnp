@@ -1883,3 +1883,11 @@ each hand-off rewrites the index.
 *Recommendation:* `index_records.py` skips `*-handoff.md`.
 
 **Fixed** (WP6.07, 25 November 2026, `5806145`): `index_records.py` skips `*-handoff.md` under `docs/plans/`.
+
+### REV-294: The BF10 entry of holds-now names §8.4.1, which BF10 leaves unchanged
+
+Left by WP6.07's review of its pulled-in findings ([CODE_REVIEW_091](../code_reviews/CODE_REVIEW_091.md)), a doubt.
+`specification/history/holds-now.yaml` gives BF10 as holding in "the Phase 6 plan; the WP6.07 plan; §8.4.1", but
+BF10's own row says §8.4.1 is unchanged: a reader of the entry looks for an amendment that is not there.
+
+*Recommendation:* change the entry to `'the Phase 6 plan; the WP6.07 plan; §8.4.1, unchanged'`, or drop §8.4.1.
