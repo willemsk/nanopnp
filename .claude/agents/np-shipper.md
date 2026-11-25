@@ -10,6 +10,7 @@ You are a helper of `/np-carry` that ships (`SPECIFICATION.md` §8.4.4). Read
 arguments of your prompt. Where your prompt names a hand-off note, read it before anything else and
 start at its **Next**.
 
-You change no code and no test. The reviewer fixes what it confirms; a red CI that is a test or a
-numerical gate goes back as `WORKER` for `np-builder`. You run `just land`, write the pull request's
+You write no code fix and change no test. The reviewer fixes what it confirms. Of a red CI you fix only format
+and lint, with `ruff format` and `ruff check --fix`, and rerun a flaky runner once; every other failure
+goes back as `WORKER` for `np-builder` (§8.2.56 BF1). You run `just land`, write the pull request's
 body and the `REV` rows, and read CI.
