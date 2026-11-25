@@ -52,9 +52,27 @@ in the foreground by a main session on Opus 5.5. [verified][^probe]
 It takes `model` (`sonnet`, `opus`, `haiku`, `fable`) and `effort`. Its description asks that
 `effort` be set only where an instruction asks for it, so `/np-carry` asks for `high`. [verified][^probe]
 
+### A project agent file (WP6.09)
+
+- **Its front matter sets the agent's model, effort and tools.** `.claude/agents/<name>.md` takes
+  `name`, `description`, `model`, `effort` and `tools`; the `Agent` tool's description says an agent
+  type's model, effort and tools come from that front matter, and that a `model` passed on the call
+  overrides it. The physics reviewer and the GUI reviewer carry `effort: high`. [verified][^agents]
+- **A file is loaded when the session starts.** An agent file written during a session is not found
+  by that session's `Agent` tool: it lists the types it loaded at start. So a new agent is probed from
+  the next session. [verified][^agents]
+- **Opus 5.5 runs at `medium` effort where none is given**, Sonnet 5.5 at `high`; so a file of either
+  names its effort. [verified][^api]
+
 [^probe]: Probe of 24 November 2026 for WP6.05's item 1, on the claude.ai cloud host (Linux), Claude
     Code 2.1.331, at commit `0212383`. The helper listed its tools, called `ToolSearch` with
     `select:Agent,AskUserQuestion,TaskCreate` (one schema came back, for `TaskCreate`) and
     `select:TaskList,TaskGet,TaskUpdate` (three), called `TaskList` once, wrote this note's first
     version, committed it, ran the push gate and pushed. It was resumed twice by `SendMessage`. A
     probe of the same day at `8b54c5f` found no task tools in a helper (the plan's *Grounding*).
+[^agents]: WP6.09's item 1, 25 November 2026, on the claude.ai cloud host (Linux), Claude Code
+    2.1.332. The four helper agents' files were written, and `Agent` with `subagent_type:
+    "np-shipper"` returned "Agent type 'np-shipper' not found" with the list of the types loaded at
+    start. The `Agent` tool's description is that version's.
+[^api]: The Claude API skill bundled with Claude Code 2.1.332, its *Thinking & Effort* table: Opus 5.5's
+    effort defaults to `medium`, Sonnet 5.5's to `high`.

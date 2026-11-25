@@ -125,6 +125,8 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
 
 - [ ] 1. `.claude/agents/np-planner.md`, `np-builder.md`, `np-shipper.md`, `np-reviewer.md`, each with its model
   and effort; the probe; knowledge note 07/26 (D1, D4, D6). Done when the code and review say so. **Executor:** main
+  > **Outcome — the probe waits for the next session.** An agent file is loaded when a session starts, so this one
+  > could not start the four; REV-289 puts the probe at WP6.07's first step.
 - [ ] 2. `.claude/workflow/helper.md`, `.claude/skills/np-carry/SKILL.md`: the note, no resume, the agents by role
   (D1, D2). Done when the code and review say so. **Executor:** main
 - [ ] 3. `.claude/skills/np-plan/wp.md`, `review.md`, `SKILL.md`, `np-carry/SKILL.md` §3: the split and the
