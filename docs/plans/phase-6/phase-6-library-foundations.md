@@ -93,6 +93,15 @@ no longer locks at a flat rim, and may differ by up to about 1° from v0.6's (BA
 stage 1's `channel_axis_revision` (BE2); the two limits stay (BE1); an axis found from joggled input is warned of
 (BE6); a lumen with atoms on its axis is warned of (AO4).
 
+### WP6.09 — The lean carry (BF1 to BF7)
+
+*Planned 25 November 2026* ([the plan](wp6.09-the-lean-carry.md)); built before WP6.07, so that WP6.07 is the first
+package carried the lean way and measures it (BF7). After WP6.06's post-mortem: Fable 5.2 only plans, Sonnet 5.5
+runs the carry and ships, Opus 5.5 builds, reviews once and takes a red CI; a helper that waits hands off to a fresh
+one through a note; the plan checks itself; a finding left to the author is an open item by default; each helper
+lists its tools; the mechanics are `just land`. It changes no code under `src/`. About 1 session, 2 to 3 agent hours
+and 2 touches.
+
 ### WP6.07 — The guard numbers (BC3)
 
 *Planned by scope.* Reference numbers for the switches off their default: PHY-23's terms, the log branch and NUM-14's

@@ -27,8 +27,12 @@ pore.
 - **Phase 6 is amended** ([§8.2.54](../../specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md),
   BD1): WP6.06 the axis fix, WP6.07 the guard numbers, WP6.08 the kernel's design; the rest is numbered at the round
   on the design. Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
-- **WP6.06 is implemented** ([the plan](phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md); PR #218), REV-279 fixed.
-- **Next:** `/np-ship wp 6.06` on Fable 5.2; then `/np-carry wp 6.07`.
+- **WP6.06 merged** ([the plan](phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md); PR #218), REV-279 fixed; its
+  tag `v0.7.0-alpha.6` is the author's to push.
+- **WP6.09, the lean carry, is planned** ([the plan](phase-6/wp6.09-the-lean-carry.md);
+  [§8.2.56](../../specification/history/56-wp609s-plan-the-lean-carry.md) BF1 to BF7), after WP6.06's post-mortem, and
+  is built before WP6.07.
+- **Next:** build and ship WP6.09 on Opus 5.5 in this conversation; then `/np-carry wp 6.07`, started on Sonnet 5.5.
 
 ## Not to be re-decided
 

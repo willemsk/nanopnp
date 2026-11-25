@@ -1,0 +1,134 @@
+# WP6.09 — The lean carry
+
+**Status: planned, not started.** Written 25 November 2026, grounded in the workflow at `5946602`. Inherits §8.2.53
+BC10, §8.2.54 BD2 to BD6, the rulings of this plan (§8.2.56 BF1 to BF7) and WP6.06's measured cost. Built before
+WP6.07, so that WP6.07 is the first package carried the lean way and measures it. Its last commit on `main` takes
+`v0.7.0-alpha.7` (§8.4.1).
+
+The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.09 entry sets this scope; `SPECIFICATION.md` governs, and
+where it and this plan disagree this plan is wrong. Identifiers are pointers into it.
+
+## In brief
+
+**What changes.** Carrying a package costs far less. On the last package the most expensive model did 85% of the
+work, most of it outside planning: three code reviews, the ship, and the main session. A helper resumed after a
+question or a review paid to reload its whole memory, a fifth of the cost; mechanical steps such as pushing ran on
+the dearest model; and every helper began by loading tools the project never uses. Now the dearest model only plans;
+a mid-priced model builds and reviews once; the cheapest ships; a helper that waits for you ends with a short note
+and a fresh one carries on; the mechanics are one script.
+
+**Cost.** About 1 session and 2 to 3 agent hours, planned and built in this conversation, and 2 times you act: the
+seven rulings, done, and the merge. Nothing changes for a user of the program.
+
+**What could go wrong.** A hand-off note can drop a detail a fresh helper then lacks; the note has a fixed shape,
+and the next package shows it. With one review, a fault a second reader would have caught can merge; the review
+keeps the physics questions, and the next package's cost and findings are compared with the last's. A helper
+limited to a list of tools may miss one it needs; the first item probes them.
+
+**Your call.** All seven decisions are ruled. Still yours: approve this plan. *Recommendation:* approve; the
+next package measures what it saves.
+
+## Execution brief
+
+Scope: the workflow of §8.4.4 and §8.4.5 and the files that carry it. It changes no code under `src/`, no test and no
+physics. It amends §8.4.4, §8.4.5 and `CLAUDE.md`'s *Models*, and supersedes §8.2.50 AZ20 and AZ21 (each plan
+proposes its models) and the parts of §8.2.54 BD2 that make a helper resume. It claims no `VER-` identifier: its
+checks are the code and the review (§8.2.13 N3).
+
+**Built and shipped in this conversation, on Opus 5.5 at high effort** (BF7). No helper and no Fable call.
+
+### Decisions
+
+| Decision | Choice | Why/source |
+|---|---|---|
+| D1 Models by role | Fable plans (both plan helpers); Sonnet runs `/np-carry`'s main session and ships; Opus builds and reviews; a red CI that is a test or a numerical gate goes to a fresh Opus helper. Each role's model is fixed in its agent file, not proposed per plan | Ruled by the author, BF1 |
+| D2 No resume | A helper that needs the author, a worker or a review ends with a hand-off note in a fixed shape; the answer goes to a fresh helper of the same role that reads the note. The plan stage is two helpers: survey-measure-ask, then write | Ruled by the author, BF2 |
+| D3 The plan's check | No review run of the plan. The plan-writing helper checks its own plan against a fixed list before it commits; `/np-plan wp n review` becomes that check alone and the approval summary | Ruled by the author, BF3 |
+| D4 The code's review | One review at the ship by a project agent `np-reviewer` on Opus at high, its prompt holding standards, specification and the physics questions; no separate physics reviewer, no `code-review` fork | Ruled by the author, BF4 |
+| D5 After the review | A finding left to the author is a `REV` row by default and the PR merges as reviewed; one the author pulls in gets a review of its own diff by `np-reviewer` told to run as Sonnet at low effort | Ruled by the author, BF5 |
+| D6 Starting context | Each helper agent file lists its tools; `.claude/settings.json` disables each plugin this project never uses | Ruled by the author, BF6 |
+| D7 The mechanics | `just land` runs the registers, the docs build when a source changed, a commit of what they wrote, the push gate and its wait, the rebase and the push with retries, and prints one line | Decided by the plan, from BF1 |
+
+### Grounding
+
+- **D1.** `.claude/skills/np-carry/SKILL.md` §3 starts every helper as `general-purpose` with `model` by stage, the
+  ship's from the plan's `**Implementing session: …; ship: …**` line; §8.4.5's first two bullets state the same. A
+  forked skill takes the main session's model, so the WP6.06 reviews ran on Fable (the post-mortem's table). The
+  main session's model is the author's at start: `/np-carry`'s report names Sonnet for the next.
+- **D1.** `.claude/agents/physics-reviewer.md` shows the shape of an agent file: front matter `model:` and `tools:`;
+  the `Agent` call's `model` overrides it, so `/np-carry` passes none for these agents.
+- **D2.** Cache rewrites after a gap above 5 minutes: ship helper 1.34 M of 1.67 M written tokens, plan helper
+  0.86 M of 1.41 M (post-mortem). `.claude/workflow/helper.md` defines `ASK`, `WORKER`, `REVIEW`, `WAIT`, `BLOCKED`,
+  `DONE`; `np-carry` §4 resumes "the same helper by `SendMessage`".
+- **D3.** `.claude/skills/np-plan/review.md` step 2 calls `code-review medium --fix`; steps 3 to 5 fix, commit and
+  summarise; its summary template (the manager's summary) stays.
+- **D4.** `.claude/skills/np-ship/wp.md` §4 asks the physics reviewer and then `code-review xhigh --fix`; the
+  helper passes both back to the main session. `np-reviewer` is an `Agent`, so a helper still cannot start it: the
+  ship helper hands back `REVIEW` with the prompt and ends, and a fresh ship helper reads the report (D2).
+- **D5.** `.claude/workflow/author.md` *Putting a choice to the author* and `np-ship/wp.md` §4 put each finding not
+  fixed to the author; §8.4.6 makes it a `REV` row when left open.
+- **D6.** Helpers started at 73k to 76k tokens, the physics reviewer with three tools at 14k (post-mortem). The
+  plugins come from the account, not `.claude/settings.json`, which has no `enabledPlugins` key today. A helper
+  needs `TaskCreate`, `TaskList`, `TaskUpdate`, `SendMessage` absent, and `mcp__claude-code-remote__*` only for the
+  ship's subscription, which the main session holds.
+- **D7.** The core's *Gate and push* steps 1 to 6; `justfile` has a `gate` recipe; `decisions.py`,
+  `index_records.py` and `uv run just docs` are the registers and the docs build.
+
+### Implementation details
+
+**Item 1, the agent files.** Each in `.claude/agents/`, front matter `name`, `description`, `model`, `tools`:
+`np-planner` (fable; Read, Edit, Write, Grep, Glob, Bash, the task tools, Context7's two), `np-builder` (opus; the
+same without Context7), `np-shipper` (sonnet; Read, Edit, Write, Grep, Glob, Bash, the task tools, the GitHub
+tools the ship uses), `np-reviewer` (opus; Read, Grep, Glob, Bash, Edit, Write). The body says which skill file the
+agent follows and points to `helper.md`. Probe each once with a one-line task: it lists its tools and its start
+context is under 30k tokens; record the numbers in the knowledge note 07/26.
+
+**Item 2, the hand-off note.** `helper.md` gains *The hand-off note*: `docs/plans/phase-<p>/wp<n>-handoff.md`,
+committed, overwritten at each hand-off, deleted by the ship. Sections: **Step**, **Done** (commits), **Measured**
+(numbers only), **Decided**, **Open** (the questions, verbatim), **Next** (the exact first action). At most 600
+words. `np-carry` §4: every hand-back ends the helper; the answer starts a fresh helper of the same agent with
+"Read `<note>`, then continue at Next with: <answer>".
+
+**Item 3, the plan.** `np-plan/wp.md` splits at *Putting the decisions to the author*: the first helper ends there
+with `ASK` and the note; the second writes, self-checks and commits. `np-plan/review.md` keeps steps 3 to 5 without
+the `code-review` call; its new step 2 is the self-check list of D3.
+
+**Item 4, the ship.** `np-ship/wp.md` §4: hand back `REVIEW` with `np-reviewer`'s prompt (standards, the clauses
+cited, the numerics questions as WP6.06's ship wrote them), end; a fresh `np-shipper` applies the report's fixes
+and records each finding not fixed as a `REV` row (D5). A red CI classified by `ci-log-classifier` as a test or a
+gate failure goes back as `WORKER` for `np-builder` with the log.
+
+**Item 5, `just land`.** A recipe calling `.claude/scripts/land.sh`, which runs the core's steps 1 to 6 in order and
+stops on the first failure, printing `land: pushed <sha>` or `land: failed at <step>`.
+
+### Work items
+
+- [ ] 1. `.claude/agents/np-planner.md`, `np-builder.md`, `np-shipper.md`, `np-reviewer.md`; the probe; knowledge
+  note 07/26 (D1, D4, D6). Done when the code and review say so. **Executor:** main
+- [ ] 2. `.claude/workflow/helper.md`, `.claude/skills/np-carry/SKILL.md`: the note, no resume, the agents by role
+  (D1, D2). Done when the code and review say so. **Executor:** main
+- [ ] 3. `.claude/skills/np-plan/wp.md`, `review.md`, `SKILL.md`: the split and the self-check; the models
+  proposal removed (D2, D3). Done when the code and review say so. **Executor:** main
+- [ ] 4. `.claude/skills/np-ship/wp.md`, `SKILL.md`, `.claude/workflow/author.md`: one review, `REV` by default,
+  red CI to Opus (D4, D5). Done when the code and review say so. **Executor:** main
+- [ ] 5. `justfile`, `.claude/scripts/land.sh`, the core's *Gate and push*; `.claude/settings.json`'s
+  `enabledPlugins` (D6, D7). Done when `just land` pushes a no-op branch and the code and review say so.
+  **Executor:** main
+- [ ] 6. §8.4.4, §8.4.5, `CLAUDE.md` *Models*, `holds-now.yaml` (AZ20, AZ21, BD2 superseded), `CHANGELOG.md`,
+  the plan's Outcome. Done when `uv run just docs` and `decisions.py --check` pass. **Executor:** main
+
+### Verification
+
+No test is added: the package is outside the test scope (§8.2.13 N1). Its checks are item 1's probe, item 5's
+no-op push, the docs build and the one review of D4, run on this package's own PR. WP6.07 reports its cost by role
+against WP6.06's: Fable at most a third of its units, and no cache rewrite above 100k tokens after a gap.
+
+### Out of scope
+
+- `/np-gui`, `/np-plan phase`, `amend` and `project`: unchanged; a later round may take the same rules.
+- The account's plugins outside this project: the author's.
+- A change to how `usage.py` measures: none is needed for WP6.07's comparison.
+
+### Open questions
+
+None.
