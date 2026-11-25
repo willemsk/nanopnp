@@ -1830,3 +1830,42 @@ note.
 its file and starts at 12.6k to 12.8k tokens, beside 73k to 76k for a `general-purpose` helper; the numbers are in
 [knowledge 07/26](../../knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md).
 
+
+### REV-290: The builder and the planner agents list no GitHub tool
+
+Left by WP6.09's review ([CODE_REVIEW_090](../code_reviews/CODE_REVIEW_090.md)). `np-builder` finds, opens and
+updates the package's PR, and `np-planner` opens the plan's PR, but neither `.claude/agents/np-builder.md` nor
+`np-planner.md` lists a GitHub tool, and `gh` is not logged in on the cloud host. Under `/np-carry` either helper
+fails at its PR step. The reviewer's edit of the tool lists was refused by the permission check.
+
+*Recommendation:* add `mcp__github__list_pull_requests`, `mcp__github__pull_request_read`,
+`mcp__github__create_pull_request` and `mcp__github__update_pull_request` to both files, before WP6.07's carry.
+
+### REV-291: A red CI that is neither a test nor a gate has no owner
+
+Left by WP6.09's review ([CODE_REVIEW_090](../code_reviews/CODE_REVIEW_090.md)). §8.2.56 BF1's consequence sends
+every red CI but lint, format or a flaky runner to Opus; `np-ship/wp.md` §5 and `np-shipper.md` send only a test or
+a numerical gate to `np-builder` and bar the ship from any code fix. A `ruff`, `docs`, stale-lock or `mypy` failure
+then belongs to no one.
+
+*Recommendation:* follow BF1's consequence: the ship runs `ruff format` and `ruff check --fix` and reruns a flaky
+runner once; every other failure goes to `np-builder`.
+
+### REV-292: WP6.09's tag number conflicts with §8.4.1
+
+Left by WP6.09's review ([CODE_REVIEW_090](../code_reviews/CODE_REVIEW_090.md)). From Phase 5, §8.4.1 numbers a package's alpha tag
+by its place in its phase, so WP6.09 takes `v0.7.0-alpha.9`; its plan and `CHANGELOG.md` give
+`v0.7.0-alpha.7`, WP6.07's number, so that versions on `main` keep rising when WP6.07 merges after it. §8.4.1 asks
+for both, and they cannot both hold.
+
+*Recommendation:* a ruling before the tag: either alpha numbers follow the merge order, amending §8.4.1 and
+`CONTRIBUTING.md`, or WP6.09 takes `alpha.9` and WP6.07, merged after it, takes none.
+`/np-ship`'s *After the merge* waits for it.
+
+### REV-293: Hand-off notes enter the plans index
+
+Left by WP6.09's review ([CODE_REVIEW_090](../code_reviews/CODE_REVIEW_090.md)). `index_records.py` lists every
+Markdown file under `docs/plans/phase-<p>/`, so a hand-off note shows in the plans index as "no status line", and
+each hand-off rewrites the index.
+
+*Recommendation:* `index_records.py` skips `*-handoff.md`.
