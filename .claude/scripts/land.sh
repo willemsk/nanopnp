@@ -24,8 +24,10 @@ fail() {
 }
 
 lease=""
-if [[ ${1:-} == --lease ]]; then
-    lease=${2:?"--lease takes the sha last pushed"}
+if [[ $# -eq 2 && $1 == --lease && -n $2 ]]; then
+    lease=$2
+elif [[ $# -ne 0 ]]; then
+    fail "the arguments: land.sh [--lease <sha>], given: $*"
 fi
 
 cd "$(git rev-parse --show-toplevel)" || fail "the repository"
@@ -36,8 +38,9 @@ branch=$(git branch --show-current)
 echo "land: the registers"
 uv run .claude/scripts/decisions.py || fail "the registers (decisions.py)"
 uv run .claude/scripts/index_records.py || fail "the registers (index_records.py)"
-if [[ -n $(git status --porcelain -- docs/project/decisions.md docs/plans docs/code_reviews docs/design/reviews) ]]; then
-    git add docs/project/decisions.md docs/plans docs/code_reviews docs/design/reviews
+registers=(docs/project/decisions.md docs/project/decisions-closed.md docs/plans docs/code_reviews docs/design/reviews)
+if [[ -n $(git status --porcelain -- "${registers[@]}") ]]; then
+    git add -- "${registers[@]}"
     git commit -q --no-verify -m "docs: the decisions page and the indexes" || fail "the registers' commit"
 fi
 
@@ -55,7 +58,8 @@ else
     since="origin/main"
 fi
 sources='^(SPECIFICATION\.md|specification/|knowledge/|CHANGELOG\.md|examples/[^/]+/README\.md|data/corrections/|mkdocs\.yml|src/|docs/)'
-if git diff --name-only "$since"...HEAD | grep -E "$sources" | grep -vqE '^docs/(plans|code_reviews)/'; then
+changed=$(git diff --name-only "$since"...HEAD | grep -E "$sources" | grep -vE '^docs/(plans|code_reviews)/')
+if [[ -n $changed ]]; then
     echo "land: the documentation build"
     uv run just docs || fail "the documentation build"
     if [[ -n $(git status --porcelain -- mkdocs.yml) ]]; then

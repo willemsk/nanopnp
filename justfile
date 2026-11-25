@@ -63,7 +63,8 @@ gate log=(env("TMPDIR", "/tmp") / "nanopnp-gate.log"):
     status=0; .claude/hooks/gate.sh run > "$1" 2>&1 || status=$?; echo "exit $status" >> "$1"; exit $status
 
 # The core's Gate and push, steps 1 to 6, into a log whose last lines are "land: …" and "exit <status>";
-# an agent starts it in the background. `--lease <sha>` pushes a branch rewritten on main
+# an agent starts it in the background. `just land <log> --lease <sha>` pushes a branch rewritten on main:
+# the log comes first
 land log=(env("TMPDIR", "/tmp") / "nanopnp-land.log") *args:
     status=0; .claude/scripts/land.sh "${@:2}" > "$1" 2>&1 || status=$?; echo "exit $status" >> "$1"; exit $status
 

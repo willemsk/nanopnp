@@ -37,8 +37,9 @@ pore.
 ## Not to be re-decided
 
 - **Process rules** are §8.4: two lanes at most (S15); a VER-62 miss is reverted or re-pinned by ruling (G10); the
-  reading limit is 8,000 words (AZ18); each plan proposes its two models (AZ20, AZ21). **A gate asks three
-  platforms at a phase's close; a pull request tests Linux** (AY4; AZ8).
+  reading limit is 8,000 words (AZ18); each role's model and effort are its agent's, and the author picks the
+  planning model at each plan (BF1, BF9). **A gate asks three platforms at a phase's close; a pull request tests
+  Linux** (AY4; AZ8).
 - **A session may restructure code while the push gate passes, its nightly walks not asked** (BA7, BA14).
 - **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4); **from v1.0 the case file and the run record are
   converted** (BC20).
