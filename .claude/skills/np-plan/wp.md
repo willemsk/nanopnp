@@ -25,8 +25,8 @@ matters. The plan is a commit under `docs/plans/`, not a chat message.
 
 ## Grounding the plan
 
-The plan is written on Fable 5.2 for an implementer, on the model the author ruled, who has not seen this session. An item marked for a
-sub-agent is for the Sonnet or Haiku model that executes it (§8.2.16 R11; §8.2.38 AN8; §8.2.50 AZ20). When the decisions are drafted, and before you
+The plan is written for an implementer, `np-builder` on Opus 5.5 at high effort, who has not seen this session. An item marked for a
+sub-agent is for the Sonnet or Haiku model that executes it (§8.2.16 R11; §8.2.38 AN8; §8.2.56 BF1). When the decisions are drafted, and before you
 commit, read yourself the code that each decision and work item changes or relies on. Settle each point
 the implementer would otherwise guess (§8.2.15 Q1). For each, ask:
 
@@ -67,19 +67,14 @@ AI6):
 
 Put each of the author's to the author as *Putting a choice to the author* in `.claude/workflow/author.md` says, the
 recommendation first, and record the rulings as `rulings.md` says. A package that changes what a user
-sees usually has two to four. A mechanical package may have none but the two models; the report then
-says why.
+sees usually has two to four. A mechanical package may have none; the report then says why. The
+models of the build and the ship are the agents' (§8.2.56 BF1), not the plan's to propose.
 
-**The two models** (§8.4.5; §8.2.50 AZ20, AZ21). Every plan puts two proposals to the author with its
-other decisions: the model of the implementing session and the model of the ship.
-
-- Opus 5.5 implements by default, Sonnet 5.5 a package that is very mechanical, and Fable 5.2 one that
-  needs subtle, long-horizon work. Fable 5.2 ships by default.
-- Give each proposal its reason, and say what another model would change in the plan.
-- After the ruling, fit the plan to the models ruled: its executors, its checkpoints and how much
-  *Implementation details* spells out.
-- Where the two models differ, the ship never chains from the implementing session
-  (`NANOPNP_AUTO_SHIP`), and the brief says so.
+**Under `/np-carry`, the plan is two helpers** (§8.2.56 BF2). The first ends here: it writes the
+draft in the plan's file, its `### Grounding` and its drafted `### Decisions` with the author's marked,
+commits it as `docs: WP<n> plan draft`, gates and pushes, and hands back `ASK` with the note
+(`.claude/workflow/helper.md`). The second, a fresh helper, reads the note and the draft, records the
+rulings, writes the rest, runs the self-check and finishes.
 
 ## Scope of one work package
 
@@ -93,10 +88,10 @@ localise an error to one term (§7.1).
 
 | Section | Content |
 |---|---|
-| Title + status | `# WP<n> — <name>`, then **Status: planned, not started**, the date, and what it inherits |
+| Title + status | `# WP<n> — <name>`, then **Status: planned, not started**, the date, the model and effort that wrote it, and what it inherits |
 | Normativity note | One paragraph: the phase plan it belongs to, that `SPECIFICATION.md` governs, that identifiers are pointers |
 | `## In brief` | Before the Execution brief; the template in `.claude/workflow/author.md` |
-| `## Execution brief` | Current scope, dependencies, requirement pointers, the model and effort of the implementing session and of the ship as the author ruled them, and the subsections below. Link evidence; do not retell earlier packages |
+| `## Execution brief` | Current scope, dependencies, requirement pointers, and the subsections below. Link evidence; do not retell earlier packages |
 | `### Decisions` | A table `Decision \| Choice \| Why/source`, **about six rows, a guideline**: more when the package needs them, each one a choice and not a detail. **This is the deliverable.** Resolve now each choice that affects correctness; each *Why/source* ends with "ruled by the author" and the ruling, or "decided by the plan" |
 | `### Grounding` | The facts of *Grounding the plan*, grouped by decision (`D1`, `D2`, …), one bullet each: `path:symbol`, what it does today and what the change does to it. Facts only: no alternatives, no history, no restated specification. Cite symbols, not line numbers, which drift |
 | `### Implementation details` | Optional, about 1,000 words (*The caps*): the exact steps, layouts, commands and file formats an item needs when a smaller model executes it, grouped by item. Steps, not design: a choice belongs in *Decisions* |
@@ -125,8 +120,7 @@ Never omit a required check or a grounding fact to meet a count.
 ### Work items
 
 Leave the boxes unticked; `/np-implement` ticks them. **Each item names its executor** (§8.2.16 R6,
-R11): `main`, or a sub-agent type and model, for example `general-purpose` on Sonnet, high effort. The plan names the
-implementing and the shipping model the author ruled (*Putting the decisions to the author*).
+R11): `main`, or a sub-agent type and model, for example `general-purpose` on Sonnet, high effort.
 
 - A sub-agent takes only an item that is independent and mechanical, and whose checks it can run: a
   sweep, a slice, a rename, a fixed list of edits. It runs on Sonnet at high effort; on Haiku only when it is
@@ -146,12 +140,15 @@ Link the planned package and its live dependencies. Its word target is in its *H
 
 1. A necessary spec amendment goes in the same commit, and the plan says so. If the author rules while
    the package is planned, write the ruling as `rulings.md`, beside this file, says.
-2. Commit `docs: WP<n> implementation plan`, with the identifiers in the body. Gate and push (the
+2. Run *The self-check* of `review.md`, beside this file, on the plan, and fix what it finds
+   (§8.2.56 BF3).
+3. Commit `docs: WP<n> implementation plan`, with the identifiers in the body. Gate and push (the
    core), so that another session on another machine can work from the branch.
-3. Open the PR by the *PR contract* of `.claude/workflow/finish.md`. It is the package's PR, and `/np-implement` reuses it. The
+4. Open the PR by the *PR contract* of `.claude/workflow/finish.md`. It is the package's PR, and `/np-implement` reuses it. The
    body's In brief is the plan's. *What this delivers* says that the plan is in and the implementation
-   follows. *Verification* ticks only the plan's gate, and says that the plan's review follows as
-   `/np-plan wp <n> review` and the code's review waits for `/np-ship`.
-4. Report the path, the PR, the close calls, what the grounding pass changed, each spec amendment and
+   follows. *Verification* ticks the plan's gate and its self-check, and says that the code's review
+   waits for `/np-ship`.
+5. Report the path, the PR, the close calls, what the grounding pass changed, each spec amendment and
    the open questions. Then pause as `SKILL.md`'s *The pause* says. Implementation is `/np-implement`,
-   in a separate turn after the review.
+   in a separate turn after the approval. A helper of `/np-carry` hands back `DONE` with the manager's
+   summary of `review.md` in place of the pause.
