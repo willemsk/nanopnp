@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06. Amended 24 November 2026 (§8.2.53; §8.2.54): WP6.06 to WP6.08 are planned by scope and numbered in build order; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06. Amended 24 and 25 November 2026 (§8.2.53; §8.2.54; §8.2.56 BF10): WP6.06 to WP6.09 are numbered in build order, and WP6.08 and WP6.09 planned by scope; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -42,14 +42,14 @@ True of the codebase today:
   again the terms of `physics/flow.py`.
 - **Nothing finds a registration in an installed package** when the command line or the workbench starts (REV-67).
 - **VER-62's stored numbers cover the default switches alone**: the review's claim, not checked at its source
-  (§8.2.53); WP6.07 checks it first.
+  (§8.2.53); WP6.08 checks it first.
 - **A package takes at least four sessions the author starts** (§8.3) and about eight touches (BC10). The browser
   tests take 468 s of the push gate's 539 s (BC15).
 
 Risks: none is retired.
 
 Excluded: the library's foundations but for "switches as data", Phase 7 (BC3, BC7); the workbench's rebuild and the composer's tool,
-Phase 8 (BC6); the benchmark on a coarse 3D mesh, until WP6.08 prices it and the author rules (BC5); a comparison with the published results (BC8 records one at Phase 7's close).
+Phase 8 (BC6); the benchmark on a coarse 3D mesh, until WP6.09 prices it and the author rules (BC5); a comparison with the published results (BC8 records one at Phase 7's close).
 
 ## Design decisions
 
@@ -69,7 +69,7 @@ Phase 8 (BC6); the benchmark on a coarse 3D mesh, until WP6.08 prices it and the
 
 ## Work packages
 
-WP6.05 to WP6.08 take `v0.7.0-alpha.5` to `v0.7.0-alpha.8`; the close takes `v0.7.0` alone (§8.4.1; BD1).
+WP6.05 to WP6.09 take `v0.7.0-alpha.5` to `v0.7.0-alpha.9`; the close takes `v0.7.0` alone (§8.4.1; BD1).
 
 ### WP6.01 to WP6.04 — delivered
 
@@ -83,7 +83,7 @@ WP6.05 to WP6.08 take `v0.7.0-alpha.5` to `v0.7.0-alpha.8`; the close takes `v0.
 ### WP6.05 — The orchestrator (BC10, BC15; BD2 to BD6)
 
 *Delivered 24 November 2026.* [The plan](wp6.05-the-orchestrator.md). Live: `/np-carry wp <n>` carries WP6.06 and
-WP6.07, which are measured (BC10); the reading limit binds every helper that implements (BD3); the browser-path
+WP6.08, which are measured (BC10); the reading limit binds every helper that implements (BD3); the browser-path
 count missed, 32 < 34, so the push gate keeps the browser tests (BC15 spent).
 
 ### WP6.06 — The channel's axis at a ragged rim (REV-279; VER-48; BA8; BB1)
@@ -93,16 +93,16 @@ no longer locks at a flat rim, and may differ by up to about 1° from v0.6's (BA
 stage 1's `channel_axis_revision` (BE2); the two limits stay (BE1); an axis found from joggled input is warned of
 (BE6); a lumen with atoms on its axis is warned of (AO4).
 
-### WP6.09 — The lean carry (BF1 to BF9)
+### WP6.07 — The lean carry (BF1 to BF10)
 
-*Planned and built 25 November 2026* ([the plan](wp6.09-the-lean-carry.md)); awaiting its review and merge; built before WP6.07, so that WP6.07 is the first
+*Planned and built 25 November 2026* ([the plan](wp6.07-the-lean-carry.md)); reviewed, awaiting its merge; numbered in build order between WP6.06 and the guard numbers (BF10). WP6.08 is the first
 package carried the lean way and measures it (BF7). After WP6.06's post-mortem: Fable 5.2 only plans, or Opus 5.5 at the author's pick, Sonnet 5.5
 runs the carry and ships, Opus 5.5 builds, reviews once and takes a red CI; a helper that waits hands off to a fresh
 one through a note; the plan checks itself; a finding left to the author is an open item by default; each helper
 lists its tools; the mechanics are `just land`. It changes no code under `src/`. About 1 session, 2 to 3 agent hours
 and 2 touches.
 
-### WP6.07 — The guard numbers (BC3)
+### WP6.08 — The guard numbers (BC3)
 
 *Planned by scope.* Reference numbers for the switches off their default: PHY-23's terms, the log branch and NUM-14's
 mode. It first checks that VER-62's walks cover the default switches alone, and stores only what is missing. The numbers are recorded once, on this package's tree, on which VER-62 passes and which
@@ -111,7 +111,7 @@ relative as VER-62's are, each with its stabilisation mode; a later change to on
 changes no physics. Its plan settles open decision 14; this plan's input is that the nightly run holds them (BA14). About 3 sessions, 2 to 3 agent hours
 and 4 touches.
 
-### WP6.08 — The kernel's design (BC2, BC5)
+### WP6.09 — The kernel's design (BC2, BC5)
 
 *Planned by scope.* A design page and a throwaway prototype. The page states the term, a correction as a coefficient
 that terms share, the rule that binds terms (PHY-08), each flux integrated once, the nine names of `physics/` the
@@ -125,8 +125,8 @@ touches.
 
 ### The ruling round on the kernel's design (BC2)
 
-After WP6.08 merges, at `/np-plan amend 6` (BC10). The author rules the design, a prototype that missed 10⁻⁸ first,
-and the 3D benchmark on its price (BC5), and sets the touches target; the round numbers what follows from WP6.09. About 2 sessions and 3 touches.
+After WP6.09 merges, at `/np-plan amend 6` (BC10). The author rules the design, a prototype that missed 10⁻⁸ first,
+and the 3D benchmark on its price (BC5), and sets the touches target; the round numbers what follows from WP6.10. About 2 sessions and 3 touches.
 
 ### Provisional (BC1, BC4, BC5)
 
@@ -147,16 +147,16 @@ Input to that round, in order; none is numbered before it:
 | 11 | What §5.2's two limits become if the fix moves 2WCD's measured axis (REV-239) | **Settled by the author, 25 November 2026**, at WP6.06's plan, before the fix was measured: the limits stay (BE1) |
 | 12 | The numbers of the packages after the review | **Settled by the author, 24 November 2026**: in build order (BD1) |
 | 13, 17 | What the reading limit counts under the orchestrator; helpers or separate sessions | **Settled by the author, 24 November 2026**: every helper that implements; helpers (BD2, BD3). The browser tests' rule is not built: WP6.05's count missed, 32 < 34 (BD4; BC15 spent) |
-| 14 | Which walk carries each switch off its default; the guard numbers' identifier in §7; whether the nightly run holds them | WP6.07's plan (BC3) |
-| 15 | The target for the author's touches a package | **Author**, at the round after WP6.08, from WP6.06's and WP6.07's measured lines (BC10) |
-| 16 | The kernel's design; the number and order of its packages; whether the 3D benchmark is built, on its price | **Author**, at the round after WP6.08 (BC2, BC5) |
-| 18 | The model a carried package's main session is started on, which both of its reviews take (REV-288) | **Author**, at the round after WP6.08, with WP6.06's and WP6.07's measured lines; left open by the author, 24 November 2026 |
+| 14 | Which walk carries each switch off its default; the guard numbers' identifier in §7; whether the nightly run holds them | WP6.08's plan (BC3) |
+| 15 | The target for the author's touches a package | **Author**, at the round after WP6.09, from WP6.06's and WP6.08's measured lines (BC10) |
+| 16 | The kernel's design; the number and order of its packages; whether the 3D benchmark is built, on its price | **Author**, at the round after WP6.09 (BC2, BC5) |
+| 18 | The model a carried package's main session is started on, which both of its reviews take (REV-288) | **Author**, at the round after WP6.09, with WP6.06's and WP6.08's measured lines; left open by the author, 24 November 2026 |
 
 ## What the author supplies
 
 | Item | Needed by | If it does not arrive |
 |---|---|---|
-| The kernel's design ruled; the 3D benchmark; the touches target | The round after WP6.08 | No kernel package is planned (BC2) |
+| The kernel's design ruled; the 3D benchmark; the touches target | The round after WP6.09 | No kernel package is planned (BC2) |
 | Merges; tags a session cannot push | Each package | The session dispatches `tag.yml` and prints the commands |
 
 ## Verification
@@ -170,16 +170,16 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 |---|---|---|
 | WP6.05 | none | Outside N1's scope. Review: the record of the three facts and of the count; CI still runs every browser test |
 | WP6.06 | 1 | VER-48 |
-| WP6.07 | 2 | VER-62's walks with the switches off their default; the identifier is open decision 14 |
-| WP6.08 | none kept | Example 01's walk of VER-62 on the prototype, reported with its commit and command |
-| The provisional packages | 1, 2 | FR-40's tests, which the design names; criterion 3's; set at the round after WP6.08 |
+| WP6.08 | 2 | VER-62's walks with the switches off their default; the identifier is open decision 14 |
+| WP6.09 | none kept | Example 01's walk of VER-62 on the prototype, reported with its commit and command |
+| The provisional packages | 1, 2 | FR-40's tests, which the design names; criterion 3's; set at the round after WP6.09 |
 
 **The phase is complete when** (§8.1's gate; that round restates criteria 3 and 6 with their tests):
 
 1. **Tiers 1 and 2 pass on Linux, macOS and Windows**, on the close's own full run. No waiver (AY4); a miss is fixed.
 2. **VER-62 is unmoved at 10⁻⁸** by every package: on a push its two walks, on the nightly run the other five (BA14).
-   Prediction: round-off alone: WP6.05 changes no `src/`, no walk takes the channel's axis, WP6.07 only adds
-   numbers, WP6.08 merges no prototype. A miss is reverted, or re-pinned only by ruling (G10).
+   Prediction: round-off alone: WP6.05 changes no `src/`, no walk takes the channel's axis, WP6.08 only adds
+   numbers, WP6.09 merges no prototype. A miss is reverted, or re-pinned only by ruling (G10).
 3. **The kernel's last package reproduces all seven walks and the guard numbers to 10⁻⁸ before it merges, and
    VER-12 to VER-22, VER-31, VER-42 and VER-77 pass unchanged** (BC4). Prediction: it holds where each flux is
    integrated once (the physics reviewer, at BC2). A miss is fixed or
@@ -201,10 +201,10 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
     plan measures first. A move, of it or of the farthest centre's 0.0148 nm, amends VER-48 and §5.2's NOTE in the
     fix's commit and is reported; the limits stay, and the package stops for the author only if 2WCD would pass one
     (BE1).
-11. **The orchestrator's three facts are recorded, and WP6.06 and WP6.07 are reported with their sessions, agent
+11. **The orchestrator's three facts are recorded, and WP6.06 and WP6.08 are reported with their sessions, agent
     hours and touches** (BC10; BD2). A package it cannot carry goes back to the three commands.
 12. **The guard numbers are stored** after the check of VER-62's coverage (BC3). Prediction: the walks cover the
-    default switches alone; if not, WP6.07 stores only what is missing.
+    default switches alone; if not, WP6.08 stores only what is missing.
 
 ## End-of-phase report
 

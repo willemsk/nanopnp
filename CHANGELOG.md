@@ -27,8 +27,8 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [0.7.0-alpha.7]
 
-WP6.09: the lean carry; tag `v0.7.0-alpha.7` once merged (§8.2.56 BF1 to BF9; REV-288). The
-[plan](docs/plans/phase-6/wp6.09-the-lean-carry.md) records the work. Nothing changes for a user of the program.
+WP6.07: the lean carry; tag `v0.7.0-alpha.7` once merged (§8.2.56 BF1 to BF10; REV-288 to REV-293). The
+[plan](docs/plans/phase-6/wp6.07-the-lean-carry.md) records the work. Nothing changes for a user of the program.
 
 - **Changed** (the workflow, §8.4.4, §8.4.5):
   - Each role has its model and effort in a project agent: Fable 5.2 at high plans, or Opus 5.5 at xhigh where the
@@ -41,6 +41,8 @@ WP6.09: the lean carry; tag `v0.7.0-alpha.7` once merged (§8.2.56 BF1 to BF9; R
   - `just land` runs the registers, the docs build, the rebase, the push gate and the push in one command.
   - Each helper agent lists its tools, so the account's plugins no longer load into a helper: it starts at about
     13k tokens, where it started at 73k to 76k.
+  - Phase 6's packages stay numbered in build order: the lean carry is WP6.07, the guard numbers WP6.08 and the
+    kernel's design WP6.09 (BF10).
 
 ## [0.7.0-alpha.6]
 

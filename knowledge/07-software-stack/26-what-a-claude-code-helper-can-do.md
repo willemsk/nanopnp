@@ -52,7 +52,7 @@ in the foreground by a main session on Opus 5.5. [verified][^probe]
 It takes `model` (`sonnet`, `opus`, `haiku`, `fable`) and `effort`. Its description asks that
 `effort` be set only where an instruction asks for it, so `/np-carry` asks for `high`. [verified][^probe]
 
-### A project agent file (WP6.09)
+### A project agent file (WP6.07)
 
 - **Its front matter sets the agent's model, effort and tools.** `.claude/agents/<name>.md` takes
   `name`, `description`, `model`, `effort` and `tools`; the `Agent` tool's description says an agent
@@ -87,7 +87,7 @@ It takes `model` (`sonnet`, `opus`, `haiku`, `fable`) and `effort`. Its descript
     `select:TaskList,TaskGet,TaskUpdate` (three), called `TaskList` once, wrote this note's first
     version, committed it, ran the push gate and pushed. It was resumed twice by `SendMessage`. A
     probe of the same day at `8b54c5f` found no task tools in a helper (the plan's *Grounding*).
-[^agents]: WP6.09's item 1, 25 November 2026, on the claude.ai cloud host (Linux), Claude Code
+[^agents]: WP6.07's item 1, 25 November 2026, on the claude.ai cloud host (Linux), Claude Code
     2.1.332. The four helper agents' files were written, and `Agent` with `subagent_type:
     "np-shipper"` returned "Agent type 'np-shipper' not found" with the list of the types loaded at
     start. The `Agent` tool's description is that version's.
@@ -95,7 +95,7 @@ It takes `model` (`sonnet`, `opus`, `haiku`, `fable`) and `effort`. Its descript
     Claude Code 2.1.332 on the cloud host: each agent started once in the foreground with a one-line
     task, and its sub-agent transcript read for `message.model`, the first call's input, cache-read and
     cache-write tokens, and the `effort` its entries record.
-[^plugins]: WP6.09, 25 November 2026, Claude Code 2.1.332 on the cloud host: the session restarted on
+[^plugins]: WP6.07, 25 November 2026, Claude Code 2.1.332 on the cloud host: the session restarted on
     `659983c`'s tree, whose settings held the block, and `ToolSearch` `+pdf display` returned
     `mcp__plugin_pdf-viewer_pdf__display_pdf`.
 [^api]: The Claude API skill bundled with Claude Code 2.1.332, its *Thinking & Effort* table: Opus 5.5's

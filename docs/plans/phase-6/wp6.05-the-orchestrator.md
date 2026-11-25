@@ -13,7 +13,7 @@ and no `AskUserQuestion`, and gates, pushes and resumes; it now keeps the task l
 measures a session and its helpers on one timeline and reports each helper's reading window. The browser-path count
 missed, `k` = 32 < 34 ([the count](../sessions/browser-path-count.md)): no rule is added and BC15 is spent. §8.3,
 §8.4.4 and §8.4.5 carry BC10 and BD2, BD3 and BD6. No `src/` or `tests/` change and no identifier is claimed. Live:
-every helper that implements is bound by the 8,000-word limit (BD3); WP6.06 and WP6.07 run under `/np-carry` and
+every helper that implements is bound by the 8,000-word limit (BD3); WP6.06 and WP6.08 run under `/np-carry` and
 are measured (BC10).
 
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.05 entry sets this scope; `SPECIFICATION.md` governs, and
@@ -279,7 +279,7 @@ tests are left to CI, in the summary line too.
 > **Outcome — review 086 changed the two files, and one question is left open.** The
 > [review](../../code_reviews/CODE_REVIEW_086.md) gave 23 findings; 21 are fixed, one cannot be (item 4's code and
 > its clause are in two pushed commits), and one is REV-288, the model of a carried package's main session, which
-> the author left open until the round after WP6.08. A ship helper no longer stops to subscribe, the main session
+> the author left open until the round after WP6.09. A ship helper no longer stops to subscribe, the main session
 > waits for a hand-back and commits nothing on a stop hook's word, the plan's review is measured and its report
 > reaches the helper, and a carried package's cost reaches its Outcome as one line. So `helper.md`'s table and the
 > skill's steps now differ from *Implementation details*, items 2 and 3, which stay as planned. Measured, the
@@ -300,8 +300,8 @@ uv run just docs
 
 ### Out of scope
 
-- The first two carried packages, their sessions, agent hours and touches: WP6.06 and WP6.07 (criterion 11).
-- The target for the author's touches: the round after WP6.08 (open decision 15).
+- The first two carried packages, their sessions, agent hours and touches: WP6.06 and WP6.08 (criterion 11).
+- The target for the author's touches: the round after WP6.09 (open decision 15).
 - Separate sessions that the main session starts: not built (BD2).
 - `NANOPNP_AUTO_CHECKPOINT` and `NANOPNP_AUTO_SHIP`: unchanged; their trial is not run (BC10).
 - A carried phase, amendment or ruling round: none (BC10).

@@ -1,12 +1,11 @@
-# WP6.09 — The lean carry
+# WP6.07 — The lean carry
 
 **Status: built and reviewed, awaiting its merge.** Written 25 November 2026 on Opus 5.5 at high effort, grounded in
 the workflow at `5946602`; built the same day on the same model. Inherits §8.2.53
-BC10, §8.2.54 BD2 to BD6, the rulings of this plan (§8.2.56 BF1 to BF9) and WP6.06's measured cost. Built before
-WP6.07, so that WP6.07 is the first package carried the lean way and measures it. Its last commit on `main` takes
-`v0.7.0-alpha.7` (§8.4.1).
+BC10, §8.2.54 BD2 to BD6, the rulings of this plan (§8.2.56 BF1 to BF10) and WP6.06's measured cost. WP6.08 is the first package carried the
+lean way and measures it. Its last commit on `main` takes `v0.7.0-alpha.7` (§8.4.1; BF10).
 
-The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.09 entry sets this scope; `SPECIFICATION.md` governs, and
+The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.07 entry sets this scope; `SPECIFICATION.md` governs, and
 where it and this plan disagree this plan is wrong. Identifiers are pointers into it.
 
 ## In brief
@@ -143,7 +142,7 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
   **Executor:** main
 - [x] 903ca78 6. §8.4.4, §8.4.5, `CLAUDE.md` *Models*, `holds-now.yaml` (AZ20, AZ21, BD2 superseded), `CHANGELOG.md`,
   the plan's Outcome. Done when `uv run just docs` and `decisions.py --check` pass. **Executor:** main
-  > **Outcome — the workflow is lean; its saving is measured on WP6.07.** `just land` pushed this branch end to end
+  > **Outcome — the workflow is lean; its saving is measured on WP6.08.** `just land` pushed this branch end to end
   > (`624ef01`; the push gate 486 s). REV-288 is fixed by BF1 and BF4; REV-289 the agents' probe. Measured
   > to this item: 1 session, 0.7 agent hours, 5 touches, all on Opus 5.5 (0.07 M tokens out, 20 M cached), beside
   > the estimate of 1 session and 2 to 3 agent hours.
@@ -155,7 +154,7 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
 ### Verification
 
 No test is added: the package is outside the test scope (§8.2.13 N1). Its checks are item 1's probe, item 5's
-no-op push, the docs build and the one review of D4, run on this package's own PR. WP6.07 reports its cost by role
+no-op push, the docs build and the one review of D4, run on this package's own PR. WP6.08 reports its cost by role
 against WP6.06's: the planning model at most a third of its units, and no cache rewrite above 100k tokens after a gap.
 
 ### Out of scope
@@ -163,7 +162,7 @@ against WP6.06's: the planning model at most a third of its units, and no cache 
 - `/np-gui`, `/np-plan phase`, `amend` and `project`: unchanged but for item 3's question of the planning model;
   a later round may take the same rules.
 - The account's plugins outside this project: the author's.
-- A change to how `usage.py` measures: none is needed for WP6.07's comparison.
+- A change to how `usage.py` measures: none is needed for WP6.08's comparison.
 
 ### Open questions
 
