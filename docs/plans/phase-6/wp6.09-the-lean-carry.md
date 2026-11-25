@@ -1,7 +1,7 @@
 # WP6.09 — The lean carry
 
 **Status: planned, not started.** Written 25 November 2026, grounded in the workflow at `5946602`. Inherits §8.2.53
-BC10, §8.2.54 BD2 to BD6, the rulings of this plan (§8.2.56 BF1 to BF7) and WP6.06's measured cost. Built before
+BC10, §8.2.54 BD2 to BD6, the rulings of this plan (§8.2.56 BF1 to BF8) and WP6.06's measured cost. Built before
 WP6.07, so that WP6.07 is the first package carried the lean way and measures it. Its last commit on `main` takes
 `v0.7.0-alpha.7` (§8.4.1).
 
@@ -18,14 +18,14 @@ a mid-priced model builds and reviews once; the cheapest ships; a helper that wa
 and a fresh one carries on; the mechanics are one script.
 
 **Cost.** About 1 session and 2 to 3 agent hours, planned and built in this conversation, and 2 times you act: the
-seven rulings, done, and the merge. Nothing changes for a user of the program.
+eight rulings, done, and the merge. Nothing changes for a user of the program.
 
 **What could go wrong.** A hand-off note can drop a detail a fresh helper then lacks; the note has a fixed shape,
 and the next package shows it. With one review, a fault a second reader would have caught can merge; the review
 keeps the physics questions, and the next package's cost and findings are compared with the last's. A helper
 limited to a list of tools may miss one it needs; the first item probes them.
 
-**Your call.** All seven decisions are ruled. Still yours: approve this plan. *Recommendation:* approve; the
+**Your call.** All eight decisions are ruled. Still yours: approve this plan. *Recommendation:* approve; the
 next package measures what it saves.
 
 ## Execution brief
@@ -45,7 +45,7 @@ checks are the code and the review (§8.2.13 N3).
 | D2 No resume | A helper that needs the author, a worker or a review ends with a hand-off note in a fixed shape; the answer goes to a fresh helper of the same role that reads the note. The plan stage is two helpers: survey-measure-ask, then write | Ruled by the author, BF2 |
 | D3 The plan's check | No review run of the plan. The plan-writing helper checks its own plan against a fixed list before it commits; `/np-plan wp n review` becomes that check alone and the approval summary | Ruled by the author, BF3 |
 | D4 The code's review | One review at the ship by a project agent `np-reviewer` on Opus at high, its prompt holding standards, specification and the physics questions; no separate physics reviewer, no `code-review` fork. The reviewer applies and commits the fix of each confirmed finding; the shipper writes no fix | Ruled by the author, BF4; who fixes decided by the plan |
-| D5 After the review | A finding left to the author is a `REV` row by default and the PR merges as reviewed; one the author pulls in gets a review of its own diff by `np-reviewer` told to run as Sonnet at low effort | Ruled by the author, BF5 |
+| D5 After the review | A finding left to the author is a `REV` row by default and the PR merges as reviewed; one the author pulls in gets a review of its own diff by `np-reviewer` on Opus at medium effort, set by the `Agent` call's `effort` | Ruled by the author, BF5 and BF8 |
 | D6 Starting context | Each helper agent file lists its tools; `.claude/settings.json` disables each plugin this project never uses | Ruled by the author, BF6 |
 | D7 The mechanics | `just land` runs the registers, the docs build when a source changed, a commit of what they wrote, the push gate and its wait, the rebase and the push with retries, and prints one line | Decided by the plan, from BF1 |
 
