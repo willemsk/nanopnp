@@ -1,7 +1,7 @@
 # WP6.09 — The lean carry
 
 **Status: planned, not started.** Written 25 November 2026, grounded in the workflow at `5946602`. Inherits §8.2.53
-BC10, §8.2.54 BD2 to BD6, the rulings of this plan (§8.2.56 BF1 to BF8) and WP6.06's measured cost. Built before
+BC10, §8.2.54 BD2 to BD6, the rulings of this plan (§8.2.56 BF1 to BF9) and WP6.06's measured cost. Built before
 WP6.07, so that WP6.07 is the first package carried the lean way and measures it. Its last commit on `main` takes
 `v0.7.0-alpha.7` (§8.4.1).
 
@@ -13,19 +13,20 @@ where it and this plan disagree this plan is wrong. Identifiers are pointers int
 **What changes.** Carrying a package costs far less. On the last package the most expensive model did 85% of the
 work, most of it outside planning: three code reviews, the ship, and the main session. A helper resumed after a
 question or a review paid to reload its whole memory, a fifth of the cost; mechanical steps such as pushing ran on
-the dearest model; and every helper began by loading tools the project never uses. Now the dearest model only plans;
+the dearest model; and every helper began by loading tools the project never uses. Now the dearest model only plans, or
+at your pick the mid-priced one at a higher effort;
 a mid-priced model builds and reviews once; the cheapest ships; a helper that waits for you ends with a short note
 and a fresh one carries on; the mechanics are one script.
 
 **Cost.** About 1 session and 2 to 3 agent hours, planned and built in this conversation, and 2 times you act: the
-eight rulings, done, and the merge. Nothing changes for a user of the program.
+nine rulings, done, and the merge. Nothing changes for a user of the program.
 
 **What could go wrong.** A hand-off note can drop a detail a fresh helper then lacks; the note has a fixed shape,
 and the next package shows it. With one review, a fault a second reader would have caught can merge; the review
 keeps the physics questions, and the next package's cost and findings are compared with the last's. A helper
 limited to a list of tools may miss one it needs; the first item probes them.
 
-**Your call.** All eight decisions are ruled. Still yours: approve this plan. *Recommendation:* approve; the
+**Your call.** All nine decisions are ruled. Still yours: approve this plan. *Recommendation:* approve; the
 next package measures what it saves.
 
 ## Execution brief
@@ -41,7 +42,7 @@ checks are the code and the review (§8.2.13 N3).
 
 | Decision | Choice | Why/source |
 |---|---|---|
-| D1 Models by role | Fable plans (both plan helpers) at high effort; Sonnet runs `/np-carry`'s main session and ships at medium; Opus builds and reviews at high; a red CI that is a test or a numerical gate goes to a fresh Opus helper. Each role's model and effort are fixed in its agent file, not proposed per plan | Models ruled by the author, BF1; efforts decided by the plan |
+| D1 Models by role | Fable plans (both plan helpers) at high effort, or Opus at `xhigh` where the author picks it when asked at each plan invocation; Sonnet runs `/np-carry`'s main session and ships at medium; Opus builds and reviews at high; a red CI that is a test or a numerical gate goes to a fresh Opus helper. Each role's model and effort are fixed in its agent file, not proposed per plan | Models ruled by the author, BF1 and BF9; efforts decided by the plan |
 | D2 No resume | A helper that needs the author, a worker or a review ends with a hand-off note in a fixed shape; the answer goes to a fresh helper of the same role that reads the note. The plan stage is two helpers: survey-measure-ask, then write | Ruled by the author, BF2 |
 | D3 The plan's check | No review run of the plan. The plan-writing helper checks its own plan against a fixed list before it commits; `/np-plan wp n review` becomes that check alone and the approval summary | Ruled by the author, BF3 |
 | D4 The code's review | One review at the ship by a project agent `np-reviewer` on Opus at high, its prompt holding standards, specification and the physics questions; no separate physics reviewer, no `code-review` fork. The reviewer applies and commits the fix of each confirmed finding; the shipper writes no fix | Ruled by the author, BF4; who fixes decided by the plan |
@@ -96,8 +97,16 @@ committed, overwritten at each hand-off, deleted by the ship. Sections: **Step**
 (numbers only), **Decided**, **Open** (the questions, verbatim), **Next** (the exact first action). At most 600
 words. `np-carry` §4: every hand-back ends the helper; the answer starts a fresh helper of the same agent with
 "Read `<note>`, then continue at Next with: <answer>". `np-carry` §3 passes neither `model` nor `effort` for these
-agents, so their files decide; its report names the main session's start as Sonnet 5.5 at medium effort
-(`/model sonnet`, `/effort medium`).
+agents, so their files decide, except the plan stage's (item 3); its report names the main session's start as
+Sonnet 5.5 at medium effort (`/model sonnet`, `/effort medium`).
+
+**Item 3, the planning model (BF9).** At every plan invocation the author is asked once, by `AskUserQuestion`:
+"Fable 5.2 at high (Recommended)" or "Opus 5.5 at xhigh (Fable's quota spent)". In `/np-carry` the main session
+asks at the plan stage's start; the answer holds for both plan helpers and the self-check, goes into the hand-off
+note's **Decided**, and on Opus sets `model: "opus"`, `effort: "xhigh"` on their `Agent` calls over
+`np-planner`'s front matter. A direct `/np-plan`, at any level, asks first; where the session runs on another
+model or effort than the one chosen, it prints the `/model` and `/effort` commands and waits for the author. The
+plan's status line names the model and effort that wrote it.
 
 **Item 3, the plan.** `np-plan/wp.md` splits at *Putting the decisions to the author*: the first helper ends there
 with `ASK` and the note; the second writes, self-checks and commits. `np-plan/review.md` keeps steps 3 to 5 without
@@ -118,8 +127,8 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
   and effort; the probe; knowledge note 07/26 (D1, D4, D6). Done when the code and review say so. **Executor:** main
 - [ ] 2. `.claude/workflow/helper.md`, `.claude/skills/np-carry/SKILL.md`: the note, no resume, the agents by role
   (D1, D2). Done when the code and review say so. **Executor:** main
-- [ ] 3. `.claude/skills/np-plan/wp.md`, `review.md`, `SKILL.md`: the split and the self-check; the models
-  proposal removed (D2, D3). Done when the code and review say so. **Executor:** main
+- [ ] 3. `.claude/skills/np-plan/wp.md`, `review.md`, `SKILL.md`, `np-carry/SKILL.md` §3: the split and the
+  self-check; the models proposal removed; the planning model asked at each invocation (D1, D2, D3). Done when the code and review say so. **Executor:** main
 - [ ] 4. `.claude/skills/np-ship/wp.md`, `SKILL.md`, `.claude/workflow/author.md`: one review that fixes what it
   confirms, `REV` by default, red CI to Opus (D4, D5). Done when the code and review say so. **Executor:** main
 - [ ] 5. `justfile`, `.claude/scripts/land.sh`, the core's *Gate and push*; `.claude/settings.json`'s
@@ -132,11 +141,12 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
 
 No test is added: the package is outside the test scope (§8.2.13 N1). Its checks are item 1's probe, item 5's
 no-op push, the docs build and the one review of D4, run on this package's own PR. WP6.07 reports its cost by role
-against WP6.06's: Fable at most a third of its units, and no cache rewrite above 100k tokens after a gap.
+against WP6.06's: the planning model at most a third of its units, and no cache rewrite above 100k tokens after a gap.
 
 ### Out of scope
 
-- `/np-gui`, `/np-plan phase`, `amend` and `project`: unchanged; a later round may take the same rules.
+- `/np-gui`, `/np-plan phase`, `amend` and `project`: unchanged but for item 3's question of the planning model;
+  a later round may take the same rules.
 - The account's plugins outside this project: the author's.
 - A change to how `usage.py` measures: none is needed for WP6.07's comparison.
 
