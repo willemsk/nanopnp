@@ -63,6 +63,19 @@ It takes `model` (`sonnet`, `opus`, `haiku`, `fable`) and `effort`. Its descript
   the next session. [verified][^agents]
 - **Opus 5.5 runs at `medium` effort where none is given**, Sonnet 5.5 at `high`; so a file of either
   names its effort. [verified][^api]
+- **The four helpers run as their files say, and start small.** Each probe's transcript records the
+  model and the effort it ran at; a tool list keeps out every other tool, and the task tools and the
+  GitHub tools a file names come deferred and load through `ToolSearch`. An agent cannot name its own
+  effort level: its context does not state it. [verified][^helpers]
+
+  | Agent | Model | Effort | Context at its first call |
+  |---|---|---|---|
+  | `np-planner` | `claude-fable-5-2` | high | 12,670 tokens |
+  | `np-builder` | `claude-opus-5-5` | high | 12,679 tokens |
+  | `np-shipper` | `claude-sonnet-5-5` | medium | 12,834 tokens |
+  | `np-reviewer` | `claude-opus-5-5` | high | 12,644 tokens |
+
+  A `general-purpose` helper started at 73k to 76k tokens (WP6.06's post-mortem, §8.2.56).
 
 [^probe]: Probe of 24 November 2026 for WP6.05's item 1, on the claude.ai cloud host (Linux), Claude
     Code 2.1.331, at commit `0212383`. The helper listed its tools, called `ToolSearch` with
@@ -74,5 +87,9 @@ It takes `model` (`sonnet`, `opus`, `haiku`, `fable`) and `effort`. Its descript
     2.1.332. The four helper agents' files were written, and `Agent` with `subagent_type:
     "np-shipper"` returned "Agent type 'np-shipper' not found" with the list of the types loaded at
     start. The `Agent` tool's description is that version's.
+[^helpers]: REV-289's probe, 25 November 2026, in the session after the one that wrote the files,
+    Claude Code 2.1.332 on the cloud host: each agent started once in the foreground with a one-line
+    task, and its sub-agent transcript read for `message.model`, the first call's input, cache-read and
+    cache-write tokens, and the `effort` its entries record.
 [^api]: The Claude API skill bundled with Claude Code 2.1.332, its *Thinking & Effort* table: Opus 5.5's
     effort defaults to `medium`, Sonnet 5.5's to `high`.

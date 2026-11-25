@@ -32,8 +32,7 @@ pore.
 - **WP6.09, the lean carry, is built** ([the plan](phase-6/wp6.09-the-lean-carry.md);
   [§8.2.56](../../specification/history/56-wp609s-plan-the-lean-carry.md) BF1 to BF9), after WP6.06's post-mortem, and
   is built before WP6.07.
-- **Next:** ship WP6.09; then `/np-carry wp 6.07`, started on Sonnet 5.5 at medium effort, which probes the four
-  helper agents first (REV-289).
+- **Next:** ship WP6.09; then `/np-carry wp 6.07`, started on Sonnet 5.5 at medium effort.
 
 ## Not to be re-decided
 

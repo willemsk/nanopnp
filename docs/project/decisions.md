@@ -6,7 +6,7 @@ Rows: 1,699. By source: history ruling 485; plan decision row 813; REV row 289; 
 
 By decider: author 814; open 5; session, own call 877; session, put to the author 3.
 
-This page lists the 554 that bind now. The 1,145 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
+This page lists the 553 that bind now. The 1,146 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -485,7 +485,6 @@ This page lists the 554 that bind now. The 1,145 of a delivered plan, fixed, spe
 | REV-285 | author | `docs/project/review-findings.md` |  |  | Whether ParaView shows a second-order field without resampling is not tried | §8.2.53: Phase 7's tolerances and exports package | accepted |
 | REV-286 | author | `docs/project/review-findings.md` |  |  | Whether Netgen meshes a wall layer at the Debye length is not tried | §8.2.53 BC9: Phase 7's mesh-error package, whose ladder meets it first | accepted |
 | REV-287 | author | `docs/project/review-findings.md` |  |  | Whether NiceGUI carries the workbench's hardest view and QR-16 is not tried | §8.2.53 BC13: Phase 8's first package, the kit's trial, before the rebuild | accepted |
-| REV-289 | session, own call | `docs/project/review-findings.md` |  | WP6.07 | The four helper agents of WP6.09 are not probed | proposed: WP6.07's `/np-carry`, its first step | open |
 | MOD-08 | author | `docs/project/modularity-findings.md` |  |  | Five registries in four shapes | §8.2.8 H5; brought forward by REV-272 and §8.2.50 AZ4; §8.2.53 BC3, BC7: Phase 7's library-shape package, its switches as data Phase 6's kernel | post-1.0 |
 | MOD-10 | author | `docs/project/modularity-findings.md` |  | WP6.08 | The backend interface of section 5.4.1 does not exist | §8.2.8 H3; §8.2.50 AZ1; §8.2.53 BC2; §8.2.54 BD1: WP6.08, the kernel's design | deferred |
 | MOD-17 | author | `docs/project/modularity-findings.md` |  |  | The validated correction set is a default in eight signatures | §8.2.8 H5 | post-1.0 |

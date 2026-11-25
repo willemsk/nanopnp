@@ -127,7 +127,8 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
 - [x] 8397623 1. `.claude/agents/np-planner.md`, `np-builder.md`, `np-shipper.md`, `np-reviewer.md`, each with its model
   and effort; the probe; knowledge note 07/26 (D1, D4, D6). Done when the code and review say so. **Executor:** main
   > **Outcome — the probe waits for the next session.** An agent file is loaded when a session starts, so this one
-  > could not start the four; REV-289 puts the probe at WP6.07's first step.
+  > could not start the four. The next session probed them: each runs on its file's model and effort, and starts at
+  > 12.6k to 12.8k tokens, beside 73k to 76k before (REV-289, fixed).
 - [x] 91d6b4d 2. `.claude/workflow/helper.md`, `.claude/skills/np-carry/SKILL.md`: the note, no resume, the agents by role
   (D1, D2). Done when the code and review say so. **Executor:** main
 - [x] fc30625 3. `.claude/skills/np-plan/wp.md`, `review.md`, `SKILL.md`, `np-carry/SKILL.md` §3: the split and the
@@ -140,7 +141,7 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
 - [x] 903ca78 6. §8.4.4, §8.4.5, `CLAUDE.md` *Models*, `holds-now.yaml` (AZ20, AZ21, BD2 superseded), `CHANGELOG.md`,
   the plan's Outcome. Done when `uv run just docs` and `decisions.py --check` pass. **Executor:** main
   > **Outcome — the workflow is lean; its saving is measured on WP6.07.** `just land` pushed this branch end to end
-  > (`624ef01`; the push gate 486 s). REV-288 is fixed by BF1 and BF4; REV-289 holds the agents' probe. Measured
+  > (`624ef01`; the push gate 486 s). REV-288 is fixed by BF1 and BF4; REV-289 the agents' probe. Measured
   > to this item: 1 session, 0.7 agent hours, 5 touches, all on Opus 5.5 (0.07 M tokens out, 20 M cached), beside
   > the estimate of 1 session and 2 to 3 agent hours.
 

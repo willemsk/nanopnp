@@ -20,13 +20,6 @@ Read the core, `${CLAUDE_SKILL_DIR}/../../workflow/core.md`, the
 *Position* of `docs/plans/current.md`, and the package's entry in its phase plan. A package absent
 from the phase plan, or marked **Provisional**, stops: it needs `/np-plan amend <phase>` first.
 
-While REV-289 is open, probe the four helper agents before the first helper: start `np-planner`,
-`np-builder`, `np-shipper` and `np-reviewer` in turn with "Probe only; change nothing. List your tools
-on one line, the model and effort you run at, and whether ToolSearch `select:TaskList` returns a
-schema." Run `uv run .claude/scripts/usage.py --label probe` after them, and give the replies and its
-line to the first helper, to record in `knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md`
-and to set REV-289 `fixed`.
-
 ## 2. The stage
 
 Find the package's PR and branch as the core says, and read the stage from the branch's commit
