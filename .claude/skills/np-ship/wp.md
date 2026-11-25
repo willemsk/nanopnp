@@ -1,8 +1,9 @@
 # Ship a work package
 
 `/np-ship [wp <n>]` runs the review and the CI watch after `/np-implement` as one sequence, without a
-stop. It runs in the implementing session after its compaction, or in a fresh session (§8.2.33 AI4),
-on the model the plan names for the ship (§8.2.50 AZ21).
+stop. It runs on Sonnet 5.5 at medium effort (§8.2.56 BF1): in a fresh session, in the implementing
+session after its compaction where that runs on the same model (§8.2.33 AI4), or as `np-shipper`
+under `/np-carry`. It writes no fix to code or tests: the reviewer and `np-builder` do.
 Usually `/np-implement` has opened the PR: reuse it. If there is no PR and the author names the branch,
 this invocation authorises you to open the PR without asking again. The review, the fixes and the CI
 watch need no further prompt.
@@ -18,8 +19,8 @@ Run `.claude/hooks/checkpoint.sh clear`: an automatic pause that led here is spe
 2. If no PR is found and the branch has no commits beyond `origin/main`, stop. A plan on `main` does
    not show that the package was implemented.
 3. **Resuming after a review.** Suppose the PR's **Verification** records a completed review, and
-   the only commits after its reviewed head are the recorded fix commits and the review's report
-   commit. Then subscribe to the PR's activity (§4) and go to §5. A review adds its own commits, so
+   the only commits after its reviewed head are the reviewer's commits and `docs: WP<n> review
+   recorded`. Then subscribe to the PR's activity (§4) and go to §5. A review adds its own commits, so
    the current head is never the reviewed head.
 
 ## 1. Preflight
@@ -51,15 +52,12 @@ the package's commits. This section starts no review and no monitoring.
 ## 4. Review pass
 
 Subscribe to the PR's activity (`subscribe_pr_activity`), so that CI results and review comments wake
-this session. Read `.claude/rules/physics-numerics.md` and `.claude/rules/python.md` now. The review
-and your decisions on its fixes need them, and a path-scoped rule does not load while you read only the
-diff.
+this session; a helper of `/np-carry` skips it, as its main session holds the subscription.
 
 **Test scope first.** Before the review, read the tests that the PR adds or changes
 (`git diff origin/main...HEAD -- tests/`) against the test scope (`CLAUDE.md`, *Testing*;
-`SPECIFICATION.md` §8.2.13 N1). Read the diffs in physics and numerics areas with the
-`physics-reviewer` agent. Delete each test outside the scope in its own commit, `test: drop tests outside the test scope`,
-with the identifiers in the body (N5). The gate runs before each commit.
+`SPECIFICATION.md` §8.2.13 N1). Delete each test outside the scope in its own commit, `test: drop
+tests outside the test scope`, with the identifiers in the body (N5). The gate runs before each commit.
 
 Push each pre-review commit, the test drops included (the core's *Gate and push*). Then write the PR's
 head and base SHAs under its **Verification**. The review covers that head, and the record stays after
@@ -68,52 +66,44 @@ a compaction.
 A PR that changes a screen runs `/np-gui review` and `/np-gui publish`, links the gallery under
 **Verification**, and runs `/np-gui collect` before the merge.
 
-Run the review from this session. Call the skill directly, never inside an `Agent`:
+**The review** is one pass by `np-reviewer`, on Opus 5.5 at high effort: standards, the
+specification and the physics and numerics together, and it fixes and commits what it confirms
+(§8.2.56 BF4). Start it in the foreground from this session with `Agent`, `subagent_type:
+"np-reviewer"`, passing no model and no effort. A helper of `/np-carry` hands back `REVIEW` with the
+prompt and ends; a fresh helper goes on with the reply. The prompt:
 
+```text
+Review PR #<number> of WP<n>, base <sha>, head <sha>; its plan is <path>. The clauses it cites:
+<identifiers>. Run no benchmark, sweep, gate.sh or pytest --nightly.
 ```
-Skill(skill="code-review", args="xhigh --fix --max-findings all <pr-number> -- Write the report to docs/code_reviews/CODE_REVIEW_NNN.md, NNN one above the highest present. Static review. A finding is never fixed by adding an off-category test (§8.2.13 N1). Run no benchmark, sweep, cost study, gate.sh or pytest --nightly; /np-ship gates the fixes afterwards. Run a command in the foreground only if it ends within 240 s. Start any longer command in the background and poll it with waits of at most 240 s each, re-issuing a wait that ends.")
-```
 
-Inside an `Agent` the skill returns no findings; called directly, it starts its own review agent.
-The commit hook, `gate.sh run` and full test runs stay in this session, never in the reviewer. The
-gate in step 3 below, not the reviewer, verifies the fixes.
+**The reply must show that the pass completed**: the reviewed base and head, which match the SHAs
+recorded above, its commits, the report's path and each finding with its outcome. Zero findings is
+valid. If the reply lacks that evidence, start the reviewer once more, never two at a time; if it
+still lacks it, stop before §5 and report it. Then, in this session:
 
-**The pass must give evidence that it completed, not that it edited files.** Wait for the review
-skill's final report. It must give the reviewed revision, the completed status, the findings (an empty
-list is valid), and the findings it could not assess or fix. Compare it with the SHAs recorded above.
+1. **Each finding left to the author** is a `REV-nn` row, `open` (`CLAUDE.md`, *Open items*), with the
+   reviewer's recommendation, listed in the PR body under **Deliberately not done**. The PR merges as
+   reviewed; the report of §6 names each row, and the author may pull one in (§8.2.56 BF5). A finding
+   pulled in is fixed by `np-builder` (a helper hands back `WORKER`) and its diff alone reviewed by
+   `np-reviewer` at `effort: "medium"` (BF8), never a full pass.
+2. Delete the hand-off note, `docs/plans/phase-<p>/wp<n>-handoff.md`, if there is one.
+3. Commit the rows, the deletion and the plan's Outcome as `docs: WP<n> review recorded`, with the
+   identifiers in the body. The Outcome takes the package's measured cost: the PR's **Measured**
+   lines and this session's so far, summed, beside the In brief's estimate (§8.4.5). Gate and push
+   (the core).
 
-- Zero findings need no retry.
-- If the evidence is missing, you may retry once, after the first dispatch has finished or failed.
-  Never run two at the same time. If completion is still not shown, stop before §5 and report it.
-- An unavailable review tool is a blocker.
-- If the PR's base or head changes during the review, review the new changes first.
-
-`--fix` writes to the working tree and does not commit. Then, in this session:
-
-1. Read each applied fix as a diff. A finding is a hypothesis: confirm it against the specification and
-   the plan. Revert a wrong fix, and give the reason in the PR thread. This step stays in this session.
-   In the implementing session, a finding you would reject because it contradicts a decision taken
-   while implementing, and not one the plan or the specification fixes, is not yours to reject: put it
-   to the author as *Putting a choice to the author* in `.claude/workflow/author.md` says, with the finding, the decision
-   and a recommendation, before the commit.
-2. For each finding that the pass could not fix, fix it here, or record a `REV-nn` row (`CLAUDE.md`,
-   *Open items*) and list it in the PR body under **Deliberately not done**. A row the author has not
-   ruled on is `open`: put it to the author before the report. Never leave a confirmed finding
-   unmentioned, or only in the PR body.
-3. Commit the accepted changes and the review's report as `fix: close the review gaps in <what>`, with
-   the identifiers in the body. A clean review commits its report alone, as `docs: code review <NNN>`.
-   The commit adds to the plan's Outcome the package's measured cost: the PR's **Measured** lines and
-   this session's so far, summed, beside the In brief's estimate (§8.4.5). Gate and push (the core).
-
-Then record the pass under **Verification**: what you invoked, how many findings came back and how many
-survived step 1, the reviewed base and head SHAs, and the fix commits. Keep the independently reviewed
-revision apart from the fixes decided here. Give the user each finding that is architectural or that
-would make the package wider: scope is the author's decision. A restructure of code the package works
-with, which changes no behaviour, is neither: make it and name it in the pull request (§8.4.4).
+Then record the pass under **Verification**: the reviewer's report, how many findings it fixed and how
+many it left, the reviewed base and head SHAs, and its fix commits. Give the user each finding that
+is architectural or that would make the package wider: scope is the author's decision. A restructure
+of code the package works with, which changes no behaviour, is neither (§8.4.4).
 
 ## 5. Drive to green
 
-Follow `.claude/skills/steward/SKILL.md`. It also applies when a PR event wakes the session later. Its
+Follow `.claude/skills/steward/SKILL.md`. It also applies when a PR event wakes the session later. A failure
+the CI-log classifier classes as a test or a numerical gate, not lint, format or a flaky runner, goes
+to `np-builder` with the classified log (a helper hands back `WORKER`, `agent: np-builder`); this
+session fixes no code (§8.2.56 BF1). Its
 *Bounded wakes* set the polling, the fallback check-ins and what counts as a new failure. Never wait on
 CI with `sleep`. Report a missing subscription or scheduler as an automation limit.
 
@@ -122,7 +112,7 @@ CI with `sleep`. Report a missing subscription or scheduler as an automation lim
 When CI is green and the PR is mergeable, tell the user in one message:
 
 - the PR link and the checks that passed;
-- what the review changed, and what is left for them to decide;
+- what the review changed, and each `REV` row it left, which they may pull in before the merge;
 - the package's measured cost beside its estimate, and this session's `usage.py` line;
 - the tag that the last commit on `main` gets after the merge, or that it gets none
   (`CONTRIBUTING.md`);

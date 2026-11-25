@@ -2,7 +2,7 @@
 
 `/np-implement [wp <n>]` runs between `/np-plan wp <n>` and `/np-ship`. It executes the plan under
 `docs/plans/`, records what the execution taught, and opens the PR. It chains into `/np-ship` only
-when the author sets `NANOPNP_AUTO_SHIP=1` and the plan names one model for both (`finish.md`,
+when the author sets `NANOPNP_AUTO_SHIP=1` and the session runs on the ship's model (`finish.md`,
 *Finishing*).
 
 ## Load the brief

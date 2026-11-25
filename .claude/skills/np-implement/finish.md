@@ -55,12 +55,12 @@ monitor CI in this turn. Then pause (§8.2.33 AI4):
 
 1. Write a prompt. It holds `/compact`, the package, the PR, its head, each decision this session took
    that the plan does not hold, the values the review needs that the plan and `git log` do not hold,
-   the shipping model that the plan names, and "resume with `/np-ship wp <n>`". Print it in a `text`
+   the ship's model, Sonnet 5.5 at medium effort (§8.2.56 BF1), and "resume with `/np-ship wp <n>`". Print it in a `text`
    block.
-2. Where the plan names another model for the ship than for the implementation, the ship never chains
-   (§8.2.50 AZ21): run `.claude/hooks/checkpoint.sh clear` and end the turn. The author switches the
-   model, then compacts and resumes here or starts `/np-ship` in a fresh session.
-3. Where it names one model for both, pipe the prompt to
+2. Where this session runs on another model than the ship's, the ship never chains: run
+   `.claude/hooks/checkpoint.sh clear` and end the turn. The author switches the model, then compacts
+   and resumes here or starts `/np-ship` in a fresh session.
+3. Where it runs on the ship's model, pipe the prompt to
    `.claude/hooks/checkpoint.sh save ship <plan> <n>`.
    - If that printed `off`, end the turn. The author compacts and resumes here, or starts `/np-ship`
      in a fresh session.
