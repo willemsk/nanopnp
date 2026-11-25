@@ -41,10 +41,10 @@ checks are the code and the review (§8.2.13 N3).
 
 | Decision | Choice | Why/source |
 |---|---|---|
-| D1 Models by role | Fable plans (both plan helpers); Sonnet runs `/np-carry`'s main session and ships; Opus builds and reviews; a red CI that is a test or a numerical gate goes to a fresh Opus helper. Each role's model is fixed in its agent file, not proposed per plan | Ruled by the author, BF1 |
+| D1 Models by role | Fable plans (both plan helpers) at high effort; Sonnet runs `/np-carry`'s main session and ships at medium; Opus builds and reviews at high; a red CI that is a test or a numerical gate goes to a fresh Opus helper. Each role's model and effort are fixed in its agent file, not proposed per plan | Models ruled by the author, BF1; efforts decided by the plan |
 | D2 No resume | A helper that needs the author, a worker or a review ends with a hand-off note in a fixed shape; the answer goes to a fresh helper of the same role that reads the note. The plan stage is two helpers: survey-measure-ask, then write | Ruled by the author, BF2 |
 | D3 The plan's check | No review run of the plan. The plan-writing helper checks its own plan against a fixed list before it commits; `/np-plan wp n review` becomes that check alone and the approval summary | Ruled by the author, BF3 |
-| D4 The code's review | One review at the ship by a project agent `np-reviewer` on Opus at high, its prompt holding standards, specification and the physics questions; no separate physics reviewer, no `code-review` fork | Ruled by the author, BF4 |
+| D4 The code's review | One review at the ship by a project agent `np-reviewer` on Opus at high, its prompt holding standards, specification and the physics questions; no separate physics reviewer, no `code-review` fork. The reviewer applies and commits the fix of each confirmed finding; the shipper writes no fix | Ruled by the author, BF4; who fixes decided by the plan |
 | D5 After the review | A finding left to the author is a `REV` row by default and the PR merges as reviewed; one the author pulls in gets a review of its own diff by `np-reviewer` told to run as Sonnet at low effort | Ruled by the author, BF5 |
 | D6 Starting context | Each helper agent file lists its tools; `.claude/settings.json` disables each plugin this project never uses | Ruled by the author, BF6 |
 | D7 The mechanics | `just land` runs the registers, the docs build when a source changed, a commit of what they wrote, the push gate and its wait, the rebase and the push with retries, and prints one line | Decided by the plan, from BF1 |
@@ -55,6 +55,11 @@ checks are the code and the review (§8.2.13 N3).
   ship's from the plan's `**Implementing session: …; ship: …**` line; §8.4.5's first two bullets state the same. A
   forked skill takes the main session's model, so the WP6.06 reviews ran on Fable (the post-mortem's table). The
   main session's model is the author's at start: `/np-carry`'s report names Sonnet for the next.
+- **D1, effort.** Opus 5.5 runs at `medium` when no effort is given; Sonnet 5.5 defaults to `high`, and its
+  guidance starts multi-step tool use at `medium`; Fable 5.2's starts at `high`, with `xhigh` only where a gain is
+  measured. `np-carry` §3 passes `effort: "high"` on each `Agent` call today, and `physics-reviewer.md` and
+  `gui-reviewer.md` carry `effort: high` in their front matter. Once the call passes no model, an agent file
+  without `effort` leaves the builder and the reviewer at Opus's `medium`.
 - **D1.** `.claude/agents/physics-reviewer.md` shows the shape of an agent file: front matter `model:` and `tools:`;
   the `Agent` call's `model` overrides it, so `/np-carry` passes none for these agents.
 - **D2.** Cache rewrites after a gap above 5 minutes: ship helper 1.34 M of 1.67 M written tokens, plan helper
@@ -64,7 +69,9 @@ checks are the code and the review (§8.2.13 N3).
   summarise; its summary template (the manager's summary) stays.
 - **D4.** `.claude/skills/np-ship/wp.md` §4 asks the physics reviewer and then `code-review xhigh --fix`; the
   helper passes both back to the main session. `np-reviewer` is an `Agent`, so a helper still cannot start it: the
-  ship helper hands back `REVIEW` with the prompt and ends, and a fresh ship helper reads the report (D2).
+  ship helper hands back `REVIEW` with the prompt and ends, and a fresh ship helper reads the report (D2). The
+  reviewer holds the diff when it finds a fault, as `code-review --fix` did; a fix written by the Sonnet shipper
+  would put the package's physics fixes on the model with the least judgement.
 - **D5.** `.claude/workflow/author.md` *Putting a choice to the author* and `np-ship/wp.md` §4 put each finding not
   fixed to the author; §8.4.6 makes it a `REV` row when left open.
 - **D6.** Helpers started at 73k to 76k tokens, the physics reviewer with three tools at 14k (post-mortem). The
@@ -76,26 +83,30 @@ checks are the code and the review (§8.2.13 N3).
 
 ### Implementation details
 
-**Item 1, the agent files.** Each in `.claude/agents/`, front matter `name`, `description`, `model`, `tools`:
-`np-planner` (fable; Read, Edit, Write, Grep, Glob, Bash, the task tools, Context7's two), `np-builder` (opus; the
-same without Context7), `np-shipper` (sonnet; Read, Edit, Write, Grep, Glob, Bash, the task tools, the GitHub
-tools the ship uses), `np-reviewer` (opus; Read, Grep, Glob, Bash, Edit, Write). The body says which skill file the
-agent follows and points to `helper.md`. Probe each once with a one-line task: it lists its tools and its start
-context is under 30k tokens; record the numbers in the knowledge note 07/26.
+**Item 1, the agent files.** Each in `.claude/agents/`, front matter `name`, `description`, `model`, `effort`,
+`tools`: `np-planner` (fable, high; Read, Edit, Write, Grep, Glob, Bash, the task tools, Context7's two),
+`np-builder` (opus, high; the same without Context7), `np-shipper` (sonnet, medium; Read, Edit, Write, Grep, Glob,
+Bash, the task tools, the GitHub tools the ship uses), `np-reviewer` (opus, high; Read, Grep, Glob, Bash, Edit,
+Write). The body says which skill file the agent follows and points to `helper.md`. Probe each once with a
+one-line task: it lists its tools, names the model and effort it runs at, and its start context is under 30k
+tokens; record the numbers in the knowledge note 07/26.
 
 **Item 2, the hand-off note.** `helper.md` gains *The hand-off note*: `docs/plans/phase-<p>/wp<n>-handoff.md`,
 committed, overwritten at each hand-off, deleted by the ship. Sections: **Step**, **Done** (commits), **Measured**
 (numbers only), **Decided**, **Open** (the questions, verbatim), **Next** (the exact first action). At most 600
 words. `np-carry` §4: every hand-back ends the helper; the answer starts a fresh helper of the same agent with
-"Read `<note>`, then continue at Next with: <answer>".
+"Read `<note>`, then continue at Next with: <answer>". `np-carry` §3 passes neither `model` nor `effort` for these
+agents, so their files decide; its report names the main session's start as Sonnet 5.5 at medium effort
+(`/model sonnet`, `/effort medium`).
 
 **Item 3, the plan.** `np-plan/wp.md` splits at *Putting the decisions to the author*: the first helper ends there
 with `ASK` and the note; the second writes, self-checks and commits. `np-plan/review.md` keeps steps 3 to 5 without
 the `code-review` call; its new step 2 is the self-check list of D3.
 
 **Item 4, the ship.** `np-ship/wp.md` §4: hand back `REVIEW` with `np-reviewer`'s prompt (standards, the clauses
-cited, the numerics questions as WP6.06's ship wrote them), end; a fresh `np-shipper` applies the report's fixes
-and records each finding not fixed as a `REV` row (D5). A red CI classified by `ci-log-classifier` as a test or a
+cited, the numerics questions as WP6.06's ship wrote them), end. The reviewer fixes and commits each confirmed
+finding and reports each doubt and each finding left to the author; a fresh `np-shipper` records each finding not
+fixed as a `REV` row (D5) and writes no fix. A red CI classified by `ci-log-classifier` as a test or a
 gate failure goes back as `WORKER` for `np-builder` with the log.
 
 **Item 5, `just land`.** A recipe calling `.claude/scripts/land.sh`, which runs the core's steps 1 to 6 in order and
@@ -103,14 +114,14 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
 
 ### Work items
 
-- [ ] 1. `.claude/agents/np-planner.md`, `np-builder.md`, `np-shipper.md`, `np-reviewer.md`; the probe; knowledge
-  note 07/26 (D1, D4, D6). Done when the code and review say so. **Executor:** main
+- [ ] 1. `.claude/agents/np-planner.md`, `np-builder.md`, `np-shipper.md`, `np-reviewer.md`, each with its model
+  and effort; the probe; knowledge note 07/26 (D1, D4, D6). Done when the code and review say so. **Executor:** main
 - [ ] 2. `.claude/workflow/helper.md`, `.claude/skills/np-carry/SKILL.md`: the note, no resume, the agents by role
   (D1, D2). Done when the code and review say so. **Executor:** main
 - [ ] 3. `.claude/skills/np-plan/wp.md`, `review.md`, `SKILL.md`: the split and the self-check; the models
   proposal removed (D2, D3). Done when the code and review say so. **Executor:** main
-- [ ] 4. `.claude/skills/np-ship/wp.md`, `SKILL.md`, `.claude/workflow/author.md`: one review, `REV` by default,
-  red CI to Opus (D4, D5). Done when the code and review say so. **Executor:** main
+- [ ] 4. `.claude/skills/np-ship/wp.md`, `SKILL.md`, `.claude/workflow/author.md`: one review that fixes what it
+  confirms, `REV` by default, red CI to Opus (D4, D5). Done when the code and review say so. **Executor:** main
 - [ ] 5. `justfile`, `.claude/scripts/land.sh`, the core's *Gate and push*; `.claude/settings.json`'s
   `enabledPlugins` (D6, D7). Done when `just land` pushes a no-op branch and the code and review say so.
   **Executor:** main
