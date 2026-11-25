@@ -223,7 +223,8 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   on which version of Claude Code. (§8.2.54 BD2; §8.2.56 BF1, BF2, BF4, BF6, BF8)
 * Seven agents are kept: the three helpers and the reviewer above; the physics reviewer and the GUI
   reviewer, both read-only and on Opus at high effort (§8.2.38 AN9); and the CI-log classifier, on
-  Haiku. The project's settings disable each account plugin the project does not use (§8.2.56 BF6).
+  Haiku. A plugin of the author's account is the author's to disable: a project's settings do not
+  reach it, and a helper's tool list keeps its tools out (§8.2.56 BF6).
   Nine scripts are kept in `.claude/scripts/`,
   beside `/np-gui`'s own in `.claude/scripts/gui/`: `clause.py` prints a clause by identifier,
   `duplicates.py` names a number that two items of one register share (§8.4.4), `same_tree.py`

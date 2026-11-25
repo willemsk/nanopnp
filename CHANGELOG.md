@@ -39,7 +39,8 @@ WP6.09: the lean carry; tag `v0.7.0-alpha.7` once merged (§8.2.56 BF1 to BF9; R
   - The ship has one review, `np-reviewer`, which fixes what it confirms; a finding it leaves is an open item and the
     pull request merges as reviewed.
   - `just land` runs the registers, the docs build, the rebase, the push gate and the push in one command.
-  - The project's settings disable the account plugins it never uses.
+  - Each helper agent lists its tools, so the account's plugins no longer load into a helper: it starts at about
+    13k tokens, where it started at 73k to 76k.
 
 ## [0.7.0-alpha.6]
 
