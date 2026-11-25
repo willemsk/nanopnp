@@ -143,8 +143,9 @@ A tolerance is specified (§7.3). Changing one is a specification amendment, and
 
 "Flake" is not a diagnosis, because the benchmarks are deterministic. Name the mechanism (a thread
 count, an ordering, a seed) and fix it. If the physics or the discretisation is wrong, stop and report
-the failing quantity, its location and what it implies. Diagnosis stays in the main session. A
-sub-agent may only read a long log (`ci-log-classifier`).
+the failing quantity, its location and what it implies. Diagnosis stays with the session that fixes
+the failure, under `/np-carry` the `np-builder` it goes to (§8.2.56 BF1). Any other sub-agent may only
+read a long log (`ci-log-classifier`).
 
 ## Fixes stay in scope
 

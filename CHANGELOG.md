@@ -43,6 +43,8 @@ WP6.07: the lean carry; tag `v0.7.0-alpha.7` once merged (§8.2.56 BF1 to BF10; 
     13k tokens, where it started at 73k to 76k.
   - Phase 6's packages stay numbered in build order: the lean carry is WP6.07, the guard numbers WP6.08 and the
     kernel's design WP6.09 (BF10).
+  - Of a red CI the ship fixes only format and lint and reruns a flaky runner once; `np-builder`, on Opus 5.5, fixes
+    every other failure (BF1). A helper's hand-off note no longer enters the plans index.
 
 ## [0.7.0-alpha.6]
 

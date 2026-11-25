@@ -109,8 +109,10 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   in a fresh session, or in the implementing session where that runs on the ship's model. Its review
   is one pass by `np-reviewer` (§8.4.5), which fixes and commits each finding it confirms; a finding
   it leaves to the author is an open `REV` row, the pull request merges as reviewed, and a finding
-  the author pulls in is fixed and its diff alone reviewed at medium effort. (§8.2.11 L7; §8.2.16 R5;
-  §8.2.33 AI4; §8.2.56 BF4, BF5, BF8; `.claude/workflow/finish.md`)
+  the author pulls in is fixed and its diff alone reviewed at medium effort. Of a red CI the ship
+  fixes only format and lint, with `ruff format` and `ruff check --fix`, and reruns a flaky runner
+  once; `np-builder` fixes every other failure. (§8.2.11 L7; §8.2.16 R5; §8.2.33 AI4; §8.2.56 BF1,
+  BF4, BF5, BF8; `.claude/workflow/finish.md`)
 * `just land` runs the push's mechanics in one command: the registers and their commit, the
   documentation build where a source changed, the rebase, the push gate and the push with retries
   (`.claude/scripts/land.sh`; `.claude/workflow/core.md`, *Gate and push*). (§8.2.56 BF1)
@@ -202,8 +204,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * The model follows the role, fixed in the role's agent file, not proposed by a plan. Each level of
   `/np-plan` and its review run on Fable 5.2 at high effort, or on Opus 5.5 at `xhigh` where the
   author picks it when asked at the plan's start, for when Fable's quota is spent. Opus 5.5 at high
-  effort builds and reviews; Sonnet 5.5 at medium effort ships and runs `/np-carry`'s main session;
-  a red CI that is a test or a numerical gate goes to Opus with its classified log. Each session and
+  effort builds and reviews; Sonnet 5.5 at medium effort ships and runs `/np-carry`'s main session.
+  Of a red CI the ship fixes only format and lint and reruns a flaky runner once; every other failure,
+  the docs, a stale lock, `mypy`, a test or a numerical gate, goes to Opus with its classified log. Each session and
   agent names its effort, because Opus 5.5's default is medium. The author picks the model when a
   session starts, and a pause's prompt names the next step's. A scoped item, one that a sub-agent
   takes whole with its checks, runs on Sonnet 5.5 at high effort; WP6.04's three blind designers are
