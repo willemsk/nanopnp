@@ -4,19 +4,19 @@ Updated 25 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-**What changes.** The orchestrator is merged and carries its first package, the fix for the pore's axis, whose plan
-is written. It found the fault larger than recorded, about one degree and not 0.6, and its cause elsewhere: a
-space lost at a flat rim, not a broken tie. The fix cures every trial wall, and the real pore keeps its axis to the
-last digit. You ruled that the two limits stay, that a case on a channel's axis runs again once, and the models.
-Fresh helpers now review, build and ship it; the stored reference numbers for the optional switches follow.
+**What changes.** The orchestrator is merged and carries its first package, the fix for the pore's axis, whose plan is
+reviewed. It found the fault larger than recorded, about one degree, not 0.6, and its cause elsewhere: a space lost at
+a flat rim, not a broken tie. The fix cures every trial wall, and the real pore keeps its axis to the last digit. You
+ruled that the two limits stay, that a channel case runs again once, that a wrongly refused structure is retried, and
+the models. Fresh helpers build and ship it; the stored reference numbers for the optional switches follow.
 
-**Cost.** This package: about 4 sessions, 2 to 4 agent hours and 6 times you act. The rest of the phase with it:
-about 38 sessions, 23 to 43 agent hours and 58 times you act.
+**Cost.** This package: about 4 sessions, 2 to 4 agent hours and 7 times you act. The rest of the phase with it: about
+38 sessions, 23 to 43 agent hours and 59 times you act.
 
 **What could go wrong.** The session you started may fill up from the reviews it runs; this package and the next
 measure it; the three commands remain the way back.
 
-**Your call.** Approve the axis plan after its review. *Recommendation:* approve; your three rulings are in it.
+**Your call.** Approve the reviewed axis plan. *Recommendation:* approve; your four rulings are in it.
 
 ## Position
 
@@ -28,9 +28,8 @@ measure it; the three commands remain the way back.
   on the design. Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
 - **WP6.06 is planned** ([the plan](phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md);
   [§8.2.55](../../specification/history/55-wp606s-plan-the-channel-axis-limits-stored-results-and-models.md), BE1 to
-  BE3).
-- **Next:** `/np-plan wp 6.06 review` on Fable 5.2; then `/np-implement wp 6.06` on Opus 5.5 and `/np-ship wp 6.06`
-  on Fable 5.2; then `/np-carry wp 6.07`.
+  BE4), **reviewed** ([the report](../code_reviews/CODE_REVIEW_087.md)).
+- **Next:** `/np-implement wp 6.06` on Opus 5.5, then `/np-ship wp 6.06` on Fable 5.2; then `/np-carry wp 6.07`.
 
 ## Not to be re-decided
 
@@ -47,7 +46,8 @@ measure it; the three commands remain the way back.
   nothing** (BC8).
 - **The kernel follows the axis fix and a design the author rules; its full check runs at its last package** (BC1
   to BC4).
-- **The channel axis's two limits stay; a stored channel case runs again once** (BE1, BE2).
+- **The channel axis's two limits stay; a stored channel case runs again once; a refused triangulation is retried**
+  (BE1, BE2, BE4).
 - **An orchestrator carries a package; the three commands stay** (BC10; BD2). **The continuation trial adopts its path
   on a full pass of marks registered first** (BC24).
 
