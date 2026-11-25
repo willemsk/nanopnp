@@ -1,6 +1,6 @@
 # WP6.06 — The channel's axis at a ragged rim
 
-**Status: planned, not started.** Written 25 November 2026, grounded in the code at `7ebfd4f`. Inherits §8.2.51 BA8,
+**Status: in progress.** Written 25 November 2026, grounded in the code at `7ebfd4f`. Inherits §8.2.51 BA8,
 §8.2.52 BB1, §8.2.54 BD1, §8.2.39 AO1 and AO4, the rulings of this plan (§8.2.55 BE1 to BE4), REV-279 and the test
 scope (§8.2.13 N1). Its last commit on `main` takes `v0.7.0-alpha.6` (§8.4.1).
 
@@ -259,10 +259,12 @@ number passes its limit.
 
 ### Work items
 
-- [ ] 1. `src/nanopnp/structure/cavity.py`, `tests/tier1/test_structure_axis.py`,
+- [x] 3a53f58 1. `src/nanopnp/structure/cavity.py`, `tests/tier1/test_structure_axis.py`,
   `specification/05-software-design/02-pipeline-stages.md`, `specification/07-verification/02-tier-1.md`: the diagram's
   edges, the candidate check and the joggled retry, with their tests and clauses (D1 to D4, D6); done when
   `tests/tier1/test_structure_axis.py` and `tests/tier1/test_structure_stage.py` pass. **Executor:** main
+  > **Outcome — the prediction held.** The six new cases fail on the code at `7ebfd4f` and pass with D1 to D3;
+  > 2WCD's test passes unchanged, so no measured number and no limit moved (D4).
 - [ ] 2. `src/nanopnp/structure/cavity.py`, `src/nanopnp/structure/stage.py`,
   `tests/tier1/test_structure_stage.py`, `specification/05-software-design/03-2-artefacts.md`,
   `specification/07-verification/02-tier-1.md`: the revision in a channel case's key (D5); done when `test_ver48_the_channel_revision_keys_only_the_channel` passes.

@@ -37,6 +37,7 @@ from nanopnp.structure.axis import (
     measure_axis,
 )
 from nanopnp.structure.cavity import (
+    CHANNEL_AXIS_REVISION,
     COVERAGE_FRACTION,
     HYDROGENS,
     STRAIGHTNESS_NM,
@@ -95,7 +96,14 @@ def structure_parameters(structure: ResolvedStructure) -> dict[str, Canonicalisa
                 f"structure.ensemble.trajectory {str(trajectory)!r} does not exist or is not a file"
             )
         parameters["ensemble"]["trajectory"] = {"sha256": file_hash(trajectory)}
+    if _takes_channel(structure):
+        parameters["channel_axis_revision"] = CHANNEL_AXIS_REVISION
     return parameters
+
+
+def _takes_channel(structure: ResolvedStructure) -> bool:
+    # The channel gives the axis where it is asked for, and under C1, which has no ring.
+    return structure.spec.symmetry.axis == "cavity" or structure.n == 1
 
 
 def _digest(parameters: Mapping[str, Canonicalisable], section: str, key: str) -> str:
@@ -148,8 +156,7 @@ def align(
     report(progress, 0.0, f"reading {spec.source.path.name}")
     universe = load_universe(spec.source.path, spec.ensemble.trajectory)
     axis_mode = spec.symmetry.axis
-    # The channel gives the axis where it is asked for, and under C1, which has no ring.
-    channel = axis_mode == "cavity" or n == 1
+    channel = _takes_channel(structure)
     chosen = select(
         universe,
         selection=spec.source.selection,
