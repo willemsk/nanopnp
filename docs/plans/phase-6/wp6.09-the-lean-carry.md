@@ -1,6 +1,6 @@
 # WP6.09 — The lean carry
 
-**Status: built, awaiting its review and merge.** Written 25 November 2026 on Opus 5.5 at high effort, grounded in
+**Status: built and reviewed, awaiting its merge.** Written 25 November 2026 on Opus 5.5 at high effort, grounded in
 the workflow at `5946602`; built the same day on the same model. Inherits §8.2.53
 BC10, §8.2.54 BD2 to BD6, the rulings of this plan (§8.2.56 BF1 to BF9) and WP6.06's measured cost. Built before
 WP6.07, so that WP6.07 is the first package carried the lean way and measures it. Its last commit on `main` takes
@@ -147,6 +147,10 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
   > (`624ef01`; the push gate 486 s). REV-288 is fixed by BF1 and BF4; REV-289 the agents' probe. Measured
   > to this item: 1 session, 0.7 agent hours, 5 touches, all on Opus 5.5 (0.07 M tokens out, 20 M cached), beside
   > the estimate of 1 session and 2 to 3 agent hours.
+  > **Outcome — one review, nine fixes, four rows.** `np-reviewer` reviewed `5946602`..`251cca8` once
+  > ([CODE_REVIEW_090](../../code_reviews/CODE_REVIEW_090.md)), fixed nine findings in `f8ebc52` and left REV-290 to
+  > REV-293 open. Measured in all: 2 sessions, 1 sub-agent, 0.9 agent hours, 7 touches, all on Opus 5.5 (0.13 M
+  > tokens out, 30 M cached), beside the estimate of 1 session and 2 to 3 agent hours.
 
 ### Verification
 
