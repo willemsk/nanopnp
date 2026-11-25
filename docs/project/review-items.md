@@ -1812,6 +1812,10 @@ default ship; both reviews then run on it, whatever a plan names for the ship.
 WP6.06's and WP6.07's measured lines (§8.2.53 BC10); until then the reviews of a carried package run on the model
 its session was started on, which `usage.py`'s line names with its tokens.
 
+**Fixed** (WP6.09, 25 November 2026): the author ruled the main session's model at WP6.09's plan, Sonnet 5.5 at
+medium effort, which `np-carry/SKILL.md` names (§8.2.56 BF1), and the ship's review is `np-reviewer`, whose own file
+fixes it on Opus 5.5 at high effort, whatever the session runs on (BF4). A plan has no review run (BF3).
+
 ### REV-289: The four helper agents of WP6.09 are not probed
 
 Left open by WP6.09's item 1. Its plan probes `np-planner`, `np-builder`, `np-shipper` and `np-reviewer` with a

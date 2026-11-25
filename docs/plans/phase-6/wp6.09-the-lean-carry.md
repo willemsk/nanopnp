@@ -1,6 +1,7 @@
 # WP6.09 — The lean carry
 
-**Status: planned, not started.** Written 25 November 2026, grounded in the workflow at `5946602`. Inherits §8.2.53
+**Status: built, awaiting its review and merge.** Written 25 November 2026 on Opus 5.5 at high effort, grounded in
+the workflow at `5946602`; built the same day on the same model. Inherits §8.2.53
 BC10, §8.2.54 BD2 to BD6, the rulings of this plan (§8.2.56 BF1 to BF9) and WP6.06's measured cost. Built before
 WP6.07, so that WP6.07 is the first package carried the lean way and measures it. Its last commit on `main` takes
 `v0.7.0-alpha.7` (§8.4.1).
@@ -133,11 +134,15 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
   self-check; the models proposal removed; the planning model asked at each invocation (D1, D2, D3). Done when the code and review say so. **Executor:** main
 - [x] faf8fa8 4. `.claude/skills/np-ship/wp.md`, `SKILL.md`, `.claude/workflow/author.md`: one review that fixes what it
   confirms, `REV` by default, red CI to Opus (D4, D5). Done when the code and review say so. **Executor:** main
-- [ ] 5. `justfile`, `.claude/scripts/land.sh`, the core's *Gate and push*; `.claude/settings.json`'s
+- [x] 624ef01 5. `justfile`, `.claude/scripts/land.sh`, the core's *Gate and push*; `.claude/settings.json`'s
   `enabledPlugins` (D6, D7). Done when `just land` pushes a no-op branch and the code and review say so.
   **Executor:** main
 - [ ] 6. §8.4.4, §8.4.5, `CLAUDE.md` *Models*, `holds-now.yaml` (AZ20, AZ21, BD2 superseded), `CHANGELOG.md`,
   the plan's Outcome. Done when `uv run just docs` and `decisions.py --check` pass. **Executor:** main
+  > **Outcome — the workflow is lean; its saving is measured on WP6.07.** `just land` pushed this branch end to end
+  > (`624ef01`; the push gate 486 s). REV-288 is fixed by BF1 and BF4; REV-289 holds the agents' probe. Measured
+  > to this item: 1 session, 0.7 agent hours, 5 touches, all on Opus 5.5 (0.07 M tokens out, 20 M cached), beside
+  > the estimate of 1 session and 2 to 3 agent hours.
 
 ### Verification
 

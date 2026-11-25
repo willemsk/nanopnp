@@ -66,17 +66,19 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * The workflow is three commands with levels: `/np-plan <project | phase n | amend n | wp n> [review]`,
   `/np-implement [wp n]` and `/np-ship [wp n | phase n]`, with no aliases. Each routes to a shared
   core and the file of its level. (§8.2.16 R5, R12; `.claude/workflow/core.md`)
-* Beside them, `/np-carry wp <n>` carries one package in one session the author starts, and resumes
-  it in a new one. It hands each step to a new `general-purpose` helper with an empty context: the
-  plan and its review, each stretch of the implementation up to a checkpoint, and the ship. A helper
-  ends each turn with one `HANDBACK` block (`.claude/workflow/helper.md`). The main session serves
-  it: it asks the author, passing the questions and the answers on unchanged, starts the code
-  reviews and the agents a helper asks for, holds the pull request's subscription and check-in, and
-  measures. A helper keeps the task list, which the two share, and commits, gates and pushes; the
-  main session commits nothing and edits only through a review's `--fix`. The stage is read from the
-  branch's commit subjects and the plan's ticks, so the three commands stay the way back. A phase,
-  an amendment or a ruling round is not carried. (§8.2.53 BC10; §8.2.54 BD2, BD6;
-  `.claude/skills/np-carry/`)
+* Beside them, `/np-carry wp <n>` carries one package in one session the author starts, on Sonnet
+  5.5 at medium effort, and resumes it in a new one. It hands each step to a fresh helper with an
+  empty context, the project agent of its role (§8.4.5): the plan in two helpers, one that surveys,
+  grounds and asks and one that writes, checks and commits it; each stretch of the implementation
+  up to a checkpoint; and the ship. A helper ends with one `HANDBACK` block, and the hand-back ends
+  it: it first commits a hand-off note of at most 600 words, and the answer starts a fresh helper of
+  the same agent that reads the note; no helper is resumed (`.claude/workflow/helper.md`). The main
+  session asks the author, passing the questions and the answers on unchanged, starts the review and
+  the agents a helper asks for, holds the pull request's subscription and check-in, and measures. A
+  helper keeps the task list, which the two share, and commits, gates and pushes; the main session
+  commits and edits nothing. The stage is read from the branch's commit subjects, the plan's ticks
+  and the note, so the three commands stay the way back. A phase, an amendment or a ruling round is
+  not carried. (§8.2.53 BC10; §8.2.54 BD2, BD6; §8.2.56 BF1, BF2; `.claude/skills/np-carry/`)
 * A pull request's CI tests on Linux, and a package's `/np-ship` reads no platform leg. `/np-ship phase`
   dispatches `ci.yml` on the close's head and stops while a `platforms` leg on ubuntu, macOS or Windows is
   not `success`. (§7.6; §8.2.49 AY4; §8.2.50 AZ8; `.claude/skills/np-ship/phase.md`)
@@ -104,9 +106,14 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   the tree. (§8.2.36 AL3, AL4)
 * One work package makes one pull request, green on Tiers 1 and 2 before the next package of its lane
   starts. `/np-implement` stops at the pull request and pauses for a compaction; `/np-ship` then runs
-  in the implementing session or in a fresh one, and puts to the author each review finding that
-  contradicts a decision the implementing session took. (§8.2.11 L7; §8.2.16 R5; §8.2.33 AI4;
-  `.claude/workflow/finish.md`)
+  in a fresh session, or in the implementing session where that runs on the ship's model. Its review
+  is one pass by `np-reviewer` (§8.4.5), which fixes and commits each finding it confirms; a finding
+  it leaves to the author is an open `REV` row, the pull request merges as reviewed, and a finding
+  the author pulls in is fixed and its diff alone reviewed at medium effort. (§8.2.11 L7; §8.2.16 R5;
+  §8.2.33 AI4; §8.2.56 BF4, BF5, BF8; `.claude/workflow/finish.md`)
+* `just land` runs the push's mechanics in one command: the registers and their commit, the
+  documentation build where a source changed, the rebase, the push gate and the push with retries
+  (`.claude/scripts/land.sh`; `.claude/workflow/core.md`, *Gate and push*). (§8.2.56 BF1)
 * An implementing session may restructure any code it works with, beyond what its plan names, as long
   as every test of the push gate passes: Tiers 1 and 2 as a push selects them, without the `nightly`
   and `slow` tests (§7.6), with the number-stability golden's per-push walks (VER-62), the layering
@@ -144,14 +151,17 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   §8.2.16 R11; §8.2.33 AI15) WP57's plan is exempt: it has no
   word or decision cap, and keeps its compaction checkpoints (§8.2.23 Y11). WP5.08's plan holds the
   words its seven decisions need (§8.2.33 AI11).
-* Each work item names its executor: the main session, or a sub-agent by type and model. The plan
-  names the model and effort of its implementing session and of its ship, as the author ruled them
-  on the plan's proposal (§8.4.5). One commit per work item, ticked
-  `[x] <short sha>`. (§8.2.11 L7; §8.2.16 R11; §8.2.50 AZ20, AZ21)
-* Each level of `/np-plan` pushes its plan, opens its pull request, reports and pauses for a
-  compaction. `/np-plan <level> [n] review` then reviews the plan with `/code-review medium --fix`, fixes
-  or records each finding, gates and pushes again, and ends with a summary for the person who approves
-  the plan, written for a reader who does not code. (§8.2.33 AI2, AI3; `.claude/skills/np-plan/review.md`)
+* Each work item names its executor: the main session, or a sub-agent by type and model. The plan's
+  status line names the model and effort that wrote it; the models of the build and the ship are
+  the agents' (§8.4.5). One commit per work item, ticked `[x] <short sha>`. (§8.2.11 L7; §8.2.16 R11;
+  §8.2.56 BF1, BF9)
+* Each level of `/np-plan` first asks the author which model plans: Fable 5.2 at high effort, or Opus
+  5.5 at `xhigh` when Fable's quota is spent. It pushes its plan, opens its pull request, reports and
+  pauses for a compaction. `/np-plan <level> [n] review` then reviews the plan, fixes or records each
+  finding, gates and pushes again, and ends with a summary for the person who approves the plan,
+  written for a reader who does not code. A work-package plan's review is a fixed self-check, which
+  its writer also runs before the commit; another level's is `/code-review medium --fix`. (§8.2.33
+  AI2, AI3; §8.2.56 BF3, BF9; `.claude/skills/np-plan/review.md`)
 * A choice put to the author carries what a reader who does not code needs to judge it: what is
   decided and why it is open, and for each option what the user gets, what it costs, how hard it is
   to undo and what it touches, with the recommendation's reason and what would change it. A
@@ -162,7 +172,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   prompt that names the next item and the values it needs, and ends its turn. When the author sets
   `NANOPNP_AUTO_CHECKPOINT=1`, the session goes on instead, and the hooks give the prompt to the
   compaction that comes when the context fills; `NANOPNP_AUTO_SHIP=1` does the same for the pause
-  before `/np-ship`, where the plan names one model for both. Where the two differ, the session
+  before `/np-ship`, where the session runs on the ship's model. Where it does not, the session
   pauses and its prompt names the model to switch to. Under `/np-carry`, a checkpoint or a pause
   ends a helper instead, and the next step goes to a new one. (§8.2.11 L7; §8.2.16 R11; §8.2.50
   AZ21; §8.2.53 BC10; the WP5.10 plan, D10)
@@ -189,33 +199,39 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 
 #### 8.4.5 Agents and models
 
-* The model follows the session's kind. Each level of `/np-plan` with its review runs on Fable 5.2 at
-  high effort. A work-package plan proposes the model of its implementing session and of its ship.
-  Opus 5.5 implements by default, Sonnet 5.5 a package that is very mechanical, and Fable 5.2 one
-  that needs subtle, long-horizon work; Fable 5.2 ships by default. `/np-plan wp` puts both proposals
-  to the author with the plan's other decisions, and the plan is then written for the models ruled:
-  its executors, and how much its *Implementation details* spell out. Each session runs at high
-  effort, set explicitly, because Opus 5.5's default is medium. The
-  author picks the model when a session starts; a plan names it, and a pause's prompt names the next
-  step's. A scoped item, one that a sub-agent takes whole with its checks, runs on Sonnet 5.5 at high
-  effort; WP6.04's three blind designers are excepted and run on Fable 5.2 and Opus 5.5, as its plan names them. Haiku 5.5 takes only mechanical, repetitive work that is fully specified and whose expected
-  context stays under 100,000 tokens. An item a sub-agent fails goes to a new worker once, then to the
-  next model. (§8.2.11 L6; §8.2.38 AN8; §8.2.49 AY7; §8.2.50 AZ20, AZ21; §8.2.52 BB3)
-* A helper of `/np-carry` runs on its step's model, set in the main session's `Agent` call with
-  `effort: "high"`: Fable 5.2 for the plan and its review, the plan's implementing model for each
-  stretch, its shipping model for the ship. A helper can start no agent and ask the author nothing,
-  so the main session does both for it; it keeps the task list, commits under the commit gate, runs
-  the push gate and pushes, and resumes with its context. The note
+* The model follows the role, fixed in the role's agent file, not proposed by a plan. Each level of
+  `/np-plan` and its review run on Fable 5.2 at high effort, or on Opus 5.5 at `xhigh` where the
+  author picks it when asked at the plan's start, for when Fable's quota is spent. Opus 5.5 at high
+  effort builds and reviews; Sonnet 5.5 at medium effort ships and runs `/np-carry`'s main session;
+  a red CI that is a test or a numerical gate goes to Opus with its classified log. Each session and
+  agent names its effort, because Opus 5.5's default is medium. The author picks the model when a
+  session starts, and a pause's prompt names the next step's. A scoped item, one that a sub-agent
+  takes whole with its checks, runs on Sonnet 5.5 at high effort; WP6.04's three blind designers are
+  excepted and run on Fable 5.2 and Opus 5.5, as its plan names them. Haiku 5.5 takes only
+  mechanical, repetitive work that is fully specified and whose expected context stays under 100,000
+  tokens. An item a sub-agent fails goes to a new worker once, then to the next model. (§8.2.11 L6;
+  §8.2.38 AN8; §8.2.49 AY7; §8.2.52 BB3; §8.2.56 BF1, BF9)
+* A helper of `/np-carry` is a project agent: `np-planner` for the plan, `np-builder` for each
+  stretch and a red CI's fix, `np-shipper` for the ship, each with its model, effort and tool list in
+  its front matter, so the main session passes neither model nor effort, but Opus at `xhigh` for a
+  plan the author put on it. The review is `np-reviewer`, on Opus 5.5 at high effort: one pass over
+  standards, the specification and the physics and numerics, which fixes and commits what it
+  confirms, and reviews a pulled-in finding's diff at medium. A helper can start no agent and ask the
+  author nothing, so the main session does both for it; it keeps the task list, commits under the
+  commit gate, runs the push gate and pushes. An agent file is loaded when a session starts. The note
   `knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md` holds what was measured, and
-  on which version of Claude Code. (§8.2.54 BD2)
-* Three agents are kept: the physics reviewer and the GUI reviewer, both read-only and on Opus at high
-  effort (§8.2.38 AN9), and the CI-log classifier. Eight scripts are kept in `.claude/scripts/`,
+  on which version of Claude Code. (§8.2.54 BD2; §8.2.56 BF1, BF2, BF4, BF6, BF8)
+* Seven agents are kept: the three helpers and the reviewer above; the physics reviewer and the GUI
+  reviewer, both read-only and on Opus at high effort (§8.2.38 AN9); and the CI-log classifier, on
+  Haiku. The project's settings disable each account plugin the project does not use (§8.2.56 BF6).
+  Nine scripts are kept in `.claude/scripts/`,
   beside `/np-gui`'s own in `.claude/scripts/gui/`: `clause.py` prints a clause by identifier,
   `duplicates.py` names a number that two items of one register share (§8.4.4), `same_tree.py`
   checks that changed Python files differ only in prose (§8.2.11 L5), `decisions.py` writes the
   decisions register and with `--check` compares it, `index_records.py` writes the indexes of the
   plans and reviews (§8.4.4), `links.py` checks every relative link of the tracked Markdown
-  (§7.6), `archive_items.py` moves the closed review items to their archive (§8.4.6), and
+  (§7.6), `archive_items.py` moves the closed review items to their archive (§8.4.6), `land.sh` runs
+  `just land` (§8.4.4), and
   `usage.py` measures a session in §8.3's units, with its tokens by model, from its Claude Code
   transcript. It takes the agent hours from the main transcript and its sub-agents' as one
   timeline and names the count of sub-agents; the sessions and touches stay the main transcript's.
