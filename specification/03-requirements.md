@@ -102,7 +102,7 @@ channel's (§5.2 NOTE on stage 1), found from each of the three covariance axes 
 straightest that converges and covers the structure; where none does, the command is refused as a
 usage error naming what was tried. A straightest start whose farthest centre lies over the
 straightness limit does not refuse it: the command warns, naming the distance and the limit, in the
-record's `warnings` and in its text output (§8.2.39 AO4). The record holds the source's name and SHA-256, the choices, the
+record's `warnings` and in its text output (§8.2.39 AO4); an axis found from joggled input is warned of the same way (§8.2.55 BE6). The record holds the source's name and SHA-256, the choices, the
 axis in the file's frame, its tilt from z, how it was found (`covariance`, `channel` or `typed`) and the
 registration centroid's distance from it. Text output is a reading of the record, and `--json` is the
 record.

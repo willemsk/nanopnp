@@ -260,6 +260,12 @@ def align(
         if isinstance(record, ChannelRecord)
         else measure_axis(aligned_mean[chosen.common_index], n)
     )
+    if (
+        isinstance(again, ChannelRecord)
+        and (retried := joggle_warning(again, frame_check=True)) is not None
+    ):
+        logger.warning("%s", retried)
+        warnings.append(retried)
     frame_check: dict[str, Canonicalisable] = {
         "tilt_deg": again.tilt_deg,
         "offset_nm": float(np.hypot(*again.foot_nm[:2])),
