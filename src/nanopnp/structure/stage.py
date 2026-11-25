@@ -45,6 +45,7 @@ from nanopnp.structure.cavity import (
     channel_axis,
     check_z_channel,
     detect_channel,
+    joggle_warning,
     refit,
     straightness_warning,
 )
@@ -78,7 +79,10 @@ def _structure(inputs: StageInputs) -> ResolvedStructure:
 
 
 def structure_parameters(structure: ResolvedStructure) -> dict[str, Canonicalisable]:
-    """Return the stage-1 key's parameters: the block, each file replaced by its digest."""
+    """Return the stage-1 key's parameters: the block, each file replaced by its digest.
+
+    Where the channel gives the axis, they hold the channel's axis revision too.
+    """
     parameters: dict[str, Canonicalisable] = structure.spec.model_dump(mode="json")
     # ``variant`` is a label: keeping it in the key would re-align and re-key stages 2 to 6,
     # and in the header a cache hit would return a stale label.
@@ -227,9 +231,11 @@ def align(
         rotation = frame_rotation(record, first_centroid)
 
     warnings: list[Canonicalisable] = []
-    if isinstance(record, ChannelRecord) and (bent := straightness_warning(record)) is not None:
-        logger.warning("%s", bent)
-        warnings.append(bent)
+    if isinstance(record, ChannelRecord):
+        for note in (straightness_warning(record), joggle_warning(record)):
+            if note is not None:
+                logger.warning("%s", note)
+                warnings.append(note)
 
     drift: list[float] = []
     for frame in range(positions.shape[0]):
@@ -306,7 +312,8 @@ def align(
         "orientation_rule": ORIENTATION_RULE,
     }
     if warnings:
-        # Present only when one fired, so the header of a straight channel keeps its digest.
+        # Present only when one fired, so the header of a channel that warns of nothing keeps
+        # its digest.
         header["warnings"] = warnings
     ensemble = AlignedEnsemble(
         positions_nm=np.asarray(aligned, dtype=np.float32),

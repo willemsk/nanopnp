@@ -1,6 +1,6 @@
 # Decisions register, closed
 
-The 1,140 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
+The 1,142 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -903,6 +903,8 @@ The 1,140 decisions of [the register](decisions.md) that bind nothing now, writt
 | WP6.06 D6 | session, own call | `docs/plans/phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md` | 2026-11-25 | WP6.06 | 24 draws of the C7 and C8 walls with the rim, tilted 12°, each checked for direction, offset, convergence and straightness; the gate test tilts the wall with the rim again; the joggled path is forced once \| VER-48's 1e-… | VER-48 | delivered plan |
 | WP6.06 D7 | session, own call | `docs/plans/phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md` | 2026-11-25 | WP6.06 | The changelog and the knowledge note give "about 1°" and the cause found; a lumen with atoms on its axis is recorded under AO4 and gets no row \| Measured here: 1.05°, not 0.6°; AO4 rules a channel that is not straight.… | unstated | delivered plan |
 | WP6.06 D8 | author | `docs/plans/phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md` | 2026-11-25 | WP6.06 | Opus 5.5 implements; Fable 5.2 ships \| Ruled by the author, BE3 \| | unstated | delivered plan |
+| WP6.06 D9 | author | `docs/plans/phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md` | 2026-11-25 | WP6.06 | A ray from a flat tetrahedron that took a neighbour's centre runs away from that neighbour's fourth atom \| Rounding signed it. Ruled by the author at the ship, BE5 \| | unstated | delivered plan |
+| WP6.06 D10 | author | `docs/plans/phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md` | 2026-11-25 | WP6.06 | An axis found from joggled input carries a warning, as the straightness does \| Ruled by the author at the ship, BE6 \| | unstated | delivered plan |
 | REV-01 | session, own call | `docs/project/review-archive.md` |  | WP37 | TOL_NM's home loaded pydantic and yaml | WP37 | fixed |
 | REV-02 | session, own call | `docs/project/review-archive.md` |  | WP37 | cli/errors.py was a re-export nothing imported | WP37 | fixed |
 | REV-03 | session, own call | `docs/project/review-archive.md` |  | WP38 | The solution-field names lived in two layers | WP38 | fixed |

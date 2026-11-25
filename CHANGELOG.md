@@ -27,8 +27,8 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [0.7.0-alpha.6]
 
-WP6.06: the channel's axis at a ragged rim; tag `v0.7.0-alpha.6` once merged (§8.2.51 BA8; §8.2.55 BE1, BE2, BE4;
-REV-279; VER-48). The [plan](docs/plans/phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md) records the work.
+WP6.06: the channel's axis at a ragged rim; tag `v0.7.0-alpha.6` once merged (§8.2.51 BA8; §8.2.55 BE1, BE2, BE4 to
+BE6; REV-279; VER-48). The [plan](docs/plans/phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md) records the work.
 
 - **Fixed**:
   - A pore's axis found from its channel no longer depends on rounding. Where the atoms of a rim lay exactly in one
@@ -36,12 +36,18 @@ REV-279; VER-48). The [plan](docs/plans/phase-6/wp6.06-the-channel-axis-at-a-rag
     off it: 17 of 24 trial walls did, by up to about 1°. A structure with coplanar or exactly symmetric atoms whose axis
     comes from the channel may get an axis up to about 1° different from v0.6's. 2WCD's axis does not move, and the
     channel's two limits stay (§5.2's NOTE on stage 1; FR-02, FR-37; BE1).
+  - Where four atoms lie on one circle, the direction of the diagram's edge that runs on from them was signed by
+    rounding, and some such edges had no length. Each now runs on away from the atom that ends it (BE5).
   - A structure whose triangulation Qhull refused for precision, reported as atoms that "span no volume", is
     triangulated once more from joggled input and gets its axis (IF-04, QR-12; BE4).
 - **Changed**:
   - Stage 1's key carries `channel_axis_revision` where the channel gives the axis, under C1 or
     `symmetry.axis: cavity`, so such a case's stored first stage and the stages after it run again once. A ring's key
     and stored results do not move (§5.3.2's NOTE on the solution payload; BE2).
+  - Atoms that lie in one plane, on one line or at one point are refused by the channel's coverage gate, as "0 of the
+    n planes", in place of "span no volume"; three atoms or fewer keep that message (BE4).
+  - A structure whose axis comes from the joggled triangulation is told so: a warning, logged, kept in the header
+    of stage 1's artefact and in a prepared pore's record, and printed by `nanopnp run` (BE6).
 
 ## [0.7.0-alpha.5]
 

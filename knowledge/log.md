@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-25
+* **Update**: A flat tetrahedron that takes a neighbour's centre signs its rays by that neighbour's fourth atom, not its own, which rounding decided: 23 of 45 trial walls held a ray with no length or off the diagram, and none does. An axis found from joggled input is reported as a warning (WP6.06's ship; §8.2.55 BE5, BE6). ([The channel's axis of 2WCD against its ring axis](04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md))
 * **Update**: The channel's axis locked off its line at a flat rim because the Voronoi edges beside a tetrahedron that fixes no centre were dropped, not because of the rim's tie; 17 of 24 trial draws locked, up to 0.84° (1.05° in one more), and none does once the edges run on. A refused triangulation is joggled; a lumen with atoms on its axis still reads 7° to 8° off (WP6.06; REV-279). ([The channel's axis of 2WCD against its ring axis](04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md))
 
 ## 2026-11-24

@@ -529,21 +529,18 @@ def test_ver48_chain_groups_superpose_as_one_ring() -> None:
     assert "lists 7 groups" in refused(GROUPED.removesuffix(",O+P"))
 
 
-def _wall(
-    n: int, bend_nm: float = 0.0, half_nm: float = 4.4, per_chain: int = 600, *, rim: bool = True
-) -> np.ndarray:
+def _wall(n: int, bend_nm: float = 0.0, half_nm: float = 4.4, per_chain: int = 600) -> np.ndarray:
     # A wall dense enough to line a channel: 600 atoms a chain between 2.0 and 2.8 nm of a
-    # centre line, which a bend carries aside by ``bend_nm`` at either end. Unless ``rim`` is
-    # false, a tenth of them lie in each end plane, a ragged rim: no atom there lines the axis's
-    # side, so the plane's widest spaces are n equal ones off the axis.
+    # centre line, which a bend carries aside by ``bend_nm`` at either end. A tenth of them lie
+    # in each end plane, a flat rim: many tetrahedra there fix no centre, and the diagram keeps
+    # the open space on the axis only where its edges run on past them.
     rng = np.random.default_rng(516 + n)
     rho = rng.uniform(2.0, 2.8, per_chain)
     half_wedge = 0.8 * math.pi / n
     phi = rng.uniform(-half_wedge, half_wedge, per_chain)
     z = rng.uniform(-half_nm, half_nm, per_chain)
-    if rim:
-        closing = per_chain // 10
-        z[:closing], z[closing : 2 * closing] = -half_nm, half_nm
+    closing = per_chain // 10
+    z[:closing], z[closing : 2 * closing] = -half_nm, half_nm
     chains = _assembly(n, np.column_stack([rho * np.cos(phi), rho * np.sin(phi), z]))
     atoms = chains.reshape(-1, 3).copy()
     atoms[:, 0] += bend_nm * (atoms[:, 2] / half_nm) ** 2
@@ -623,10 +620,61 @@ def test_ver48_a_refused_triangulation_is_joggled(monkeypatch: pytest.MonkeyPatc
             raise scipy.spatial.QhullError("QH6417 qhull precision error (qh_merge_twisted)")
         return real(points, qhull_options=qhull_options)
 
+    wall = _wall(8) @ TILT.T + OFFSET_NM
+    assert not cavity.channel_axis(wall).joggled
     monkeypatch.setattr(scipy.spatial, "Delaunay", refusing)
-    record = cavity.channel_axis(_wall(8) @ TILT.T + OFFSET_NM)
+    record = cavity.channel_axis(wall)
     _assert_on_axis(record, TILT @ np.array([0.0, 0.0, 1.0]), OFFSET_NM, "joggled")
     assert asked == [None, cavity.JOGGLE_OPTIONS]
+    assert record.joggled
+
+
+@pytest.mark.parametrize("tilt_deg", [0.0, 35.0])
+def test_ver48_a_ray_of_the_diagram_starts_along_a_true_edge(tilt_deg: float) -> None:
+    # A flat tetrahedron's own fourth atom lies in its faces' plane: a ray signed by it takes
+    # its direction from rounding, or no length, and its true half is missing from the diagram.
+    from scipy.spatial import cKDTree
+
+    atoms = _wall(8) @ _rotation(np.array([1.0, 0.0, 0.0]), math.radians(tilt_deg)).T
+    voids = cavity._voids(atoms)
+    ray = voids.edges[:, 1] >= len(voids.simplices)
+    start = voids.centres[voids.edges[ray, 0]]
+    along = voids.centres[voids.edges[ray, 1]] - start
+    length = np.linalg.norm(along, axis=1)
+    assert np.count_nonzero(ray) > 2000
+    assert length.min() > 0.0, f"{np.count_nonzero(length == 0.0)} rays have no length"
+    points = start + 1e-3 * along / length[:, None]
+    clearance = np.linalg.norm(points - atoms[voids.edge_atom[ray]], axis=1)
+    nearest, _ = cKDTree(atoms).query(points)
+    off = np.abs(nearest - clearance) > 1e-6 * np.maximum(1.0, clearance)
+    assert not off.any(), f"{np.count_nonzero(off)} rays leave the diagram within 0.001 nm"
+
+
+def test_ver48_a_channel_candidate_has_no_atom_nearer_than_its_clearance() -> None:
+    # A ray run on past its edge's true end must leave no candidate there: its clearance would
+    # be a distance to atoms that are not its nearest, and a false widest space of its plane.
+    from scipy.spatial import cKDTree
+
+    # Three atoms on the unit circle about z and a fourth at z = 3: the edge along z from the
+    # circle's centre ends at z = 4/3, where the fourth is as near as the three. The ray runs
+    # on to z = 3 and the planes cut it every 0.5 nm from z = 0.
+    turn = np.radians([0.0, 120.0, 240.0])
+    circle = np.column_stack([np.cos(turn), np.sin(turn), np.zeros(3)])
+    atoms = np.vstack([circle, [0.0, 0.0, 3.0]])
+    voids = cavity._Voids(
+        atoms=atoms,
+        tree=cKDTree(atoms),
+        simplices=np.array([[0, 1, 2, 3]]),
+        centres=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 3.0]]),
+        edges=np.array([[0, 1]]),
+        edge_atom=np.array([0]),
+        reach_nm=10.0,
+        joggled=False,
+    )
+    sections = cavity._sections(voids, np.array([0.0, 0.0, 1.0]), atoms.mean(axis=0))
+    assert len(sections) == 7
+    kept = sorted(float(point[2]) for section in sections for point in section.points)
+    assert kept == pytest.approx([0.0, 0.5, 1.0], abs=1e-12)
 
 
 def test_ver48_the_channel_takes_one_chain_whatever_its_kind() -> None:
