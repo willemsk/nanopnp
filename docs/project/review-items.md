@@ -1826,5 +1826,7 @@ tool missing from a list, or an effort the front matter does not set, shows only
 
 *Recommendation:* WP6.07's `/np-carry` probes the four before its first helper and records the numbers in the
 note.
-`np-carry/SKILL.md` §1 asks for the probe while this row is open.
+**Fixed** (WP6.09, 25 November 2026): probed in the next session. Each of the four runs on the model and effort of
+its file and starts at 12.6k to 12.8k tokens, beside 73k to 76k for a `general-purpose` helper; the numbers are in
+[knowledge 07/26](../../knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md).
 

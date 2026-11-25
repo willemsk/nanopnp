@@ -1,6 +1,6 @@
 # Decisions register, closed
 
-The 1,145 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
+The 1,146 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1134,6 +1134,7 @@ The 1,145 decisions of [the register](decisions.md) that bind nothing now, writt
 | REV-279 | author | `docs/project/review-findings.md` |  | WP6.06 | At a ragged rim the channel's axis can lock about 0.6° off, as rounding decides | fixed by WP6.06 (§8.2.55 BE1, BE2, BE4); ruled by the author, 22 November 2026, at WP6.01; placed by §8.2.51 BA8 and §8.2.52 BB1 | fixed |
 | REV-280 | author | `docs/project/review-findings.md` |  |  | The ground-up review's proposals wait for the author's rulings | ruled by the author, 24 November 2026 (§8.2.53 BC1 to BC24): each of the 25 proposals is ruled or carried with its owner | fixed |
 | REV-288 | author | `docs/project/review-findings.md` |  | WP6.09 | Nothing names the model of a carried package's main session | fixed by WP6.09 (§8.2.56 BF1, BF4); ruled by the author, 24 November 2026: left open until the round after WP6.08 | fixed |
+| REV-289 | session, own call | `docs/project/review-findings.md` |  | WP6.09 | The four helper agents of WP6.09 are not probed | fixed by WP6.09, the probe in the next session | fixed |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |
