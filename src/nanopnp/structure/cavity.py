@@ -154,7 +154,8 @@ def _voids(atoms: np.ndarray) -> _Voids:
     # into tetrahedra some of which are flat. A flat one takes the centre of a neighbour whose
     # sphere holds its four atoms, so the Voronoi edges through it stay joined. Its own fourth
     # atom lies in its faces' plane and says nothing of where its edges end: the neighbour's
-    # fourth atom does, the one off that plane, and is kept as its ``ender``.
+    # fourth atom does, the one off that plane, and is kept as its ``ender``. A neighbour that
+    # was flat itself has its fourth atom in that plane too, and hands on its own ``ender``.
     ender = np.full(len(simplices), -1, dtype=np.int64)
     flat = np.flatnonzero(~sound)
     while len(flat):
@@ -476,12 +477,21 @@ def straightness_warning(record: ChannelRecord) -> str | None:
     )
 
 
-def joggle_warning(record: ChannelRecord) -> str | None:
-    """Return the warning for an axis found from a joggled triangulation, else None."""
+def joggle_warning(record: ChannelRecord, *, frame_check: bool = False) -> str | None:
+    """Return the warning for an axis found from a joggled triangulation, else None.
+
+    Parameters
+    ----------
+    frame_check
+        Whether the record is stage 1's check of its aligned frame, not the axis it took.
+    """
     if not record.joggled:
         return None
+    atoms, axis = (
+        ("aligned atoms", "frame check's axis") if frame_check else ("atoms", "channel's axis")
+    )
     return (
-        "channel triangulation: Qhull refused the atoms as they stand, so the channel's axis is "
+        f"channel triangulation: Qhull refused the {atoms} as they stand, so the {axis} is "
         "found from a triangulation of joggled input"
     )
 

@@ -292,10 +292,11 @@ number passes its limit.
   > draws) none holds a ray without a length or off the diagram, where 23 did, up to 10 a wall. The 36 draws recover
   > to 5.4e-11 rad and the 225 at 1e-14 to 5.6e-14 rad, in 2 to 4 iterations; the two walls Qhull refuses recover to
   > 1.9e-14 rad and their records say so (D10). 2WCD's test passes unchanged. With D9 the candidate check of D2
-  > removes a point on 1 of 63 trial walls, so its test cuts a ray built by hand. Measured at the ship's review:
-  > 1 session, 8 sub-agents, 2.6 agent hours, 4 touches (claude-fable-5-2 0.42 M out, 57 M cached; claude-opus-5-5
-  > 0.10 M out, 14 M cached), beside the In brief's about 4 sessions, 2 to 4 agent hours and 7 touches; the ship's
-  > two rulings were a fifth touch.
+  > removes a point on 1 of 63 trial walls, so its test cuts a ray built by hand. A second pass over the two repairs,
+  > [`CODE_REVIEW_089.md`](../../code_reviews/CODE_REVIEW_089.md), found no fault in either and four nits, all fixed:
+  > the frame check's axis is warned of too. Measured at the second pass: 1 session, 9 sub-agents, 3.3 agent hours,
+  > 5 touches (claude-fable-5-2 0.58 M out, 80 M cached; claude-opus-5-5 0.10 M out, 14 M cached), beside the In
+  > brief's about 4 sessions, 2 to 4 agent hours and 7 touches.
 
 ### Verification
 

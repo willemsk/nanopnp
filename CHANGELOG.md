@@ -47,7 +47,8 @@ BE6; REV-279; VER-48). The [plan](docs/plans/phase-6/wp6.06-the-channel-axis-at-
   - Atoms that lie in one plane, on one line or at one point are refused by the channel's coverage gate, as "0 of the
     n planes", in place of "span no volume"; three atoms or fewer keep that message (BE4).
   - A structure whose axis comes from the joggled triangulation is told so: a warning, logged, kept in the header
-    of stage 1's artefact and in a prepared pore's record, and printed by `nanopnp run` (BE6).
+    of stage 1's artefact and in a prepared pore's record, and printed by `nanopnp run` and `nanopnp prepare`
+    (§5.2's NOTE on stage 1; IF-02's NOTE on preparation; BE6).
 
 ## [0.7.0-alpha.5]
 

@@ -81,16 +81,18 @@ the candidate centres are the points where it cuts an edge of the atoms' Voronoi
 its clearance, its distance to the nearest atom, of at least 0.2 nm. An edge runs on from its
 tetrahedron's centre along its face's normal, away from that tetrahedron's fourth atom, past the
 atoms' hull and past a tetrahedron that gives the diagram no centre: a flat one that takes no
-neighbour's, and one whose sphere holds an atom or is wider than twice the atoms' greatest distance
-from their centroid. A flat tetrahedron that takes a neighbour's centre has its own fourth atom in
-its faces' plane, and its edges run on away from that neighbour's fourth atom (§8.2.55 BE5). Atoms
-of a rim lying in one plane then do not empty the axis there. A candidate
+neighbour's, and one whose sphere holds an atom or has a radius over twice the atoms' greatest
+distance from their centroid. A flat tetrahedron that takes a neighbour's centre has its own fourth
+atom in its faces' plane, and its edges run on away from that neighbour's fourth atom, or, where
+that neighbour is a flat one that took the centre itself, from the atom its edges run on away from
+(§8.2.55 BE5). Atoms of a rim lying in one plane then do not empty the axis there. A candidate
 whose clearance is not its nearest atom's distance, to 10⁻⁶ of the larger of that distance and 1 nm,
 is left out: a ray can pass its edge's true end. Atoms Qhull refuses to triangulate, as it refuses
 some for precision, are triangulated again from joggled input, and are refused as spanning no volume
 only if that fails too; atoms in one plane, on one line or at one point then hold no enclosed
-candidate and are refused for coverage (§8.2.55 BE4). An axis found from joggled input is reported
-as a warning, as the straightness below is (§8.2.55 BE6). A candidate is *enclosed* when
+candidate and are refused for coverage (§8.2.55 BE4). An axis found from joggled input, the one the
+stage takes or the one its frame check finds among the aligned atoms, is reported as a warning, as
+the straightness below is (§8.2.55 BE6). A candidate is *enclosed* when
 the atoms within 0.25 nm of the plane and within 1.0 nm of its sphere leave no gap of 90° or more
 around it. The channel starts at the widest enclosed candidate of any plane and is followed plane
 by plane in both directions: a plane's centre is the centroid of its enclosed candidates within
