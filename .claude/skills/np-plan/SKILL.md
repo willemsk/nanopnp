@@ -9,12 +9,19 @@ argument-hint: <project | phase n | amend n | wp n> [review]
 1. The first argument is the level, the second its number n (for `wp`, `54` or `5.01`). A last argument
    `review` asks for the level's review. A missing or unknown level, or a level other than `project`
    without n: print `Usage: /np-plan <project | phase n | amend n | wp n> [review]` and stop.
-2. Read the core, `${CLAUDE_SKILL_DIR}/../../workflow/core.md` (`.claude/workflow/core.md`).
-3. Read the level's file beside this one: `${CLAUDE_SKILL_DIR}/<level>.md`, one of `project.md`,
+2. **The planning model** (§8.2.56 BF9). Before anything else, ask the author with
+   `AskUserQuestion` which model plans: "Fable 5.2 at high (Recommended)", or "Opus 5.5 at xhigh", for
+   when Fable's quota is spent. Where this session runs on another model or effort than the one
+   chosen, print `/model fable` and `/effort high`, or `/model opus` and `/effort xhigh`, ask the
+   author to run them and to say `go`, and end the turn. A helper of `/np-carry` skips this step: the
+   main session asked. The plan's status line names the model and effort that wrote it.
+3. Read the core, `${CLAUDE_SKILL_DIR}/../../workflow/core.md` (`.claude/workflow/core.md`).
+4. Read the level's file beside this one: `${CLAUDE_SKILL_DIR}/<level>.md`, one of `project.md`,
    `phase.md`, `amend.md` and `wp.md`. `project`, `phase` and `amend` also read `rulings.md` beside
    it.
-4. Without `review`, follow the level's file; it ends with *The pause* below. With `review`, read
-   `${CLAUDE_SKILL_DIR}/review.md` and follow its *The review*, against the level's caps and sections.
+5. Without `review`, follow the level's file; it ends with *The pause* below. With `review`, read
+   `${CLAUDE_SKILL_DIR}/review.md` and follow its *The review*: the self-check and the manager's
+   summary.
 
 ## The pause
 
