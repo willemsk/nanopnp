@@ -582,6 +582,53 @@ def test_ver48_the_channel_axis_recovers_a_known_axis(n: int, tilt_deg: float) -
     )
 
 
+def _assert_on_axis(
+    record: cavity.ChannelRecord, true_axis: np.ndarray, point: np.ndarray, label: str
+) -> None:
+    angle = math.asin(min(1.0, float(np.linalg.norm(np.cross(record.axis, true_axis)))))
+    assert angle <= 1e-6, f"{label}: the axis is {math.degrees(angle):.3g} degrees off"
+    assert record.axis @ true_axis > 0.0, label
+    offset = point - record.centroid_nm
+    aside = float(np.linalg.norm(offset - (offset @ record.axis) * record.axis))
+    assert aside <= 1e-6, f"{label}: the line passes {aside:.3g} nm aside"
+    assert record.converged, label
+    assert record.straightness_nm <= 1e-6, f"{label}: straightness {record.straightness_nm:.3g} nm"
+
+
+@pytest.mark.parametrize("relative", [1e-14, 1e-12, 1e-10])
+@pytest.mark.parametrize("n", [7, 8])
+def test_ver48_the_channel_axis_is_not_locked_by_rounding(n: int, relative: float) -> None:
+    # Rounding of the atoms must not hold the axis at a second line: where a rim's atoms lie in
+    # one plane, an edge of the diagram dropped there empties the axis in the end slice.
+    tilt = _rotation(np.array([1.0, 0.0, 0.0]), math.radians(12.0))
+    wall = _wall(n) @ tilt.T
+    true_axis = tilt @ np.array([0.0, 0.0, 1.0])
+    for seed in range(4):
+        rng = np.random.default_rng(seed)
+        atoms = wall * (1.0 + relative * rng.standard_normal(wall.shape))
+        record = cavity.channel_axis(atoms)
+        _assert_on_axis(record, true_axis, np.zeros(3), f"C{n}, {relative:g}, seed {seed}")
+
+
+def test_ver48_a_refused_triangulation_is_joggled(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Atoms Qhull refuses for precision must be triangulated again, not refused as flat.
+    import scipy.spatial
+
+    real = scipy.spatial.Delaunay
+    asked: list[str | None] = []
+
+    def refusing(points: np.ndarray, qhull_options: str | None = None) -> object:
+        asked.append(qhull_options)
+        if qhull_options is None:
+            raise scipy.spatial.QhullError("QH6417 qhull precision error (qh_merge_twisted)")
+        return real(points, qhull_options=qhull_options)
+
+    monkeypatch.setattr(scipy.spatial, "Delaunay", refusing)
+    record = cavity.channel_axis(_wall(8) @ TILT.T + OFFSET_NM)
+    _assert_on_axis(record, TILT @ np.array([0.0, 0.0, 1.0]), OFFSET_NM, "joggled")
+    assert asked == [None, cavity.JOGGLE_OPTIONS]
+
+
 def test_ver48_the_channel_takes_one_chain_whatever_its_kind() -> None:
     from nanopnp.structure.read import select
 
@@ -622,9 +669,7 @@ def test_ver48_the_channel_axis_gates_fire(monkeypatch: pytest.MonkeyPatch) -> N
     assert 0.3 <= float(found.group(1)) <= 2.0
     assert cavity.straightness_warning(cavity.detect_channel(_wall(8))) is None
 
-    # Without a ragged rim: there a line a little off the axis breaks the n-fold tie and can hold
-    # the iteration about 0.6 degrees off, which rounding of 1e-14 decides (REV-279).
-    tilted = _wall(8, rim=False) @ _rotation(np.array([1.0, 0.0, 0.0]), math.radians(12.0)).T
+    tilted = _wall(8) @ _rotation(np.array([1.0, 0.0, 0.0]), math.radians(12.0)).T
     message = refused(lambda: cavity.detect_channel(tilted))
     found = re.search(r"orientation gate: the channel's axis is (\d+\.\d+) degrees", message)
     assert found is not None, message
