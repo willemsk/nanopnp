@@ -1811,3 +1811,16 @@ default ship; both reviews then run on it, whatever a plan names for the ship.
 **Ruled** (the author, 24 November 2026): left open. The author decides it at the round after WP6.08, with
 WP6.06's and WP6.07's measured lines (§8.2.53 BC10); until then the reviews of a carried package run on the model
 its session was started on, which `usage.py`'s line names with its tokens.
+
+### REV-289: The four helper agents of WP6.09 are not probed
+
+Left open by WP6.09's item 1. Its plan probes `np-planner`, `np-builder`, `np-shipper` and `np-reviewer` with a
+one-line task each: the tools each lists, the model and effort it runs at, and a start context under 30k tokens.
+The session that wrote them cannot start them: an agent file is loaded when a session starts
+([knowledge 07/26](../../knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md)). Until the probe, a
+tool missing from a list, or an effort the front matter does not set, shows only when a helper fails.
+
+*Recommendation:* WP6.07's `/np-carry` probes the four before its first helper and records the numbers in the
+note.
+`np-carry/SKILL.md` §1 asks for the probe while this row is open.
+
