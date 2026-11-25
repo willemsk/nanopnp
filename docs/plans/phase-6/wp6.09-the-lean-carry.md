@@ -131,7 +131,7 @@ stops on the first failure, printing `land: pushed <sha>` or `land: failed at <s
   (D1, D2). Done when the code and review say so. **Executor:** main
 - [x] fc30625 3. `.claude/skills/np-plan/wp.md`, `review.md`, `SKILL.md`, `np-carry/SKILL.md` §3: the split and the
   self-check; the models proposal removed; the planning model asked at each invocation (D1, D2, D3). Done when the code and review say so. **Executor:** main
-- [ ] 4. `.claude/skills/np-ship/wp.md`, `SKILL.md`, `.claude/workflow/author.md`: one review that fixes what it
+- [x] faf8fa8 4. `.claude/skills/np-ship/wp.md`, `SKILL.md`, `.claude/workflow/author.md`: one review that fixes what it
   confirms, `REV` by default, red CI to Opus (D4, D5). Done when the code and review say so. **Executor:** main
 - [ ] 5. `justfile`, `.claude/scripts/land.sh`, the core's *Gate and push*; `.claude/settings.json`'s
   `enabledPlugins` (D6, D7). Done when `just land` pushes a no-op branch and the code and review say so.

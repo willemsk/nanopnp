@@ -48,9 +48,10 @@ the plans and §8.2.
 
 ## Models and executors
 
-Fable 5.2 plans; a package's plan names the models that implement and ship it (`CLAUDE.md`,
-*Models*; §8.4.5). The author picks a session's model, so each pause's prompt names the
-model of the next step. A survey goes to Sonnet, or to Haiku where *Models* allows; read what it
+Fable 5.2 at high effort plans, or Opus 5.5 at `xhigh` where the author picks it at the plan's
+start; Opus 5.5 at high builds and reviews; Sonnet 5.5 at medium ships and runs `/np-carry`'s main
+session (`CLAUDE.md`, *Models*; §8.4.5; §8.2.56 BF1, BF9). The author picks a session's model, so each
+pause's prompt names the model of the next step. A survey goes to Sonnet, or to Haiku where *Models* allows; read what it
 returns before you use it. Physics and numerics decisions stay in this session.
 
 ## Records
@@ -64,6 +65,13 @@ returns before you use it. Physics and numerics decisions stay in this session.
 | `docs/project/review-findings.md` | A `REV-nn` row for each item left open (`CLAUDE.md`, *Open items*) |
 
 ## Gate and push
+
+**`just land` runs steps 1 to 6** and stops at the first failure (§8.2.56; `.claude/scripts/land.sh`).
+Start it with Bash `run_in_background`, `uv run just land <log>`, then wait in the same turn, in the
+foreground, `until grep -q '^exit ' <log>; do sleep 10; done`, waiting again if the 10-minute limit
+ends the wait. Its last lines are `land: pushed <sha>` or `land: failed at <step>`, and `exit <status>`.
+Fix a failure and run it again; end the turn only on a push. The steps it runs, which a session runs
+by hand where `land` cannot:
 
 1. Before a commit that adds or changes a decision (a ruling, a plan's `Dn` row, a `REV`, `MOD`,
    `OPN` or `WB` row), run `uv run .claude/scripts/decisions.py`; before one that adds a plan or a
