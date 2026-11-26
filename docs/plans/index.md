@@ -18,7 +18,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP6.06 — The channel's axis at a ragged rim](phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md): delivered, 25 November 2026.
 - [WP6.07 — The lean carry](phase-6/wp6.07-the-lean-carry.md): delivered, 26 November 2026.
 - [WP6.08 — The guard numbers](phase-6/wp6.08-the-guard-numbers.md): delivered, 26 November 2026.
-- [WP6.09 — The kernel's design](phase-6/wp6.09-the-kernels-design.md): in progress, items 1 to 4 done.
+- [WP6.09 — The kernel's design](phase-6/wp6.09-the-kernels-design.md): in progress, items 1 to 7 done.
 
 ## Phase 5
 
