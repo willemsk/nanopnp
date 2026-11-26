@@ -14,6 +14,15 @@ each guard walk repeating to 0.000e+00 (item 2). Live: a later change to a guard
 the kernel's last package checks against them (BC4); the log branch's case key and manifest line are REV-298's,
 WP6.09's. Evidence: [the knowledge section](../../../knowledge/06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md#the-guard-walks-of-ver-80-against-the-default).
 
+**Outcome of the review.** [CODE_REVIEW_095](../../code_reviews/CODE_REVIEW_095.md) (PR #221, base `f571e72`, head
+`17e3111`) found four and fixed all four in `3f88e59`: VER-80's row says the log branch runs as one rung and the two
+stabilised modes on the ladder; the knowledge claim names both stabilised tests; WP6.07's records are written; one
+line rewrapped. No test dropped for scope; no row left. A limit stands, noted: `guard-no-inertia` stays within 1e-8
+of the default (4.7e-9), so only the descriptor check would catch an ignored switch. **Measured cost** (carry, whole
+package): 1 session, 6 sub-agents, 1.5 agent hours, 4 touches; claude-fable-5-2 0.15 M out, 18 M cached,
+claude-opus-5-5 0.08 M out, 12 M cached, claude-sonnet-5-5 0.01 M out, 4 M cached; the In brief estimated about 3
+sessions, 2 to 3 agent hours and 4 touches.
+
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.08 entry sets this scope; `SPECIFICATION.md` governs, and
 where it and this plan disagree this plan is wrong. Identifiers are pointers into it.
 
