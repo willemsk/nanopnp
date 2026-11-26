@@ -1,6 +1,6 @@
 # WP6.09 — The kernel's design
 
-**Status: in progress, items 1 to 4 done.** Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
+**Status: in progress, items 1 to 7 done.** Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
 `3cc0fbd`. Inherits §8.2.53 BC1, BC2, BC4 and BC5, this plan's rulings (§8.2.60 BJ1 to BJ3), §8.2.7 G10 and
 §8.2.13 N1. Its last commit on `main` takes `v0.7.0-alpha.9` (§8.4.1).
 
@@ -272,13 +272,30 @@ for each defect found; `CHANGELOG.md`'s `## [0.7.0-alpha.9]`; `holds-now.yaml` (
   > `coordinate_names`; the two-vector velocity and the hoop terms of `flow.py` and the prototype's `kernel.py`;
   > `ngs.Id(2)` in `stabilisation.py` and `post/forces.py`; the axial direction as the second component in
   > `post/forces.py` and as `ngs.y` in `post/indicator.py`.
-- [ ] 5. The three runs of D5 on the prototype's head, and their Outcome in this plan; done when the log lists
+- [x] 1b5f5e3 5. The three runs of D5 on the prototype's head, and their Outcome in this plan; done when the log lists
   thirteen walks with example 01 within 10⁻⁸, the control fails and the gate's log ends `exit 0`. **Executor:**
   main, the runs by the main session
-- [ ] 6. The hand-over of the prototype's branch (D2); done when `git ls-remote origin
+  > **Outcome — the walks hold, the control misses, the gate passes.** On the prototype at `1b5f5e3`, under
+  > `linux-x86_64/X86_V3` with one thread each. Run 1, the thirteen walks (43 passed, no skip, 426 s with `-n auto`),
+  > each walk's largest relative drift and its mode: example 01 8.7 × 10⁻¹⁴ (`eof_m3_s`, `none`), the D5 (b) pass
+  > mark; example 02 classical 2.6 × 10⁻¹⁶, ePNP-NS 2.2 × 10⁻¹⁶, example 03 charged 6.3 × 10⁻¹⁶, example 07
+  > 4.3 × 10⁻¹⁵, 2WCD charged 2.9 × 10⁻¹², 2WCD shell 1.3 × 10⁻¹², each `none`; the guards constant density
+  > 3.8 × 10⁻¹⁶, dielectric 1.8 × 10⁻¹⁶, log 2.1 × 10⁻¹⁶, no inertia 1.8 × 10⁻¹⁶ (`none`), reference 2.3 × 10⁻¹⁶
+  > (`reference`), SUPG 5.3 × 10⁻¹⁶ (`supg`). All on the stored mesh; no walk missed. Run 2, the control, with the
+  > steric flux dropped: the four tests of example 02's ePNP-NS file error at setup, because `nanopnp run` exits 4
+  > before the golden is read: NUM-24's indicator current, 6.2718 × 10⁻¹¹ A, and NUM-25's reaction flux,
+  > 6.3127 × 10⁻¹¹ A, differ by 6.5 × 10⁻³ against the route tolerance of 10⁻³. Against the stored total current,
+  > 6.2876 × 10⁻¹¹ A, they drift 2.5 × 10⁻³ and 4.0 × 10⁻³. That is D5 (d)'s miss: the test fails, the cause is the
+  > dropped term alone, and the refusal itself shows that the solve reads the composition, as the reaction flux
+  > is taken from the composed form while the indicator writes the steric flux from the state. Run 3, the push gate:
+  > passed in 474 s on the tree `c0171d4` of `1b5f5e3` (the push selection; the gate prints no counts).
+- [x] 1b5f5e3 6. The hand-over of the prototype's branch (D2); done when `git ls-remote origin
   refs/heads/prototype/wp6.09-kernel` prints the sha the Outcome names. **Executor:** main, the push by the author
   where the session's is refused
-- [ ] 7. Compaction checkpoint. **Executor:** main
+  > **Outcome — pushed by the session.** The hook refused the push for want of a stamp in one command with the
+  > gate, so the gate ran alone and the push followed it; `origin` took the branch, and `git ls-remote origin
+  > refs/heads/prototype/wp6.09-kernel` prints `1b5f5e3dc54489c365c4053f0e6fec89293e2071`. No bundle was needed.
+- [x] 7. Compaction checkpoint. **Executor:** main
 - [ ] 8. `docs/design/kernel.md`, `mkdocs.yml`: the page (D7); done when `uv run just docs` passes and the code and
   review say so. **Executor:** main
 - [ ] 9. `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md`, `knowledge/06-numerics-fem/index.md`,
