@@ -764,8 +764,9 @@ WP6.09's prototype composed `CoupledModel.residual_form` from terms that add exp
 
 - **One integral per slot holds the operator.** With each of today's integrals a slot, and a slot's contributions
   summed before it is integrated once, the composed residual and Jacobian equal today's to 2.1 × 10⁻¹⁶ and
-  1.2 × 10⁻¹⁶ of their largest entry, in all three stabilisation modes. NGSolve sets an integral's order from its
-  integrand, so the sum is what keeps each slot's rule.
+  1.2 × 10⁻¹⁶ of their largest entry, in all three stabilisation modes. NGSolve estimates an integral's order from
+  the trial and test functions it carries (`02-axisymmetric-weak-forms.md`), so summing before integrating keeps each
+  slot's rule; the prototype did not measure a slot split term by term.
 - **The order of a sum is round-off.** Summing PHY-23's decrement into the flux bracket in another order moves its
   slot by 3.0 × 10⁻¹⁶; writing the drift as `c~_i b` moves the flux slots to at most 3.2 × 10⁻¹⁶.
 - **A slot owns its closing and its rule.** The stabilisation's integrands carry their own test function, so their
@@ -780,7 +781,7 @@ WP6.09's prototype composed `CoupledModel.residual_form` from terms that add exp
 - **A 3D mesh is mishandled without a word below the adapters.** `Measures.volume(rule_order=)` builds an explicit
   rule for `SEGM`, `TRIG` and `QUAD` alone and falls back to NGSolve's estimate on a tetrahedron (at order 20 an
   explicit `TET` rule moves the vector by 8.5 × 10⁻⁴), and `AXISYMMETRIC` weights by `ngs.x` on any mesh. Only
-  `mesh/adapter.py:from_ngsolve` refuses the mesh (CON-04).
+  `mesh/adapter.py:from_ngsolve` refuses the mesh (CON-01).
 
 ---
 
