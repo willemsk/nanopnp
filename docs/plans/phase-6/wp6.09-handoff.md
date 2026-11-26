@@ -2,28 +2,31 @@
 
 ## Step
 
-Implement, second helper: item 4 done; item 5's three runs, and item 6's push attempt, handed back as one `RUN`.
+Implement, third helper: items 5 and 6 ticked from the main session's `RUN`, and item 7's compaction checkpoint ticked.
 Opus 5.5 at high effort built.
 
 ## Done
 
-- `1b5f5e3` chore: prototype, the 3D trial (item 4), on the local branch `prototype/wp6.09-kernel`, above
-  `0867e2d` and `241606f`; not pushed (D2: item 6 pushes it)
-- this note's commit, `docs: WP6.09 hand-off, implement`: item 4's tick and Outcome, on `ccr-d29ea716-fd3bw4`
+- this note's commit, `docs: WP6.09 hand-off, implement`, on `ccr-d29ea716-fd3bw4`: item 5's and item 6's Outcomes,
+  the ticks of items 5 to 7, the plan's status line
+- the prototype `1b5f5e3` is on `origin/prototype/wp6.09-kernel` (`git ls-remote` checked)
 
 ## Measured
 
-- `prototype/three_d.py`: 7 s wall; the plan's item 4 Outcome holds its numbers.
-- The commit hook on the prototype: passed (one ruff retry for line length).
+- Run 1, thirteen walks: 43 passed, 426 s with `-n auto`; example 01 8.7 × 10⁻¹⁴. The plan's item 5 Outcome holds
+  each walk.
+- Run 2, the control: exit 1, four setup errors in 10.9 s; the run's currents drift 2.5 × 10⁻³ and 4.0 × 10⁻³ from
+  the stored total current.
+- Run 3, the push gate: passed, 474 s, tree `c0171d4`.
+- Logs: `/home/user/nanopnp/.git/wp609-{walks,control,gate,push}.log`.
 
 ## Decided
 
-- Item 5's three runs and item 6's single push attempt go in one `RUN`, in the plan's order, each with its own log
-  under `/home/user/nanopnp/.git/`: `wp609-walks.log`, `wp609-control.log`, `wp609-gate.log`, `wp609-push.log`.
-  The push follows run 3 in the same command, so no land replaces the prototype's stamp first. Each log ends
-  `exit <status>`; the push log opens with the sha pushed.
-- The 3D VER-17 mesh is the fluid alone (lumen and two half-ball reservoirs); the membrane is not meshed. The page
-  says so beside the count.
+- The control's refusal counts as D5 (d)'s miss. `nanopnp run` exits 4 at the NUM-24/NUM-25 route check
+  (6.5 × 10⁻³ against 10⁻³) before the golden is read; the test fails, only the dropped term causes it, and the
+  refusal shows that the solve reads the composition (the reaction flux comes from the composed form; the indicator
+  writes the steric flux from the state). The page's *what the prototype showed* says so, and notes that the route
+  check is itself a guard against a term the form drops but the post-processing keeps.
 
 ## Open
 
@@ -31,16 +34,10 @@ None.
 
 ## Next
 
-A fresh helper for `/np-implement wp 6.09`, Opus 5.5 at high effort, at item 5. First action: read the four logs
-under `/home/user/nanopnp/.git/` (above), with the branch `ccr-d29ea716-fd3bw4` checked out.
-
-- Walks: thirteen walks listed under `number stability`, no failure, no skip; example 01 within 10⁻⁸, else
-  `BLOCKED` with the log (D5 b). Other misses are reported, never tuned.
-- Control: it must fail on its stored numbers; a pass is `BLOCKED` (D5 d).
-- Gate: ends `exit 0`; record its counts and time.
-- Push: `exit 0` and `git ls-remote origin refs/heads/prototype/wp6.09-kernel` printing the logged sha ticks
-  item 6. If `origin` refused it, run item 6's `git bundle create` from the plan's *Implementation details* and
-  hand back `ASK` for the author's push; if the hook refused it for want of a stamp, item 6 says what follows.
-
-Then write item 5's Outcome (each walk's largest drift and mode, the control's drift, the gate's counts and time,
-the prototype's sha `1b5f5e3`) and tick items 5 and 6, then item 7's checkpoint.
+A fresh helper for `/np-implement wp 6.09`, Opus 5.5 at high effort, at item 8, on `ccr-d29ea716-fd3bw4`. First
+action: read the plan `docs/plans/phase-6/wp6.09-the-kernels-design.md` whole (D7, *Implementation details* item 8,
+and the Outcomes of items 2, 4 to 6, which hold every number the page cites), then `docs/design/workbench.md` and
+`mkdocs.yml`'s Project section for the page's form. The prototype's code is read with
+`git show 1b5f5e3:src/nanopnp/physics/kernel.py` (and `models.py`, `stabilisation.py`, `prototype/`), never by
+checking the branch out. Write `docs/design/kernel.md`, add its line under `Workbench design` in `mkdocs.yml`, and
+run `uv run just docs` before the commit.
