@@ -147,7 +147,9 @@ and stop.
 1. Fetch `main`: a hosted clone is shallow. The merge sha is the `merge_commit_sha` of the merged PR.
 2. If `git ls-remote --tags origin <tag>` lists the tag, report it and stop.
 3. Dispatch `.github/workflows/tag.yml` on `main` with `tag` and `sha` (`actions_run_trigger`, or
-   `gh workflow run tag.yml --ref main -f tag=<tag> -f sha=<merge sha>` where `gh` is installed). It checks the
+   `gh workflow run tag.yml --ref main -f tag=<tag> -f sha=<merge sha>` where `gh` is installed). Both are
+   allowed in `.claude/settings.json`; if one is refused, use the other before you hand back `BLOCKED`. A
+   rebase merge gives the PR no `merge_commit_sha`: the sha is the PR's last commit on `main`. It checks the
    tag, the commit and its changelog section, pushes the annotated tag and starts `release.yml` with the
    full matrix (§8.2.33 AI8). Wait for its run, as the steward's *Bounded wakes* say, and read its
    result. A cloud session never pushes a tag itself: its git credentials push only its own branch, and

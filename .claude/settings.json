@@ -16,7 +16,9 @@
       "Bash(git log:*)",
       "Bash(git show:*)",
       "Bash(git fetch:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(gh workflow run tag.yml:*)",
+      "mcp__github__actions_run_trigger"
     ],
     "deny": [
       "mcp__github__push_files",
