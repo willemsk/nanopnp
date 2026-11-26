@@ -3,7 +3,8 @@
 The registers are the requirement identifiers that the current specification defines, as a table
 row ``| **VER-62** |`` or a ``**PHY-11.**`` paragraph; the ruling letters and the §8.2 numbers of
 ``specification/history/``; the ``REV-nn`` rows of ``docs/project/review-findings.md`` and
-``review-archive.md``; the code-review reports; and the work-package plans of ``docs/plans/``. Two
+``review-archive.md``; the code-review reports; and the work-package plans of ``docs/plans/``,
+without a helper's ``*-handoff.md``. Two
 lanes that each add an item can merge one number twice without a textual conflict, so ``/np-ship``
 runs this after it merges ``main``. The exit status is non-zero when any number is shared.
 
@@ -65,7 +66,14 @@ def main() -> int:
             REV_ROW,
         ),
         "code-review report": _names(sorted((ROOT / "docs/code_reviews").glob("*.md")), REPORT),
-        "work package": _names(sorted((ROOT / "docs/plans").rglob("wp*.md")), PLAN),
+        "work package": _names(
+            sorted(
+                p
+                for p in (ROOT / "docs/plans").rglob("wp*.md")
+                if not p.name.endswith("-handoff.md")
+            ),
+            PLAN,
+        ),
     }
     for key, places in _scan(current, DEFINITION_PARAGRAPH).items():
         registers["requirement identifier"].setdefault(key, []).extend(places)
