@@ -4,33 +4,31 @@ Updated 26 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-**What changes.** The guard numbers are merged and tagged. Before the physics core is rebuilt, the program stores
-reference numbers for six optional settings of the model, each on the second worked example's charged pore. Every
-night they are computed again, and the run fails if one has moved by more than one part in a hundred million. Next
-the kernel's design is planned.
+**What changes.** The design package of the kernel is planned. It writes how the core of the physics is rebuilt
+from small registered pieces, and tries that in a throwaway prototype of the whole coupled model, checked against
+today's equations, all thirteen stored reference runs and the tests of every push. A trial prices a 3D check.
 
-**Cost.** The package took 1 session, 1.5 agent hours and 4 times you acted, against about 3 sessions estimated. The
-rest of the phase: about 33 sessions, 19 to 36 agent hours and 51 times you act.
+**Cost.** About 3 sessions, 4 to 7 agent hours and 8 times you act, one to push the prototype's branch. The rest of
+the phase after it: about 28 sessions, 16 to 30 agent hours and 43 times you act.
 
-**What could go wrong.** The numbers record what the program computes today, not that it is right. They are checked
-on Linux alone. Without inertia the numbers lie so close to the default's that they show a broken path, not an ignored
-setting.
+**What could go wrong.** The prototype may miss the stored numbers: a miss on the first example comes to you before
+any kernel package is planned. Its branch is never merged, so its code survives only while that branch does.
 
-**Your call.** Start the plan of the kernel's design? *Recommendation:* start it; you rule on the design it brings
-before the kernel is rebuilt.
+**Your call.** Approve the plan of the design package, after its review? *Recommendation:* approve; it changes no
+code a user runs and no rule.
 
 ## Position
 
 - Phases 1 to 5 **closed**, `v0.2.0` to `v0.6.0` ([Phase 5's report](phase-5/phase-5-workbench.md#end-of-phase-report)).
 - **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.08 merged**,
   tagged to `v0.7.0-alpha.8`.
-- **After WP6.09, the kernel's design, the rest is numbered at the round on that design**
-  ([§8.2.54](../../specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md), BD1). Phases
-  6 to 12: [the input note](sessions/phases-6-to-11.md).
-- **WP6.08, the guard numbers, is merged and tagged `v0.7.0-alpha.8`** ([the plan](phase-6/wp6.08-the-guard-numbers.md);
-  [§8.2.59](../../specification/history/59-wp608s-plan-the-guard-numbers.md) BI1, BI2): six walks of example 02's
-  ePNP-NS case, one setting each, held nightly on Linux (VER-80), each repeating to 0.000e+00. REV-298 is WP6.09's.
-- **Next:** `/np-plan wp 6.09`, the kernel's design.
+- **WP6.09, the kernel's design, is planned** ([the plan](phase-6/wp6.09-the-kernels-design.md);
+  [§8.2.60](../../specification/history/60-wp609s-plan-the-kernels-design.md)): a design page, and a prototype of
+  the whole coupled model on `prototype/wp6.09-kernel`, never merged, with thirteen walks reported on it.
+- **After it, the rest is numbered at the round on that design** (BD1;
+  [the input note](sessions/phases-6-to-11.md)).
+- **Next:** `/np-plan wp 6.09 review` (Fable 5.2, high); then, approved, `/np-carry wp 6.09` (Sonnet 5.5, medium)
+  or `/np-implement wp 6.09` (Opus 5.5, high).
 
 ## Not to be re-decided
 
@@ -49,6 +47,7 @@ before the kernel is rebuilt.
 - **The kernel follows the axis fix and a design the author rules; its full check runs at its last package** (BC1
   to BC4).
 - **The channel axis's two limits stay** (BE1). **Six settings get guard numbers, held on Linux alone** (BI1, BI2).
+- **The prototype covers the whole model, on its own branch** (BJ1, BJ3).
 - **An orchestrator carries a package; the three commands stay** (BC10; BD2). **The continuation trial adopts its path
   on a full pass of marks registered first** (BC24).
 

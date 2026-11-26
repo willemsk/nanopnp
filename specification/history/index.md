@@ -70,6 +70,7 @@ letter pair from §8.2.25 on, and numbered within it (A1, B3, R10, AA2).
 * [8.2.57 /np-chore: a change outside a work package, agreed 26 November 2026](57-np-chore-a-change-outside-a-package.md) - A skill that makes one change and opens its PR; any session where no carry runs; no limit on content, with an np-reviewer pass unless the diff is Markdown alone; not a lane; recorded in §8.4.4 and duplicates.py in CI; Opus at high on src/ and tests/.
 * [8.2.58 A REV row is for an item that outlives its session, agreed 26 November 2026](58-a-rev-row-is-for-an-item-that-outlives-its-session.md) - A row only for a deferral, a doubt only the author can settle, or a finding larger than a small edit; a small finding is fixed in the session that finds it.
 * [8.2.59 WP6.08's plan: the guard numbers, agreed 26 November 2026](59-wp608s-plan-the-guard-numbers.md) - Six of the model's settings get stored reference numbers before the kernel is rebuilt, three beyond the names of BC3; the numbers are held in the reference environment alone.
+* [8.2.60 WP6.09's plan: the kernel's design, agreed 26 November 2026](60-wp609s-plan-the-kernels-design.md) - The throwaway prototype rebuilds every path of the coupled model and reports all thirteen stored walks, example 01's staying the one pass mark; the benchmark on a coarse 3D mesh is priced from a bounded trial; the prototype lives on a branch of its own that is never merged, which the author pushes.
 
 ## Where each ruling holds now
 

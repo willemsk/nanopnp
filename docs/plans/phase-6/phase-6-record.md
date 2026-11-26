@@ -500,3 +500,26 @@ Open decision 14's owner read "WP6.08's plan (BC3)", the verification table's ro
 the switches off their default; the identifier is open decision 14", and criterion 12 ended:
 
 > Prediction: the walks cover the default switches alone; if not, WP6.08 stores only what is missing.
+
+## Amended 26 November 2026, at WP6.09's plan (§8.2.60 BJ1 to BJ3)
+
+WP6.09's plan read the entry against the code: example 01's walk already solves the coupled model at its validated
+default. The author ruled that the prototype rebuilds every path of that model and reports all thirteen stored walks,
+that the 3D benchmark is priced from a bounded trial, and that the prototype lives on a branch of its own. The entry
+of WP6.09 read:
+
+> ### WP6.09 — The kernel's design (BC2, BC5)
+>
+> *Planned by scope.* A design page and a throwaway prototype. The page states the term, a correction as a coefficient
+> that terms share, the rule that binds terms (PHY-08), each flux integrated once, the nine names of `physics/` the
+> workbench reads, how an installed package registers, and §5.4.1's interface (MOD-10; AZ1). The prototype rebuilds the
+> simplest model from terms. The package reports whether example 01's walk of VER-62 holds to 10⁻⁸, with the commit
+> that holds the prototype, the command and the stabilisation mode, so the run can be repeated; the tree it merges
+> holds none of the prototype's code. It proposes the kernel's packages and their Tier 1 and Tier 2
+> tests (FR-40), and prices the benchmark that solves VER-13 or VER-17 on a coarse 3D mesh (BC5). The page is a
+> proposal until the round below, which rewrites ADR-005, §5.4 and §5.5. About 5 sessions, 3 to 6 agent hours and 8
+> touches.
+
+The verification table's row for WP6.09 read "Example 01's walk of VER-62 on the prototype, reported with its commit
+and command", criterion 5 ended at "(BC2).", and the end-of-phase report asked for "the prototype's drift on example
+01's walk".
