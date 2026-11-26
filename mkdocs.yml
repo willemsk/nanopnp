@@ -424,6 +424,7 @@ nav:
       - Decisions register: project/decisions.md
       - Decisions register, closed: project/decisions-closed.md
       - Workbench design: design/workbench.md
+      - Kernel design: design/kernel.md
       - Citing: project/citing.md
       - Release notes: _generated/project/changelog.md
       - Licence: project/licence.md
