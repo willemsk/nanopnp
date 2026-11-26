@@ -314,7 +314,7 @@ for each defect found; `CHANGELOG.md`'s `## [0.7.0-alpha.9]`; `holds-now.yaml` (
   > and `post/forces.py` was not edited: both are on paper. The page prices the kernel at four packages, about 12
   > sessions, 9 to 16 agent hours and 19 touches, from the prototype's 0.7 agent hours and WP6.06's and WP6.08's
   > measured lines.
-- [ ] 9. `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md`, `knowledge/06-numerics-fem/index.md`,
+- [x] 3869ebf 9. `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md`, `knowledge/06-numerics-fem/index.md`,
   `knowledge/log.md`, `docs/project/modularity.md`, `docs/project/review-items.md`,
   `docs/project/review-findings.md`, `CHANGELOG.md`, `specification/history/holds-now.yaml`, this plan, the Phase 6
   plan, `docs/plans/current.md`: the records (D8); done when the code and review say so. **Executor:** main
