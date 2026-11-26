@@ -314,6 +314,13 @@ for each defect found; `CHANGELOG.md`'s `## [0.7.0-alpha.9]`; `holds-now.yaml` (
   > and `post/forces.py` was not edited: both are on paper. The page prices the kernel at four packages, about 12
   > sessions, 9 to 16 agent hours and 19 touches, from the prototype's 0.7 agent hours and WP6.06's and WP6.08's
   > measured lines.
+  > **Outcome — the review.** [CODE_REVIEW_097](../../code_reviews/CODE_REVIEW_097.md), base `45b9798`, head `8e0151b`:
+  > nine findings, eight fixed in `4a31cd8` (the order NGSolve estimates, the emptied `requires: flow` cells, NUM-12's
+  > NOTE and REV-300, the indicator's reader, the `grad` name, the mark's sha, CON-01's citation, the Status line),
+  > one left as REV-301 (three CON-04 citations in `mesh/`).
+  > **Measured cost** (carry, whole): 1 session, 6 sub-agents, 1.2 agent hours, 2 touches; claude-opus-5-5 0.19 M out,
+  > 28 M cached, claude-sonnet-5-5 0.02 M out, 5 M cached; the estimate was about 3 sessions, 4 to 7 agent hours and
+  > 8 touches.
 - [x] 3869ebf 9. `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md`, `knowledge/06-numerics-fem/index.md`,
   `knowledge/log.md`, `docs/project/modularity.md`, `docs/project/review-items.md`,
   `docs/project/review-findings.md`, `CHANGELOG.md`, `specification/history/holds-now.yaml`, this plan, the Phase 6

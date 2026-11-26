@@ -1974,3 +1974,13 @@ drift as one the stabilisation does not read.
 
 *Recommendation:* keep it out, as today, and say so in NUM-12's NOTE, at the round on the kernel's design; reading it
 is a re-pin of the stabilised modes under PHY-23, by ruling (§8.2.7 G10).
+
+### REV-301: Three messages in mesh/ cite CON-04 for the half-plane where CON-01 is meant
+
+Left by `/np-ship`'s review of WP6.09, [CODE_REVIEW_097](../code_reviews/CODE_REVIEW_097.md). The refusals of a
+three-dimensional mesh at `src/nanopnp/mesh/adapter.py:386` and `:471`, and the one at `src/nanopnp/mesh/quality.py:200`,
+name CON-04 (azimuthal averaging of a Cₙ structure) where CON-01 (2D-axisymmetric, steady state) states the
+restriction. The citations predate WP6.09, which changes no code.
+
+*Recommendation:* change the three identifiers to CON-01 in the next package or chore that edits `mesh/`; no behaviour
+moves.

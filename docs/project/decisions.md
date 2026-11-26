@@ -2,11 +2,11 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,739. By source: history ruling 499; plan decision row 828; REV row 300; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 8.
+Rows: 1,740. By source: history ruling 499; plan decision row 828; REV row 301; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 8.
 
-By decider: author 837; open 5; session, own call 894; session, put to the author 3.
+By decider: author 837; open 5; session, own call 895; session, put to the author 3.
 
-This page lists the 562 that bind now. The 1,177 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
+This page lists the 563 that bind now. The 1,177 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -494,6 +494,7 @@ This page lists the 562 that bind now. The 1,177 of a delivered plan, fixed, spe
 | REV-298 | session, own call | `docs/project/review-findings.md` |  | WP6.08 | The log branch has no case key and no line in the manifest | left by WP6.08's plan, D4; WP6.09's design takes it up | open |
 | REV-299 | session, own call | `docs/project/review-findings.md` |  |  | A rebase merge rewrites the shas that a package's ticks and Outcome name | left by `/np-chore`'s review, CODE_REVIEW_096 | open |
 | REV-300 | session, own call | `docs/project/review-findings.md` |  | WP6.09 | The stabilisation's wind leaves out PHY-23's decrement | left by WP6.09's prototype; the round on the kernel's design rules it | open |
+| REV-301 | session, own call | `docs/project/review-findings.md` |  | WP6.09 | Three messages in mesh/ cite CON-04 for the half-plane where CON-01 is meant | left by `/np-ship`'s review of WP6.09, CODE_REVIEW_097 | open |
 | MOD-08 | author | `docs/project/modularity-findings.md` |  |  | Five registries in four shapes | §8.2.8 H5; brought forward by REV-272 and §8.2.50 AZ4; §8.2.53 BC3, BC7: Phase 7's library-shape package, its switches as data Phase 6's kernel | post-1.0 |
 | MOD-10 | author | `docs/project/modularity-findings.md` |  | WP6.09 | The backend interface of section 5.4.1 does not exist | §8.2.8 H3; §8.2.50 AZ1; §8.2.53 BC2; §8.2.54 BD1: WP6.09, the kernel's design | deferred |
 | MOD-17 | author | `docs/project/modularity-findings.md` |  |  | The validated correction set is a default in eight signatures | §8.2.8 H5 | post-1.0 |
