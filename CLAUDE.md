@@ -118,6 +118,8 @@ One work package per PR, green on tiers 1–2 before the next one in its lane (a
   green and prints the tag commands. A phase's close also tags the release.
 - `/np-carry wp <n>` runs all three in one session through fresh helpers, which commit; the main
   session lands each hand-back's commits with `just land`.
+- `/np-chore <what>` makes one change no package owns, in a session of its own where no carry runs:
+  a branch from `main`, a review unless it is Markdown alone, `just land`, a `chore:` PR the author merges.
 
 §8.4.4 holds the workflow's rules and pauses; §8.4.5 the agents, the models and the kept scripts. A
 choice put to the author follows `.claude/workflow/author.md`.

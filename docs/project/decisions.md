@@ -2,11 +2,11 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,706. By source: history ruling 487; plan decision row 813; REV row 294; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 8.
+Rows: 1,715. By source: history ruling 493; plan decision row 813; REV row 297; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 8.
 
-By decider: author 818; open 5; session, own call 880; session, put to the author 3.
+By decider: author 826; open 5; session, own call 881; session, put to the author 3.
 
-This page lists the 556 that bind now. The 1,150 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
+This page lists the 565 that bind now. The 1,150 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -426,6 +426,12 @@ This page lists the 556 that bind now. The 1,150 of a delivered plan, fixed, spe
 | WP6.07 D5 | author | `docs/plans/phase-6/wp6.07-the-lean-carry.md` | 2026-11-25 | WP6.07 | A finding left to the author is a `REV` row by default and the PR merges as reviewed; one the author pulls in gets a review of its own diff by `np-reviewer` on Opus at medium effort, set by the `Agent` call's `effort` \|… | unstated | plan in flight |
 | WP6.07 D6 | author | `docs/plans/phase-6/wp6.07-the-lean-carry.md` | 2026-11-25 | WP6.07 | Each helper agent file lists its tools; `.claude/settings.json` disables each plugin this project never uses \| Ruled by the author, BF6 \| | unstated | plan in flight |
 | WP6.07 D7 | session, own call | `docs/plans/phase-6/wp6.07-the-lean-carry.md` | 2026-11-25 | WP6.07 | `just land` runs the registers, the docs build when a source changed, a commit of what they wrote, the push gate and its wait, the rebase and the push with retries, and prints one line \| Decided by the plan, from BF1 \| | unstated | plan in flight |
+| §8.2.57 BG1 | author | `specification/history/57-np-chore-a-change-outside-a-package.md` | 2026-11-26 | phase ruling | `/np-chore` is a skill that makes one change and opens its pull request.** The author asked for it with no limit on what the pull request may contain and no line between a chore and a package, "I prefer the flexibility" | §8.4.4; `.claude/skills/np-chore/` | in force |
+| §8.2.57 BG2 | author | `specification/history/57-np-chore-a-change-outside-a-package.md` | 2026-11-26 | phase ruling | Any session may run a chore, where no carry is running.** Offered the main session only (*the recommendation*), any session, and any session where no carry runs, the author chose the last | §8.4.4; `.claude/skills/np-chore/`; §8.2.56 BF11 stands | in force |
+| §8.2.57 BG3 | author | `specification/history/57-np-chore-a-change-outside-a-package.md` | 2026-11-26 | phase ruling | A diff that is not Markdown alone is reviewed by `np-reviewer` before the pull request opens.** Offered limits on the content (*the recommendation*), no limit, and no limit with a review, the author chose the last. The… | §8.4.4; `.claude/agents/np-reviewer.md`; `.claude/skills/np-chore/` | in force |
+| §8.2.57 BG4 | author | `specification/history/57-np-chore-a-change-outside-a-package.md` | 2026-11-26 | phase ruling | A chore is not a lane.** Offered that it is not (*the recommendation*), that it is one, and that it merges only between packages, the author chose the first | §8.4.4 | in force |
+| §8.2.57 BG5 | author | `specification/history/57-np-chore-a-change-outside-a-package.md` | 2026-11-26 | phase ruling | The rule is recorded in §8.4.4, and `duplicates.py` runs in CI.** Offered the record with the CI step (*the recommendation*), the record with the skill running it, and no record, the author chose the first | §8.4.4; `ci.yml`; `.claude/skills/np-chore/` | in force |
+| §8.2.57 BG6 | author | `specification/history/57-np-chore-a-change-outside-a-package.md` | 2026-11-26 | phase ruling | A chore's model follows §8.4.5.** Raised by the second review (finding 11) and ruled with "do all fixes": a chore has no limit on content, and Sonnet 5.5 at medium builds no `src/` | §8.4.4; §8.4.5; `.claude/skills/np-chore/` | in force |
 | REV-35 | author | `docs/project/review-findings.md` |  |  | _second_crossings loops in Python | §8.2.9 I3 | post-1.0 |
 | REV-41 | author | `docs/project/review-findings.md` |  |  | No prepare command, upto on reproduce, or region export | §8.2.18 T3; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4; §8.2.53 BC7: Phase 7's tolerances and exports package | deferred |
 | REV-45 | author | `docs/project/review-findings.md` |  |  | The derived χ field has no export | §8.2.18 T3; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4; §8.2.53 BC7: Phase 7's tolerances and exports package | deferred |
@@ -488,6 +494,9 @@ This page lists the 556 that bind now. The 1,150 of a delivered plan, fixed, spe
 | REV-286 | author | `docs/project/review-findings.md` |  |  | Whether Netgen meshes a wall layer at the Debye length is not tried | §8.2.53 BC9: Phase 7's mesh-error package, whose ladder meets it first | accepted |
 | REV-287 | author | `docs/project/review-findings.md` |  |  | Whether NiceGUI carries the workbench's hardest view and QR-16 is not tried | §8.2.53 BC13: Phase 8's first package, the kit's trial, before the rebuild | accepted |
 | REV-294 | session, own call | `docs/project/review-findings.md` |  | WP6.07 | The BF10 entry of holds-now names §8.4.1, which BF10 leaves unchanged | left by WP6.07's review of its pulled-in findings, CODE_REVIEW_091 | open |
+| REV-295 | session, own call | `docs/project/review-findings.md` |  |  | A pull request's duplicates check goes stale when main moves | left by `/np-chore`'s review, CODE_REVIEW_092 | open |
+| REV-296 | author | `docs/project/review-findings.md` |  |  | A failed land of a chore is fixed by the session, a red CI by np-builder | left by `/np-chore`'s review of its ruled doubts, CODE_REVIEW_093 | open |
+| REV-297 | author | `docs/project/review-findings.md` |  |  | The chore's worktree refusal names a branch pattern that package branches lack | left by `/np-chore`'s review of its ruled doubts, CODE_REVIEW_093 | open |
 | MOD-08 | author | `docs/project/modularity-findings.md` |  |  | Five registries in four shapes | §8.2.8 H5; brought forward by REV-272 and §8.2.50 AZ4; §8.2.53 BC3, BC7: Phase 7's library-shape package, its switches as data Phase 6's kernel | post-1.0 |
 | MOD-10 | author | `docs/project/modularity-findings.md` |  | WP6.09 | The backend interface of section 5.4.1 does not exist | §8.2.8 H3; §8.2.50 AZ1; §8.2.53 BC2; §8.2.54 BD1: WP6.09, the kernel's design | deferred |
 | MOD-17 | author | `docs/project/modularity-findings.md` |  |  | The validated correction set is a default in eight signatures | §8.2.8 H5 | post-1.0 |
