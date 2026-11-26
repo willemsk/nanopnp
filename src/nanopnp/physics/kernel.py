@@ -18,7 +18,11 @@ from nanopnp.physics.flow import (
     permittivity_gradient,
     strain_rate,
 )
-from nanopnp.physics.nernst_planck import ConcentrationVariables, excess_potential_gradient
+from nanopnp.physics.nernst_planck import (
+    ConcentrationVariables,
+    StericForm,
+    excess_potential_gradient,
+)
 from nanopnp.physics.stabilisation import (
     CROSSWIND_BONUS_ORDER,
     FLOW_BONUS_ORDER,
@@ -37,19 +41,34 @@ __all__ = [
     "Contribution",
     "KernelTerm",
     "Slot",
+    "State",
     "Switch",
+    "body_force",
     "compose",
     "compose_integrals",
     "coupled_slots",
     "dielectric_force",
     "in_force",
     "ionic_force",
+    "transport_drift",
 ]
 
 DROP_VARIABLE = "NANOPNP_PROTOTYPE_DROP"
 """The environment variable naming, comma-separated, the terms the prototype leaves out."""
 
 Domain = Literal["omega", "fluid", "surface_charge"]
+
+
+@dataclass(frozen=True)
+class State:
+    """One side of an assembly, trial or lagged: what a drift or a force density reads."""
+
+    coefficients: NondimensionalCoefficients
+    variables: ConcentrationVariables
+    potential: Expression
+    velocity: Expression | None
+    steric: StericForm | None
+    solid: SolidBlend | None = None
 
 
 @dataclass(frozen=True)
@@ -87,6 +106,17 @@ class Context:
         if "Variable density" in self.terms_in_force:
             return self.coefficients.mass_density()
         return None
+
+    def state(self) -> State:
+        """Return the trial side as a :class:`State`."""
+        return State(
+            coefficients=self.coefficients,
+            variables=self.variables,
+            potential=self.trials[POTENTIAL],
+            velocity=self.trials[VELOCITY] if self.model.flow else None,
+            steric=self.model.steric_form,
+            solid=self.solid,
+        )
 
     def require_species(self) -> str:
         """Return the species at hand; RuntimeError on a slot that has none."""
@@ -143,13 +173,78 @@ class Contribution:
     build: Callable[[Context], Expression | None]
 
 
+Drift = Callable[[State, str], Expression | None]
+Force = Callable[[State], Expression]
+
+
 @dataclass(frozen=True)
 class KernelTerm:
-    """A term of the model: its display term, if any, and the contributions it adds."""
+    """A term of the model: its display term, if any, and the contributions it adds.
+
+    Parameters
+    ----------
+    drift
+        A flux term's drift ``b``, written once: the flux slot takes ``c~_i b`` and the
+        stabilisation reads ``b`` where ``in_drift`` holds.
+    force
+        A force term's density ``f``, written once: its slot takes ``-f . v`` and the flow
+        stabilisation's residual reads ``f``.
+    """
 
     name: str
     contributions: tuple[Contribution, ...]
     display: Term | None = None
+    drift: Drift | None = None
+    in_drift: bool = True
+    force: Force | None = None
+    force_slot: str | None = None
+
+    @property
+    def all_contributions(self) -> tuple[Contribution, ...]:
+        """Return the term's contributions, those its drift and its force imply included."""
+        derived: list[Contribution] = []
+        drift, force = self.drift, self.force
+        if drift is not None:
+
+            def flux(context: Context) -> Expression | None:
+                species = context.require_species()
+                value = drift(context.state(), species)
+                return None if value is None else context.variables.values[species] * value
+
+            derived.append(Contribution("flux", flux))
+        if force is not None:
+            if self.force_slot is None:
+                raise ValueError(f"the force term {self.name!r} names no slot")
+            derived.append(Contribution(self.force_slot, lambda context: force(context.state())))
+        return (*self.contributions, *derived)
+
+
+def transport_drift(terms: Sequence[KernelTerm], state: State, species: str) -> Expression | None:
+    """Return ``b~_i``, the sum of the drifts in force that the stabilisation reads."""
+    parts = [
+        value
+        for term in terms
+        if term.drift is not None
+        and term.in_drift
+        and (value := term.drift(state, species)) is not None
+    ]
+    if not parts:
+        return None
+    total = parts[0]
+    for part in parts[1:]:
+        total = total + part
+    return total
+
+
+def body_force(terms: Sequence[KernelTerm], state: State) -> Expression | None:
+    """Return ``f``, the sum of the force densities in force."""
+    parts = [term.force(state) for term in terms if term.force is not None]
+    if not parts:
+        return None
+    total = parts[0]
+    for part in parts[1:]:
+        total = total + part
+    return total
 
 
 @dataclass(frozen=True)
@@ -231,7 +326,7 @@ def compose_integrals(
         parts = [
             built
             for term in terms
-            for contribution in term.contributions
+            for contribution in term.all_contributions
             if contribution.slot == slot.family
             and (built := contribution.build(at_hand)) is not None
         ]
@@ -452,54 +547,42 @@ def _surface_charge(context: Context) -> Expression | None:
     return None if context.surface_charge is None else -1.0 * context.surface_charge
 
 
-def _diffusion_migration(context: Context) -> Expression:
+def _diffusion(context: Context) -> Expression:
+    species = context.require_species()
+    return context.coefficients.diffusivity(species) * context.variables.gradients[species]
+
+
+def _migration_drift(state: State, species: str) -> Expression:
     import ngsolve as ngs
 
-    species = context.require_species()
-    coefficients = context.coefficients
-    ion = coefficients.electrolyte.ion(species)
-    concentration = context.variables.values[species]
-    bracket = coefficients.diffusivity(species) * context.variables.gradients[species]
-    return bracket + float(ion.valence) * coefficients.mobility(species) * concentration * ngs.grad(
-        context.trials[POTENTIAL]
-    )
+    coefficients = state.coefficients
+    valence = float(coefficients.electrolyte.ion(species).valence)
+    return valence * coefficients.mobility(species) * ngs.grad(state.potential)
 
 
-def _steric(context: Context) -> Expression | None:
-    form = context.model.steric_form
-    if form is None:
+def _steric_drift(state: State, species: str) -> Expression | None:
+    if state.steric is None:
         return None
-    species = context.require_species()
-    coefficients = context.coefficients
-    concentration = context.variables.values[species]
-    return (
-        coefficients.diffusivity(species)
-        * concentration
-        * form(context.variables, coefficients, species)
+    coefficients = state.coefficients
+    return coefficients.diffusivity(species) * state.steric(state.variables, coefficients, species)
+
+
+def _decrement_drift(state: State, species: str) -> Expression:
+    coefficients = state.coefficients
+    return coefficients.diffusivity(species) * excess_potential_gradient(
+        species,
+        coefficients=coefficients,
+        variables=state.variables,
+        potential=state.potential,
+        solid=state.solid,
     )
 
 
-def _decrement(context: Context) -> Expression:
-    species = context.require_species()
-    coefficients = context.coefficients
-    concentration = context.variables.values[species]
-    return (
-        coefficients.diffusivity(species)
-        * concentration
-        * excess_potential_gradient(
-            species,
-            coefficients=coefficients,
-            variables=context.variables,
-            potential=context.trials[POTENTIAL],
-            solid=context.solid,
-        )
-    )
-
-
-def _advection(context: Context) -> Expression:
-    species = context.require_species()
-    concentration = context.variables.values[species]
-    return -(context.coefficients.peclet * context.trials[VELOCITY] * concentration)
+def _advection_drift(state: State, species: str) -> Expression | None:
+    del species
+    if state.velocity is None:
+        return None
+    return -(state.coefficients.peclet * state.velocity)
 
 
 def _viscous_stress(context: Context) -> Expression:
@@ -534,33 +617,23 @@ def _inertia(context: Context) -> Expression:
     return context.coefficients.reynolds * (1.0 if density is None else density) * convective
 
 
-def ionic_force(coefficients: NondimensionalCoefficients, potential: Expression) -> Expression:
+def ionic_force(state: State) -> Expression:
     """Return the ionic body force density ``f = -S (sum_i z_i c~_i) grad(phi~)``, written once."""
     import ngsolve as ngs
 
-    return -coefficients.screening * coefficients.ionic_charge_density() * ngs.grad(potential)
+    coefficients = state.coefficients
+    return -coefficients.screening * coefficients.ionic_charge_density() * ngs.grad(state.potential)
 
 
-def dielectric_force(
-    coefficients: NondimensionalCoefficients,
-    variables: ConcentrationVariables,
-    potential: Expression,
-    solid: SolidBlend | None,
-) -> Expression:
+def dielectric_force(state: State) -> Expression:
     """Return PHY-23's force density ``-1/2 |grad phi~|^2 grad(eps~_r)``, written once."""
     import ngsolve as ngs
 
-    field = ngs.grad(potential)
-    return -0.5 * (field * field) * permittivity_gradient(coefficients, variables, solid=solid)
-
-
-def _ionic_force(context: Context) -> Expression:
-    return ionic_force(context.coefficients, context.trials[POTENTIAL])
-
-
-def _dielectric_force(context: Context) -> Expression:
-    return dielectric_force(
-        context.coefficients, context.variables, context.trials[POTENTIAL], context.solid
+    field = ngs.grad(state.potential)
+    return (
+        -0.5
+        * (field * field)
+        * permittivity_gradient(state.coefficients, state.variables, solid=state.solid)
     )
 
 
@@ -579,15 +652,18 @@ COUPLED_TERMS: tuple[KernelTerm, ...] = (
     ),
     KernelTerm(
         _NERNST_PLANCK,
-        (Contribution("flux", _diffusion_migration),),
+        (Contribution("flux", _diffusion),),
         _display(_NERNST_PLANCK),
+        drift=_migration_drift,
     ),
-    KernelTerm("Steric flux", (Contribution("flux", _steric),), _display("Steric flux")),
-    KernelTerm("Advection", (Contribution("flux", _advection),), _display("Advection")),
+    KernelTerm("Steric flux", (), _display("Steric flux"), drift=_steric_drift),
+    KernelTerm("Advection", (), _display("Advection"), drift=_advection_drift),
     KernelTerm(
         "Dielectric decrement",
-        (Contribution("flux", _decrement),),
+        (),
         _display("Dielectric decrement"),
+        drift=_decrement_drift,
+        in_drift=False,
     ),
     KernelTerm(
         "Momentum",
@@ -606,12 +682,18 @@ COUPLED_TERMS: tuple[KernelTerm, ...] = (
     ),
     KernelTerm("Variable density", (), _display("Variable density")),
     KernelTerm(
-        "Body force", (Contribution("momentum.body_force", _ionic_force),), _display("Body force")
+        "Body force",
+        (),
+        _display("Body force"),
+        force=ionic_force,
+        force_slot="momentum.body_force",
     ),
     KernelTerm(
         "Dielectric-gradient force",
-        (Contribution("momentum.dielectric_force", _dielectric_force),),
+        (),
         _display("Dielectric-gradient force"),
+        force=dielectric_force,
+        force_slot="momentum.dielectric_force",
     ),
     KernelTerm("Corrections", (), _display("Corrections")),
 )

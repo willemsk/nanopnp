@@ -75,10 +75,13 @@ from nanopnp.physics.kernel import (
     Contribution,
     KernelTerm,
     Slot,
+    body_force,
     compose,
     coupled_slots,
     in_force,
+    transport_drift,
 )
+from nanopnp.physics.kernel import State as KernelState
 from nanopnp.physics.nernst_planck import (
     ConcentrationVariables,
     StericForm,
@@ -1013,7 +1016,7 @@ class CoupledModel:
             if state is not None
             else coefficients
         )
-        terms = [term for term in (*COUPLED_TERMS, *self._model_terms()) if in_force(term, self)]
+        terms = self._terms_in_force()
         context = Context(
             model=self,
             mesh=mesh,
@@ -1246,8 +1249,8 @@ class CoupledModel:
             if stabilisation.terms:
                 stabilisation_term = stabilisation.transport_term(
                     measures,
-                    trial=self._transport_state(name, trials, variables, coefficients),
-                    lagged=self._transport_state(
+                    trial=self._reference_transport_state(name, trials, variables, coefficients),
+                    lagged=self._reference_transport_state(
                         name, lagged, lagged_variables, lagged_coefficients
                     ),
                     test=tests[field_name],
@@ -1264,10 +1267,10 @@ class CoupledModel:
             if stabilisation.terms:
                 flow_term = stabilisation.flow_term(
                     measures,
-                    trial=self._flow_state(
+                    trial=self._reference_flow_state(
                         trials, coefficients, variables, sources=sources, solid=solid
                     ),
-                    lagged=self._flow_state(
+                    lagged=self._reference_flow_state(
                         lagged, lagged_coefficients, lagged_variables, sources=sources, solid=solid
                     ),
                     velocity_test=tests[VELOCITY],
@@ -1284,7 +1287,7 @@ class CoupledModel:
             residual -= measures.volume(source * tests[name], **options)
         return residual
 
-    def _transport_state(
+    def _reference_transport_state(
         self,
         species: str,
         functions: Mapping[str, Expression],
@@ -1300,7 +1303,7 @@ class CoupledModel:
             steric=self.steric_form,
         )
 
-    def _flow_state(
+    def _reference_flow_state(
         self,
         functions: Mapping[str, Expression],
         coefficients: NondimensionalCoefficients,
@@ -1317,8 +1320,6 @@ class CoupledModel:
             * ngs.grad(functions[POTENTIAL])
         )
         if self.dielectric_gradient_forces:
-            # The Korteweg-Helmholtz force of PHY-23, which survives the
-            # approximate residual: it carries first derivatives only.
             field = ngs.grad(functions[POTENTIAL])
             force = force - 0.5 * (field * field) * permittivity_gradient(
                 coefficients, variables, solid=solid
@@ -1329,6 +1330,61 @@ class CoupledModel:
             pressure=functions[PRESSURE],
             density=coefficients.mass_density() if self.variable_density else 1.0,
             body_force=force,
+            inertia=self.inertia,
+            source=sources.get(VELOCITY),
+        )
+
+    def _terms_in_force(self) -> list[KernelTerm]:
+        return [term for term in (*COUPLED_TERMS, *self._model_terms()) if in_force(term, self)]
+
+    def _transport_state(
+        self,
+        species: str,
+        functions: Mapping[str, Expression],
+        variables: ConcentrationVariables,
+        coefficients: NondimensionalCoefficients,
+    ) -> TransportState:
+        velocity = functions[VELOCITY] if self.flow else None
+        state = KernelState(
+            coefficients=coefficients,
+            variables=variables,
+            potential=functions[POTENTIAL],
+            velocity=velocity,
+            steric=self.steric_form,
+        )
+        return TransportState(
+            species=species,
+            coefficients=coefficients,
+            variables=variables,
+            potential=functions[POTENTIAL],
+            velocity=velocity,
+            steric=self.steric_form,
+            drift=transport_drift(self._terms_in_force(), state, species),
+        )
+
+    def _flow_state(
+        self,
+        functions: Mapping[str, Expression],
+        coefficients: NondimensionalCoefficients,
+        variables: ConcentrationVariables,
+        *,
+        sources: Mapping[str, Expression],
+        solid: SolidBlend | None = None,
+    ) -> FlowState:
+        state = KernelState(
+            coefficients=coefficients,
+            variables=variables,
+            potential=functions[POTENTIAL],
+            velocity=functions[VELOCITY],
+            steric=self.steric_form,
+            solid=solid,
+        )
+        return FlowState(
+            coefficients=coefficients,
+            velocity=functions[VELOCITY],
+            pressure=functions[PRESSURE],
+            density=coefficients.mass_density() if self.variable_density else 1.0,
+            body_force=body_force(self._terms_in_force(), state),
             inertia=self.inertia,
             source=sources.get(VELOCITY),
         )

@@ -109,6 +109,7 @@ class TransportState:
     potential: Expression
     velocity: Expression | None
     steric: StericForm | None
+    drift: Expression | None = None
 
     @property
     def diffusivity(self) -> Expression:
@@ -153,9 +154,11 @@ def _positive_part(scalar: Expression) -> Expression:
 
 
 def advective_velocity(state: TransportState) -> Expression:
-    """Return ``b~_i``, the non-diffusive part of the flux bracket."""
+    """Return ``b~_i``, the non-diffusive part of the flux bracket: the terms' drift where given."""
     import ngsolve as ngs
 
+    if state.drift is not None:
+        return state.drift
     coefficients = state.coefficients
     ion = coefficients.electrolyte.ion(state.species)
     velocity = float(ion.valence) * coefficients.mobility(state.species) * ngs.grad(state.potential)
