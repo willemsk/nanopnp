@@ -1,6 +1,6 @@
 # WP6.08 — The guard numbers
 
-**Status: planned, not started.** Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
+**Status: in progress; item 1 done, item 2's run next.** Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
 `f571e72`. Inherits §8.2.53 BC3 and BC4, the rulings of this plan (§8.2.59 BI1, BI2), §8.2.51 BA14, §8.2.13 N1 and
 N4, §8.2.7 G10 and VER-62's mechanism. Its last commit on `main` takes `v0.7.0-alpha.8` (§8.4.1).
 
@@ -248,7 +248,7 @@ re-recorded to fit.
 
 ### Work items
 
-- [ ] 1. `tests/tier2/test_guard_numbers.py`, `tests/tier2/data/number_stability.json`,
+- [x] cdb67aa 1. `tests/tier2/test_guard_numbers.py`, `tests/tier2/data/number_stability.json`,
   `specification/07-verification/03-tier-2.md`, `specification/07-verification/06-continuous-integration.md`,
   `specification/a-traceability-matrix.md`, `CHANGELOG.md`: the six guard tests, their numbers recorded and folded
   in, VER-80 and the nightly NOTE (D1 to D7); done when `tests/tier1/test_number_stability_file.py` passes and the

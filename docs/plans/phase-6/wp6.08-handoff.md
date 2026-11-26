@@ -2,56 +2,43 @@
 
 ## Step
 
-Plan, second helper of two: done. The plan is written, checked by `np-plan/review.md`'s self-check and committed; the
-author's approval is next, then the build. Fable 5.2 at high effort planned.
+Implement, first helper: item 1 done and committed; item 2's run handed back as `RUN`. Opus 5.5 at high effort built.
 
 ## Done
 
-- `3dfbe6f` docs: WP6.08 plan draft (the first helper)
-- `444733a` chore: duplicates.py skips a helper's hand-off note
-- `a4d492e` docs: WP6.08 implementation plan: the plan, record 59 (BI1, BI2), REV-298, the Phase 6 plan and its
-  record, `current.md`, the input note, the decisions page and the plans index
-- this note's commit, `docs: WP6.08 hand-off, plan`
+- `cdb67aa` test: the guard numbers of six settings off the validated default (item 1: the guard file, the six
+  records folded into `number_stability.json`, VER-80's row, §7.6's nightly NOTE, Appendix A, `CHANGELOG.md`)
+- this note's commit, `docs: WP6.08 hand-off, implement`: item 1's tick, the plan's status line, the plans index
 
 ## Measured
 
-- 3,211 words in the plan: 985 in `### Grounding`, 727 in `### Implementation details`, 1,499 outside both; the caps
-  are 3,850, 1,100 and 1,650. The In brief has 275 words, its limit.
-- 700 words in `docs/plans/current.md`, its limit.
-- Run again by this helper under the gate's SIMD cap, one thread, on mesh `546c34f4…`: `supg` 33 s, `reference` 69 s,
-  the log branch 25 s. The stabilisation currents are −3.001e-13 A (Cl⁻) and −7.009e-13 A (Na⁺) under `supg`, and
-  −3.002e-13 A and −7.013e-13 A under `reference`.
-- `duplicates.py` exited 1 with the note beside the plan, and exits 0 with the fix.
+- Recorded under the gate's SIMD cap, one thread, `CI` unset: all six on mesh `546c34f4fb4b…` and
+  `linux-x86_64/X86_V3`. The fold added 118 lines to `number_stability.json` and removed none.
+- Seconds a walk, the record's calls: `guard-dielectric` 113 (its call), `guard-reference` 68.4, `guard-supg` 33.2,
+  `guard-log` 25.2, `guard-constant-density` 8.6, `guard-no-inertia` 8.3; the second call 144 s in all.
+- Against the folded file, `-k "density or inertia"`: both walks same-mesh, largest relative drift 0.000e+00;
+  `tests/tier1/test_number_stability_file.py` 7 passed.
 
 ## Decided
 
-- The author ruled D1 "All six (Recommended)" and D2 "Linux only (Recommended)": BI1 and BI2 of §8.2.59.
-- D7 changed from the draft: the numbers are recorded first, and one `RUN` after item 1's commit takes VER-62's seven
-  walks and the six guard walks together. The package changes no `src/`, so the one run shows that VER-62 passes on
-  the tree and repeats the guard numbers. The draft had the seven walks run before the record.
-- VER-80's row, §7.6's NOTE, Appendix A's line and `CHANGELOG.md` go with item 1, not with the plan's commit: no test
-  reads §7.3's rows, and the clause would name a file that holds no guard walk yet.
-- A walk needs a workspace of its own: the solve stage refuses a folder that holds an earlier run's files.
-- CI's `docs` job runs `duplicates.py`, which counted the hand-off note as a second WP6.08 plan and would have failed
-  the package's pull request until the ship deletes the note. Fixed as a small finding (§8.2.58 BH1), as REV-293 was
-  for `index_records.py`; no row.
-- The Phase 6 plan's WP6.07 entry and status line said "awaiting its merge"; PR 219 is merged and `v0.7.0-alpha.7`
-  is published, so both are corrected.
-- `docs/plans/current.md`'s cost of the rest of the phase is the sum of the Phase 6 plan's entries after WP6.08: 33
-  sessions, 19 to 36 agent hours, 51 touches.
+- The skip message reads `the guard numbers are held in linux-x86_64/X86_V3 alone, not <environment>`.
+- No *Grounding* fact was found untrue; the plan's text is unchanged but for the tick and the status line.
 
 ## Open
 
-None. The plan's `### Open questions` is empty.
+None.
 
 ## Next
 
-After the author approves the plan, a fresh `np-builder` for `/np-implement wp 6.08`:
+The main session has run item 2's command (the plan's *Implementation details*, *Item 2, the run*) and gives its
+log's path, `<git dir>/wp608-walks.log`. A fresh `np-builder` for `/np-implement wp 6.08`:
 
-1. Read `docs/plans/phase-6/wp6.08-the-guard-numbers.md`; start at work item 1, with its *Implementation details*.
-2. Write `tests/tier2/test_guard_numbers.py`, record under the cap in two calls, fold with
-   `uv run python tests/tier2/data/merge_number_stability.py <dir>`, write the clauses, commit.
-3. Hand back `RUN` with item 2's command, whose log is `<git dir>/wp608-walks.log`.
-
-The package's pull request is #221, opened by this helper on `claude/zealous-planck-aio2ty` with the plan's In brief;
-the build reuses it and brings its body to the tree's state (`.claude/workflow/finish.md`, *The PR contract*).
+1. Read the log. Done when it shows no failure and no skip and its `number stability on linux-x86_64/X86_V3`
+   section lists thirteen walks. A failed or skipped VER-62 walk: hand back `BLOCKED`. A guard walk beyond 10⁻⁸:
+   investigate, never re-record.
+2. Item 2 is the checkpoint: read `.claude/skills/np-implement/finish.md`'s compaction checkpoint, tick item 2
+   (`[x]` with no sha of its own, as the item makes no commit; name the log's numbers in its Outcome under item 3).
+3. Item 3, the records, in `docs/plans/phase-6/wp6.08-the-guard-numbers.md`'s *Implementation details*: the
+   knowledge section in `knowledge/06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md`,
+   `specification/history/holds-now.yaml` (BI1, BI2, BC3), the plan's Outcome with the thirteen drifts, the Phase 6
+   plan's entry and `docs/plans/current.md`; then `finish.md`'s *Finishing*, PR #221's body to the tree.
