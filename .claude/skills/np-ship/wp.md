@@ -97,15 +97,18 @@ still lacks it, stop before §5 and report it. Then, in this session:
    pulled in is fixed by `np-builder` (a helper hands back `WORKER`) and its diff alone reviewed by
    `np-reviewer` at `effort: "medium"` (BF8), never a full pass.
 2. Delete the hand-off note, `docs/plans/phase-<p>/wp<n>-handoff.md`, if there is one.
-3. Bring every document to its merged state now, in the same commit: no commit after the merge may be
-   needed. `docs/plans/current.md` says the package is merged and tagged (the tag of §6, or that it
-   gets none), drops the `/np-carry`/`/np-ship` line from *Next* and names the next step. Phase and
-   package **Status** lines and ticks likewise. The tag itself stays §7's.
-4. Commit the rows, the deletion, the plan's Outcome and those documents as
-   `docs: WP<n> review recorded`, with the identifiers in the body. The Outcome takes the package's measured cost: the PR's **Measured**
-   lines and this session's so far, summed, beside the In brief's estimate (§8.4.5). Gate and push
-   (the core); `np-shipper` gives its `WAIT` of §5 `land: yes`, which pushes the reviewer's commits
-   with this one.
+3. Bring these records to their merged state now, so that no commit is needed after the merge; the
+   tag itself stays §7's. `docs/plans/current.md` says the package is merged and tagged (the tag of
+   §6, or that it gets none), drops the `/np-carry`/`/np-ship` line from *Next*, names the next step
+   and rewrites its In brief for that step (`author.md`). With two lanes open it edits only its lane's
+   position line (the core's *Two lanes*). The package's and the phase plan's **Status** lines read
+   delivered, as `np-implement/finish.md` says, with no "awaiting its merge". The ticks name this
+   branch's commits (the core's *Gate and push*, step 7); an item left unticked stays unticked.
+4. Commit the rows, the deletion, the plan's Outcome and those records as
+   `docs: WP<n> review recorded`, with the identifiers in the body. The Outcome takes the package's
+   measured cost: the PR's **Measured** lines and this session's so far, summed, beside the In
+   brief's estimate (§8.4.5). Gate and push (the core); `np-shipper` gives its `WAIT` of §5
+   `land: yes`, which pushes the reviewer's commits with this one.
 
 Then record the pass under **Verification**: the reviewer's report, how many findings it fixed and how
 many it left, the reviewed base and head SHAs, and its fix commits. Give the user each finding that
