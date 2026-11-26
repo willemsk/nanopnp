@@ -25,6 +25,18 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.7.0-alpha.9]
+
+WP6.09: the kernel's design; tag `v0.7.0-alpha.9` once merged (FR-40; §8.2.53 BC2, BC5; §8.2.60 BJ1 to BJ3). The
+[plan](docs/plans/phase-6/wp6.09-the-kernels-design.md) records the work. Nothing changes for a user of the program.
+
+- **Added** (the documentation):
+  - The kernel's design, `docs/design/kernel.md`, in the site's Project section: a physics model built from
+    registered terms, each integral of the equations assembled once, the switches as data, terms from installed
+    packages, and the price of a 3D benchmark. It is a proposal that the author rules before the kernel is built.
+    Its prototype, on the branch `prototype/wp6.09-kernel` at `1b5f5e3`, reproduces today's operator to
+    2.1 × 10⁻¹⁶ and every stored walk, example 01's to 8.7 × 10⁻¹⁴; it is never merged.
+
 ## [0.7.0-alpha.8]
 
 WP6.08: the guard numbers; tag `v0.7.0-alpha.8` once merged (VER-80; §8.2.53 BC3; §8.2.59 BI1, BI2). The

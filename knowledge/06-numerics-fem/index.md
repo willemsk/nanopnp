@@ -9,7 +9,7 @@
 * [6. Linear solvers](06-linear-solvers.md) - UMFPACK and SuperLU measured at production size, which NUM-21's NOTE cites; NUM-21 and NUM-22 state the solver choices.
 * [7. Quantities of interest — and the flux trap](07-quantities-of-interest-and-the-flux-trap.md) - The quantities of interest, the flux trap and the routes that extract them.
 * [8. Mesh resolution and adaptivity](08-mesh-resolution-and-adaptivity.md) - Mesh resolution and adaptivity, measured against the reference mesh.
-* [NGSolve traps and measured numerics facts](09-ngsolve-traps-found-by-implementing.md) - The NGSolve traps found by implementing the model, all silent, then measured facts: the reaction flux, convergence and solver facts, sweep warm starts and parallel scaling, the zero-bias route check, the gate sampler and the gate constants.
+* [NGSolve traps and measured numerics facts](09-ngsolve-traps-found-by-implementing.md) - The NGSolve traps found by implementing the model, all silent, then measured facts: the reaction flux, convergence and solver facts, sweep warm starts and parallel scaling, the zero-bias route check, the gate sampler and the gate constants, and what a residual composed from terms must keep.
 * [9. Unverified / to measure](10-unverified-to-measure.md) - Items still unverified or to be measured.
 * [Tier-1 test evidence: norms and the attribution identity](11-tier-1-test-evidence-norms-and-the.md) - The relative L² norms on known fields, the axis defect the r-weighted norm hides, the pressure gauge, and why the attribution identity cannot see a stale golden.
 * [Tier-1 test evidence: the Langevin cutoff](12-tier-1-test-evidence-the-langevin.md) - A pointer to the Langevin series cutoff, recorded with the physics.

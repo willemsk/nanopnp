@@ -164,6 +164,10 @@ left out of WP20, and nothing in `src/` or the specification owns them.
 
 **Placed** (§8.2.53 BC5, 24 November 2026): Phase 6's installed packages, after the kernel: an installed package declares its terms, corrections, shapes or solvers, and that package settles which registering names are public.
 
+**Proposed** (WP6.09, 26 November 2026; [the kernel's design](../design/kernel.md), *Installed packages*): one public
+registrar handed to each entry point of the group `nanopnp.extensions`, the registries behind it private. The
+installed packages' package settles it.
+
 ### REV-91 — About 400 tests name their requirement only in a comment
 
 *Area:* documentation. *Severity:* low. *Found:* WP45.
@@ -1940,6 +1944,9 @@ enters at the resolved case and asserts the descriptor.
 *Recommendation:* WP6.09's design, which makes a switch data, says whether the branch becomes a case key recorded as
 a deviation, or stays a library option that the manifest still names.
 
+**Proposed** (WP6.09, 26 November 2026; [the kernel's design](../design/kernel.md), *What the author rules*, 5): a case
+key recorded as a deviation, a switch record that excludes PHY-23's switch. The round on the design rules it.
+
 ### REV-299: A rebase merge rewrites the shas that a package's ticks and Outcome name
 
 Left by `/np-chore`'s review, [CODE_REVIEW_096](../code_reviews/CODE_REVIEW_096.md). A package's ticks and the plan's
@@ -1952,3 +1959,17 @@ that `main` lacks.
 *Recommendation:* the core says a tick or an Outcome sha names the branch's commit, which the PR's
 `refs/pull/<n>/head` keeps reachable, and that a merge's rewrite is not corrected. The other route is a merge that
 keeps the shas, which changes how the author merges.
+
+### REV-300: The stabilisation's wind leaves out PHY-23's decrement
+
+Left by WP6.09's prototype ([the kernel's design](../design/kernel.md), *One expression and its three readers*).
+`physics/stabilisation.py:advective_velocity` sums the migration, the steric part and the advection into `b~_i`, and
+leaves out the drift of PHY-23's dielectric decrement, which `species_flux` keeps in the weak form's bracket. Under
+`dielectric_gradient_forces` with a stabilised mode, the streamline and crosswind parameters and the approximate
+residual of NUM-14 therefore read a drift that differs from the flux the form integrates. No clause says which the
+wind should read: NUM-14's reference settings were recorded for a model without the decrement, and no stored walk
+takes the switch and a stabilised mode together. The prototype reproduced today's operator only by marking the
+decrement's drift as one the stabilisation does not read.
+
+*Recommendation:* keep it out, as today, and say so in NUM-14's NOTE, at the round on the kernel's design; reading it
+is a re-pin of the stabilised modes under PHY-23, by ruling (§8.2.7 G10).

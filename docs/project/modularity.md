@@ -331,6 +331,10 @@ machinery can pin.
 `physics/models.py` and `default_ladder` that MOD-13 tied to it (§8.2.50 AZ1, 22 November 2026). The kernel's
 design package of Phase 6 decides it (§8.2.53 BC1, BC2, 24 November 2026).
 
+**Proposed** (WP6.09, 26 November 2026; [the kernel's design](../design/kernel.md), *§5.4.1's interface*): the seam
+is the kernel's context, slot and measure, which hold §5.4.1's names; a term keeps NGSolve's algebra until a second
+backend is planned, and VER-65 stays the guard. The round on the design rules it.
+
 ### MOD-11 — with_section and register are outside PUBLIC
 
 *Area:* surface. *Severity:* low.

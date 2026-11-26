@@ -139,7 +139,7 @@ paper, with VER-22's routes as its check.
 out PHY-23's decrement, so the stabilisation's wind and its approximate residual omit a part of the flux that the weak
 form keeps. The prototype reproduced this with a per-term flag, `in_drift=False` on the decrement, and the guard walks
 hold. No clause says whether the wind should read the decrement: NUM-14's reference settings were recorded for a
-model without it. The design keeps the flag and puts the question to the author below.
+model without it. The design keeps the flag and puts the question to the author below (REV-300).
 
 ## A model as a list of terms
 
@@ -308,7 +308,7 @@ Each choice with its options; the recommendation first.
 
 1. **The design**: term, slot, coefficient, switch record and model as above. *Approve* (recommended: the prototype
    held every mark, the operator to 2.1 × 10⁻¹⁶); approve with named changes; or redesign before any package.
-2. **The decrement in the stabilisation's wind.** *Keep it out*, as today, and say so in NUM-14's NOTE (recommended:
+2. **The decrement in the stabilisation's wind** (REV-300). *Keep it out*, as today, and say so in NUM-14's NOTE (recommended:
    the approximate residual is already inexact, and the guard numbers hold today's operator); or read it, a re-pin of
    the stabilised modes under PHY-23 by ruling (G10).
 3. **The kernel's packages.** *Four, as above* (recommended); three, with the full check folded into the third; or

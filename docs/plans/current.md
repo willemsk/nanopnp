@@ -4,31 +4,30 @@ Updated 26 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-**What changes.** The design package of the kernel is planned. It writes how the core of the physics is rebuilt
-from small registered pieces, and tries that in a throwaway prototype of the whole coupled model, checked against
-today's equations, all thirteen stored reference runs and the tests of every push. A trial prices a 3D check.
+**What changes.** The kernel's design is built and waits for its review. Its page proposes rebuilding the core of
+the physics from small registered pieces. The throwaway prototype matched today's equations to round-off and every
+stored run, and passed the tests of every push. A short trial priced a 3D check at one package.
 
-**Cost.** About 3 sessions, 4 to 7 agent hours and 8 times you act, one to push the prototype's branch. The rest of
-the phase after it: about 28 sessions, 16 to 30 agent hours and 43 times you act.
+**Cost.** Left: the review and the ship. The page prices the kernel at four packages, about 12 sessions, 9 to 16
+agent hours and 19 times you act; the round sets it.
 
-**What could go wrong.** The prototype may miss the stored numbers: a miss on the first example comes to you before
-any kernel package is planned. Its branch is never merged, so its code survives only while that branch does.
+**What could go wrong.** The prototype holds the numbers, which shows that the design can hold them, not that the
+kernel will. One question it found, the stabilisation's wind, is yours at the round.
 
-**Your call.** Approve the plan of the design package, which is reviewed? *Recommendation:* approve; it changes no
-code a user runs and no rule.
+**Your call.** Nothing until the review; then the seven choices at the page's end. *Recommendation:* ship the
+package, then rule the design as the page recommends.
 
 ## Position
 
 - Phases 1 to 5 **closed**, `v0.2.0` to `v0.6.0` ([Phase 5's report](phase-5/phase-5-workbench.md#end-of-phase-report)).
 - **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.08 merged**,
   tagged to `v0.7.0-alpha.8`.
-- **WP6.09, the kernel's design, is planned** ([the plan](phase-6/wp6.09-the-kernels-design.md);
-  [§8.2.60](../../specification/history/60-wp609s-plan-the-kernels-design.md)): a design page, and a prototype of
-  the whole coupled model on `prototype/wp6.09-kernel`, never merged, with thirteen walks reported on it.
-- **After it, the rest is numbered at the round on that design** (BD1;
-  [the input note](sessions/phases-6-to-11.md)).
-- **Next:** the plan is reviewed; once approved, `/np-carry wp 6.09` (Sonnet 5.5, medium) or
-  `/np-implement wp 6.09` (Opus 5.5, high).
+- **WP6.09, the kernel's design, is built** ([the plan](phase-6/wp6.09-the-kernels-design.md);
+  [the design](../design/kernel.md)): the prototype is `prototype/wp6.09-kernel` at `1b5f5e3`, on `origin`, never
+  merged. Its pull request waits for `/np-ship wp 6.09`.
+- **After it, the round on the design** (`/np-plan amend 6`) rules the design, the kernel's packages and the 3D
+  benchmark, and numbers what follows (BC2, BC5; BD1; [the input note](sessions/phases-6-to-11.md)).
+- **Next:** `/np-ship wp 6.09` (Sonnet 5.5, medium), within `/np-carry wp 6.09`.
 
 ## Not to be re-decided
 
@@ -47,7 +46,6 @@ code a user runs and no rule.
 - **The kernel follows the axis fix and a design the author rules; its full check runs at its last package** (BC1
   to BC4).
 - **The channel axis's two limits stay** (BE1). **Six settings get guard numbers, held on Linux alone** (BI1, BI2).
-- **The prototype covers the whole model, on its own branch** (BJ1, BJ3).
 - **An orchestrator carries a package; the three commands stay** (BC10; BD2). **The continuation trial adopts its path
   on a full pass of marks registered first** (BC24).
 
