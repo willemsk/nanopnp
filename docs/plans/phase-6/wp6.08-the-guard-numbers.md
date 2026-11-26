@@ -1,6 +1,6 @@
 # WP6.08 — The guard numbers
 
-**Status: in progress; item 1 done, item 2's run next.** Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
+**Status: in progress; items 1 and 2 done, item 3 next.** Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
 `f571e72`. Inherits §8.2.53 BC3 and BC4, the rulings of this plan (§8.2.59 BI1, BI2), §8.2.51 BA14, §8.2.13 N1 and
 N4, §8.2.7 G10 and VER-62's mechanism. Its last commit on `main` takes `v0.7.0-alpha.8` (§8.4.1).
 
@@ -253,7 +253,7 @@ re-recorded to fit.
   `specification/a-traceability-matrix.md`, `CHANGELOG.md`: the six guard tests, their numbers recorded and folded
   in, VER-80 and the nightly NOTE (D1 to D7); done when `tests/tier1/test_number_stability_file.py` passes and the
   guard file's `-k "density or inertia"` passes against the folded file. **Executor:** main
-- [ ] 2. The run of D7, a `RUN` hand-back with no commit, and the checkpoint: a fresh helper reads its log; done
+- [x] 2. The run of D7, a `RUN` hand-back with no commit, and the checkpoint: a fresh helper reads its log; done
   when the log lists thirteen walks with no failure and no skip. **Executor:** main, the run by the main session
 - [ ] 3. `knowledge/06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md`, `knowledge/06-numerics-fem/index.md`,
   `knowledge/log.md`, `specification/history/holds-now.yaml`, this plan, the Phase 6 plan, `docs/plans/current.md`:
