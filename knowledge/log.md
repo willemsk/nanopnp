@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-26
+* **Record**: A residual composed from terms equals today's to 2.1e-16 where each of today's integrals is one slot whose contributions are summed and integrated once; today's stabilisation wind leaves out PHY-23's decrement; dropping the steric flux stops example 02's walk at NUM-26's route check, 6.5e-3 against 1e-3 (WP6.09's prototype, `1b5f5e3`). ([NGSolve traps and measured numerics facts](06-numerics-fem/09-ngsolve-traps-found-by-implementing.md))
 * **Record**: VER-80's six guard walks lie 3.4e-12 to 1.7e-2 from example 02's default walk on the same mesh; without inertia the walk shows a broken path, not an ignored switch, and at constant density both by a factor of about three. Each repeats its stored values to 0.000e+00 on the recorded tree (WP6.08; §8.2.59 BI1). ([Tier-2 test evidence: ladder walks, block systems and extraction routes](06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md))
 
 ## 2026-11-25

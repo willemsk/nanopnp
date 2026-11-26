@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08. Amended 24 to 26 November 2026 (§8.2.53; §8.2.54; §8.2.56 BF10; §8.2.59; §8.2.60): WP6.06 to WP6.09 are numbered in build order, WP6.09 is planned; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08, WP6.09. Amended 24 to 26 November 2026 (§8.2.53; §8.2.54; §8.2.56 BF10; §8.2.59; §8.2.60): WP6.06 to WP6.09 are numbered in build order, WP6.09 is planned; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -109,17 +109,10 @@ one is a re-pin by ruling (G10); the kernel's last package checks against them (
 
 ### WP6.09 — The kernel's design (BC2, BC5; BJ1 to BJ3)
 
-*Planned* ([the plan](wp6.09-the-kernels-design.md)). A design page, `docs/design/kernel.md`, and a throwaway
-prototype. The page states the term, a correction as a coefficient that terms share, the rule that binds terms
-(PHY-08), each flux integrated once, the nine names of `physics/` the workbench reads, how an installed package
-registers, and §5.4.1's interface (MOD-10; AZ1). The prototype composes every path of `CoupledModel.residual_form`
-from terms (BJ1) on the branch `prototype/wp6.09-kernel`, which is never merged and which the author pushes (BJ3).
-The package reports VER-62's seven walks and VER-80's six on it, each with its largest drift and its stabilisation
-mode, with the branch's sha and the command, so the run can be repeated. Example 01's walk at 10⁻⁸ is the pass
-mark; a miss on another walk goes to the round. It proposes the kernel's packages and their Tier 1 and Tier 2 tests
-(FR-40), and prices the benchmark that solves VER-13 or VER-17 on a coarse 3D mesh from a bounded trial (BC5; BJ2).
-The page is a proposal until the round below, which rewrites ADR-005, §5.4 and §5.5. About 3 sessions, 4 to 7 agent
-hours and 8 touches.
+*Delivered 26 November 2026* ([the plan](wp6.09-the-kernels-design.md); [the design](../../design/kernel.md)). Live:
+the design is a proposal that the round below rules in seven choices; the prototype, `prototype/wp6.09-kernel` at
+`1b5f5e3`, held example 01's walk to 8.7 × 10⁻¹⁴ and the other twelve with no miss, and its branch stays until the
+kernel's last package merges (BJ3); REV-300 is the round's.
 
 ### The ruling round on the kernel's design (BC2)
 
@@ -186,6 +179,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
    that implements (BD3). A miss continues the cleanup.
 5. **The author rules the kernel's design before its packages are planned**; the prototype holds example 01's walk
    to 10⁻⁸, or the miss is put to the author (BC2). The other twelve stored walks are reported on it (BJ1).
+   Prediction met by WP6.09: 8.7 × 10⁻¹⁴, the other twelve at most 2.9 × 10⁻¹²; the ruling waits for the round.
 6. **The kernel's own Tier 1 and Tier 2 tests pass** (FR-40), **and a term an installed package registers is found
    by the command line and the workbench and named in the manifest, with its test** (BC5).
 7. **VER-61 and VER-65 hold.** A cycle or a new backend subpackage goes to the author (H6).

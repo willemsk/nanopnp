@@ -1,6 +1,16 @@
 # WP6.09 — The kernel's design
 
-**Status: in progress, items 1 to 7 done.** Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
+**Status: delivered, 26 November 2026.** The kernel's design is [`docs/design/kernel.md`](../../design/kernel.md), a
+proposal in the site's Project section: terms add contributions to slots, each of today's integrals one slot
+integrated once; a coefficient shared; a switch a record, PHY-08's pair under one; a model a list of terms; the nine
+names; installed packages by entry point; §5.4.1's seam (FR-40, FR-20, QR-13, QR-14; BC2, BC5). The prototype,
+`prototype/wp6.09-kernel` at `1b5f5e3`, never merged (BJ3), composes every path of the coupled model (BJ1): the
+operator to 2.1 × 10⁻¹⁶ on ten variants, example 01's walk to 8.7 × 10⁻¹⁴, no miss on the other twelve, the control
+refused, the push gate passed (items 2 and 5). The 3D trial prices VER-13 in 3D at one package (BJ2; item 4). Live:
+the round on the design rules seven choices, the page's last section, before any kernel package is planned (BC2);
+REV-300 is the round's; the prototype's branch stays until the kernel's last package merges.
+
+Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
 `3cc0fbd`. Inherits §8.2.53 BC1, BC2, BC4 and BC5, this plan's rulings (§8.2.60 BJ1 to BJ3), §8.2.7 G10 and
 §8.2.13 N1. Its last commit on `main` takes `v0.7.0-alpha.9` (§8.4.1).
 
@@ -296,8 +306,14 @@ for each defect found; `CHANGELOG.md`'s `## [0.7.0-alpha.9]`; `holds-now.yaml` (
   > gate, so the gate ran alone and the push followed it; `origin` took the branch, and `git ls-remote origin
   > refs/heads/prototype/wp6.09-kernel` prints `1b5f5e3dc54489c365c4053f0e6fec89293e2071`. No bundle was needed.
 - [x] 7. Compaction checkpoint. **Executor:** main
-- [ ] 8. `docs/design/kernel.md`, `mkdocs.yml`: the page (D7); done when `uv run just docs` passes and the code and
+- [x] bdd540d 8. `docs/design/kernel.md`, `mkdocs.yml`: the page (D7); done when `uv run just docs` passes and the code and
   review say so. **Executor:** main
+  > **Outcome — the page, about 4,200 words, and one contradiction of D4.** `uv run just docs` passed. D3 held; D4
+  > held but for one drift: today's stabilisation wind leaves out PHY-23's decrement, which the prototype reproduced
+  > with a per-term flag, so the page puts it to the author (REV-300). The switch records were written and not read,
+  > and `post/forces.py` was not edited: both are on paper. The page prices the kernel at four packages, about 12
+  > sessions, 9 to 16 agent hours and 19 touches, from the prototype's 0.7 agent hours and WP6.06's and WP6.08's
+  > measured lines.
 - [ ] 9. `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md`, `knowledge/06-numerics-fem/index.md`,
   `knowledge/log.md`, `docs/project/modularity.md`, `docs/project/review-items.md`,
   `docs/project/review-findings.md`, `CHANGELOG.md`, `specification/history/holds-now.yaml`, this plan, the Phase 6

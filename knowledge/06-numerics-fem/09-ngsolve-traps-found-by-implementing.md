@@ -756,6 +756,32 @@ cycle is collected with the mesh. **[tested: tests/tier1/test_ngsolve_traps.py::
   = 0.0543` against the clamped 0.0601).
 - The Poisson diagonal block scales as `1/lambda~^2`, 130 at 3 M and a 2 nm pore (NUM-10).
 
+### 8.7 What a residual composed from terms must keep **[verified][^wp609-prototype]** {#87-what-a-residual-composed-from-terms-must-keep}
+
+WP6.09's prototype composed `CoupledModel.residual_form` from terms that add expressions to slots, one integral each
+(the design: `docs/design/kernel.md`), and compared it with today's form on ten variants at one smooth state on a
+118-element cylinder.
+
+- **One integral per slot holds the operator.** With each of today's integrals a slot, and a slot's contributions
+  summed before it is integrated once, the composed residual and Jacobian equal today's to 2.1 × 10⁻¹⁶ and
+  1.2 × 10⁻¹⁶ of their largest entry, in all three stabilisation modes. NGSolve sets an integral's order from its
+  integrand, so the sum is what keeps each slot's rule.
+- **The order of a sum is round-off.** Summing PHY-23's decrement into the flux bracket in another order moves its
+  slot by 3.0 × 10⁻¹⁶; writing the drift as `c~_i b` moves the flux slots to at most 3.2 × 10⁻¹⁶.
+- **A slot owns its closing and its rule.** The stabilisation's integrands carry their own test function, so their
+  slots close with the identity, and each takes the mode's bonus order; the hoop slot has no contribution under a
+  planar measure.
+- **Today's wind is not the flux's drift.** `advective_velocity` leaves out PHY-23's decrement, so a composed wind
+  reproduces today's operator only where the decrement's drift is marked as not read (REV-300).
+- **A dropped term is seen at once.** Dropping the steric flux and the inertia moves every variant by 6.9 × 10⁻⁶ to
+  3.3 × 10⁻². Dropping the steric flux alone from example 02's ePNP-NS walk stops the run at NUM-26's route check:
+  the reaction flux, taken from the composed form, and the indicator current, which writes the steric flux from the
+  state, differ by 6.5 × 10⁻³ against 10⁻³.
+- **A 3D mesh is mishandled without a word below the adapters.** `Measures.volume(rule_order=)` builds an explicit
+  rule for `SEGM`, `TRIG` and `QUAD` alone and falls back to NGSolve's estimate on a tetrahedron (at order 20 an
+  explicit `TET` rule moves the vector by 8.5 × 10⁻⁴), and `AXISYMMETRIC` weights by `ngs.x` on any mesh. Only
+  `mesh/adapter.py:from_ngsolve` refuses the mesh (CON-04).
+
 ---
 
 [^wp45-validation-strip]: `git show 3872426`, prose strip of `src/nanopnp/validation/attribution.py` and `src/nanopnp/validation/mms.py` (WP45, 13 October 2026).
@@ -763,4 +789,5 @@ cycle is collected with the mesh. **[tested: tests/tier1/test_ngsolve_traps.py::
 [^wp35-simd-dispatch]: `git show 6c0a249` and `git show 1a2e383`, WP35 NumPy SIMD dispatch and VER-62 number-stability mesh records (5 October 2026).
 [^wp45-numerics-strip]: `git show 7597814`, prose strip of `src/nanopnp/numerics/gates.py` recording the 144,628-element `FieldSampler` timings (WP45, 13 October 2026).
 [^wp3-singular-system]: `git show 0f8b57b:.knowledge/06-numerics-fem.md`, trap 9 (singular five-field block system, solver norms and residuals, WP3 review).
+[^wp609-prototype]: `git show 1b5f5e3` on the branch `prototype/wp6.09-kernel` (WP6.09, 26 November 2026): `uv run python prototype/compare_operators.py --slots` at `0867e2d` and `uv run python prototype/three_d.py`; the control's run is item 5's Outcome in `docs/plans/phase-6/wp6.09-the-kernels-design.md`.
 [^wp11-sweep-timings]: `git show 5abcf42:.knowledge/06-numerics-fem.md`, section 8.4 (WP11 toy-pore setup, one thread per worker, worker counts 1/2/4 and pool lifetime).
