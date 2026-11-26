@@ -2,27 +2,34 @@
 
 ## Step
 
-Implement, first helper: item 1 done and committed; item 2's run handed back as `RUN`. Opus 5.5 at high effort built.
+Implement, second helper: all three items done and committed, PR #221's body brought to the tree. The build is
+finished; the ship is next. Opus 5.5 at high effort built.
 
 ## Done
 
-- `cdb67aa` test: the guard numbers of six settings off the validated default (item 1: the guard file, the six
-  records folded into `number_stability.json`, VER-80's row, §7.6's nightly NOTE, Appendix A, `CHANGELOG.md`)
-- this note's commit, `docs: WP6.08 hand-off, implement`: item 1's tick, the plan's status line, the plans index
+- `cdb67aa` test: the guard numbers of six settings off the validated default (item 1)
+- `8cce00f` docs: WP6.08 hand-off, implement (first helper's note)
+- `2aa21d8` docs: WP6.08 item 2, the run of the thirteen walks
+- `645bc83` docs: WP6.08 records, the guard walks' shifts and drifts (item 3)
+- this note's commit, `docs: WP6.08 hand-off, implement`: item 3's tick
 
 ## Measured
 
-- Recorded under the gate's SIMD cap, one thread, `CI` unset: all six on mesh `546c34f4fb4b…` and
-  `linux-x86_64/X86_V3`. The fold added 118 lines to `number_stability.json` and removed none.
-- Seconds a walk, the record's calls: `guard-dielectric` 113 (its call), `guard-reference` 68.4, `guard-supg` 33.2,
-  `guard-log` 25.2, `guard-constant-density` 8.6, `guard-no-inertia` 8.3; the second call 144 s in all.
-- Against the folded file, `-k "density or inertia"`: both walks same-mesh, largest relative drift 0.000e+00;
-  `tests/tier1/test_number_stability_file.py` 7 passed.
+- Item 2's run at `8cce00f` (`<git dir>/wp608-walks.log`): 43 passed, no skip, 294.7 s; thirteen walks, all
+  same-mesh; each guard walk's largest drift 0.000e+00; VER-62's largest 2.898e-12 (`2wcd-charged`).
+- Shifts from `example-02-epnpns` on mesh `546c34f4…`, recomputed from the stored hex values: current 3.6e-8 and
+  flow 2.8e-8 at constant density, flow 4.7e-9 without inertia (the plan's *Grounding* reads 3.7e-8 and 4.8e-9 from
+  its own default run; the knowledge section and the PR take the stored values).
+- `docs/plans/current.md` 694 words, its In brief 170; the PR's In brief 274.
 
 ## Decided
 
-- The skip message reads `the guard numbers are held in linux-x86_64/X86_V3 alone, not <environment>`.
-- No *Grounding* fact was found untrue; the plan's text is unchanged but for the tick and the status line.
+- Item 2's tick commit, `2aa21d8`, is its own commit (the compaction checkpoint) though the item makes no other
+  change; item 3 followed in the same helper, as the last note's Next asked.
+- `holds-now.yaml`: BC3 reads `…its stored numbers widened by BI1, held by VER-80`.
+- PHY-23, NUM-02, NUM-11 and NUM-14 are named in the PR as exercised, not discharged.
+- No `usage.py` line for this helper (a helper skips it); the PR's Measured carries the plan's and item 1's lines
+  the main session gave.
 
 ## Open
 
@@ -30,15 +37,7 @@ None.
 
 ## Next
 
-The main session has run item 2's command (the plan's *Implementation details*, *Item 2, the run*) and gives its
-log's path, `<git dir>/wp608-walks.log`. A fresh `np-builder` for `/np-implement wp 6.08`:
-
-1. Read the log. Done when it shows no failure and no skip and its `number stability on linux-x86_64/X86_V3`
-   section lists thirteen walks. A failed or skipped VER-62 walk: hand back `BLOCKED`. A guard walk beyond 10⁻⁸:
-   investigate, never re-record.
-2. Item 2 is the checkpoint: read `.claude/skills/np-implement/finish.md`'s compaction checkpoint, tick item 2
-   (`[x]` with no sha of its own, as the item makes no commit; name the log's numbers in its Outcome under item 3).
-3. Item 3, the records, in `docs/plans/phase-6/wp6.08-the-guard-numbers.md`'s *Implementation details*: the
-   knowledge section in `knowledge/06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md`,
-   `specification/history/holds-now.yaml` (BI1, BI2, BC3), the plan's Outcome with the thirteen drifts, the Phase 6
-   plan's entry and `docs/plans/current.md`; then `finish.md`'s *Finishing*, PR #221's body to the tree.
+A fresh helper for `/np-ship wp 6.08`, Sonnet 5.5 at medium effort (§8.2.56 BF1): read
+`.claude/skills/np-ship/SKILL.md` and its `wp.md`, and start at §0 from PR #221 (head after the land of this note's
+commit). The review of the code by `np-reviewer` comes first; the ship deletes this note in its commit after the
+review.

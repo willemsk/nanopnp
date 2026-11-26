@@ -273,7 +273,7 @@ re-recorded to fit.
   `example-07` 0.000e+00; and 0.000e+00 for each guard walk: `guard-dielectric`, `guard-log`,
   `guard-constant-density` and `guard-no-inertia` under stabilisation `none`, `guard-reference` under `reference`,
   `guard-supg` under `supg`. The prediction held: VER-62 passes at round-off on the tree the numbers come from.
-- [ ] 3. `knowledge/06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md`, `knowledge/06-numerics-fem/index.md`,
+- [x] 645bc83 3. `knowledge/06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md`, `knowledge/06-numerics-fem/index.md`,
   `knowledge/log.md`, `specification/history/holds-now.yaml`, this plan, the Phase 6 plan, `docs/plans/current.md`:
   the records, with each walk's drift (D7); done when the code and review say so. **Executor:** main
 
