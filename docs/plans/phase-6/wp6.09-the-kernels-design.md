@@ -1,6 +1,6 @@
 # WP6.09 — The kernel's design
 
-**Status: planned, not started.** Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
+**Status: in progress, items 1 to 3 done.** Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
 `3cc0fbd`. Inherits §8.2.53 BC1, BC2, BC4 and BC5, this plan's rulings (§8.2.60 BJ1 to BJ3), §8.2.7 G10 and
 §8.2.13 N1. Its last commit on `main` takes `v0.7.0-alpha.9` (§8.4.1).
 
@@ -242,13 +242,20 @@ for each defect found; `CHANGELOG.md`'s `## [0.7.0-alpha.9]`; `holds-now.yaml` (
 
 ### Work items
 
-- [ ] 1. On the prototype: `src/nanopnp/physics/kernel.py`, `src/nanopnp/physics/models.py`,
+- [x] 241606f 1. On the prototype: `src/nanopnp/physics/kernel.py`, `src/nanopnp/physics/models.py`,
   `prototype/compare_operators.py`: the composition and the comparison (D1, D3 to D5); done when it prints ten
   variants within 10⁻¹², or names each slot above it with what was tried. **Executor:** main
-- [ ] 2. On the prototype: `src/nanopnp/physics/stabilisation.py`, `src/nanopnp/physics/models.py`,
+- [x] 0867e2d 2. On the prototype: `src/nanopnp/physics/stabilisation.py`, `src/nanopnp/physics/models.py`,
   `src/nanopnp/physics/kernel.py`: the drift and the force density read from the terms (D4); done when the
   comparison's result is unchanged. **Executor:** main
-- [ ] 3. Compaction checkpoint. **Executor:** main
+  > **Outcome — the composition is today's operator to round-off.** On the prototype at `0867e2d`,
+  > `uv run python prototype/compare_operators.py --slots` (118 elements): all ten variants within 10⁻¹², the
+  > largest 2.1 × 10⁻¹⁶ in the residual and 1.2 × 10⁻¹⁶ in the Jacobian, each slot against today's integral of the
+  > same index. At item 1 every slot but the two flux slots of `dielectric_gradient_forces` (3.0 × 10⁻¹⁶) was bit
+  > for bit; item 2's drift written as `c~_i b` moves the flux slots to ≤ 3.2 × 10⁻¹⁶ and leaves the stabilisation's
+  > slots bit for bit. With `NANOPNP_PROTOTYPE_DROP="Steric flux,Inertia"` every variant misses, from 6.9 × 10⁻⁶
+  > (`pnp-ns`, the inertia alone) to 3.3 × 10⁻²: the comparison sees a term.
+- [x] 3. Compaction checkpoint. **Executor:** main
 - [ ] 4. On the prototype: `prototype/three_d.py`, and its printed result as this plan's Outcome (D6); done when
   each of its three results is printed or reported as not reached. **Executor:** main
 - [ ] 5. The three runs of D5 on the prototype's head, and their Outcome in this plan; done when the log lists
