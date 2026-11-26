@@ -86,7 +86,9 @@ relative difference of the walk's stored value from the default walk's stored va
 - **[tested: tests/tier2/test_guard_numbers.py::test_ver80_a_constant_density_flow_holds_its_numbers]** At constant
   density the current moves 3.6e-8 and the flow 2.8e-8, about three times the tolerance: the walk shows both a broken
   path and an ignored switch, by that margin alone.
-- **[tested: tests/tier2/test_guard_numbers.py::test_ver80_the_log_branch_holds_its_numbers]** The log branch, the
+- **[tested: tests/tier2/test_guard_numbers.py::test_ver80_the_log_branch_holds_its_numbers]**
+  **[tested: tests/tier2/test_guard_numbers.py::test_ver80_the_reference_stabilisation_holds_its_numbers]**
+  **[tested: tests/tier2/test_guard_numbers.py::test_ver80_supg_holds_its_numbers]** The log branch, the
   least moved of the other four walks, shifts the current by 6.5e-6, and the dielectric forces and the two stabilised
   modes by 1.1e-3 to 6.9e-3: an ignored setting fails each of the four by orders of magnitude.
 - **[tested: tests/tier2/test_guard_numbers.py::test_ver80_dielectric_gradient_forces_hold_their_numbers]** Run again

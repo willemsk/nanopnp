@@ -96,12 +96,10 @@ stage 1's `channel_axis_revision` (BE2); the two limits stay (BE1); an axis foun
 
 ### WP6.07 — The lean carry (BF1 to BF11)
 
-*Delivered 26 November 2026* ([the plan](wp6.07-the-lean-carry.md)); numbered in build order between WP6.06 and the guard numbers (BF10). WP6.08 is the first
-package carried the lean way and measures it (BF7). After WP6.06's post-mortem: Fable 5.2 only plans, or Opus 5.5 at the author's pick, Sonnet 5.5
-runs the carry and ships, Opus 5.5 builds, reviews once and takes a red CI; a helper that waits hands off to a fresh
-one through a note; the plan checks itself; a finding left to the author is an open item by default; each helper
-lists its tools; the mechanics are `just land`. It changes no code under `src/`. About 1 session, 2 to 3 agent hours
-and 2 touches.
+*Delivered 26 November 2026.* [The plan](wp6.07-the-lean-carry.md). Live: Fable 5.2 only plans, or Opus 5.5 at the
+author's pick; Sonnet 5.5 runs the carry and ships; Opus 5.5 builds, reviews once and takes a red CI (BF1, BF4,
+BF9); a helper that waits hands off to a fresh one through a note (BF2); a helper commits and the main session lands
+with `just land` (BF11); WP6.08, the first package carried the lean way, measures it (BF7).
 
 ### WP6.08 — The guard numbers (BC3; BI1, BI2; VER-80)
 

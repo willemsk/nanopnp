@@ -1,9 +1,17 @@
 # WP6.07 — The lean carry
 
-**Status: built and reviewed, awaiting its merge.** Written 25 November 2026 on Opus 5.5 at high effort, grounded in
+**Status: delivered, 26 November 2026.** Written 25 November 2026 on Opus 5.5 at high effort, grounded in
 the workflow at `5946602`; built the same day on the same model. Inherits §8.2.53
 BC10, §8.2.54 BD2 to BD6, the rulings of this plan (§8.2.56 BF1 to BF11) and WP6.06's measured cost. WP6.08 is the first package carried the
 lean way and measures it. Its last commit on `main` takes `v0.7.0-alpha.7` (§8.4.1; BF10).
+
+**Delivered.** The workflow of §8.4.4 and §8.4.5 by role (§8.2.56 BF1 to BF11), with `CLAUDE.md`'s *Models*: Fable
+5.2 plans, or Opus 5.5 at `xhigh` at the author's pick; Opus 5.5 builds, reviews once as `np-reviewer` and takes a
+red CI; Sonnet 5.5 runs `/np-carry`'s main session and ships. A helper that waits ends with a hand-off note and a
+fresh one carries on; the plan checks itself; each helper agent lists its tools; a helper commits and the main
+session lands with `just land` (BF11). A finding left to the author that outlives its session is a `REV` row (BF5;
+§8.2.58 BH1). No code under `src/` and no test changed. Live: WP6.08 measures the saving against WP6.06 (BF7).
+Evidence: item 6's Outcomes and [CODE_REVIEW_090](../../code_reviews/CODE_REVIEW_090.md).
 
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.07 entry sets this scope; `SPECIFICATION.md` governs, and
 where it and this plan disagree this plan is wrong. Identifiers are pointers into it.
