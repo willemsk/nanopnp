@@ -1925,3 +1925,17 @@ or package branch, but a package branch has no name pattern: the core finds it f
 **Fixed** (`/np-chore`, 26 November 2026, with §8.2.58 BH1): a small finding, so the skill is corrected
 and no row stays open. It refuses on any other worktree whose branch holds commits past `origin/main`; §8.4.4 says the
 same.
+
+### REV-298: The log branch has no case key and no line in the manifest
+
+Left by WP6.08's plan ([D4](../plans/phase-6/wp6.08-the-guard-numbers.md)). NUM-02 provides the log-variable branch
+"behind a flag". The flag is `physics/models.py:CoupledModel.log_variables`, which only
+`models.create(..., log_variables=True)` sets: `io/case.py:Physics` and `pipeline/case.py:_model_options` hold no key
+for it, so no case file reaches the branch. A run that takes it, through a resolved case whose `model_options` carries
+the option, keys its solution apart and writes `log_variables: true` in the stored state's descriptor, but
+`CoupledModel._deviations` omits it and the manifest names it nowhere (FR-25). Measured on example 02's ePNP-NS case,
+the branch moves the current by 6.5e-6 relative. WP6.08 changes no schema and no physics, so its `guard-log` walk
+enters at the resolved case and asserts the descriptor.
+
+*Recommendation:* WP6.09's design, which makes a switch data, says whether the branch becomes a case key recorded as
+a deviation, or stays a library option that the manifest still names.

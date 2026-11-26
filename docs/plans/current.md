@@ -1,38 +1,36 @@
 # Current work
 
-Updated 25 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged branch is not shipped.
+Updated 26 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-**What changes.** The fix for the pore's axis is built and awaits review. Where the atoms of a rim lie exactly in one
-plane, the program lost the open space on the axis and could settle on a line up to about one degree off; no trial
-wall does now. The real pore keeps its axis exactly and its two limits stay. A wrongly refused structure is
-tried once more; a case taking its axis from the channel runs again once.
+**What changes.** The next package is planned and awaits your approval. Before the core of the physics is rebuilt, it
+stores reference numbers for six optional settings of the model that no stored number covers today, each on the
+charged pore of the second worked example. Every night they are computed again, and the run fails if one has moved by
+more than one part in a hundred million.
 
-**Cost.** This package: about 4 sessions, 2 to 4 agent hours and 7 times you act. The rest of the phase: about 34
-sessions, 21 to 39 agent hours and 52 times you act.
+**Cost.** This package: about 3 sessions, 2 to 3 agent hours and 4 times you act, three of them done. The rest of the
+phase: about 33 sessions, 19 to 36 agent hours and 51 times you act.
 
-**What could go wrong.** A structure the trials did not cover could still settle off its axis; the new test sees only
-its own walls. A lumen with atoms on its axis still reads several degrees off, warned of. The session you started may
-fill up from the reviews it runs; this package and the next measure it.
+**What could go wrong.** The numbers record what the program computes today, not that it is right. They are checked
+on Linux alone. A run that takes one of the six, reached from Python alone, does not say so in its record; the design
+package takes that up.
 
-**Your call.** Merge the axis fix once its review passes. *Recommendation:* merge; it moves no number of the real
-pore.
+**Your call.** Approve the plan for the stored numbers. *Recommendation:* approve; it changes no physics and no file
+a user writes.
 
 ## Position
 
 - Phases 1 to 5 **closed**, `v0.2.0` to `v0.6.0` ([Phase 5's report](phase-5/phase-5-workbench.md#end-of-phase-report)).
-- **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.05 merged**,
-  tagged to `v0.7.0-alpha.4`; `v0.7.0-alpha.5` is not published yet.
-- **Phase 6 is amended** ([§8.2.54](../../specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md),
-  BD1; §8.2.56 BF10): WP6.06 the axis fix, WP6.07 the lean carry, WP6.08 the guard numbers, WP6.09 the kernel's
-  design; the rest is numbered at the round on the design. Phases 6 to 12: [the input note](sessions/phases-6-to-11.md).
-- **WP6.06 merged** ([the plan](phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md); PR #218), REV-279 fixed; its
-  tag `v0.7.0-alpha.6` is the author's to push.
-- **WP6.07, the lean carry, is built** ([the plan](phase-6/wp6.07-the-lean-carry.md);
-  [§8.2.56](../../specification/history/56-wp607s-plan-the-lean-carry.md) BF1 to BF11), after WP6.06's post-mortem, and
-  numbered in build order (BF10).
-- **Next:** ship WP6.07; then `/np-carry wp 6.08`, started on Sonnet 5.5 at medium effort.
+- **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.07 merged**,
+  tagged to `v0.7.0-alpha.7`.
+- **After WP6.09, the kernel's design, the rest is numbered at the round on that design**
+  ([§8.2.54](../../specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md), BD1). Phases
+  6 to 12: [the input note](sessions/phases-6-to-11.md).
+- **WP6.08, the guard numbers, is planned** ([the plan](phase-6/wp6.08-the-guard-numbers.md);
+  [§8.2.59](../../specification/history/59-wp608s-plan-the-guard-numbers.md) BI1, BI2): six walks of example 02's
+  ePNP-NS case, one setting each, held nightly on Linux (VER-80). REV-298 is WP6.09's.
+- **Next:** the author approves WP6.08's plan; then `/np-carry wp 6.08` builds it on Opus 5.5 at high.
 
 ## Not to be re-decided
 
@@ -50,8 +48,7 @@ pore.
   nothing** (BC8).
 - **The kernel follows the axis fix and a design the author rules; its full check runs at its last package** (BC1
   to BC4).
-- **The channel axis's two limits stay; a stored channel case runs again once; a refused triangulation is retried**
-  (BE1, BE2, BE4).
+- **The channel axis's two limits stay** (BE1). **Six settings get guard numbers, held on Linux alone** (BI1, BI2).
 - **An orchestrator carries a package; the three commands stay** (BC10; BD2). **The continuation trial adopts its path
   on a full pass of marks registered first** (BC24).
 
