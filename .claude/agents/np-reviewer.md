@@ -1,6 +1,6 @@
 ---
 name: np-reviewer
-description: Reviews a nanopnp work package's diff once, at its ship, for the project's standards, the specification it cites and the physics and numerics, then fixes and commits each finding it confirms. Started by the ship's session, or by /np-carry's main session.
+description: Reviews a nanopnp work package's diff once, at its ship, for the project's standards, the specification it cites and the physics and numerics, then fixes and commits each finding it confirms. Started by the ship's session, by /np-carry's main session, or by /np-chore's session.
 model: opus
 effort: high
 tools: Read, Grep, Glob, Bash, Edit, Write

@@ -89,6 +89,19 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   the plan's ticks and the note, so the three commands stay the way back. A phase, an amendment or a
   ruling round is not carried. (§8.2.53 BC10; §8.2.54 BD2, BD6; §8.2.56 BF1, BF2, BF11;
   `.claude/skills/np-carry/`)
+* Beside them, `/np-chore <what>` makes one change that no package owns: a branch from `origin/main`, the
+  change, a review, `just land` and a `chore:` pull request that the author merges, and that nothing tags.
+  Its content has no limit and it is no lane; a change that is not Markdown alone is reviewed once by
+  `np-reviewer`, with the chore's statement for its plan, and always where it touches `.claude/settings*.json`,
+  the hooks, the agents, the skills or the workflows of `.claude/` and `.github/`. A commit made after the review
+  is reviewed on its own diff at medium effort unless it is Markdown alone outside those paths. A session runs
+  it only where no carry is running, which the author's start of the session ensures; it refuses on a dirty
+  tree, commits past `origin/main` or a worktree on a package branch, and a helper, the reviewer or a worker
+  hands the chore back. It runs on Sonnet 5.5 at medium effort, and on Opus 5.5 at high where it touches
+  `src/` or `tests/`. An open package rebases on `main` at its ship, as `just land` never rebases on `main`. A
+  numbered item that a chore adds takes the next number on `origin/main`; CI runs `duplicates.py`, and the
+  chore runs it again after a rebase on a `main` that moved before its land. (§8.2.57 BG1 to BG6;
+  `.claude/skills/np-chore/`)
 * A pull request's CI tests on Linux, and a package's `/np-ship` reads no platform leg. `/np-ship phase`
   dispatches `ci.yml` on the close's head and stops while a `platforms` leg on ubuntu, macOS or Windows is
   not `success`. (§7.6; §8.2.49 AY4; §8.2.50 AZ8; `.claude/skills/np-ship/phase.md`)
@@ -215,7 +228,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * The model follows the role, fixed in the role's agent file, not proposed by a plan. Each level of
   `/np-plan` and its review run on Fable 5.2 at high effort, or on Opus 5.5 at `xhigh` where the
   author picks it when asked at the plan's start, for when Fable's quota is spent. Opus 5.5 at high
-  effort builds and reviews; Sonnet 5.5 at medium effort ships and runs `/np-carry`'s main session.
+  effort builds and reviews; Sonnet 5.5 at medium effort ships and runs `/np-carry`'s main session. A
+  `/np-chore` runs on Sonnet 5.5 at medium effort, and on Opus 5.5 at high where it touches `src/` or `tests/`
+  (§8.2.57 BG6).
   Of a red CI the ship fixes only format and lint and reruns a flaky runner once; every other failure,
   the docs, a stale lock, `mypy`, a test or a numerical gate, goes to Opus with its classified log. Each session and
   agent names its effort, because Opus 5.5's default is medium. The author picks the model when a

@@ -1891,3 +1891,30 @@ Left by WP6.07's review of its pulled-in findings ([CODE_REVIEW_091](../code_rev
 BF10's own row says §8.4.1 is unchanged: a reader of the entry looks for an amendment that is not there.
 
 *Recommendation:* change the entry to `'the Phase 6 plan; the WP6.07 plan; §8.4.1, unchanged'`, or drop §8.4.1.
+
+### REV-295: A pull request's duplicates check goes stale when main moves
+
+Left by `/np-chore`'s review ([CODE_REVIEW_092](../code_reviews/CODE_REVIEW_092.md)), finding 9. CI's `docs` job runs
+`duplicates.py` on a pull request merged with `main` as it was when the run started; GitHub does not rerun it when
+`main` moves, so a number two pull requests share is caught on `main` after the merge. Where `main` moved before its land,
+the skill rebases on it and runs the check again on the rebased tree (§8.2.57 BG5), which covers a chore, not a package.
+
+*Recommendation:* the author sets "Require branches to be up to date before merging" on `main`'s protection, a
+repository setting that no commit can make.
+
+### REV-296: A failed land of a chore is fixed by the session, a red CI by np-builder
+
+Left by the review of `/np-chore`'s ruled doubts ([CODE_REVIEW_093](../code_reviews/CODE_REVIEW_093.md)), a doubt. A red
+CI's failure other than format and lint goes to a fresh `np-builder` (§8.2.57 BG3), but a failed land runs the same
+`mypy` and tests and the session fixes it itself, on Sonnet 5.5 at medium effort where the chore touches no `src/` or
+`tests/`. The ruling covered only a red CI.
+
+*Recommendation:* a land failure other than format and lint follows the red CI's rule.
+
+### REV-297: The chore's worktree refusal names a branch pattern that package branches lack
+
+Left by the same review, a doubt. The skill refuses where `git worktree list` shows a worktree on a `claude/np-carry-*`
+or package branch, but a package branch has no name pattern: the core finds it from its pull request's title.
+
+*Recommendation:* refuse on any other worktree whose branch holds commits past `origin/main`.
+
