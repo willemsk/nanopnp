@@ -134,9 +134,12 @@ work that is fully specified and needs under 100k tokens of context.
 **Code review reports** go to `docs/code_reviews/CODE_REVIEW_NNN.md`, with NNN one above the highest
 present.
 
-**Open items** are a finding not fixed, a deferral, or a question for the author. Each is a `REV-nn`
-row in `docs/project/review-findings.md` with a section in `review-items.md`, until the commit that
-resolves it sets it `fixed` (§8.4.6). A PR body is never its only record.
+**Open items** are a deferral to a later package, a doubt only the author can settle, or a finding
+whose fix is more than a small edit: an item that outlives the session that found it. Each is a
+`REV-nn` row in `docs/project/review-findings.md` with a section in `review-items.md`, until the
+commit that resolves it sets it `fixed` (§8.4.6). A small finding, a doubt among them whose fix moves
+no ruling, is fixed in the session that finds it and gets no row; a review, a ship and a chore are not
+done until each is fixed (§8.2.58 BH1). A PR body is never the only record of an open item.
 
 ## Git
 

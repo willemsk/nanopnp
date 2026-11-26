@@ -1911,6 +1911,10 @@ CI's failure other than format and lint goes to a fresh `np-builder` (§8.2.57 B
 
 *Recommendation:* a land failure other than format and lint follows the red CI's rule.
 
+**Fixed** (`/np-chore`, 26 November 2026, with §8.2.58 BH1): a small finding, so the skill is corrected
+and no row stays open. Of a failed land, as of a red CI, the session fixes only format and lint and a fresh
+`np-builder` every other failure; §8.4.4 says the same.
+
 ### REV-297: The chore's worktree refusal names a branch pattern that package branches lack
 
 Left by the same review, a doubt. The skill refuses where `git worktree list` shows a worktree on a `claude/np-carry-*`
@@ -1918,3 +1922,6 @@ or package branch, but a package branch has no name pattern: the core finds it f
 
 *Recommendation:* refuse on any other worktree whose branch holds commits past `origin/main`.
 
+**Fixed** (`/np-chore`, 26 November 2026, with §8.2.58 BH1): a small finding, so the skill is corrected
+and no row stays open. It refuses on any other worktree whose branch holds commits past `origin/main`; §8.4.4 says the
+same.

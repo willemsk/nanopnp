@@ -96,12 +96,13 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   the hooks, the agents, the skills or the workflows of `.claude/` and `.github/`. A commit made after the review
   is reviewed on its own diff at medium effort unless it is Markdown alone outside those paths. A session runs
   it only where no carry is running, which the author's start of the session ensures; it refuses on a dirty
-  tree, commits past `origin/main` or a worktree on a package branch, and a helper, the reviewer or a worker
-  hands the chore back. It runs on Sonnet 5.5 at medium effort, and on Opus 5.5 at high where it touches
-  `src/` or `tests/`. An open package rebases on `main` at its ship, as `just land` never rebases on `main`. A
-  numbered item that a chore adds takes the next number on `origin/main`; CI runs `duplicates.py`, and the
+  tree, commits past `origin/main` or another worktree whose branch holds commits past `origin/main`, and
+  a helper, the reviewer or a worker hands the chore back. Of a failed land or a red CI the session fixes
+  only format and lint, and `np-builder` every other failure. It runs on Sonnet 5.5 at medium effort,
+  and on Opus 5.5 at high where it touches `src/` or `tests/`. An open package rebases on `main` at its
+  ship, as `just land` never rebases on `main`. A numbered item that a chore adds takes the next number on `origin/main`; CI runs `duplicates.py`, and the
   chore runs it again after a rebase on a `main` that moved before its land. (§8.2.57 BG1 to BG6;
-  `.claude/skills/np-chore/`)
+  §8.2.58 BH1; `.claude/skills/np-chore/`)
 * A pull request's CI tests on Linux, and a package's `/np-ship` reads no platform leg. `/np-ship phase`
   dispatches `ci.yml` on the close's head and stops while a `platforms` leg on ubuntu, macOS or Windows is
   not `success`. (§7.6; §8.2.49 AY4; §8.2.50 AZ8; `.claude/skills/np-ship/phase.md`)
@@ -130,12 +131,13 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * One work package makes one pull request, green on Tiers 1 and 2 before the next package of its lane
   starts. `/np-implement` stops at the pull request and pauses for a compaction; `/np-ship` then runs
   in a fresh session, or in the implementing session where that runs on the ship's model. Its review
-  is one pass by `np-reviewer` (§8.4.5), which fixes and commits each finding it confirms; a finding
-  it leaves to the author is an open `REV` row, the pull request merges as reviewed, and a finding
-  the author pulls in is fixed and its diff alone reviewed at medium effort. Of a red CI the ship
-  fixes only format and lint, with `ruff format` and `ruff check --fix`, and reruns a flaky runner
-  once; `np-builder` fixes every other failure. (§8.2.11 L7; §8.2.16 R5; §8.2.33 AI4; §8.2.56 BF1,
-  BF4, BF5, BF8; `.claude/workflow/finish.md`)
+  is one pass by `np-reviewer` (§8.4.5), which fixes and commits each finding it confirms and each small
+  one; a small finding it leaves is fixed by `np-builder`, a finding it leaves that outlives the session
+  is an open `REV` row, the pull request merges as reviewed, and a finding the author pulls in is fixed;
+  the diff of either fix alone is reviewed at medium effort. Of a red CI the ship fixes only format and
+  lint, with `ruff format` and `ruff check --fix`, and reruns a flaky runner once; `np-builder` fixes
+  every other failure. (§8.2.11 L7; §8.2.16 R5; §8.2.33 AI4; §8.2.56 BF1, BF4, BF5, BF8; §8.2.58 BH1;
+  `.claude/workflow/finish.md`)
 * `just land` runs the push's mechanics in one command: the registers and their commit, the
   documentation build where a source changed, the rebase, the push gate and the push with retries
   (`.claude/scripts/land.sh`; `.claude/workflow/core.md`, *Gate and push*). A main session runs it,
@@ -285,10 +287,13 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 
 #### 8.4.6 Open items and review
 
-* An open item of an implementation or a review, such as a finding not fixed, a deferral or a question
-  for the author, is a `REV-nn` row in `docs/project/review-findings.md` with a section in
+* An open item of an implementation or a review is one that outlives the session that found it: a
+  deferral to a later package, a doubt only the author can settle, or a finding whose fix is more than a
+  small edit. It is a `REV-nn` row in `docs/project/review-findings.md` with a section in
   `docs/project/review-items.md`, added in the commit that leaves it open. The commit that resolves it
-  sets it `fixed`. A pull request body is never its only record. (§8.2.8 H12)
+  sets it `fixed`. A pull request body is never its only record. A small finding, a doubt among them
+  whose fix moves no ruling, is fixed in the session that finds it and gets no row; a review, a ship and
+  a chore are not done until each is fixed. (§8.2.8 H12; §8.2.58 BH1)
 * A `fixed`, `declined` or `wontfix` row moves, with its section, to `docs/project/review-archive.md`
   at the close of the phase that closed it: `/np-ship phase` runs `.claude/scripts/archive_items.py`,
   which rewrites every link to it. The register keeps the rows that are open or owned by a later

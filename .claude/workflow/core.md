@@ -62,7 +62,7 @@ returns before you use it. Physics and numerics decisions stay in this session.
 | `specification/history/` | A ruling round's record (`np-plan/rulings.md`) |
 | `knowledge/` | Durable findings (`CLAUDE.md`, *Durable learnings*) |
 | The WP's plan | The current Execution brief; short `> **Outcome — <what changed>.**` annotations that link the evidence; the numbers the plan asks for |
-| `docs/project/review-findings.md` | A `REV-nn` row for each item left open (`CLAUDE.md`, *Open items*) |
+| `docs/project/review-findings.md` | A `REV-nn` row for each item left open that outlives the session (`CLAUDE.md`, *Open items*); none for a small finding |
 
 ## Gate and push
 

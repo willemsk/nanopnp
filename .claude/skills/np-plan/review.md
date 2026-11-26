@@ -26,8 +26,9 @@ runs before the commit (§8.2.56 BF3).
    - A fix keeps every ruling of the author. A finding that would change one goes to the author as
      *Putting a choice to the author* in `.claude/workflow/author.md` says, before the commit; the ruling is recorded as
      `rulings.md` says.
-   - A finding not fixed is a `REV-nn` row with its section (`CLAUDE.md`, *Open items*), or one of the
-     plan's open questions if it blocks the implementation.
+   - A small finding is fixed (§8.2.58 BH1). A finding not fixed, which outlives the session, is a
+     `REV-nn` row with its section (`CLAUDE.md`, *Open items*), or one of the plan's open questions if
+     it blocks the implementation.
    - A fix that changes specified behaviour amends the specification in the same commit (the core's
      *Normativity*).
    - Count the plan's words again against its level's caps, each with its 10% allowance. Trim prose

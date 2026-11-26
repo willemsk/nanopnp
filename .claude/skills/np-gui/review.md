@@ -10,8 +10,9 @@
 
    Ask for its findings only.
 2. Write its reply to `<r>/review.md` unedited.
-3. Decide each finding here, as the caller. Fix it in this item, answer it in the gallery card, or
-   leave it open as a `REV-nn` row (§8.4.6). Never soften a finding to close it. A `blocking` finding
+3. Decide each finding here, as the caller. Fix it in this item, answer it in the gallery card, or,
+   where it outlives the session, leave it open as a `REV-nn` row; a small finding is fixed here
+   (§8.4.6; §8.2.58 BH1). Never soften a finding to close it. A `blocking` finding
    left open stops a mockup item (WP5.01 D3).
 4. Where the host has the `impeccable:impeccable` skill, run its `critique` over the same `<r>` PNGs and
    the change (`<r>/change.diff`). Write its reply to `<r>/critique.md` unedited. A host without the

@@ -89,7 +89,9 @@ own, as the land before the review may add them (§8.2.56 BF11), its commits, th
 valid. If the reply lacks that evidence, start the reviewer once more, never two at a time; if it
 still lacks it, stop before §5 and report it. Then, in this session:
 
-1. **Each finding left to the author** is a `REV-nn` row, `open` (`CLAUDE.md`, *Open items*), with the
+1. **A small finding** the reviewer left is fixed now, by `np-builder` (a helper hands back `WORKER`), its
+   diff reviewed as below; it gets no row (§8.2.58 BH1). **Each other finding left to the author** is a
+   `REV-nn` row, `open` (`CLAUDE.md`, *Open items*), with the
    reviewer's recommendation, listed in the PR body under **Deliberately not done**. The PR merges as
    reviewed; the report of §6 names each row, and the author may pull one in (§8.2.56 BF5). A finding
    pulled in is fixed by `np-builder` (a helper hands back `WORKER`) and its diff alone reviewed by
