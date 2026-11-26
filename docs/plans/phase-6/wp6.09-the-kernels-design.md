@@ -1,6 +1,6 @@
 # WP6.09 — The kernel's design
 
-**Status: in progress, items 1 to 3 done.** Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
+**Status: in progress, items 1 to 4 done.** Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
 `3cc0fbd`. Inherits §8.2.53 BC1, BC2, BC4 and BC5, this plan's rulings (§8.2.60 BJ1 to BJ3), §8.2.7 G10 and
 §8.2.13 N1. Its last commit on `main` takes `v0.7.0-alpha.9` (§8.4.1).
 
@@ -256,8 +256,22 @@ for each defect found; `CHANGELOG.md`'s `## [0.7.0-alpha.9]`; `holds-now.yaml` (
   > slots bit for bit. With `NANOPNP_PROTOTYPE_DROP="Steric flux,Inertia"` every variant misses, from 6.9 × 10⁻⁶
   > (`pnp-ns`, the inertia alone) to 3.3 × 10⁻²: the comparison sees a term.
 - [x] 3. Compaction checkpoint. **Executor:** main
-- [ ] 4. On the prototype: `prototype/three_d.py`, and its printed result as this plan's Outcome (D6); done when
+- [x] 1b5f5e3 4. On the prototype: `prototype/three_d.py`, and its printed result as this plan's Outcome (D6); done when
   each of its three results is printed or reported as not reached. **Executor:** main
+  > **Outcome — all three results reached.** On the prototype at `1b5f5e3`, `uv run python prototype/three_d.py`
+  > (7 s). VER-13 in 3D, at `maxh=0.4` curved to order 2 and solved under `PLANAR` by today's `solve_pb_recorded`
+  > unchanged: 2,868 tetrahedra, 4,883 unknowns, meshed in 0.25 s and solved in 0.07 s, r-weighted relative error
+  > 3.8 × 10⁻³ against `I₀(r/λ)/I₀(a/λ)` along a radius at mid-height; on VER-13's 2D mesh, 118 triangles, 267
+  > unknowns, 1.1 × 10⁻³. VER-17's fluid in 3D, the lumen and two half-ball reservoirs of 50 nm at `maxh=50/12`,
+  > wall 0.5 nm, grading 0.2, the membrane not meshed: 58,445 tetrahedra in 5.4 s, 86,802 order-2 `H1` dofs, 260,406
+  > unknowns for three fields; not solved. A 3D mesh is refused by `mesh/adapter.py:from_ngsolve`, and so by every
+  > quality gate (CON-04); it is mishandled without a word by `Measures.volume(rule_order=)`, which has no `TET`
+  > rule and falls back to NGSolve's estimate (at order 20 an explicit `TET` rule moves the vector by 8.5 × 10⁻⁴),
+  > and by `AXISYMMETRIC`, which weights by `ngs.x` on any mesh. Written for two dimensions: the eight
+  > `OCCGeometry(dim=2)` calls of `mesh/` and `geometry/`; `MeshData` and `to_ngsolve`; `Measures.symmetry` and
+  > `coordinate_names`; the two-vector velocity and the hoop terms of `flow.py` and the prototype's `kernel.py`;
+  > `ngs.Id(2)` in `stabilisation.py` and `post/forces.py`; the axial direction as the second component in
+  > `post/forces.py` and as `ngs.y` in `post/indicator.py`.
 - [ ] 5. The three runs of D5 on the prototype's head, and their Outcome in this plan; done when the log lists
   thirteen walks with example 01 within 10⁻⁸, the control fails and the gate's log ends `exit 0`. **Executor:**
   main, the runs by the main session
