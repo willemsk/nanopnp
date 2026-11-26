@@ -4,25 +4,26 @@ Updated 26 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-**What changes.** The next package is built and awaits its review. Before the physics core is rebuilt, the program
-now stores reference numbers for six optional settings of the model, each on the second worked example's charged pore. Every night they are computed again, and the run fails if one has moved by
-more than one part in a hundred million.
+**What changes.** The guard numbers are merged and tagged. Before the physics core is rebuilt, the program stores
+reference numbers for six optional settings of the model, each on the second worked example's charged pore. Every
+night they are computed again, and the run fails if one has moved by more than one part in a hundred million. Next
+the kernel's design is planned.
 
-**Cost.** This package: about 3 sessions, 2 to 3 agent hours and 4 times you act, three of them done. The rest of the
-phase: about 33 sessions, 19 to 36 agent hours and 51 times you act.
+**Cost.** The package took 1 session, 1.5 agent hours and 4 times you acted, against about 3 sessions estimated. The
+rest of the phase: about 33 sessions, 19 to 36 agent hours and 51 times you act.
 
 **What could go wrong.** The numbers record what the program computes today, not that it is right. They are checked
 on Linux alone. Without inertia the numbers lie so close to the default's that they show a broken path, not an ignored
 setting.
 
-**Your call.** None until the review; then merge the package. *Recommendation:* merge once the review and checks
-are green; it changes no physics.
+**Your call.** Start the plan of the kernel's design? *Recommendation:* start it; you rule on the design it brings
+before the kernel is rebuilt.
 
 ## Position
 
 - Phases 1 to 5 **closed**, `v0.2.0` to `v0.6.0` ([Phase 5's report](phase-5/phase-5-workbench.md#end-of-phase-report)).
-- **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.07 merged**,
-  tagged to `v0.7.0-alpha.7`.
+- **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.08 merged**,
+  tagged to `v0.7.0-alpha.8`.
 - **After WP6.09, the kernel's design, the rest is numbered at the round on that design**
   ([§8.2.54](../../specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md), BD1). Phases
   6 to 12: [the input note](sessions/phases-6-to-11.md).
