@@ -1,6 +1,6 @@
 # Decisions register, closed
 
-The 1,150 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
+The 1,152 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1139,6 +1139,8 @@ The 1,150 decisions of [the register](decisions.md) that bind nothing now, writt
 | REV-291 | author | `docs/project/review-findings.md` |  | WP6.07 | A red CI that is neither a test nor a gate has no owner | fixed by WP6.07 in `5806145` (§8.2.56 BF1, the author's ruling); left by its review, CODE_REVIEW_090 | fixed |
 | REV-292 | author | `docs/project/review-findings.md` |  | WP6.07 | The lean carry's tag number conflicts with §8.4.1 | fixed by WP6.07 in `f9f4554` (§8.2.56 BF10, the author's ruling); left by its review, CODE_REVIEW_090 | fixed |
 | REV-293 | session, own call | `docs/project/review-findings.md` |  | WP6.07 | Hand-off notes enter the plans index | fixed by WP6.07 in `5806145`; left by its review, CODE_REVIEW_090 | fixed |
+| REV-296 | author | `docs/project/review-findings.md` |  |  | A failed land of a chore is fixed by the session, a red CI by np-builder | fixed by `/np-chore` with §8.2.58 BH1; left by `/np-chore`'s review of its ruled doubts, CODE_REVIEW_093 | fixed |
+| REV-297 | author | `docs/project/review-findings.md` |  |  | The chore's worktree refusal names a branch pattern that package branches lack | fixed by `/np-chore` with §8.2.58 BH1; left by `/np-chore`'s review of its ruled doubts, CODE_REVIEW_093 | fixed |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |

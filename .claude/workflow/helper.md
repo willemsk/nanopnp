@@ -68,7 +68,8 @@ pushed at that sha, its `HEAD`.
 - `WORKER`: `agent: <type>`, `model: <name>` (none for a project agent, whose file sets it), then the
   worker's whole prompt.
 - `REVIEW`: `agent: np-reviewer`, `effort: medium` for the review of a finding the author pulled in
-  (§8.2.56 BF8), then the reviewer's whole prompt.
+  (§8.2.56 BF8) or of a small finding fixed after the review (§8.2.58 BH1), then the reviewer's whole
+  prompt.
 - `WAIT`: `pr: <number>` and the steward's check-in delay.
 - `RUN`: the command, with its output sent to a log under `<git dir>`; it writes no tracked file.
   The main session runs it in the background, waits, and gives the next helper the log's path.

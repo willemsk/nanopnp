@@ -29,8 +29,11 @@ or a doubt. Then:
 - **Confirmed and within the plan:** fix it, run the tests that cover it (`uv run pytest <files>`,
   never `--nightly`, never `gate.sh run`), and commit the fixes as `fix: close the review gaps in
   <what>`, with the identifiers in the body. The commit hook gates it.
-- **A doubt, or a fix that would move a ruling or widen the package:** do not fix it; report it for
-  the author.
+- **A doubt whose fix is a small edit that moves no ruling and keeps the package's scope:** fix it
+  too, as above. No small finding is left: the session that started you records no row for one
+  (§8.2.58 BH1).
+- **A fix that would move a ruling or widen the package, or a doubt whose fix is more than a small
+  edit:** do not fix it; report it for the author, with your recommendation.
 
 Never slacken a tolerance, skip a test, or add a test outside the test scope to close a finding. Never
 soften a finding to be agreeable.

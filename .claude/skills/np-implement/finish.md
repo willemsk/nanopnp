@@ -69,4 +69,5 @@ monitor CI in this turn. Then pause (§8.2.33 AI4):
    - If it printed `on`, the author set `NANOPNP_AUTO_SHIP=1`: run the `np-ship` skill with `wp <n>`
      in this turn. The hooks carry the prompt across the compaction that comes when the context
      fills, as at a checkpoint. `/np-ship` still records each finding against this session's
-     decisions that the review leaves as an open `REV` row (§8.2.56 BF5).
+     decisions that the review leaves, and that outlives the session, as an open `REV` row
+     (§8.2.56 BF5; §8.2.58 BH1).

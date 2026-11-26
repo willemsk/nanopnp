@@ -57,7 +57,7 @@ H8: spent
 H9: superseded by I5
 H10: spent (deferred to Phase 5)
 H11: §5.1, VER-61, VER-65
-H12: §8.4.6
+H12: '§8.4.6; its rows for small findings amended by BH1'
 I1: spent
 I2: spent
 I3: spent
@@ -480,7 +480,7 @@ BF1: '§8.4.4; §8.4.5; `CLAUDE.md` *Models*; its planning model amended by BF9'
 BF2: §8.4.4; §8.4.5
 BF3: §8.4.4
 BF4: §8.4.4; §8.4.5
-BF5: '§8.4.4; its review''s model and effort amended by BF8'
+BF5: '§8.4.4; its review''s model and effort amended by BF8, its rows for small findings by BH1'
 BF6: '§8.4.5; its plugins are the account''s, not the project''s to disable'
 BF7: the WP6.07 plan
 BF8: §8.4.4; §8.4.5
@@ -488,8 +488,9 @@ BF9: '§8.4.4; §8.4.5; `CLAUDE.md` *Models*'
 BF10: 'the Phase 6 plan; the WP6.07 plan; §8.4.1'
 BF11: '§7.6; §8.4.2; §8.4.4; §8.4.5; `CLAUDE.md` *The gate* and *Implementation workflow*'
 BG1: '§8.4.4; `.claude/skills/np-chore/`'
-BG2: '§8.4.4; `.claude/skills/np-chore/`; §8.2.56 BF11 stands'
-BG3: '§8.4.4; `.claude/agents/np-reviewer.md`; `.claude/skills/np-chore/`'
+BG2: '§8.4.4; `.claude/skills/np-chore/`; §8.2.56 BF11 stands; its worktree refusal amended by BH1'
+BG3: '§8.4.4; `.claude/agents/np-reviewer.md`; `.claude/skills/np-chore/`; its rows for small findings and its failed land amended by BH1'
 BG4: '§8.4.4'
 BG5: '§8.4.4; `ci.yml`; `.claude/skills/np-chore/`'
 BG6: '§8.4.4; §8.4.5; `.claude/skills/np-chore/`'
+BH1: '§8.4.4; §8.4.6; `CLAUDE.md` *Open items*; `.claude/agents/`; `.claude/skills/`; `.claude/workflow/`'

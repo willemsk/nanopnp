@@ -23,8 +23,8 @@ a cost to a user of the program, such as speed, a dependency or money, in plain 
 
 Every choice the workflow puts to the author carries what a reader who does not code needs to judge
 its impact: a ruling round, a work-package decision, a disputed review finding (§8.2.33 AI7). A
-finding the ship's review leaves to the author is not a question: it is a `REV` row with the
-reviewer's recommendation, the pull request merges as reviewed, and the ship's report names the row,
+finding the ship's review leaves to the author that outlives the session is not a question: it is a
+`REV` row with the reviewer's recommendation, the pull request merges as reviewed, and the ship's report names the row,
 which the author may pull in (§8.2.56 BF5). The
 question dialog may be all the author sees, so the context lives in it, not in the chat.
 

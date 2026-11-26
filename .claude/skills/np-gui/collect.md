@@ -14,8 +14,9 @@
    - Choice panels: `| Choice | Pick | Note | Reviewer finding | Disposition |`. Each pick's
      disposition names the mockup that carries it. For `either` it names both. For `neither` it
      names a third take, or a note that asks for one.
-3. Act on each `drop` and `change` in the package, and say how under *Disposition*. Or add a `REV-nn`
-   row with its section (§8.4.6) and name it there. Answer a note's question in its disposition;
+3. Act on each `drop` and `change` in the package, and say how under *Disposition*. Or, where it outlives
+   the session, add a `REV-nn` row with its section and name it there; a small one is fixed here
+   (§8.4.6; §8.2.58 BH1). Answer a note's question in its disposition;
    put a question that is the author's to decide with `AskUserQuestion` first. A `keep`, `fine` or
    `prefer` needs no disposition, unless its note asks for something.
 4. After a fix, render again and look at the shots it touches before you commit.
