@@ -69,6 +69,16 @@ from nanopnp.physics.flow import (
     pressure_term,
     viscous_operator,
 )
+from nanopnp.physics.kernel import (
+    COUPLED_TERMS,
+    Context,
+    Contribution,
+    KernelTerm,
+    Slot,
+    compose,
+    coupled_slots,
+    in_force,
+)
 from nanopnp.physics.nernst_planck import (
     ConcentrationVariables,
     StericForm,
@@ -926,6 +936,211 @@ class CoupledModel:
         state: GridFunction | None = None,
         **kwargs: Option,
     ) -> IntegralTerm:
+        """Return the coupled weak residual, composed from the terms in force.
+
+        Parameters
+        ----------
+        measures
+            Symmetry and quadrature policy; its element order must match the model's.
+        fixed_charge
+            The dimensionless protein space charge, if any.
+        solid_fraction_gradient
+            The gradient of ``solid_fraction``; the dielectric-gradient terms need it.
+        """
+        return compose(
+            *self._composition(
+                space,
+                measures,
+                wall_distance_nm=wall_distance_nm,
+                fixed_charge=fixed_charge,
+                solid_fraction=solid_fraction,
+                solid_fraction_gradient=solid_fraction_gradient,
+                surface_charge=surface_charge,
+                surface_charge_boundary=surface_charge_boundary,
+                sources=sources,
+                state=state,
+                **kwargs,
+            )
+        )
+
+    def _composition(  # noqa: PLR0913
+        self,
+        space: FESpace,
+        measures: Measures,
+        *,
+        wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
+        fixed_charge: FixedCharge | None = None,
+        solid_fraction: Expression | None = None,
+        solid_fraction_gradient: Expression | None = None,
+        surface_charge: Expression | None = None,
+        surface_charge_boundary: str = "wall",
+        sources: Mapping[str, Expression] | None = None,
+        state: GridFunction | None = None,
+        **kwargs: Option,
+    ) -> tuple[list[KernelTerm], list[Slot], Context]:
+        _reject_unknown(kwargs, f"{self.name!r}.residual_form")
+        if measures.element_order != self.order:
+            raise ValueError(
+                f"measures.element_order is {measures.element_order} but the model is order "
+                f"{self.order}; the NUM-07 quadrature bonus is computed from the element order, "
+                "so a mismatch under-integrates the 1/r forms it exists to protect"
+            )
+        mesh = space.mesh
+        trials = self._split(list(space.TrialFunction()))
+        tests = self._split(list(space.TestFunction()))
+        sources = dict(sources or {})
+        unknown = set(sources) - set(trials)
+        if unknown:
+            raise ValueError(
+                f"sources name fields {', '.join(sorted(unknown))} that {self.name!r} does not "
+                f"solve for; it solves {', '.join(trials)}"
+            )
+        stabilisation = self.stabilisation_model
+        if stabilisation.terms and state is None:
+            raise ValueError(
+                f"the {stabilisation.name!r} stabilisation assembles "
+                f"{', '.join(stabilisation.terms)} and needs the solve state to evaluate its "
+                "parameters at the iterate; pass state="
+            )
+        if fixed_charge is not None:
+            _check_fixed_charge(fixed_charge)
+        variables = self.concentration_variables(trials)
+        coefficients = self.coefficients(variables, wall_distance_nm)
+        lagged = self._split(list(state.components)) if state is not None else trials
+        lagged_variables = self.concentration_variables(lagged) if state is not None else variables
+        lagged_coefficients = (
+            self.coefficients(lagged_variables, wall_distance_nm)
+            if state is not None
+            else coefficients
+        )
+        terms = [term for term in (*COUPLED_TERMS, *self._model_terms()) if in_force(term, self)]
+        context = Context(
+            model=self,
+            mesh=mesh,
+            measures=measures,
+            fluid=mesh.Materials(self.fluid),
+            trials=trials,
+            tests=tests,
+            lagged=lagged,
+            variables=variables,
+            lagged_variables=lagged_variables,
+            coefficients=coefficients,
+            lagged_coefficients=lagged_coefficients,
+            permittivity=self.permittivity(mesh, coefficients, solid_fraction=solid_fraction),
+            terms_in_force=frozenset(term.name for term in terms),
+            solid=(
+                self.solid_blend(mesh, solid_fraction, solid_fraction_gradient)
+                if self.dielectric_gradient_forces
+                else None
+            ),
+            fixed_charge=fixed_charge,
+            surface_charge=surface_charge,
+            surface_region=(
+                surface_charge_region(mesh, surface_charge_boundary)
+                if surface_charge is not None
+                else None
+            ),
+            sources=sources,
+        )
+        slots = coupled_slots(context, self.species, [f.name for f in self.fields])
+        return terms, slots, context
+
+    def _model_terms(self) -> tuple[KernelTerm, ...]:
+        stabilisation = self.stabilisation_model
+
+        def transport(index: int, family: str) -> Contribution:
+            def build(context: Context) -> Expression | None:
+                if not stabilisation.terms:
+                    return None
+                species, field_name = context.require_species(), context.require_field()
+                parts = stabilisation.transport_contributions(
+                    trial=self._transport_state(
+                        species, context.trials, context.variables, context.coefficients
+                    ),
+                    lagged=self._transport_state(
+                        species,
+                        context.lagged,
+                        context.lagged_variables,
+                        context.lagged_coefficients,
+                    ),
+                    test=context.tests[field_name],
+                    source=(context.sources or {}).get(field_name),
+                )
+                return parts[index].integrand if index < len(parts) else None
+
+            return Contribution(family, build)
+
+        def flow(index: int, family: str) -> Contribution:
+            def build(context: Context) -> Expression | None:
+                if not (self.flow and stabilisation.terms):
+                    return None
+                sources = context.sources or {}
+                parts = stabilisation.flow_contributions(
+                    context.measures,
+                    trial=self._flow_state(
+                        context.trials,
+                        context.coefficients,
+                        context.variables,
+                        sources=sources,
+                        solid=context.solid,
+                    ),
+                    lagged=self._flow_state(
+                        context.lagged,
+                        context.lagged_coefficients,
+                        context.lagged_variables,
+                        sources=sources,
+                        solid=context.solid,
+                    ),
+                    velocity_test=context.tests[VELOCITY],
+                    pressure_test=context.tests[PRESSURE],
+                )
+                return parts[index].integrand if index < len(parts) else None
+
+            return Contribution(family, build)
+
+        def constraint(context: Context) -> Expression | None:
+            if not self.pressure_constraint:
+                return None
+            trials, tests = context.trials, context.tests
+            return trials[PRESSURE] * tests[PRESSURE_MEAN] + trials[PRESSURE_MEAN] * tests[PRESSURE]
+
+        def source(field_name: str) -> Contribution:
+            def build(context: Context) -> Expression | None:
+                value = (context.sources or {}).get(field_name)
+                return None if value is None else -1.0 * value
+
+            return Contribution(f"source.{field_name}", build)
+
+        return (
+            KernelTerm(
+                "Stabilisation",
+                (
+                    transport(0, "streamline"),
+                    transport(1, "crosswind"),
+                    flow(0, "flow.gls_momentum"),
+                    flow(1, "flow.gls_pressure"),
+                    flow(2, "flow.grad_div"),
+                ),
+            ),
+            KernelTerm("Pressure constraint", (Contribution("constraint", constraint),)),
+            KernelTerm("Sources", tuple(source(f.name) for f in self.fields)),
+        )
+
+    def _reference_residual_form(  # noqa: PLR0913
+        self,
+        space: FESpace,
+        measures: Measures,
+        *,
+        wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
+        fixed_charge: FixedCharge | None = None,
+        solid_fraction: Expression | None = None,
+        solid_fraction_gradient: Expression | None = None,
+        surface_charge: Expression | None = None,
+        surface_charge_boundary: str = "wall",
+        sources: Mapping[str, Expression] | None = None,
+        state: GridFunction | None = None,
+        **kwargs: Option,
+    ) -> IntegralTerm:
         """Return the coupled weak residual, written in the trial functions.
 
         Parameters
@@ -1043,7 +1258,7 @@ class CoupledModel:
                     residual += stabilisation_term
 
         if self.flow:
-            residual += self._flow_residual(
+            residual += self._reference_flow_residual(
                 trials, tests, measures, coefficients, variables, definedon=fluid, solid=solid
             )
             if stabilisation.terms:
@@ -1118,7 +1333,7 @@ class CoupledModel:
             source=sources.get(VELOCITY),
         )
 
-    def _flow_residual(
+    def _reference_flow_residual(
         self,
         trials: Mapping[str, Expression],
         tests: Mapping[str, Expression],

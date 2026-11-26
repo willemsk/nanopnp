@@ -340,6 +340,17 @@ class StabilisationModel(Protocol):
     ) -> tuple[StabilisationIntegrand, ...]:
         """Return one species' transport contributions as unweighted integrands."""
 
+    def flow_contributions(
+        self,
+        measures: Measures,
+        *,
+        trial: FlowState,
+        lagged: FlowState,
+        velocity_test: Expression,
+        pressure_test: Expression,
+    ) -> tuple[StabilisationIntegrand, ...]:
+        """Return the flow contributions as unweighted integrands."""
+
     def indicator_term(
         self,
         measures: Measures,
@@ -396,6 +407,19 @@ class NoStabilisation:
     ) -> tuple[StabilisationIntegrand, ...]:
         """Return one species' transport contributions as unweighted integrands."""
         del trial, lagged, test, source
+        return ()
+
+    def flow_contributions(
+        self,
+        measures: Measures,
+        *,
+        trial: FlowState,
+        lagged: FlowState,
+        velocity_test: Expression,
+        pressure_test: Expression,
+    ) -> tuple[StabilisationIntegrand, ...]:
+        """Return the flow contributions as unweighted integrands."""
+        del measures, trial, lagged, velocity_test, pressure_test
         return ()
 
     def transport_term(
@@ -586,8 +610,30 @@ class StreamlineStabilisation:
         **kwargs: Option,
     ) -> IntegralTerm | None:
         """Return this mode's contribution to the flow residual, or ``None``."""
+        return _assemble(
+            measures,
+            self.flow_contributions(
+                measures,
+                trial=trial,
+                lagged=lagged,
+                velocity_test=velocity_test,
+                pressure_test=pressure_test,
+            ),
+            **kwargs,
+        )
+
+    def flow_contributions(
+        self,
+        measures: Measures,
+        *,
+        trial: FlowState,
+        lagged: FlowState,
+        velocity_test: Expression,
+        pressure_test: Expression,
+    ) -> tuple[StabilisationIntegrand, ...]:
+        """Return the flow contributions as unweighted integrands; empty without the flow term."""
         if not self.flow:
-            return None
+            return ()
         import ngsolve as ngs
 
         size = element_size()
@@ -601,24 +647,20 @@ class StreamlineStabilisation:
         # with a minus. Grad-div is on the velocity row (plus) and carries 1/r through div^,
         # so it is integrated with the singular rule.
         convective_test = reynolds * lagged.density * (ngs.grad(velocity_test) * lagged.velocity)
-        return _assemble(
-            measures,
-            (
-                StabilisationIntegrand(
-                    tau_m * (residual * convective_test), extra_order=FLOW_BONUS_ORDER
-                ),
-                StabilisationIntegrand(
-                    -tau_m * (residual * ngs.grad(pressure_test)), extra_order=FLOW_BONUS_ORDER
-                ),
-                StabilisationIntegrand(
-                    tau_c
-                    * axisymmetric_divergence(velocity_test, measures)
-                    * axisymmetric_divergence(trial.velocity, measures),
-                    extra_order=FLOW_BONUS_ORDER,
-                    singular=True,
-                ),
+        return (
+            StabilisationIntegrand(
+                tau_m * (residual * convective_test), extra_order=FLOW_BONUS_ORDER
             ),
-            **kwargs,
+            StabilisationIntegrand(
+                -tau_m * (residual * ngs.grad(pressure_test)), extra_order=FLOW_BONUS_ORDER
+            ),
+            StabilisationIntegrand(
+                tau_c
+                * axisymmetric_divergence(velocity_test, measures)
+                * axisymmetric_divergence(trial.velocity, measures),
+                extra_order=FLOW_BONUS_ORDER,
+                singular=True,
+            ),
         )
 
     def indicator_term(
