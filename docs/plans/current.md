@@ -26,11 +26,10 @@ are green; it changes no physics.
 - **After WP6.09, the kernel's design, the rest is numbered at the round on that design**
   ([§8.2.54](../../specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md), BD1). Phases
   6 to 12: [the input note](sessions/phases-6-to-11.md).
-- **WP6.08, the guard numbers, is built** ([the plan](phase-6/wp6.08-the-guard-numbers.md);
+- **WP6.08, the guard numbers, is merged and tagged `v0.7.0-alpha.8`** ([the plan](phase-6/wp6.08-the-guard-numbers.md);
   [§8.2.59](../../specification/history/59-wp608s-plan-the-guard-numbers.md) BI1, BI2): six walks of example 02's
   ePNP-NS case, one setting each, held nightly on Linux (VER-80), each repeating to 0.000e+00. REV-298 is WP6.09's.
-- **Next:** `/np-carry wp 6.08` ships it (review, CI, the tag `v0.7.0-alpha.8`); then `/np-plan wp 6.09`, the
-  kernel's design.
+- **Next:** `/np-plan wp 6.09`, the kernel's design.
 
 ## Not to be re-decided
 
