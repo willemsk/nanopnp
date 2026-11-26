@@ -2,59 +2,56 @@
 
 ## Step
 
-Plan, first helper of two (`np-plan/wp.md`, *Under `/np-carry`, the plan is two helpers*). The draft is committed
-with its `### Decisions` and `### Grounding`; D1 and D2 are put to the author. Fable 5.2 at high effort planned.
+Plan, second helper of two: done. The plan is written, checked by `np-plan/review.md`'s self-check and committed; the
+author's approval is next, then the build. Fable 5.2 at high effort planned.
 
 ## Done
 
-- `3dfbe6f` docs: WP6.08 plan draft
+- `3dfbe6f` docs: WP6.08 plan draft (the first helper)
+- `444733a` chore: duplicates.py skips a helper's hand-off note
+- `a4d492e` docs: WP6.08 implementation plan: the plan, record 59 (BI1, BI2), REV-298, the Phase 6 plan and its
+  record, `current.md`, the input note, the decisions page and the plans index
 - this note's commit, `docs: WP6.08 hand-off, plan`
 
 ## Measured
 
-- 1,607 words in the draft, 747 of them outside `### Grounding`; the caps are 3,850 and 1,650.
-- 6 walks, about 270 s on one core; each walk's seconds and shift are in the draft's table under D1.
-- 0 open pull requests against `main`; the branch `claude/zealous-planck-aio2ty` started at `origin/main`, `f571e72`.
-- VER-79, REV-297, record 58 and letter BH are the highest in use: the next are VER-80, REV-298, record 59, BI.
+- 3,211 words in the plan: 985 in `### Grounding`, 727 in `### Implementation details`, 1,499 outside both; the caps
+  are 3,850, 1,100 and 1,650. The In brief has 275 words, its limit.
+- 700 words in `docs/plans/current.md`, its limit.
+- Run again by this helper under the gate's SIMD cap, one thread, on mesh `546c34f4…`: `supg` 33 s, `reference` 69 s,
+  the log branch 25 s. The stabilisation currents are −3.001e-13 A (Cl⁻) and −7.009e-13 A (Na⁺) under `supg`, and
+  −3.002e-13 A and −7.013e-13 A under `reference`.
+- `duplicates.py` exited 1 with the note beside the plan, and exits 0 with the fix.
 
 ## Decided
 
-- The seven walks of VER-62 that the build runs first are named by file, which runs a `nightly` test without the
-  flag: `tests/tier2/test_examples_01_quickstart.py`, `test_examples_02_classical.py`, `test_examples_02_epnpns.py`,
-  `test_examples_03_iv_sweep.py`, `test_examples_07_pdb_to_charged_run.py`, `test_pipeline_2wcd.py` and
-  `test_exclusion_2wcd_walk.py`. Their time is not measured: the item is a `RUN` hand-back.
-- The guard tests are one new file, `tests/tier2/test_guard_numbers.py`: one `Store` for the module, one test function
-  a walk with its name written out, `test_ver80_<walk>_…`.
-- The recording is `NANOPNP_RECORD_STABILITY=<dir>` on the guard file under the gate's SIMD cap, then
-  `uv run python tests/tier2/data/merge_number_stability.py <dir>`, then the file again with no variable set.
-- VER-80's row goes into §7.3 with the item that adds the test, not with the plan's commit: check first whether a
-  records test wants a clause's test file to exist. Appendix A and `CHANGELOG.md` take a line with it.
-- The phase plan's line "VER-62's stored numbers cover the default switches alone: the review's claim, not checked"
-  is now checked (the draft, D1), and its open decision 14 and criterion 12 are settled by the plan; the final commit
-  rewrites those lines and `docs/plans/current.md`, whose *Next* still names WP6.07's ship.
-- The measured shifts of the two flow switches are a durable finding for `knowledge/`, with the item that records.
+- The author ruled D1 "All six (Recommended)" and D2 "Linux only (Recommended)": BI1 and BI2 of §8.2.59.
+- D7 changed from the draft: the numbers are recorded first, and one `RUN` after item 1's commit takes VER-62's seven
+  walks and the six guard walks together. The package changes no `src/`, so the one run shows that VER-62 passes on
+  the tree and repeats the guard numbers. The draft had the seven walks run before the record.
+- VER-80's row, §7.6's NOTE, Appendix A's line and `CHANGELOG.md` go with item 1, not with the plan's commit: no test
+  reads §7.3's rows, and the clause would name a file that holds no guard walk yet.
+- A walk needs a workspace of its own: the solve stage refuses a folder that holds an earlier run's files.
+- CI's `docs` job runs `duplicates.py`, which counted the hand-off note as a second WP6.08 plan and would have failed
+  the package's pull request until the ship deletes the note. Fixed as a small finding (§8.2.58 BH1), as REV-293 was
+  for `index_records.py`; no row.
+- The Phase 6 plan's WP6.07 entry and status line said "awaiting its merge"; PR 219 is merged and `v0.7.0-alpha.7`
+  is published, so both are corrected.
+- `docs/plans/current.md`'s cost of the rest of the phase is the sum of the Phase 6 plan's entries after WP6.08: 33
+  sessions, 19 to 36 agent hours, 51 touches.
 
 ## Open
 
-Put to the author, verbatim in the hand-back:
-
-1. Which of the model's optional settings get stored reference numbers before the kernel is rebuilt: all six, the
-   three BC3 names, or the three and the simpler stabilisation (D1).
-2. On which machines the new numbers are held: Linux only, or all three platforms (D2).
+None. The plan's `### Open questions` is empty.
 
 ## Next
 
-A fresh `np-plan` helper, with the author's two answers in its prompt:
+After the author approves the plan, a fresh `np-builder` for `/np-implement wp 6.08`:
 
-1. Read `docs/plans/phase-6/wp6.08-the-guard-numbers.md`, then `.claude/skills/np-plan/rulings.md`, *Where the
-   rulings are written*.
-2. Record the answers as BI1 and BI2 in a new `specification/history/59-wp608s-plan-the-guard-numbers.md`, with its
-   line in `specification/history/index.md` and two lines in `holds-now.yaml`. Rewrite D1 and D2 to what was ruled.
-   If D1 is narrowed, drop the walks ruled out, in D1, D3, D6 and the Grounding table's use. If D2 is "all three",
-   remove the skip, and give the fold of the macOS and Windows records an owner in `### Out of scope`: a chore after
-   the first nightly run, as a `REV` row.
-3. Add REV-298 for D4's finding (`docs/project/review-findings.md`, `review-items.md`), owned by WP6.09's design.
-4. Write the rest of the plan (`np-plan/wp.md`, *What to write*): the status line, the In brief, the work items,
-   `### Verification`, `### Out of scope`, `### Open questions`; amend the phase plan and `current.md`.
-5. Run `uv run .claude/scripts/decisions.py` and `uv run .claude/scripts/index_records.py`, then the self-check of
-   `np-plan/review.md`, and commit `docs: WP6.08 implementation plan`.
+1. Read `docs/plans/phase-6/wp6.08-the-guard-numbers.md`; start at work item 1, with its *Implementation details*.
+2. Write `tests/tier2/test_guard_numbers.py`, record under the cap in two calls, fold with
+   `uv run python tests/tier2/data/merge_number_stability.py <dir>`, write the clauses, commit.
+3. Hand back `RUN` with item 2's command, whose log is `<git dir>/wp608-walks.log`.
+
+The package's pull request is #221, opened by this helper on `claude/zealous-planck-aio2ty` with the plan's In brief;
+the build reuses it and brings its body to the tree's state (`.claude/workflow/finish.md`, *The PR contract*).
