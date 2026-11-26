@@ -17,7 +17,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP6.05 — The orchestrator](phase-6/wp6.05-the-orchestrator.md): delivered, 24 November 2026.
 - [WP6.06 — The channel's axis at a ragged rim](phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md): delivered, 25 November 2026.
 - [WP6.07 — The lean carry](phase-6/wp6.07-the-lean-carry.md): built and reviewed, awaiting its merge.
-- [WP6.08 — The guard numbers](phase-6/wp6.08-the-guard-numbers.md): planned, not started.
+- [WP6.08 — The guard numbers](phase-6/wp6.08-the-guard-numbers.md): in progress; item 1 done, item 2's run next.
 
 ## Phase 5
 
