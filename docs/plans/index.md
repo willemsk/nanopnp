@@ -8,7 +8,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 
 ## Phase 6
 
-- [Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read](phase-6/phase-6-library-foundations.md): in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08. Amended 24 to 26 November 2026 (§8.2.53; §8.2.54; §8.2.56 BF10; §8.2.59): WP6.06 to WP6.09 are numbered in build order, WP6.09 is p…
+- [Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read](phase-6/phase-6-library-foundations.md): in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08. Amended 24 to 26 November 2026 (§8.2.53; §8.2.54; §8.2.56 BF10; §8.2.59; §8.2.60): WP6.06 to WP6.09 are numbered in build order, WP…
 - [Phase 6 plan: the record](phase-6/phase-6-record.md): a record of replaced text, last added to on 26 November 2026 (§8.2.59 BI1); it states nothing that holds now.
 - [WP6.01 — The Windows leg: the stall named and bounded, the failures fixed](phase-6/wp6.01-the-windows-leg.md): delivered, 22 November 2026.
 - [WP6.02 — The cleanup: the reading measured, the instructions audited, the records cut](phase-6/wp6.02-the-cleanup-measure-audit-records.md): delivered, 22 November 2026.
@@ -18,6 +18,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP6.06 — The channel's axis at a ragged rim](phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md): delivered, 25 November 2026.
 - [WP6.07 — The lean carry](phase-6/wp6.07-the-lean-carry.md): delivered, 26 November 2026.
 - [WP6.08 — The guard numbers](phase-6/wp6.08-the-guard-numbers.md): delivered, 26 November 2026.
+- [WP6.09 — The kernel's design](phase-6/wp6.09-the-kernels-design.md): planned, not started.
 
 ## Phase 5
 

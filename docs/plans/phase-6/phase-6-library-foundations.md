@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08. Amended 24 to 26 November 2026 (§8.2.53; §8.2.54; §8.2.56 BF10; §8.2.59): WP6.06 to WP6.09 are numbered in build order, WP6.09 is planned by scope; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08. Amended 24 to 26 November 2026 (§8.2.53; §8.2.54; §8.2.56 BF10; §8.2.59; §8.2.60): WP6.06 to WP6.09 are numbered in build order, WP6.09 is planned; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -24,7 +24,7 @@ and the target for how often a package needs you. *Recommendation:* approve; it 
 
 ## Context
 
-`SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 to §8.2.59 (AY to BI). The
+`SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 to §8.2.60 (AY to BJ). The
 text each amendment replaced is in [the record](phase-6-record.md). This file keeps its first name: the library's
 foundations are Phase 7 (BC7), in [the input note](../sessions/phases-6-to-11.md).
 
@@ -107,17 +107,19 @@ with `just land` (BF11); WP6.08, the first package carried the lean way, measure
 case hold their numbers at 10⁻⁸ relative, nightly, in the reference environment alone (VER-80; BI1, BI2); a change to
 one is a re-pin by ruling (G10); the kernel's last package checks against them (BC4); REV-298 is WP6.09's.
 
-### WP6.09 — The kernel's design (BC2, BC5)
+### WP6.09 — The kernel's design (BC2, BC5; BJ1 to BJ3)
 
-*Planned by scope.* A design page and a throwaway prototype. The page states the term, a correction as a coefficient
-that terms share, the rule that binds terms (PHY-08), each flux integrated once, the nine names of `physics/` the
-workbench reads, how an installed package registers, and §5.4.1's interface (MOD-10; AZ1). The prototype rebuilds the
-simplest model from terms. The package reports whether example 01's walk of VER-62 holds to 10⁻⁸, with the commit
-that holds the prototype, the command and the stabilisation mode, so the run can be repeated; the tree it merges
-holds none of the prototype's code. It proposes the kernel's packages and their Tier 1 and Tier 2
-tests (FR-40), and prices the benchmark that solves VER-13 or VER-17 on a coarse 3D mesh (BC5). The page is a
-proposal until the round below, which rewrites ADR-005, §5.4 and §5.5. About 5 sessions, 3 to 6 agent hours and 8
-touches.
+*Planned* ([the plan](wp6.09-the-kernels-design.md)). A design page, `docs/design/kernel.md`, and a throwaway
+prototype. The page states the term, a correction as a coefficient that terms share, the rule that binds terms
+(PHY-08), each flux integrated once, the nine names of `physics/` the workbench reads, how an installed package
+registers, and §5.4.1's interface (MOD-10; AZ1). The prototype composes every path of `CoupledModel.residual_form`
+from terms (BJ1) on the branch `prototype/wp6.09-kernel`, which is never merged and which the author pushes (BJ3).
+The package reports VER-62's seven walks and VER-80's six on it, each with its largest drift and its stabilisation
+mode, with the branch's sha and the command, so the run can be repeated. Example 01's walk at 10⁻⁸ is the pass
+mark; a miss on another walk goes to the round. It proposes the kernel's packages and their Tier 1 and Tier 2 tests
+(FR-40), and prices the benchmark that solves VER-13 or VER-17 on a coarse 3D mesh from a bounded trial (BC5; BJ2).
+The page is a proposal until the round below, which rewrites ADR-005, §5.4 and §5.5. About 3 sessions, 4 to 7 agent
+hours and 8 touches.
 
 ### The ruling round on the kernel's design (BC2)
 
@@ -167,7 +169,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP6.05 | none | Outside N1's scope. Review: the record of the three facts and of the count; CI still runs every browser test |
 | WP6.06 | 1 | VER-48 |
 | WP6.08 | 2 | VER-80: six walks of example 02's ePNP-NS case, one setting off its default each, `nightly` |
-| WP6.09 | none kept | Example 01's walk of VER-62 on the prototype, reported with its commit and command |
+| WP6.09 | none kept | VER-62's seven walks and VER-80's six on the prototype, reported with its branch's sha and command; example 01's is the pass mark (BJ1) |
 | The provisional packages | 1, 2 | FR-40's tests, which the design names; criterion 3's; set at the round after WP6.09 |
 
 **The phase is complete when** (§8.1's gate; that round restates criteria 3 and 6 with their tests):
@@ -183,7 +185,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 4. **A fresh package session starts under the reading limit** of 8,000 words (`usage.py`; AZ18), by every helper
    that implements (BD3). A miss continues the cleanup.
 5. **The author rules the kernel's design before its packages are planned**; the prototype holds example 01's walk
-   to 10⁻⁸, or the miss is put to the author (BC2).
+   to 10⁻⁸, or the miss is put to the author (BC2). The other twelve stored walks are reported on it (BJ1).
 6. **The kernel's own Tier 1 and Tier 2 tests pass** (FR-40), **and a term an installed package registers is found
    by the command line and the workbench and named in the manifest, with its test** (BC5).
 7. **VER-61 and VER-65 hold.** A cycle or a new backend subpackage goes to the author (H6).
@@ -209,7 +211,7 @@ The close fills it. It reports, each with the command or test that logs it:
 - the three platforms' Tier 1 and Tier 2 counts and times, from the close's full run;
 - VER-62's largest relative drift per walk and platform, and the guard numbers' per switch, at the kernel's last
   package (stabilisation mode named);
-- the prototype's drift on example 01's walk, and the design as ruled;
+- the prototype's drift on each of the thirteen stored walks, and the design as ruled;
 - the kernel's terms with the test each has, and each term an installed package registered in the close's run;
 - the reading baseline and a fresh session's reading against the limit (`usage.py`);
 - the ground-up review's proposals by ruling: kept, changed now, changed later, dropped;
