@@ -39,8 +39,8 @@ by loosening a tolerance or weakening an oracle.
 
 NOTE (the per-push selection; §8.2.13 N4): a Tier-1 or Tier-2 test that walks the pipeline end to end
 carries the marker `nightly`: an executed worked example of VER-46 other than example 01, or the
-vendored 2WCD entry taken through the stages. Example 01 carries it only if its solve takes 60 s
-or more on four cores; example 02's ePNP-NS leg with its VER-62 golden carries none, so a moved
+vendored 2WCD entry taken through the stages, or a guard walk of VER-80. Example 01 carries it only
+if its solve takes 60 s or more on four cores; example 02's ePNP-NS leg with its VER-62 golden carries none, so a moved
 physics number is caught before the merge. The nightly run, the release and a `--nightly` run
 include them. A failed nightly run opens an issue titled `Nightly failed: <date> <sha7>` and blocks
 nothing; a golden on another walk is caught the night after its merge. The selection leaves the
