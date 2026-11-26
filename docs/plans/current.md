@@ -14,7 +14,7 @@ the phase after it: about 28 sessions, 16 to 30 agent hours and 43 times you act
 **What could go wrong.** The prototype may miss the stored numbers: a miss on the first example comes to you before
 any kernel package is planned. Its branch is never merged, so its code survives only while that branch does.
 
-**Your call.** Approve the plan of the design package, after its review? *Recommendation:* approve; it changes no
+**Your call.** Approve the plan of the design package, which is reviewed? *Recommendation:* approve; it changes no
 code a user runs and no rule.
 
 ## Position
@@ -27,8 +27,8 @@ code a user runs and no rule.
   the whole coupled model on `prototype/wp6.09-kernel`, never merged, with thirteen walks reported on it.
 - **After it, the rest is numbered at the round on that design** (BD1;
   [the input note](sessions/phases-6-to-11.md)).
-- **Next:** `/np-plan wp 6.09 review` (Fable 5.2, high); then, approved, `/np-carry wp 6.09` (Sonnet 5.5, medium)
-  or `/np-implement wp 6.09` (Opus 5.5, high).
+- **Next:** the plan is reviewed; once approved, `/np-carry wp 6.09` (Sonnet 5.5, medium) or
+  `/np-implement wp 6.09` (Opus 5.5, high).
 
 ## Not to be re-decided
 

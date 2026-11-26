@@ -63,7 +63,8 @@ Read at `3cc0fbd`.
   rebuilds the form of a stored state. A composition placed in it runs on every path.
 - `physics/terms.py:Term` is display alone: `EPNP_NS_TERMS` holds twelve, read by `ModelDeclaration.terms` and
   the workbench; nothing assembles from them. `Term.switches` and `Term.correction` already say when a term is in
-  force.
+  force. `PNP_NS_TERMS` and `PNP_TERMS` are the display lists of the other two names; all three names build one
+  `CoupledModel`, told apart by its electrolyte's switches and `flow`.
 - `CoupledModel.__post_init__` refuses `dielectric_gradient_forces` beside `log_variables` or without `flow`;
   `physics/nernst_planck.py:excess_potential_gradient` and `physics/flow.py:permittivity_gradient` raise in the
   log branch.
@@ -73,8 +74,9 @@ Read at `3cc0fbd`.
 - `.claude/scripts/land.sh` lands `git branch --show-current`; `~/.claude/stop-hook-git-check.sh` tests `HEAD`
   alone for unpushed commits. A local branch that is not checked out trips neither.
 - `.claude/hooks/gate.sh` gates each `git commit` on any branch, and lets a push through only where
-  `gate.sh run` stamped its tree. `.github/workflows/tag.yml` records that a cloud session's credentials push its
-  own branch alone.
+  `gate.sh run` stamped its tree. The stamp holds one `push` line, which the next `gate.sh run` replaces, and
+  `just land` runs one. `.github/workflows/tag.yml` records that a cloud session's credentials push its own
+  branch alone.
 - The package's tree changes no `src/`, so `origin/main` holds the same code as the package's branch.
 
 **D3**
@@ -159,18 +161,20 @@ the prototype is ticked on `<package>` with the prototype commit's sha.
   lagged functions, the concentration variables, the coefficients, the measures, the mesh, the fluid, the solid
   blend, the species at hand and the model. `compose(terms, slots, context)`: the sum over the slots, in order,
   of one integral each; a slot with no contribution is left out.
-- A term is in force when each of its display `Term`'s switches is true on the model and its correction leaf is
-  not `none`. A term whose name is in the environment variable `NANOPNP_PROTOTYPE_DROP` is left out.
+- The kernel's terms wrap those of `EPNP_NS_TERMS`, for all three names. A term is in force when each of its
+  display `Term`'s switches is true on the model and its correction leaf is not `none`. A term whose name is in
+  the environment variable `NANOPNP_PROTOTYPE_DROP` is left out.
 - `physics/models.py`: `CoupledModel.residual_form` builds the context and returns `compose(…)`; its body and
   `_flow_residual` stay as `_reference_residual_form` and `_reference_flow_residual`. The constraint, the sources
   and the stabilisation's integrals are contributions of the model, with no display `Term`.
-- `prototype/compare_operators.py`, run as `uv run python prototype/compare_operators.py`. The mesh is
+- `prototype/compare_operators.py`. The mesh is
   `CylinderGeometry(radius_nm=2.0, length_nm=4.0).generate(maxh_nm=0.4)`, with `BOUNDARIES` and `fluid` as
   `tests/tier2/test_mms.py` has them. The fields are those of `ManufacturedSolution.polynomial` on that test's
-  model, set on each component of the variant's state; the log branch takes their logarithm. Each variant is
-  called with `wall_distance_nm = 2.0 − r`, a `FixedCharge` of a smooth density at `rule_order=8`, a surface
-  charge on `wall`, a smooth source for each field and `state=`.
-- The ten variants: `epnp-ns` at its default; then one change each: `dielectric_gradient_forces=True`, with no
+  model, set on each component of the variant's state; the log branch takes their logarithm, and the
+  constraint's multiplier is 0.5. Each variant is called with `wall_distance_nm = 2.0 − r`, a `FixedCharge` of a
+  smooth density at `rule_order=8`, a surface charge on `wall`, a smooth source for each field and `state=`.
+- The ten variants, each from `create(name, concentration_M=0.1, fluid=…)`: `epnp-ns` at its default; then one
+  change each: `dielectric_gradient_forces=True`, with no
   solid fraction (`materials/fields.py:nearest_solid_permittivity` refuses a mesh with no solid, so the blend's
   branch is not compared, and the page says so); `log_variables=True`; `stabilisation="reference"`; `"supg"`;
   `variable_density=False`; `inertia=False`; `pressure_constraint=True`; then `pnp-ns` and `pnp`.
@@ -190,8 +194,6 @@ decrement stays out of the drift, as today. `post/forces.py` is not edited.
   and three times the unknowns of an order-2 `H1` space. No solve.
 - The list of *Grounding* D6, completed by a search of `src/` for what is written for two dimensions.
 
-Whatever the stretch does not reach is reported as not reached.
-
 **Item 5, the runs.** Each with the prototype checked out, `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and
 `MKL_NUM_THREADS` at 1 and `NPY_DISABLE_CPU_FEATURES="X86_V4 AVX512_ICL AVX512_SPR"`, its log under the git
 directory; under `/np-carry` each is a `RUN` whose command checks the prototype out first and `<package>` last.
@@ -201,14 +203,16 @@ directory; under `/np-carry` each is a `RUN` whose command checks the prototype 
    to `wp609-control.log`. It must fail on its stored numbers.
 3. The gate: `.claude/hooks/gate.sh run`, to `wp609-gate.log`, closed by `echo "exit $?"`.
 
-The Outcome under item 5 holds each walk's largest drift, its mode and its stabilisation mode, the control's
+The Outcome under item 5 holds each walk's largest drift and its stabilisation mode, the control's
 drift, the gate's counts and time, and the prototype's sha. Example 01 above 10⁻⁸, or a control that passes,
 stops the package: `BLOCKED`, with the log.
 
-**Item 6, the hand-over.** Item 5's gate stamped the head's tree, so `git push -u origin prototype/wp6.09-kernel`
-goes through the hook; try it once. If it is refused, `git bundle create "$(git rev-parse
---git-dir)/wp6.09-prototype.bundle" origin/main..prototype/wp6.09-kernel`; the main session sends the author the
-file with these commands and asks whether it is pushed:
+**Item 6, the hand-over.** Run 3 stamped the prototype's head, and the next land replaces that stamp. So `git push
+-u origin prototype/wp6.09-kernel` is the first command after run 3, before a hand-back or a land; try it once.
+If the hook refuses it for want of a stamp, run the gate on the prototype again, then push. If `origin` refuses
+it, `git bundle create "$(git rev-parse --git-dir)/wp6.09-prototype.bundle"
+origin/main..prototype/wp6.09-kernel`; the main session sends the author the file with these commands and asks
+whether it is pushed:
 
 ```bash
 git fetch <the bundle> prototype/wp6.09-kernel:prototype/wp6.09-kernel
