@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-26
+* **Record**: VER-80's six guard walks lie 3.4e-12 to 1.7e-2 from example 02's default walk on the same mesh; without inertia the walk shows a broken path, not an ignored switch, and at constant density both by a factor of about three. Each repeats its stored values to 0.000e+00 on the recorded tree (WP6.08; §8.2.59 BI1). ([Tier-2 test evidence: ladder walks, block systems and extraction routes](06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md))
+
 ## 2026-11-25
 * **Update**: A helper's prompt cache lives 5 minutes and the main session's 1 hour, so a helper that waits on the push gate writes its context again; the main session lands (WP6.07; §8.2.56 BF11). ([26. What a Claude Code helper can do](07-software-stack/26-what-a-claude-code-helper-can-do.md))
 * **Update**: The four helper agents run on their files' models and efforts and start at about 13k tokens, beside 73k to 76k; a project's settings do not disable an account's plugins (WP6.07). ([26. What a Claude Code helper can do](07-software-stack/26-what-a-claude-code-helper-can-do.md))

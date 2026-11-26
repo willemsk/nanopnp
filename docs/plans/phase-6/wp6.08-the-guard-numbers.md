@@ -1,8 +1,18 @@
 # WP6.08 — The guard numbers
 
-**Status: in progress; items 1 and 2 done, item 3 next.** Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
+**Status: delivered, 26 November 2026.** Written 26 November 2026 on Fable 5.2 at high effort, grounded in the code at
 `f571e72`. Inherits §8.2.53 BC3 and BC4, the rulings of this plan (§8.2.59 BI1, BI2), §8.2.51 BA14, §8.2.13 N1 and
 N4, §8.2.7 G10 and VER-62's mechanism. Its last commit on `main` takes `v0.7.0-alpha.8` (§8.4.1).
+
+**Delivered.** `tests/tier2/test_guard_numbers.py` holds six `nightly` walks of example 02's ePNP-NS case, one
+setting off its validated default each (PHY-23's forces, NUM-02's log branch, NUM-14's and NUM-11's modes, a constant
+density and no inertia with the flow solved; BI1), folded into VER-62's `tests/tier2/data/number_stability.json` on
+mesh `546c34f4…` in `linux-x86_64/X86_V3` alone (BI2). Each asserts first, on the stored state's descriptor, that the
+solved model took its one setting and its stabilisation mode, then its numbers at 10⁻⁸ relative; elsewhere it skips.
+VER-80 is §7.3's clause, §7.6's NOTE names the walks nightly, and VER-62's seven walks pass on the recorded tree with
+each guard walk repeating to 0.000e+00 (item 2). Live: a later change to a guard number is a re-pin by ruling (G10);
+the kernel's last package checks against them (BC4); the log branch's case key and manifest line are REV-298's,
+WP6.09's. Evidence: [the knowledge section](../../../knowledge/06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md#the-guard-walks-of-ver-80-against-the-default).
 
 The [Phase 6 plan](phase-6-library-foundations.md)'s WP6.08 entry sets this scope; `SPECIFICATION.md` governs, and
 where it and this plan disagree this plan is wrong. Identifiers are pointers into it.
@@ -255,6 +265,14 @@ re-recorded to fit.
   guard file's `-k "density or inertia"` passes against the folded file. **Executor:** main
 - [x] 2. The run of D7, a `RUN` hand-back with no commit, and the checkpoint: a fresh helper reads its log; done
   when the log lists thirteen walks with no failure and no skip. **Executor:** main, the run by the main session
+  > **Outcome — thirteen walks, 43 passed, no skip.** The run of the tree at `8cce00f` (`<git dir>/wp608-walks.log`,
+  294.7 s, `-n auto`, one thread a worker, the gate's cap) printed under `number stability on linux-x86_64/X86_V3`
+  each walk's mode and largest relative drift, all `same-mesh`: `2wcd-charged` 2.898e-12 and `2wcd-shell` 1.347e-12
+  (`currents_A[Cl-]`), `example-01` 6.876e-14 and `example-02-classical` 1.288e-16 (`eof_m3_s`),
+  `example-02-epnpns` 2.246e-16 (`currents_A[Cl-]`), `example-03-charged` 4.704e-16 (`point-1.conductance_S`),
+  `example-07` 0.000e+00; and 0.000e+00 for each guard walk: `guard-dielectric`, `guard-log`,
+  `guard-constant-density` and `guard-no-inertia` under stabilisation `none`, `guard-reference` under `reference`,
+  `guard-supg` under `supg`. The prediction held: VER-62 passes at round-off on the tree the numbers come from.
 - [ ] 3. `knowledge/06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md`, `knowledge/06-numerics-fem/index.md`,
   `knowledge/log.md`, `specification/history/holds-now.yaml`, this plan, the Phase 6 plan, `docs/plans/current.md`:
   the records, with each walk's drift (D7); done when the code and review say so. **Executor:** main

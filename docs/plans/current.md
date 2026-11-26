@@ -4,20 +4,19 @@ Updated 26 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-**What changes.** The next package is planned and awaits your approval. Before the core of the physics is rebuilt, it
-stores reference numbers for six optional settings of the model that no stored number covers today, each on the
-charged pore of the second worked example. Every night they are computed again, and the run fails if one has moved by
+**What changes.** The next package is built and awaits its review. Before the physics core is rebuilt, the program
+now stores reference numbers for six optional settings of the model, each on the second worked example's charged pore. Every night they are computed again, and the run fails if one has moved by
 more than one part in a hundred million.
 
 **Cost.** This package: about 3 sessions, 2 to 3 agent hours and 4 times you act, three of them done. The rest of the
 phase: about 33 sessions, 19 to 36 agent hours and 51 times you act.
 
 **What could go wrong.** The numbers record what the program computes today, not that it is right. They are checked
-on Linux alone. A run that takes one of the six, reached from Python alone, does not say so in its record; the design
-package takes that up.
+on Linux alone. Without inertia the numbers lie so close to the default's that they show a broken path, not an ignored
+setting.
 
-**Your call.** Approve the plan for the stored numbers. *Recommendation:* approve; it changes no physics and no file
-a user writes.
+**Your call.** None until the review; then merge the package. *Recommendation:* merge once the review and checks
+are green; it changes no physics.
 
 ## Position
 
@@ -27,10 +26,11 @@ a user writes.
 - **After WP6.09, the kernel's design, the rest is numbered at the round on that design**
   ([§8.2.54](../../specification/history/54-phase-6-amended-the-packages-after-the-review-numbered.md), BD1). Phases
   6 to 12: [the input note](sessions/phases-6-to-11.md).
-- **WP6.08, the guard numbers, is planned** ([the plan](phase-6/wp6.08-the-guard-numbers.md);
+- **WP6.08, the guard numbers, is built** ([the plan](phase-6/wp6.08-the-guard-numbers.md);
   [§8.2.59](../../specification/history/59-wp608s-plan-the-guard-numbers.md) BI1, BI2): six walks of example 02's
-  ePNP-NS case, one setting each, held nightly on Linux (VER-80). REV-298 is WP6.09's.
-- **Next:** the author approves WP6.08's plan; then `/np-carry wp 6.08` builds it on Opus 5.5 at high.
+  ePNP-NS case, one setting each, held nightly on Linux (VER-80), each repeating to 0.000e+00. REV-298 is WP6.09's.
+- **Next:** `/np-carry wp 6.08` ships it (review, CI, the tag `v0.7.0-alpha.8`); then `/np-plan wp 6.09`, the
+  kernel's design.
 
 ## Not to be re-decided
 
