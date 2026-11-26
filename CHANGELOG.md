@@ -25,6 +25,17 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.7.0-alpha.8]
+
+WP6.08: the guard numbers; tag `v0.7.0-alpha.8` once merged (VER-80; §8.2.53 BC3; §8.2.59 BI1, BI2). The
+[plan](docs/plans/phase-6/wp6.08-the-guard-numbers.md) records the work. Nothing changes for a user of the program.
+
+- **Added** (the tests, §7.3, §7.6):
+  - Stored numbers for six settings off the validated default, each example 02's charged pore with one setting
+    changed: the dielectric-gradient forces, the log branch of the ion equations, the `reference` and `supg`
+    stabilisation modes, and the flow at constant density and without inertia. Each night they are computed again
+    on Linux, and a drift beyond 10⁻⁸ relative fails the run (VER-80).
+
 ## [0.7.0-alpha.7]
 
 WP6.07: the lean carry; tag `v0.7.0-alpha.7` once merged (§8.2.56 BF1 to BF11; REV-288 to REV-293). The
