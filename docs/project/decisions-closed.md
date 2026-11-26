@@ -1,6 +1,6 @@
 # Decisions register, closed
 
-The 1,152 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
+The 1,159 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -907,6 +907,13 @@ The 1,152 decisions of [the register](decisions.md) that bind nothing now, writt
 | WP6.06 D8 | author | `docs/plans/phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md` | 2026-11-25 | WP6.06 | Opus 5.5 implements; Fable 5.2 ships \| Ruled by the author, BE3 \| | unstated | delivered plan |
 | WP6.06 D9 | author | `docs/plans/phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md` | 2026-11-25 | WP6.06 | A ray from a flat tetrahedron that took a neighbour's centre runs away from that neighbour's fourth atom \| Rounding signed it. Ruled by the author at the ship, BE5 \| | unstated | delivered plan |
 | WP6.06 D10 | author | `docs/plans/phase-6/wp6.06-the-channel-axis-at-a-ragged-rim.md` | 2026-11-25 | WP6.06 | An axis found from joggled input carries a warning, as the straightness does \| Ruled by the author at the ship, BE6 \| | unstated | delivered plan |
+| WP6.08 D1 | author | `docs/plans/phase-6/wp6.08-the-guard-numbers.md` | 2026-11-26 | WP6.08 | Six walks, one setting off its default each: `guard-dielectric` (PHY-23), `guard-log` (NUM-02's log branch), `guard-reference` (NUM-14), `guard-supg` (NUM-11's flag), `guard-constant-density` (`physics.variable_density:…` | PHY-23, NUM-02, NUM-14, NUM-11, VER-62 | delivered plan |
+| WP6.08 D2 | author | `docs/plans/phase-6/wp6.08-the-guard-numbers.md` | 2026-11-26 | WP6.08 | In the reference environment alone, `linux-x86_64/X86_V3`; elsewhere each guard test skips before its walk, naming the environment \| A guard asks whether a change moved a number, which one environment answers (§7.6's NO… | §7.6, VER-62 | delivered plan |
+| WP6.08 D3 | session, own call | `docs/plans/phase-6/wp6.08-the-guard-numbers.md` | 2026-11-26 | WP6.08 | Each walk is `examples/02-charged-pore/epnpns.case.yaml` with one setting changed, on the mesh `example-02-epnpns` already pins. A setting the NUM-18 ladder refuses takes `numerics.continuation: none` beside it; the two… | NUM-18, §7.1 | delivered plan |
+| WP6.08 D4 | session, own call | `docs/plans/phase-6/wp6.08-the-guard-numbers.md` | 2026-11-26 | WP6.08 | `guard-log` hands `run_document` a resolved case whose `model_options` carries `log_variables: True`. No case key is added. That the branch has no case key and no line in the manifest is REV-298, which WP6.09's design t… | REV-298 | delivered plan |
+| WP6.08 D5 | session, own call | `docs/plans/phase-6/wp6.08-the-guard-numbers.md` | 2026-11-26 | WP6.08 | VER-80. The walks are folded into `tests/tier2/data/number_stability.json` under names that begin `guard-`, asserted through the `number_stability` fixture at 10⁻⁸ relative on the recorded mesh, and carry `nightly`. A l… | VER-80, §7.6 | delivered plan |
+| WP6.08 D6 | session, own call | `docs/plans/phase-6/wp6.08-the-guard-numbers.md` | 2026-11-26 | WP6.08 | VER-62's five quantities; the two stabilised walks add the stabilisation's current for each species. Before its numbers, each test asserts on the stored state's descriptor that the solved model carried the walk's one se… | VER-62 | delivered plan |
+| WP6.08 D7 | session, own call | `docs/plans/phase-6/wp6.08-the-guard-numbers.md` | 2026-11-26 | WP6.08 | The numbers are recorded under the push gate's SIMD cap, on this package's tree. One run of the committed tree then takes VER-62's seven walks and the six guard walks: it shows that VER-62 passes on the tree the numbers… | VER-62 | delivered plan |
 | REV-01 | session, own call | `docs/project/review-archive.md` |  | WP37 | TOL_NM's home loaded pydantic and yaml | WP37 | fixed |
 | REV-02 | session, own call | `docs/project/review-archive.md` |  | WP37 | cli/errors.py was a re-export nothing imported | WP37 | fixed |
 | REV-03 | session, own call | `docs/project/review-archive.md` |  | WP38 | The solution-field names lived in two layers | WP38 | fixed |

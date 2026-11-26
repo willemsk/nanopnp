@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07. Amended 24 to 26 November 2026 (§8.2.53; §8.2.54; §8.2.56 BF10; §8.2.59): WP6.06 to WP6.09 are numbered in build order, WP6.08 is planned and WP6.09 planned by scope; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08. Amended 24 to 26 November 2026 (§8.2.53; §8.2.54; §8.2.56 BF10; §8.2.59): WP6.06 to WP6.09 are numbered in build order, WP6.09 is planned by scope; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -105,13 +105,9 @@ and 2 touches.
 
 ### WP6.08 — The guard numbers (BC3; BI1, BI2; VER-80)
 
-*Planned 26 November 2026* ([the plan](wp6.08-the-guard-numbers.md)). Reference numbers for six settings off their
-default, each a walk of example 02's ePNP-NS case with that one setting changed: PHY-23's terms, the log branch,
-NUM-14's mode, SUPG, and a constant density and no inertia with the flow solved (BI1). The numbers are recorded once,
-on this package's tree, on which VER-62 passes and which no kernel package has touched. They are a regression
-reference with no independent oracle, reproduced to 10⁻⁸ relative by VER-62's mechanism, each with its stabilisation
-mode; a later change to one is a re-pin by ruling (G10). The nightly run holds them (BA14), in the reference
-environment alone (BI2). It changes no physics. About 3 sessions, 2 to 3 agent hours and 4 touches.
+*Delivered 26 November 2026* ([the plan](wp6.08-the-guard-numbers.md)). Live: six guard walks of example 02's ePNP-NS
+case hold their numbers at 10⁻⁸ relative, nightly, in the reference environment alone (VER-80; BI1, BI2); a change to
+one is a re-pin by ruling (G10); the kernel's last package checks against them (BC4); REV-298 is WP6.09's.
 
 ### WP6.09 — The kernel's design (BC2, BC5)
 

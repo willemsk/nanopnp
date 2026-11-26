@@ -1,7 +1,7 @@
 ---
 type: Test Evidence
 title: 'Tier-2 test evidence: ladder walks, block systems and extraction routes'
-description: "The access-conductance benchmark, the wall-pinned trivial state, the block system's constraints, the force tolerance and reference record, the envelope walk, and the route agreement under stabilisation."
+description: "The access-conductance benchmark, the wall-pinned trivial state, the block system's constraints, the force tolerance and reference record, the envelope walk, the route agreement under stabilisation, and how far each guard walk of VER-80 lies from the default."
 tags:
 - numerics
 - test-evidence
@@ -36,6 +36,18 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_access_conductance.py::test_ver17_the_model_s_own_bulk_conductivity_of_1_m_nacl_is_12_6_s_per_m
   at: '2026-10-18T00:00:00Z'
+- by: process:tests/tier2/test_guard_numbers.py::test_ver80_dielectric_gradient_forces_hold_their_numbers
+  at: '2026-11-26T00:00:00Z'
+- by: process:tests/tier2/test_guard_numbers.py::test_ver80_the_log_branch_holds_its_numbers
+  at: '2026-11-26T00:00:00Z'
+- by: process:tests/tier2/test_guard_numbers.py::test_ver80_the_reference_stabilisation_holds_its_numbers
+  at: '2026-11-26T00:00:00Z'
+- by: process:tests/tier2/test_guard_numbers.py::test_ver80_supg_holds_its_numbers
+  at: '2026-11-26T00:00:00Z'
+- by: process:tests/tier2/test_guard_numbers.py::test_ver80_a_constant_density_flow_holds_its_numbers
+  at: '2026-11-26T00:00:00Z'
+- by: process:tests/tier2/test_guard_numbers.py::test_ver80_a_flow_without_inertia_holds_its_numbers
+  at: '2026-11-26T00:00:00Z'
 ---
 
 ## Tier-2 test evidence: ladder walks, block systems and extraction routes
@@ -51,6 +63,35 @@ verified:
 - **[tested: tests/tier2/test_envelope.py::test_82_bias_walk_emits_waypoints_verbatim]** Recording the envelope on the way past each point (the monotone walks from the concentration spine) costs 45 warm-started rungs for the whole 30-point grid; restarting each target from the spine instead covers the same ground about five times over and nearly doubles the run **[verified][^envelope-doc-3782c43]**. Source: `test_envelope.py` (module docstring at `3782c43`, before WP45).
 - **[tested: tests/tier1/test_wall_distance.py::test_num34_the_coarse_mesh_is_refused_naming_everything_it_measured]** On the 124-element toy pore of `07-quantities-of-interest-and-the-flux-trap.md` §7.1.1 the signed distance field reaches −0.94 nm over the fluid, with 9.7 % of the samples negative. The stabilisation term's share of the current on the VER-11 pore, −8.1 %, and why it exceeds the NUM-30 estimate: `04-stabilisation.md` §4.2.1.
 - **[tested: tests/tier2/test_current_routes.py::test_num26_the_routes_agree_in_reference_only_because_psi_carries_the_term]** Subtracting the stabilisation term from the bare indicator integral `∫J̃·∇ψ` leaves the NUM-24 route and the NUM-25 reaction flux agreeing to within NUM-26's tolerance, and the uncorrected routes differ by about eighty times it; the NUM-26 identity asserts the gap equals the independently computed contribution, species by species.
+
+### The guard walks of VER-80 against the default
+
+Each guard walk is example 02's ePNP-NS case with one setting off its validated default, on the mesh
+`546c34f4…` that `example-02-epnpns` pins, recorded in `linux-x86_64/X86_V3` on WP6.08's tree. A *shift* is the
+relative difference of the walk's stored value from the default walk's stored value on the same mesh, both read from
+`tests/tier2/data/number_stability.json`; the seconds are one walk on one thread (WP6.08's plan, *Grounding* D1).
+
+| Walk | Setting | Path | Stabilisation | Seconds | Shift of `current_A` | of `eof_m3_s` |
+|---|---|---|---|---|---|---|
+| `guard-dielectric` | `physics.dielectric_gradient_forces: true` | single rung | none | 114 | 1.1e-3 | 2.7e-3 |
+| `guard-log` | the log branch, through the resolved case | single rung | none | 25 | 6.5e-6 | 7.5e-6 |
+| `guard-reference` | `numerics.stabilisation: reference` | ladder | reference | 69 | 6.7e-3 | 1.7e-2 |
+| `guard-supg` | `numerics.stabilisation: supg` | ladder | supg | 34 | 6.9e-3 | 8.9e-3 |
+| `guard-constant-density` | `physics.variable_density: false` | single rung | none | 9 | 3.6e-8 | 2.8e-8 |
+| `guard-no-inertia` | `physics.inertia: false` | single rung | none | 9 | 3.4e-12 | 4.7e-9 |
+
+- **[tested: tests/tier2/test_guard_numbers.py::test_ver80_a_flow_without_inertia_holds_its_numbers]** Without
+  inertia the stored numbers lie within VER-62's 10⁻⁸ of the default's, so the walk shows a broken path but not an
+  ignored switch; its descriptor assertion, `inertia: false` in the solved model, is what shows the switch was taken.
+- **[tested: tests/tier2/test_guard_numbers.py::test_ver80_a_constant_density_flow_holds_its_numbers]** At constant
+  density the current moves 3.6e-8 and the flow 2.8e-8, about three times the tolerance: the walk shows both a broken
+  path and an ignored switch, by that margin alone.
+- **[tested: tests/tier2/test_guard_numbers.py::test_ver80_the_log_branch_holds_its_numbers]** The log branch, the
+  least moved of the other four walks, shifts the current by 6.5e-6, and the dielectric forces and the two stabilised
+  modes by 1.1e-3 to 6.9e-3: an ignored setting fails each of the four by orders of magnitude.
+- **[tested: tests/tier2/test_guard_numbers.py::test_ver80_dielectric_gradient_forces_hold_their_numbers]** Run again
+  on the recorded tree with VER-62's seven walks (43 tests, under the gate's SIMD cap, one thread a worker), each of
+  the six repeated its stored values with a largest relative drift of 0.000e+00.
 
 [^factorisation-doc-3782c43]: `git show 3782c43:tests/tier2/test_factorisation_benchmark.py`, module docstring (before WP45).
 [^envelope-doc-3782c43]: `git show 3782c43:tests/tier2/test_envelope.py`, module docstring (before WP45).
