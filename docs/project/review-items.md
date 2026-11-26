@@ -1939,3 +1939,16 @@ enters at the resolved case and asserts the descriptor.
 
 *Recommendation:* WP6.09's design, which makes a switch data, says whether the branch becomes a case key recorded as
 a deviation, or stays a library option that the manifest still names.
+
+### REV-299: A rebase merge rewrites the shas that a package's ticks and Outcome name
+
+Left by `/np-chore`'s review, [CODE_REVIEW_096](../code_reviews/CODE_REVIEW_096.md). A package's ticks and the plan's
+Outcome name the branch's commits (WP6.08: `cdb67aa`, `645bc83`, the reviewed head `17e3111`, the fix `3f88e59`).
+GitHub's rebase merge rewrites each, so those shas are not on `main`. The core (*Gate and push*, step 7) says the next
+commit corrects the ticks a rewrite moved, and a merge is such a rewrite. The ship's final commit now brings the
+documents to their merged state before the merge, so either a commit follows the merge, or the ticks name commits
+that `main` lacks.
+
+*Recommendation:* the core says a tick or an Outcome sha names the branch's commit, which the PR's
+`refs/pull/<n>/head` keeps reachable, and that a merge's rewrite is not corrected. The other route is a merge that
+keeps the shas, which changes how the author merges.
