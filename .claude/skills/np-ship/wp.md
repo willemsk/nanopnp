@@ -97,8 +97,12 @@ still lacks it, stop before §5 and report it. Then, in this session:
    pulled in is fixed by `np-builder` (a helper hands back `WORKER`) and its diff alone reviewed by
    `np-reviewer` at `effort: "medium"` (BF8), never a full pass.
 2. Delete the hand-off note, `docs/plans/phase-<p>/wp<n>-handoff.md`, if there is one.
-3. Commit the rows, the deletion and the plan's Outcome as `docs: WP<n> review recorded`, with the
-   identifiers in the body. The Outcome takes the package's measured cost: the PR's **Measured**
+3. Bring every document to its merged state now, in the same commit: no commit after the merge may be
+   needed. `docs/plans/current.md` says the package is merged and tagged (the tag of §6, or that it
+   gets none), drops the `/np-carry`/`/np-ship` line from *Next* and names the next step. Phase and
+   package **Status** lines and ticks likewise. The tag itself stays §7's.
+4. Commit the rows, the deletion, the plan's Outcome and those documents as
+   `docs: WP<n> review recorded`, with the identifiers in the body. The Outcome takes the package's measured cost: the PR's **Measured**
    lines and this session's so far, summed, beside the In brief's estimate (§8.4.5). Gate and push
    (the core); `np-shipper` gives its `WAIT` of §5 `land: yes`, which pushes the reviewer's commits
    with this one.
