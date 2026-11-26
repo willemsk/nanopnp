@@ -69,6 +69,7 @@ letter pair from §8.2.25 on, and numbered within it (A1, B3, R10, AA2).
 * [8.2.56 WP6.07's plan: the lean carry, agreed 25 November 2026](56-wp607s-plan-the-lean-carry.md) - Fable only plans; Sonnet runs the carry and ships, Opus builds, reviews once and takes a red CI; a waiting helper hands off to a fresh one; the plan checks itself; a finding left to the author is an open item; helpers list their tools; the package is WP6.07, in build order; a helper commits and the main session lands; a change to the workflow skips the tests.
 * [8.2.57 /np-chore: a change outside a work package, agreed 26 November 2026](57-np-chore-a-change-outside-a-package.md) - A skill that makes one change and opens its PR; any session where no carry runs; no limit on content, with an np-reviewer pass unless the diff is Markdown alone; not a lane; recorded in §8.4.4 and duplicates.py in CI; Opus at high on src/ and tests/.
 * [8.2.58 A REV row is for an item that outlives its session, agreed 26 November 2026](58-a-rev-row-is-for-an-item-that-outlives-its-session.md) - A row only for a deferral, a doubt only the author can settle, or a finding larger than a small edit; a small finding is fixed in the session that finds it.
+* [8.2.59 WP6.08's plan: the guard numbers, agreed 26 November 2026](59-wp608s-plan-the-guard-numbers.md) - Six of the model's settings get stored reference numbers before the kernel is rebuilt, three beyond the names of BC3; the numbers are held in the reference environment alone.
 
 ## Where each ruling holds now
 

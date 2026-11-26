@@ -4,7 +4,7 @@ The amended text of [the Phase 6 plan](phase-6-library-foundations.md), quoted a
 restated it to its current scope (§8.2.16 R4). Read it on demand; the plan states what holds now. A later amendment
 appends a dated section below.
 
-**Status: a record of replaced text, last added to on 24 November 2026 (§8.2.54 BD1); it states nothing that holds now.**
+**Status: a record of replaced text, last added to on 26 November 2026 (§8.2.59 BI1); it states nothing that holds now.**
 
 ---
 
@@ -476,3 +476,27 @@ Criterion 4 ended "counted as open decision 13 rules", and criterion 11 ended:
 
 > hours and touches** (BC10). A fact that fails builds separate sessions; a package it cannot carry goes back to
 >     the three commands.
+
+## Amended 26 November 2026, at WP6.08's plan (§8.2.59 BI1, BI2)
+
+WP6.08's plan checked BC3's claim at its source, and the author ruled that six settings are stored, three beyond the
+entry, and that the numbers are held in the reference environment alone. The entry of WP6.08 read:
+
+> ### WP6.08 — The guard numbers (BC3)
+>
+> *Planned by scope.* Reference numbers for the switches off their default: PHY-23's terms, the log branch and NUM-14's
+> mode. It first checks that VER-62's walks cover the default switches alone, and stores only what is missing. The numbers are recorded once, on this package's tree, on which VER-62 passes and which
+> no kernel package has touched. They are a regression reference with no independent oracle, reproduced to 10⁻⁸
+> relative as VER-62's are, each with its stabilisation mode; a later change to one is a re-pin by ruling (G10). It
+> changes no physics. Its plan settles open decision 14; this plan's input is that the nightly run holds them (BA14). About 3 sessions, 2 to 3 agent hours
+> and 4 touches.
+
+Of the code, *Context* read:
+
+> - **VER-62's stored numbers cover the default switches alone**: the review's claim, not checked at its source
+>   (§8.2.53); WP6.08 checks it first.
+
+Open decision 14's owner read "WP6.08's plan (BC3)", the verification table's row for WP6.08 read "VER-62's walks with
+the switches off their default; the identifier is open decision 14", and criterion 12 ended:
+
+> Prediction: the walks cover the default switches alone; if not, WP6.08 stores only what is missing.
