@@ -19,8 +19,9 @@ Five pieces, each a record a reader can list without building a model:
   its *drift*, and a force term its *force density*, each written once (below).
 - **A slot** is one integral of one equation: the field whose test function it takes, its domain (Ω, the fluid, or a
   boundary), its quadrature rule and how the summed contributions close into the integrand. The kernel sums a slot's
-  contributions and integrates once. A flux integrated term by term moves its rule, because the engine sets the
-  order from the integrand (NUM-07's NOTE), so a term never owns an integral.
+  contributions and integrates once. A flux integrated term by term may move its rule, because the engine estimates
+  the order from the trial and test functions each integral carries, not from its coefficients (NUM-07's NOTE on the
+  `r` weight), so a term never owns an integral.
 - **A coefficient** is a corrected property, built once for an assembly from its registered correction model
   (PHY-22) and handed to every term that reads it.
 - **A switch** is a record: its name, case path, validated default, the terms it brings in force, and what it
@@ -103,13 +104,16 @@ The kernel holds one record for each switch and derives all four lists from the 
 | Switch | Case path | Default | Terms in force | Requires | Excludes |
 |---|---|---|---|---|---|
 | `flow` | `physics.flow` | true | Advection, Momentum, Inertia, Velocity continuity, Body force | | |
-| `variable_density` | `physics.variable_density` | true | Variable density | `flow` | |
-| `inertia` | `physics.inertia` | true | Inertia | `flow` | |
+| `variable_density` | `physics.variable_density` | true | Variable density | | |
+| `inertia` | `physics.inertia` | true | Inertia | | |
 | `dielectric_gradient_forces` | `physics.dielectric_gradient_forces` | false | Dielectric-gradient force, Dielectric decrement | `flow` | `log_variables` |
 
 PHY-08 and PHY-23 bind the force and the decrement: either alone is thermodynamically inconsistent. The record states
 the binding once, as one switch that brings both terms in force; nothing can switch one without the other, because no
-record names one alone. `requires` and `excludes` replace the two refusals in `CoupledModel.__post_init__`, and a
+record names one alone. `requires` and `excludes` replace the two refusals in `CoupledModel.__post_init__` and no
+more. `variable_density` and `inertia` require nothing: their terms already need `flow` through their display
+switches, and `epnp-ns` with the flow off and both at their defaults runs today, so a `requires` there would refuse
+it. The prototype's records carry `requires=("flow",)` on both, written and never read. A
 model's declaration names the records it honours, with the value sets of §5.4.3's NOTE. A value away from the default is a deviation in the manifest (FR-25), read from the record.
 
 **What the prototype did not try.** It wrote the four records and decided "in force" from each display `Term`'s
@@ -138,8 +142,16 @@ paper, with VER-22's routes as its check.
 **Where the prototype contradicted D4.** Not every drift is read by every reader. Today `advective_velocity` leaves
 out PHY-23's decrement, so the stabilisation's wind and its approximate residual omit a part of the flux that the weak
 form keeps. The prototype reproduced this with a per-term flag, `in_drift=False` on the decrement, and the guard walks
-hold. No clause says whether the wind should read the decrement: NUM-14's reference settings were recorded for a
-model without it. The design keeps the flag and puts the question to the author below (REV-300).
+hold. NUM-12's NOTE writes the wind as `b_i = z_i μ_i ∇φ̃ + D_i β_i − Pe u`, without the decrement, and no clause
+says whether that holds under PHY-23: NUM-14's reference settings were recorded for a model without it. The design
+keeps the flag and puts the question to the author below (REV-300).
+
+**A fourth reader the prototype left alone.** NUM-24's indicator current takes each species' flux from
+`nernst_planck.py:species_flux`, the function today's weak form integrates, so the two read one flux (PHY-23's NOTE;
+FR-23). The prototype composed the flux from the drifts and left the indicator on `species_flux`, so its flux is
+written twice; that is why the control below was refused at NUM-26's route check. With the indicator reading the
+drifts in force, as D4 asks, a term dropped from the model is dropped from both routes, and the route check no longer
+sees it: the stored walks and the Tier 1 check that a term left out changes its own slots alone remain the guards.
 
 ## A model as a list of terms
 
@@ -204,11 +216,12 @@ behind it stay private.
 
 ## §5.4.1's interface
 
-§5.4.1 lists the names a second backend would implement, `FunctionSpace`, `TrialFn`, `TestFn`, `dx_axi`, `ds` and
-`Coefficient`, and §8.2.8 H3 left it unbuilt (MOD-10). The kernel gives the interface a place: the context holds the
-trial and test functions and the coefficients, the slot holds the domain and the rule, and `Measures` holds the
-measure. These are the table's names. A term's body still writes backend algebra (`ngs.grad`, `ngs.InnerProduct`, the
-coordinate `ngs.x`): in the prototype 11 of the kernel's functions import NGSolve.
+§5.4.1 lists the names a second backend would implement, `FunctionSpace`, `TrialFn`, `TestFn`, `grad`, `dx_axi`,
+`ds` and `Coefficient`, and §8.2.8 H3 left it unbuilt (MOD-10). The kernel gives the interface a place: the context
+holds the trial and test functions and the coefficients, the slot holds the domain and the rule, and `Measures` holds
+the measure. These are the table's names but `grad`, which a term's body still writes as backend algebra
+(`ngs.grad`, with `ngs.InnerProduct` and the coordinate `ngs.x`): in the prototype 11 of the kernel's functions import
+NGSolve.
 
 Two readings follow, put to the author below: the seam is the context, the slot and the measure, and a term keeps
 NGSolve's algebra until a second backend is planned (H3's argument stands: a wrapper with one implementation cannot
@@ -217,8 +230,10 @@ backend-neutral in form but tests nothing more today. VER-65 remains the guard e
 
 ## What the prototype showed
 
-The pass marks were registered in the plan before any run (D5). Each run used the prototype's head, one thread for
-each library and `NPY_DISABLE_CPU_FEATURES="X86_V4 AVX512_ICL AVX512_SPR"`, in `linux-x86_64/X86_V3`.
+The pass marks were registered in the plan before any run (D5). The runs of marks (b) to (e) used the prototype's
+head, one thread for each library and `NPY_DISABLE_CPU_FEATURES="X86_V4 AVX512_ICL AVX512_SPR"`, in
+`linux-x86_64/X86_V3`. Mark (a) ran at `0867e2d`, whose code the head leaves unchanged: `1b5f5e3` adds
+`prototype/three_d.py` alone.
 
 | Mark | Command on the branch | Result | Mode |
 |---|---|---|---|
@@ -246,8 +261,8 @@ run is refused before its numbers are compared: NUM-24's indicator current, 6.27
 flux, 6.3127 × 10⁻¹¹ A, differ by 6.5 × 10⁻³, above the route tolerance of 10⁻³. Against the stored total current,
 6.2876 × 10⁻¹¹ A, they drift by 2.5 × 10⁻³ and 4.0 × 10⁻³, five orders above 10⁻⁸. The refusal itself shows that the
 solve reads the composition: the reaction flux is taken from the composed form, while the indicator writes the steric
-flux from the state. The route check is a guard of its own against a term that the form drops and the
-post-processing keeps.
+flux from the state. Today the route check is a guard of its own against a term that the form drops and the
+post-processing keeps; once the indicator reads the drifts in force it is not (*A fourth reader*, above).
 
 **What the prototype does not show.** It is a quick build. Where it holds the numbers it shows that the design can
 hold them, not that the kernel will: the kernel's packages write new code and pass the same marks again (BC4). It did
@@ -267,7 +282,8 @@ CON-01 says that nothing may preclude 3D, and no test can fail it (BC5). The bou
 - **VER-17's fluid counted.** The lumen and two half-ball reservoirs of 50 nm at VER-17's sizes (`maxh=50/12`, the
   wall at 0.5 nm, grading 0.2), the membrane not meshed: 58,445 tetrahedra in 5.4 s, 86,802 order-2 `H1` degrees of
   freedom, and 260,406 unknowns for VER-17's three fields. Not solved.
-- **What refuses or mishandles a 3D mesh.** `mesh/adapter.py:from_ngsolve` refuses it (CON-04), and so every quality
+- **What refuses or mishandles a 3D mesh.** `mesh/adapter.py:from_ngsolve` refuses it (CON-01; its message cites
+  CON-04), and so every quality
   gate. `Measures.volume(rule_order=)` has no `TET` rule and falls back to NGSolve's estimate without a word (at
   order 20 an explicit rule moves the vector by 8.5 × 10⁻⁴); `AXISYMMETRIC` weights by `ngs.x` on any mesh. Written
   for two dimensions: the eight `OCCGeometry(dim=2)` calls of `mesh/` and `geometry/`; `MeshData` and `to_ngsolve`;
@@ -279,7 +295,7 @@ The weak forms did not stop the trial; the measure and the mesh adapters did. Pr
 
 | Option | Scope | Price |
 |---|---|---|
-| A. VER-13 in 3D | A planar 3D symmetry in `Measures` with `TET` rules, and the axisymmetric measure refused on a 3D mesh; the benchmark meshes with Netgen in its fixture, outside the 2D adapters (CON-04 stands), and checks its convergence rate on three meshes, the error at each falling as the mesh is halved | One package after the kernel: about 3 sessions, 2 to 4 agent hours, 5 touches |
+| A. VER-13 in 3D | A planar 3D symmetry in `Measures` with `TET` rules, and the axisymmetric measure refused on a 3D mesh; the benchmark meshes with Netgen in its fixture, outside the 2D adapters (their refusal stands), and checks its convergence rate on three meshes, the error at each falling as the mesh is halved | One package after the kernel: about 3 sessions, 2 to 4 agent hours, 5 touches |
 | B. A and VER-17 in 3D | A, and a 3D path in the mesher, the indicator current along a 3D axis, and a Newton solve of 260,406 unknowns at the coarsest size, whose direct factorisation is unmeasured | A, and about two more packages: 6 sessions, 5 to 10 agent hours, 10 touches, and machine time not known |
 | C. Neither | CON-01 stays a statement no test can fail; this list is its record | None |
 
@@ -293,7 +309,7 @@ quick build, and writes the code anew.
 
 | Package | Scope | Tier 1 | Tier 2 | Price |
 |---|---|---|---|---|
-| 1. The composition | `physics/kernel.py`: term, slot, contribution, `compose`; the coupled residual composed and today's body removed; the stabilisation reads the drifts and densities | A slot with two contributions assembles as one integral, where the term-by-term sum under a moved rule does not (the silent failure D3 exists for); a term left out changes its own slots alone | VER-14 to VER-18, VER-42 and VER-77 unchanged; VER-62's two push walks; VER-80 nightly | 3 sessions, 2 to 4 agent hours, 5 touches |
+| 1. The composition | `physics/kernel.py`: term, slot, contribution, `compose`; the coupled residual composed and today's body removed; the stabilisation reads the drifts and densities, and NUM-24's indicator current the drifts in force | A slot with two contributions assembles as one integral, where the term-by-term sum under a moved rule does not (the silent failure D3 exists for); a term left out changes its own slots alone | VER-14 to VER-18, VER-42 and VER-77 unchanged; VER-62's two push walks; VER-80 nightly | 3 sessions, 2 to 4 agent hours, 5 touches |
 | 2. Switches as data and the forces | The switch records; `SWITCHES`, the switch paths and both deviation lists derived; the two refusals as `requires` and `excludes`; `post/forces.py` reads the densities (BC3); REV-298 as ruled | PHY-23's switch brings both terms or neither; each switch away from its default is a deviation in the manifest | VER-22's routes unchanged; VER-80's dielectric and log guards | 3 sessions, 2 to 4 agent hours, 5 touches |
 | 3. A model as a list of terms | `pnp`, `pnp-ns` and `epnp-ns` as term lists; `poisson`, `pb` and `pb-linear` composed; the declaration's terms derived; `physics/models.py` split; the three moved names, the shell following | VER-56 restated: a model registered as a list of terms runs from a case file; the declaration's terms are those assembled | VER-12, VER-13 and VER-31 unchanged, the single-field models' checks | 3 sessions, 3 to 5 agent hours, 5 touches |
 | 4. The full check | VER-62's seven walks and VER-80's six to 10⁻⁸ before the merge (BC4); VER-12 to VER-22, VER-31, VER-42 and VER-77 unchanged; §5.4.1's ruled reading written; MOD-10 closed | none new | the full check | 3 sessions, 2 to 3 agent hours, 4 touches |
@@ -308,9 +324,9 @@ Each choice with its options; the recommendation first.
 
 1. **The design**: term, slot, coefficient, switch record and model as above. *Approve* (recommended: the prototype
    held every mark, the operator to 2.1 × 10⁻¹⁶); approve with named changes; or redesign before any package.
-2. **The decrement in the stabilisation's wind** (REV-300). *Keep it out*, as today, and say so in NUM-14's NOTE (recommended:
-   the approximate residual is already inexact, and the guard numbers hold today's operator); or read it, a re-pin of
-   the stabilised modes under PHY-23 by ruling (G10).
+2. **The decrement in the stabilisation's wind** (REV-300). *Keep it out*, as today, and say so in NUM-12's NOTE,
+   which writes `b_i` without it (recommended: the approximate residual is already inexact, and the guard numbers
+   hold today's operator); or read it, a re-pin of the stabilised modes under PHY-23 by ruling (G10).
 3. **The kernel's packages.** *Four, as above* (recommended); three, with the full check folded into the third; or
    another cut the author names.
 4. **MOD-10, §5.4.1's interface.** *The seam is the context, the slot and the measure*, with NGSolve's algebra in the

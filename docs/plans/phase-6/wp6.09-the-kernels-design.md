@@ -275,7 +275,7 @@ for each defect found; `CHANGELOG.md`'s `## [0.7.0-alpha.9]`; `holds-now.yaml` (
   > unknowns, 1.1 × 10⁻³. VER-17's fluid in 3D, the lumen and two half-ball reservoirs of 50 nm at `maxh=50/12`,
   > wall 0.5 nm, grading 0.2, the membrane not meshed: 58,445 tetrahedra in 5.4 s, 86,802 order-2 `H1` dofs, 260,406
   > unknowns for three fields; not solved. A 3D mesh is refused by `mesh/adapter.py:from_ngsolve`, and so by every
-  > quality gate (CON-04); it is mishandled without a word by `Measures.volume(rule_order=)`, which has no `TET`
+  > quality gate (CON-01; the message cites CON-04); it is mishandled without a word by `Measures.volume(rule_order=)`, which has no `TET`
   > rule and falls back to NGSolve's estimate (at order 20 an explicit `TET` rule moves the vector by 8.5 × 10⁻⁴),
   > and by `AXISYMMETRIC`, which weights by `ngs.x` on any mesh. Written for two dimensions: the eight
   > `OCCGeometry(dim=2)` calls of `mesh/` and `geometry/`; `MeshData` and `to_ngsolve`; `Measures.symmetry` and

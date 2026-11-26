@@ -1966,10 +1966,11 @@ Left by WP6.09's prototype ([the kernel's design](../design/kernel.md), *One exp
 `physics/stabilisation.py:advective_velocity` sums the migration, the steric part and the advection into `b~_i`, and
 leaves out the drift of PHY-23's dielectric decrement, which `species_flux` keeps in the weak form's bracket. Under
 `dielectric_gradient_forces` with a stabilised mode, the streamline and crosswind parameters and the approximate
-residual of NUM-14 therefore read a drift that differs from the flux the form integrates. No clause says which the
-wind should read: NUM-14's reference settings were recorded for a model without the decrement, and no stored walk
-takes the switch and a stabilised mode together. The prototype reproduced today's operator only by marking the
-decrement's drift as one the stabilisation does not read.
+residual of NUM-14 therefore read a drift that differs from the flux the form integrates. NUM-12's NOTE writes the
+wind as `b_i = z_i μ_i ∇φ̃ + D_i β_i − Pe u`, without the decrement, and no clause says whether that holds under
+PHY-23: NUM-14's reference settings were recorded for a model without the decrement, and no stored walk takes the
+switch and a stabilised mode together. The prototype reproduced today's operator only by marking the decrement's
+drift as one the stabilisation does not read.
 
-*Recommendation:* keep it out, as today, and say so in NUM-14's NOTE, at the round on the kernel's design; reading it
+*Recommendation:* keep it out, as today, and say so in NUM-12's NOTE, at the round on the kernel's design; reading it
 is a re-pin of the stabilised modes under PHY-23, by ruling (§8.2.7 G10).

@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08, WP6.09. Amended 24 to 26 November 2026 (§8.2.53; §8.2.54; §8.2.56 BF10; §8.2.59; §8.2.60): WP6.06 to WP6.09 are numbered in build order, WP6.09 is planned; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08, WP6.09. Amended 24 to 26 November 2026 (§8.2.53; §8.2.54; §8.2.56 BF10; §8.2.59; §8.2.60): WP6.06 to WP6.09 are numbered in build order; the kernel's packages, the installed packages and the close are provisional until the author rules the kernel's design. Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
