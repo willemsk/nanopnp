@@ -28,10 +28,12 @@ updates the PR after a push, do it before the hand-back if `origin/<head>` exist
 brings the PR to your commits; if it does not, the next helper does it.
 
 **The land is the Tier 1–2 check.** The push gate runs `uv run pytest`, the default selection of
-Tiers 1 and 2, on every land. Where an item's done-criterion asks for the carried tests or Tier 2,
-run in the foreground only the test files the item touches, commit, and hand back with `land: yes`:
-the land runs the rest. Never hand back a `RUN` of a Tier 1 or 2 selection: `-m tier2` replaces
-the default's `not slow` and pulls in the `slow` tests, which run for hours.
+Tiers 1 and 2, on every land. Where an item's done-criterion names the land's push gate, the carried
+tests or Tier 2, run in the foreground only the test files the item touches, within the 4 minutes
+above, commit, and hand back with `land: yes`: the land runs the rest. Never hand back a `RUN` of a
+marker selection such as `-m tier2`, or of the carried tests: `-m tier2` replaces the default's `not
+slow` and pulls in every `slow` test, which run for hours. A `RUN` names its tests by file or node
+id.
 
 ## The hand-off note
 

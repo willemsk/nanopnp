@@ -48,7 +48,8 @@ Items marked `main` stay in this session.
 
 ## How the work lands
 
-**One commit per work item.** An item is done when the tests of its done-criterion pass. Use a
+**One commit per work item.** An item is done when the tests of its done-criterion pass; where it
+names the land's push gate, when the test files the item touches pass, and the land runs the rest. Use a
 conventional prefix, and put the requirement identifier in the body. Tick each item
 `[x] <short sha>` in the next commit. A checkpoint ticks itself and the item before it. A later
 session then resumes from the first unticked item. Set an item's task `in_progress` when you start it
