@@ -502,4 +502,5 @@ BJ3: spent
 BK1: '§8.4.4; §8.4.5; `CLAUDE.md` *Implementation workflow*; `.claude/agents/np-reviewer.md`; `.claude/skills/`'
 BK2: §8.4.4
 BK3: '§8.4.4; `.claude/skills/np-chore/`; its paths widened by BK4'
-BK4: '§8.4.4; `.claude/skills/np-chore/`'
+BK4: '§8.4.4; `.claude/skills/np-chore/`; its paths widened by BK5'
+BK5: '§8.4.4; `.claude/skills/np-chore/`'

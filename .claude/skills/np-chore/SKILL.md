@@ -33,9 +33,10 @@ Opus 5.5 at high where the change touches `src/` or `tests/` (§8.4.5; BG6).
 5. Commit with a conventional subject, the identifiers in the body.
 6. **Review**, unless every changed path is `*.md`. Always review a change to
    `.claude/settings*.json`, `.claude/hooks/`, `.githooks/`, `.claude/agents/`, `.claude/skills/`,
-   `.claude/workflow/` or `.github/workflows/`. Where a changed path is under `src/`, `tests/` or
-   `.githooks/`, is a `.py`, `.sh` or `.cjs` file, or is `justfile`, first run the hunt on the
-   committed head, directly from this session, never inside an `Agent` (§8.2.61 BK1 to BK4):
+   `.claude/workflow/` or `.github/workflows/`. Where a changed path is under `src/`, `tests/`,
+   `.githooks/` or `.claude/scripts/`, is a `.py`, `.sh` or `.cjs` file, or is `justfile`, first run
+   the hunt on the committed head, directly from this session, never inside an `Agent` (§8.2.61 BK1
+   to BK5):
 
    ```
    Skill(skill="code-review", args="high --max-findings all <branch> -- Report only: edit, commit and write nothing. Static review: run no tests, benchmark, sweep, gate.sh or pytest --nightly.")
