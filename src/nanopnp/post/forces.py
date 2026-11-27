@@ -463,11 +463,10 @@ def _integrands(solution: ModelSolution, wall_distance_nm: Expression | None) ->
         # d(eps~_r)/d(c~_i) would come back in w_i; see _Integrands.korteweg.
         korteweg = None
     else:
-        korteweg = (
-            -0.5
-            * ngs.InnerProduct(field, field)
-            * permittivity_gradient(coefficients, variables, solid=solid)
-        )
+        gradient = permittivity_gradient(coefficients, variables, solid=solid)
+        # A fit or a blend moves eps~_r on this branch, so its gradient is not the zero None.
+        assert gradient is not None
+        korteweg = -0.5 * ngs.InnerProduct(field, field) * gradient
 
     velocity = functions[VELOCITY]
     return _Integrands(

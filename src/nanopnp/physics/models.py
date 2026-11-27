@@ -24,6 +24,7 @@ from nanopnp.io.vocabulary import (
     PRESSURE_MEAN,
     VELOCITY,
     VELOCITY_AXIS,
+    concentration_field_name,
 )
 from nanopnp.materials.electrolyte import (
     NO_STERIC_MODEL,
@@ -54,27 +55,22 @@ from nanopnp.numerics.newton import (
     NewtonStep,
     damped_newton,
 )
+from nanopnp.physics.backend import NGSOLVE_OPERATORS, geometry_of
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
     NondimensionalCoefficients,
     mesh_unit_scales,
     species_concentrations_SI,
 )
-from nanopnp.physics.flow import (
-    continuity_term,
-    dielectric_gradient_force,
-    electrical_body_force,
-    inertia_term,
-    permittivity_gradient,
-    pressure_term,
-    viscous_operator,
+from nanopnp.physics.coupled import (
+    COUPLED_TERMS,
+    PRESSURE_CONSTRAINT,
+    SOURCES,
+    STABILISATION,
+    coupled_slots,
 )
-from nanopnp.physics.nernst_planck import (
-    ConcentrationVariables,
-    StericForm,
-    nernst_planck_residual,
-    species_flux,
-)
+from nanopnp.physics.kernel import Context, Inputs, KernelTerm, Side, compose
+from nanopnp.physics.nernst_planck import ConcentrationVariables, StericForm
 from nanopnp.physics.pb import (
     linear_pb_operator,
     nonlinear_pb_residual,
@@ -88,10 +84,9 @@ from nanopnp.physics.poisson import (
 )
 from nanopnp.physics.spaces import set_boundary_values
 from nanopnp.physics.stabilisation import (
-    FlowState,
     StabilisationModel,
-    TransportState,
     registered_stabilisations,
+    transport_state,
 )
 from nanopnp.physics.stabilisation import cell_peclet as species_cell_peclet
 from nanopnp.physics.stabilisation import create as create_stabilisation
@@ -126,6 +121,7 @@ __all__ = [
     "PoissonModel",
     "Term",
     "TransportModel",
+    "concentration_field_name",
     "create",
     "declaration",
     "equal_order_stabilisations",
@@ -140,6 +136,8 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
+
+_STERIC_LEAF = "electrolyte.corrections.steric.model"
 
 ElementKind: TypeAlias = Literal["h1", "vector_h1", "number"]
 
@@ -274,11 +272,6 @@ class ModelSolution:
         if transport_model(self.model).log_variables:
             return ngs.exp(field)
         return field
-
-
-def concentration_field_name(species: str) -> str:
-    """Return the field name holding one species' concentration."""
-    return f"c_{species}"
 
 
 @dataclass(frozen=True)
@@ -464,10 +457,27 @@ class TransportModel(PhysicsModel, Protocol):
         """Return the NUM-02 concentration variables."""
         ...
 
-    def transport_states(
-        self, functions: Mapping[str, Expression], wall_distance_nm: Expression
-    ) -> dict[str, TransportState]:
-        """Return one stabilisation state per species."""
+    def terms_in_force(self) -> tuple[KernelTerm, ...]:
+        """Return the kernel terms the model assembles, in order."""
+        ...
+
+    def context(  # noqa: PLR0913
+        self,
+        mesh: Mesh,
+        measures: Measures,
+        *,
+        trial: Mapping[str, Expression],
+        tests: Mapping[str, Expression] | None = None,
+        lagged: Mapping[str, Expression] | None = None,
+        wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
+        fixed_charge: FixedCharge | None = None,
+        solid_fraction: Expression | None = None,
+        solid_fraction_gradient: Expression | None = None,
+        surface_charge: Expression | None = None,
+        surface_charge_boundary: str = "wall",
+        sources: Mapping[str, Expression] | None = None,
+    ) -> Context:
+        """Return the kernel context of one assembly, bound to the terms in force."""
         ...
 
     def cell_peclet(
@@ -837,8 +847,8 @@ class CoupledModel:
         """Return the concentration variables for the current branch."""
         fields = {name: functions[concentration_field_name(name)] for name in self.species}
         if self.log_variables:
-            return ConcentrationVariables.logarithmic_branch(fields)
-        return ConcentrationVariables.primitive(fields)
+            return ConcentrationVariables.logarithmic_branch(fields, NGSOLVE_OPERATORS)
+        return ConcentrationVariables.primitive(fields, NGSOLVE_OPERATORS)
 
     def cell_peclet(
         self, state: GridFunction, wall_distance_nm: Expression
@@ -850,17 +860,14 @@ class CoupledModel:
         state
             A grid function on this model's product space, normally the converged one.
         """
-        states = self.transport_states(self._split(list(state.components)), wall_distance_nm)
-        return {name: species_cell_peclet(species) for name, species in states.items()}
-
-    def transport_states(
-        self, functions: Mapping[str, Expression], wall_distance_nm: Expression
-    ) -> dict[str, TransportState]:
-        """Return one transport state per species, from the solved fields."""
-        variables = self.concentration_variables(functions)
-        coefficients = self.coefficients(variables, wall_distance_nm)
+        context = self.context(
+            state.space.mesh,
+            Measures(element_order=self.order),
+            trial=self._split(list(state.components)),
+            wall_distance_nm=wall_distance_nm,
+        )
         return {
-            name: self._transport_state(name, functions, variables, coefficients)
+            name: species_cell_peclet(transport_state(context, context.trial, name))
             for name in self.species
         }
 
@@ -944,10 +951,7 @@ class CoupledModel:
                 f"{self.order}; the NUM-07 quadrature bonus is computed from the element order, "
                 "so a mismatch under-integrates the 1/r forms it exists to protect"
             )
-        mesh = space.mesh
-        fluid = mesh.Materials(self.fluid)
         trials = self._split(list(space.TrialFunction()))
-        tests = self._split(list(space.TestFunction()))
         sources = dict(sources or {})
         unknown = set(sources) - set(trials)
         if unknown:
@@ -955,17 +959,6 @@ class CoupledModel:
                 f"sources name fields {', '.join(sorted(unknown))} that {self.name!r} does not "
                 f"solve for; it solves {', '.join(trials)}"
             )
-
-        variables = self.concentration_variables(trials)
-        coefficients = self.coefficients(variables, wall_distance_nm)
-        potential, potential_test = trials[POTENTIAL], tests[POTENTIAL]
-        velocity = trials[VELOCITY] if self.flow else None
-        solid = (
-            self.solid_blend(mesh, solid_fraction, solid_fraction_gradient)
-            if self.dielectric_gradient_forces
-            else None
-        )
-
         stabilisation = self.stabilisation_model
         if stabilisation.terms and state is None:
             raise ValueError(
@@ -975,208 +968,120 @@ class CoupledModel:
                 "instead would put max(0, .) and 1/||grad c~|| into the Jacobian, which the "
                 "NUM-16 damping policy is not tuned for"
             )
-        # The lagged side, from which every stabilisation parameter is read. When
-        # no state is supplied the mode assembles nothing, so the trial side stands
-        # in rather than a branch on the mode name (PHY-22).
-        lagged = self._split(list(state.components)) if state is not None else trials
-        lagged_variables = self.concentration_variables(lagged) if state is not None else variables
-        lagged_coefficients = (
-            self.coefficients(lagged_variables, wall_distance_nm)
-            if state is not None
-            else coefficients
-        )
-
-        # Poisson over all of Omega; the mobile charge lives on the fluid only.
-        residual = poisson_operator(
-            potential,
-            potential_test,
-            measures,
-            permittivity=self.permittivity(mesh, coefficients, solid_fraction=solid_fraction),
-        )
-        residual -= charge_source(
-            coefficients.screening * coefficients.ionic_charge_density(),
-            potential_test,
-            measures,
-            definedon=fluid,
-        )
         if fixed_charge is not None:
             _check_fixed_charge(fixed_charge)
-            residual -= charge_source(
-                fixed_charge.density, potential_test, measures, rule_order=fixed_charge.rule_order
-            )
-        if surface_charge is not None:
-            residual += surface_charge_term(
-                surface_charge,
-                potential_test,
-                measures,
-                side="residual",
-                definedon=surface_charge_region(mesh, surface_charge_boundary),
-            )
-
-        for name in self.species:
-            flux = species_flux(
-                name,
-                coefficients=coefficients,
-                variables=variables,
-                potential=potential,
-                velocity=velocity,
-                steric=self.steric_form,
-                dielectric_gradient=self.dielectric_gradient_forces,
-                solid=solid,
-            )
-            field_name = concentration_field_name(name)
-            residual += nernst_planck_residual(flux, tests[field_name], measures, definedon=fluid)
-            # Guarded on the capability, not the mode name (PHY-22); a mode with no terms
-            # is the one case where the lagged state falls back to the trial side.
-            if stabilisation.terms:
-                stabilisation_term = stabilisation.transport_term(
-                    measures,
-                    trial=self._transport_state(name, trials, variables, coefficients),
-                    lagged=self._transport_state(
-                        name, lagged, lagged_variables, lagged_coefficients
-                    ),
-                    test=tests[field_name],
-                    source=sources.get(field_name),
-                    definedon=fluid,
-                )
-                if stabilisation_term is not None:
-                    residual += stabilisation_term
-
-        if self.flow:
-            residual += self._flow_residual(
-                trials, tests, measures, coefficients, variables, definedon=fluid, solid=solid
-            )
-            if stabilisation.terms:
-                flow_term = stabilisation.flow_term(
-                    measures,
-                    trial=self._flow_state(
-                        trials, coefficients, variables, sources=sources, solid=solid
-                    ),
-                    lagged=self._flow_state(
-                        lagged, lagged_coefficients, lagged_variables, sources=sources, solid=solid
-                    ),
-                    velocity_test=tests[VELOCITY],
-                    pressure_test=tests[PRESSURE],
-                    definedon=fluid,
-                )
-                if flow_term is not None:
-                    residual += flow_term
-
-        for name, source in sources.items():
-            # Poisson is posed on all of Omega and everything else on the fluid,
-            # so a source follows its own equation's domain.
-            options = {} if name == POTENTIAL else {"definedon": fluid}
-            residual -= measures.volume(source * tests[name], **options)
-        return residual
-
-    def _transport_state(
-        self,
-        species: str,
-        functions: Mapping[str, Expression],
-        variables: ConcentrationVariables,
-        coefficients: NondimensionalCoefficients,
-    ) -> TransportState:
-        return TransportState(
-            species=species,
-            coefficients=coefficients,
-            variables=variables,
-            potential=functions[POTENTIAL],
-            velocity=functions[VELOCITY] if self.flow else None,
-            steric=self.steric_form,
-        )
-
-    def _flow_state(
-        self,
-        functions: Mapping[str, Expression],
-        coefficients: NondimensionalCoefficients,
-        variables: ConcentrationVariables,
-        *,
-        sources: Mapping[str, Expression],
-        solid: SolidBlend | None = None,
-    ) -> FlowState:
-        import ngsolve as ngs
-
-        force = (
-            -coefficients.screening
-            * coefficients.ionic_charge_density()
-            * ngs.grad(functions[POTENTIAL])
-        )
-        if self.dielectric_gradient_forces:
-            # The Korteweg-Helmholtz force of PHY-23, which survives the
-            # approximate residual: it carries first derivatives only.
-            field = ngs.grad(functions[POTENTIAL])
-            force = force - 0.5 * (field * field) * permittivity_gradient(
-                coefficients, variables, solid=solid
-            )
-        return FlowState(
-            coefficients=coefficients,
-            velocity=functions[VELOCITY],
-            pressure=functions[PRESSURE],
-            density=coefficients.mass_density() if self.variable_density else 1.0,
-            body_force=force,
-            inertia=self.inertia,
-            source=sources.get(VELOCITY),
-        )
-
-    def _flow_residual(
-        self,
-        trials: Mapping[str, Expression],
-        tests: Mapping[str, Expression],
-        measures: Measures,
-        coefficients: NondimensionalCoefficients,
-        variables: ConcentrationVariables,
-        *,
-        definedon: Option,
-        solid: SolidBlend | None = None,
-    ) -> IntegralTerm:
-        velocity, pressure = trials[VELOCITY], trials[PRESSURE]
-        velocity_test, pressure_test = tests[VELOCITY], tests[PRESSURE]
-        viscosity = coefficients.viscosity()
-        density = coefficients.mass_density() if self.variable_density else None
-
-        residual = viscous_operator(
-            velocity, velocity_test, measures, viscosity=viscosity, definedon=definedon
-        )
-        residual += pressure_term(pressure, velocity_test, measures, definedon=definedon)
-        residual += continuity_term(
-            velocity, pressure_test, measures, mass_density=density, definedon=definedon
-        )
-        if self.inertia:
-            residual += inertia_term(
-                velocity,
-                velocity_test,
-                measures,
-                reynolds=coefficients.reynolds,
-                mass_density=density if density is not None else 1.0,
-                definedon=definedon,
-            )
-        residual += electrical_body_force(
-            coefficients.ionic_charge_density(),
-            trials[POTENTIAL],
-            velocity_test,
+        context = self.context(
+            space.mesh,
             measures,
-            screening=coefficients.screening,
-            definedon=definedon,
+            trial=trials,
+            tests=self._split(list(space.TestFunction())),
+            lagged=self._split(list(state.components)) if state is not None else None,
+            wall_distance_nm=wall_distance_nm,
+            fixed_charge=fixed_charge,
+            solid_fraction=solid_fraction,
+            solid_fraction_gradient=solid_fraction_gradient,
+            surface_charge=surface_charge,
+            surface_charge_boundary=surface_charge_boundary,
+            sources=sources,
         )
-        if self.pressure_constraint:
-            # int p q_lambda + int lambda q, the saddle-point form of
-            # "the mean pressure is prescribed". Without it a solve whose
-            # velocity is essential on the whole boundary has a constant
-            # pressure null mode, and a direct solver factorises that happily
-            # and returns a plausible, useless answer.
-            multiplier, multiplier_test = trials[PRESSURE_MEAN], tests[PRESSURE_MEAN]
-            residual += measures.volume(
-                pressure * multiplier_test + multiplier * pressure_test, definedon=definedon
-            )
-        if self.dielectric_gradient_forces:
-            residual += dielectric_gradient_force(
-                trials[POTENTIAL],
-                permittivity_gradient(coefficients, variables, solid=solid),
-                velocity_test,
-                measures,
-                definedon=definedon,
-            )
-        return residual
+        slots = coupled_slots(
+            self.species,
+            [field.name for field in self.fields],
+            None if fixed_charge is None else fixed_charge.rule_order,
+            sources,
+        )
+        return compose(context.terms, slots, context)
+
+    def terms_in_force(self) -> tuple[KernelTerm, ...]:
+        """Return the kernel terms the model assembles, in order: each record's switches decide."""
+        return tuple(term for term in COUPLED_TERMS if self._in_force(term))
+
+    def _in_force(self, term: KernelTerm) -> bool:
+        if term.name == PRESSURE_CONSTRAINT:
+            return self.pressure_constraint
+        if term.name == STABILISATION:
+            return bool(self.stabilisation_model.terms)
+        if term.name == SOURCES:
+            return True
+        display = term.display
+        if display is None:
+            raise ValueError(f"the term {term.name!r} has no display record and no rule")
+        if not all(bool(getattr(self, switch)) for switch in display.switches):
+            return False
+        if display.correction is None:
+            return True
+        if display.correction != _STERIC_LEAF:
+            raise ValueError(f"no switch of {self.name!r} reads the leaf {display.correction!r}")
+        return self.steric
+
+    def _side(self, functions: Mapping[str, Expression], wall_distance_nm: Expression) -> Side:
+        variables = self.concentration_variables(functions)
+        coefficients = self.coefficients(variables, wall_distance_nm)
+        variable_density = self.flow and self.variable_density
+        return Side(
+            functions=functions,
+            variables=variables,
+            coefficients=coefficients,
+            density=coefficients.mass_density() if variable_density else None,
+        )
+
+    def context(  # noqa: PLR0913
+        self,
+        mesh: Mesh,
+        measures: Measures,
+        *,
+        trial: Mapping[str, Expression],
+        tests: Mapping[str, Expression] | None = None,
+        lagged: Mapping[str, Expression] | None = None,
+        wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
+        fixed_charge: FixedCharge | None = None,
+        solid_fraction: Expression | None = None,
+        solid_fraction_gradient: Expression | None = None,
+        surface_charge: Expression | None = None,
+        surface_charge_boundary: str = "wall",
+        sources: Mapping[str, Expression] | None = None,
+    ) -> Context:
+        """Return the kernel context of one assembly, bound to the terms in force.
+
+        Parameters
+        ----------
+        trial
+            Each field's function by name: the trial functions, or a state's components.
+        lagged
+            The side the stabilisation parameters are read from; None takes the trial side.
+        """
+        trial_side = self._side(trial, wall_distance_nm)
+        lagged_side = trial_side if lagged is None else self._side(lagged, wall_distance_nm)
+        solid = (
+            self.solid_blend(mesh, solid_fraction, solid_fraction_gradient)
+            if self.dielectric_gradient_forces
+            else None
+        )
+        inputs = Inputs(
+            permittivity=self.permittivity(
+                mesh, trial_side.coefficients, solid_fraction=solid_fraction
+            ),
+            solid=solid,
+            fixed_charge=fixed_charge,
+            surface_charge=surface_charge,
+            surface_region=None
+            if surface_charge is None
+            else surface_charge_region(mesh, surface_charge_boundary),
+            sources=dict(sources or {}),
+        )
+        return Context(
+            ops=NGSOLVE_OPERATORS,
+            geometry=geometry_of(mesh, measures),
+            measures=measures,
+            fluid=mesh.Materials(self.fluid),
+            trial=trial_side,
+            lagged=lagged_side,
+            tests=dict(tests or {}),
+            inputs=inputs,
+            steric=self.steric_form,
+            stabilisation=self.stabilisation_model,
+            terms=self.terms_in_force(),
+        )
 
     def gates(
         self,

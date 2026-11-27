@@ -10,6 +10,7 @@ from nanopnp.materials.fields import SolidBlend, blend
 from nanopnp.mesh.primitives import SlabGeometry
 from nanopnp.numerics.gates import PackingFractionGate
 from nanopnp.physics import steric
+from nanopnp.physics.backend import NGSOLVE_OPERATORS
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
     NondimensionalCoefficients,
@@ -43,7 +44,7 @@ def _build(
         field = ngs.GridFunction(space, name=name)
         field.Set(expression)
         fields[name] = field
-    variables = ConcentrationVariables.primitive(fields)
+    variables = ConcentrationVariables.primitive(fields, NGSOLVE_OPERATORS)
     electrolyte = Electrolyte.from_parameter_file()
     coefficients = NondimensionalCoefficients(
         electrolyte=electrolyte,
@@ -160,7 +161,7 @@ def test_num02_log_branch_uses_the_chain_rule() -> None:
     space = ngs.H1(mesh, order=2)
     field = ngs.GridFunction(space, name="w")
     field.Set(0.3 * ngs.x - 0.7 * ngs.y)
-    variables = ConcentrationVariables.logarithmic_branch({"Na+": field})
+    variables = ConcentrationVariables.logarithmic_branch({"Na+": field}, NGSOLVE_OPERATORS)
 
     step = 1e-5
     radial, axial = SAMPLE
@@ -186,7 +187,7 @@ def test_num02_branches_agree_where_both_are_exact() -> None:
         field = ngs.GridFunction(space, name=f"w_{name}")
         field.Set(ngs.CF(math.log(1.3)))
         logs[name] = field
-    logarithmic = ConcentrationVariables.logarithmic_branch(logs)
+    logarithmic = ConcentrationVariables.logarithmic_branch(logs, NGSOLVE_OPERATORS)
     log_coefficients = NondimensionalCoefficients(
         electrolyte=coefficients.electrolyte,
         scales=coefficients.scales,
@@ -218,7 +219,7 @@ def test_num02_log_branch_is_positive_by_construction(mesh: ngs.Mesh) -> None:
     space = ngs.H1(mesh, order=2)
     field = ngs.GridFunction(space)
     field.Set(-8.0 + 4.0 * ngs.x)
-    variables = ConcentrationVariables.logarithmic_branch({"Na+": field})
+    variables = ConcentrationVariables.logarithmic_branch({"Na+": field}, NGSOLVE_OPERATORS)
     value = variables.values["Na+"](mesh(*SAMPLE))
     assert value > 0.0
     assert value == pytest.approx(math.exp(-8.0 + 4.0 * SAMPLE[0]), rel=1e-6)
@@ -243,7 +244,11 @@ def test_phy23_the_permittivity_sensitivity_is_zero_when_the_correction_is_off(
     potential = ngs.GridFunction(ngs.H1(mesh, order=2))
     potential.Set(ngs.x * ngs.x + ngs.y)
     gradient = excess_potential_gradient(
-        "Na+", coefficients=coefficients, variables=variables, potential=potential
+        "Na+",
+        ops=NGSOLVE_OPERATORS,
+        coefficients=coefficients,
+        variables=variables,
+        potential=potential,
     )
     assert tuple(gradient(point)) == (0.0, 0.0)
 
@@ -268,7 +273,12 @@ def test_phy23_the_dielectric_terms_differentiate_the_blend_not_the_fluid_alone(
     )
     force = permittivity_gradient(coefficients, variables, solid=solid)
     decrement = excess_potential_gradient(
-        "Na+", coefficients=coefficients, variables=variables, potential=potential, solid=solid
+        "Na+",
+        ops=NGSOLVE_OPERATORS,
+        coefficients=coefficients,
+        variables=variables,
+        potential=potential,
+        solid=solid,
     )
     step = 1e-5
     for r, z in ((0.5, 0.25), (0.3, 0.7), (0.8, 0.45)):

@@ -93,21 +93,13 @@ class _StubStabilisation:
         self.calls.append("terms")
         return self._inner.terms
 
-    def flow_terms(self, *args: object, **kwargs: object) -> object:
-        self.calls.append("flow_terms")
-        return self._inner.flow_terms(*args, **kwargs)
+    def transport_contributions(self, **kwargs: object) -> object:
+        self.calls.append("transport_contributions")
+        return self._inner.transport_contributions(**kwargs)
 
-    def transport_streamline(self, *args: object, **kwargs: object) -> object:
-        self.calls.append("transport_streamline")
-        return self._inner.transport_streamline(*args, **kwargs)
-
-    def transport_crosswind(self, *args: object, **kwargs: object) -> object:
-        self.calls.append("transport_crosswind")
-        return self._inner.transport_crosswind(*args, **kwargs)
-
-    def indicator_term(self, *args: object, **kwargs: object) -> object:
-        self.calls.append("indicator_term")
-        return self._inner.indicator_term(*args, **kwargs)
+    def flow_contributions(self, **kwargs: object) -> object:
+        self.calls.append("flow_contributions")
+        return self._inner.flow_contributions(**kwargs)
 
     def __getattr__(self, name: str) -> object:
         return getattr(self._inner, name)

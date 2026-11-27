@@ -7,8 +7,9 @@ import numpy as np
 import pytest
 
 from nanopnp.core.typing import Expression
+from nanopnp.io.vocabulary import POTENTIAL, PRESSURE, VELOCITY
 from nanopnp.materials.electrolyte import Electrolyte
-from nanopnp.mesh.primitives import CylinderGeometry
+from nanopnp.mesh.primitives import CoupledBoundaries, CylinderGeometry
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import kernel
 from nanopnp.physics.backend import NGSOLVE_OPERATORS, geometry_of
@@ -17,10 +18,15 @@ from nanopnp.physics.coefficients import (
     NondimensionalCoefficients,
     mesh_unit_scales,
 )
+from nanopnp.physics.coupled import coupled_slots
+from nanopnp.physics.models import CoupledModel, create
 from nanopnp.physics.nernst_planck import ConcentrationVariables
 from nanopnp.physics.stabilisation import create as create_stabilisation
 
 FLUID = "electrolyte"
+BOUNDARIES = CoupledBoundaries(
+    potential="wall|end", concentration="wall|end", velocity="wall|end", velocity_axis="axis"
+)
 ROUND_OFF = 1.0e-12
 OPS = NGSOLVE_OPERATORS
 
@@ -120,3 +126,57 @@ def test_ver81_one_slot_is_one_integral_where_term_by_term_moves_the_rule(
     )
     assert _relative(composed, reference) <= ROUND_OFF
     assert _relative(apart, reference) > 1.0e-6
+
+
+def _coupled_state(mesh: ngs.Mesh) -> tuple[CoupledModel, ngs.FESpace, ngs.GridFunction]:
+    model = create("epnp-ns", concentration_M=0.1, fluid=FLUID)
+    assert isinstance(model, CoupledModel)
+    space = model.space(mesh, BOUNDARIES)
+    state = ngs.GridFunction(space)
+    r, z = ngs.x, ngs.y
+    values = {
+        POTENTIAL: 0.3 * ngs.sin(0.7 * z) * (1.0 + 0.1 * r * r),
+        "c_Na+": 1.0 + 0.2 * ngs.cos(0.5 * z) * (1.0 - 0.05 * r * r),
+        "c_Cl-": 1.0 - 0.15 * ngs.sin(0.4 * z) * (1.0 + 0.05 * r * r),
+        VELOCITY: ngs.CF((0.02 * r * ngs.cos(0.3 * z), 0.04 * (1.0 - 0.1 * r * r))),
+        PRESSURE: 0.01 * ngs.sin(0.6 * z) * (1.0 + 0.2 * r * r),
+    }
+    for field, component in zip(model.fields, state.components, strict=True):
+        component.Set(values[field.name])
+    return model, space, state
+
+
+def _slot_vectors(
+    model: CoupledModel,
+    space: ngs.FESpace,
+    state: ngs.GridFunction,
+    terms: tuple[kernel.KernelTerm, ...],
+) -> dict[str, np.ndarray]:
+    mesh = space.mesh
+    context = model.context(
+        mesh,
+        AXISYMMETRIC,
+        trial=dict(zip((f.name for f in model.fields), space.TrialFunction(), strict=True)),
+        tests=dict(zip((f.name for f in model.fields), space.TestFunction(), strict=True)),
+    )
+    slots = coupled_slots(model.species, [f.name for f in model.fields], None, ())
+    return {
+        name: _applied(space, integral, state)
+        for name, integral in kernel.integrals(terms, slots, context)
+    }
+
+
+@pytest.mark.parametrize("left_out", ["Steric flux", "Advection", "Inertia", "Body force"])
+def test_ver81_a_term_left_out_changes_its_own_slots_alone(mesh: ngs.Mesh, left_out: str) -> None:
+    model, space, state = _coupled_state(mesh)
+    terms = model.terms_in_force()
+    (term,) = (term for term in terms if term.name == left_out)
+    whole = _slot_vectors(model, space, state, terms)
+    without = _slot_vectors(model, space, state, tuple(t for t in terms if t is not term))
+    families = set(term.slots)
+    for name, vector in whole.items():
+        other = without.get(name, np.zeros_like(vector))
+        if name.split(":")[0] in families:
+            assert np.max(np.abs(vector - other)) > 1.0e-8 * np.max(np.abs(vector)), name
+        else:
+            assert np.array_equal(vector, other), name

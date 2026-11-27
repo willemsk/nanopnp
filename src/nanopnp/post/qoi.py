@@ -14,7 +14,9 @@ from nanopnp.io.vocabulary import (
 )
 from nanopnp.numerics.gates import FieldSampler
 from nanopnp.numerics.measures import Measures
+from nanopnp.physics import kernel
 from nanopnp.physics.coefficients import species_concentrations_SI
+from nanopnp.physics.coupled import coupled_slots
 from nanopnp.physics.models import (
     ModelSolution,
     TransportModel,
@@ -22,6 +24,7 @@ from nanopnp.physics.models import (
     transport_model,
 )
 from nanopnp.physics.nernst_planck import species_flux
+from nanopnp.physics.stabilisation import TRANSPORT_SLOTS
 from nanopnp.post.reaction_flux import boundary_reaction_flux
 
 __all__ = [
@@ -164,22 +167,38 @@ def stabilisation_currents(
     distance = solution.wall_distance_nm if wall_distance_nm is None else wall_distance_nm
     stabilisation = model.stabilisation_model
     scale = TWO_PI * model.scales.current_A
-    states = model.transport_states(_functions(solution), distance)
+    context = model.context(
+        mesh,
+        measures,
+        trial=_functions(solution),
+        tests={concentration_field_name(name): indicator for name in model.species},
+        wall_distance_nm=distance,
+        solid_fraction=solution.solid_fraction,
+        solid_fraction_gradient=solution.solid_fraction_gradient,
+    )
+    slots = {
+        (slot.family, slot.species): slot
+        for slot in coupled_slots(model.species, _functions(solution), None, ())
+    }
 
     contributions: dict[str, float] = {}
-    for name, state in states.items():
+    for name in model.species:
         valence = float(model.electrolyte.ion(name).valence)
-        contributions[name] = (
-            valence
-            * scale
-            * stabilisation.indicator_term(
-                measures,
+        total = 0.0
+        for family in TRANSPORT_SLOTS:
+            slot = slots[(family, name)]
+            integrand = kernel.integrand(context.terms, slot, context)
+            if integrand is None:
+                continue
+            total += measures.integrate(
+                integrand,
                 mesh,
-                state=state,
-                indicator=indicator,
-                definedon=mesh.Materials(model.fluid),
+                singular=slot.singular,
+                extra_order=slot.extra_order,
+                definedon=context.fluid,
+                what=f"the {stabilisation.name!r} {family} term of {name!r}",
             )
-        )
+        contributions[name] = valence * scale * total
     logger.debug("stabilisation currents in %r (A): %s", stabilisation.name, contributions)
     return contributions
 

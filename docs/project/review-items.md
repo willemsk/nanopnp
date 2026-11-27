@@ -1998,3 +1998,17 @@ moves.
 
 **Placed** (the Phase 6 plan as amended, 27 November 2026): WP6.14, which gives the mesher its 3D path, changes the
 three citations.
+
+### REV-302: PHY-23 under a stabilised mode assembles fifty times slower
+
+Left by WP6.10, item 2 ([its plan](../plans/phase-6/wp6.10-the-composition.md)). The wind now reads every drift in
+force (§8.2.62 BL5), so under `dielectric_gradient_forces` with a stabilised mode the streamline and crosswind
+integrands carry the decrement's drift, `D̃_i ∇μ̃_ex,i`: a Hessian of `φ̃` and the derivatives of the corrected
+permittivity in each concentration, on the trial side and the lagged one. On the comparison's 118-element cylinder,
+one `Apply` with one `AssembleLinearization` takes 69.6 s under `reference` and 33.8 s under `supg`, against 1.25 s
+and 0.48 s without PHY-23; the streamline slot takes 16 s and the crosswind 18 s a species. The combination is opt-in
+and no stored walk takes it, but at a pore's element count a Newton step under it costs hours.
+
+*Recommendation:* measure which side dominates first. If it is the lagged one, the kernel can interpolate the lagged
+wind into a vector grid function once a step; if the trial one, compiling the integrand in the backend
+(`CoefficientFunction.Compile`) is the cheaper trial. Either stays out of the terms (§5.4.1).

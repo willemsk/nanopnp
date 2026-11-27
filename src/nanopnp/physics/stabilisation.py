@@ -1,49 +1,54 @@
-"""The residual stabilisation registry and its terms (NUM-11, NUM-14, NUM-15)."""
+"""The residual stabilisation registry and its terms (NUM-11, NUM-12, NUM-14, NUM-15)."""
 
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Protocol, TypeAlias
+from typing import TYPE_CHECKING, Protocol, TypeAlias
 
-from nanopnp.core.typing import Expression, IntegralTerm, Mesh, Numeric, Option
-from nanopnp.numerics.measures import Measures
-from nanopnp.physics.coefficients import NondimensionalCoefficients
-from nanopnp.physics.flow import axisymmetric_divergence
-from nanopnp.physics.nernst_planck import ConcentrationVariables, StericForm
+from nanopnp.core.typing import Expression, Numeric
+from nanopnp.io.vocabulary import PRESSURE, VELOCITY
+from nanopnp.physics.kernel import force_density, wind
+from nanopnp.physics.operators import Geometry, Operators, divergence
+
+if TYPE_CHECKING:
+    from nanopnp.physics.kernel import Build, Context, Side
 
 __all__ = [
     "CROSSWIND_BONUS_ORDER",
     "CROSSWIND_COEFFICIENT",
     "FLOW_BONUS_ORDER",
+    "FLOW_SLOTS",
     "GRAD_DIV_COEFFICIENT",
     "MAGNITUDE_FLOOR",
     "SHAKIB_CONVECTIVE",
     "SHAKIB_VISCOUS",
     "STREAMLINE_BONUS_ORDER",
     "STREAMLINE_CUTOFF",
+    "TRANSPORT_SLOTS",
     "WIND_FLOOR",
     "WIND_THRESHOLD",
     "FlowState",
     "NoStabilisation",
     "ReferenceStabilisation",
-    "StabilisationIntegrand",
     "StabilisationModel",
     "StreamlineStabilisation",
     "TransportState",
-    "advective_velocity",
     "approximate_residual",
     "cell_peclet",
     "create",
     "crosswind_projector",
     "crosswind_viscosity",
-    "element_size",
+    "flow_contribution",
+    "flow_state",
     "grad_div_parameter",
     "momentum_parameter",
     "momentum_residual",
     "register",
     "registered_stabilisations",
     "streamline_parameter",
+    "transport_contribution",
+    "transport_state",
 ]
 
 # Chaudhry, Comer, Aksimentiev & Olson, Commun. Comput. Phys. 15, 93 (2014); section 6.4.1.
@@ -83,89 +88,98 @@ MAGNITUDE_FLOOR = WIND_FLOOR * WIND_FLOOR
 WIND_THRESHOLD = 1.0e-12
 
 
-def element_size() -> Expression:
-    """Return ``h_K = sqrt(2|K|)``, the element size the stabilisation parameters are built on."""
-    import ngsolve as ngs
+TRANSPORT_SLOTS = ("streamline", "crosswind")
+"""The families of a species' transport stabilisation slots, in assembly order."""
 
-    return ngs.specialcf.mesh_size
-
-
-@dataclass(frozen=True)
-class StabilisationIntegrand:
-    """One stabilisation contribution and its quadrature."""
-
-    integrand: Expression
-    extra_order: int = 0
-    singular: bool = False
+FLOW_SLOTS = ("flow.gls_momentum", "flow.gls_pressure", "flow.grad_div")
+"""The families of the flow stabilisation slots, in assembly order."""
 
 
 @dataclass(frozen=True)
 class TransportState:
-    """Everything a transport stabilisation term needs about one species."""
+    """Everything a transport stabilisation term reads about one species on one side.
+
+    Parameters
+    ----------
+    gradient
+        ``grad(c~_i)``, in whichever branch is in force.
+    wind
+        ``b~_i``, the sum of the drifts in force.
+    """
 
     species: str
-    coefficients: NondimensionalCoefficients
-    variables: ConcentrationVariables
-    potential: Expression
-    velocity: Expression | None
-    steric: StericForm | None
-
-    @property
-    def diffusivity(self) -> Expression:
-        """Return ``D~_i``."""
-        return self.coefficients.diffusivity(self.species)
-
-    @property
-    def concentration_gradient(self) -> Expression:
-        """Return ``grad(c~_i)``, in whichever branch is in force."""
-        return self.variables.gradients[self.species]
+    diffusivity: Expression
+    gradient: Expression
+    wind: Expression
+    ops: Operators
+    geometry: Geometry
 
 
 @dataclass(frozen=True)
 class FlowState:
-    """Everything the flow stabilisation needs about the momentum block."""
+    """Everything the flow stabilisation reads about the momentum block on one side.
 
-    coefficients: NondimensionalCoefficients
+    Parameters
+    ----------
+    density
+        ``rho~``, 1 where the variable density is not in force.
+    force
+        ``f``, the sum of the force densities in force, or None.
+    source
+        A manufactured momentum source, or None.
+    """
+
     velocity: Expression
     pressure: Expression
-    density: Numeric = 1.0
-    body_force: Expression | None = None
-    inertia: bool = True
-    source: Expression | None = None
+    density: Numeric
+    viscosity: Expression
+    reynolds: float
+    force: Expression | None
+    source: Expression | None
+    ops: Operators
+    geometry: Geometry
 
 
-def _magnitude(vector: Expression) -> Expression:
-    import ngsolve as ngs
-
-    return ngs.sqrt(vector * vector + MAGNITUDE_FLOOR)
-
-
-def _absolute(scalar: Expression) -> Expression:
-    import ngsolve as ngs
-
-    return ngs.IfPos(scalar, scalar, -scalar)
-
-
-def _positive_part(scalar: Expression) -> Expression:
-    import ngsolve as ngs
-
-    return ngs.IfPos(scalar, scalar, 0.0)
+def transport_state(context: Context, side: Side, species: str) -> TransportState:
+    """Return one species' transport state on ``side``, its wind summed over ``context.terms``."""
+    drift = wind(context, side, species)
+    if drift is None:
+        raise ValueError(f"no term in force states a drift of {species!r}; there is no wind")
+    return TransportState(
+        species=species,
+        diffusivity=side.coefficients.diffusivity(species),
+        gradient=side.variables.gradients[species],
+        wind=drift,
+        ops=context.ops,
+        geometry=context.geometry,
+    )
 
 
-def advective_velocity(state: TransportState) -> Expression:
-    """Return ``b~_i``, the non-diffusive part of the flux bracket."""
-    import ngsolve as ngs
+def flow_state(context: Context, side: Side) -> FlowState:
+    """Return the flow state on ``side``, its force summed over ``context.terms``."""
+    return FlowState(
+        velocity=side.functions[VELOCITY],
+        pressure=side.functions[PRESSURE],
+        density=1.0 if side.density is None else side.density,
+        viscosity=side.coefficients.viscosity(),
+        reynolds=side.coefficients.reynolds,
+        force=force_density(context, side),
+        source=context.inputs.sources.get(VELOCITY),
+        ops=context.ops,
+        geometry=context.geometry,
+    )
 
-    coefficients = state.coefficients
-    ion = coefficients.electrolyte.ion(state.species)
-    velocity = float(ion.valence) * coefficients.mobility(state.species) * ngs.grad(state.potential)
-    if state.steric is not None:
-        velocity = velocity + state.diffusivity * state.steric(
-            state.variables, coefficients, state.species
-        )
-    if state.velocity is not None:
-        velocity = velocity - coefficients.peclet * state.velocity
-    return velocity
+
+def _magnitude(ops: Operators, vector: Expression) -> Expression:
+    return ops.sqrt(ops.dot(vector, vector) + MAGNITUDE_FLOOR)
+
+
+def _absolute(ops: Operators, scalar: Expression) -> Expression:
+    return ops.where_positive(scalar, scalar, -scalar)
+
+
+def _positive_part(ops: Operators, scalar: Expression) -> Expression:
+    return ops.where_positive(scalar, scalar, 0.0)
 
 
 def cell_peclet(state: TransportState, *, size: Expression | None = None) -> Expression:
@@ -176,16 +190,13 @@ def cell_peclet(state: TransportState, *, size: Expression | None = None) -> Exp
     state
         The state to evaluate at; the converged one, for a diagnostic.
     """
-    return (
-        _magnitude(advective_velocity(state))
-        * (element_size() if size is None else size)
-        / (2.0 * state.diffusivity)
-    )
+    h = state.ops.element_size() if size is None else size
+    return _magnitude(state.ops, state.wind) * h / (2.0 * state.diffusivity)
 
 
 def approximate_residual(state: TransportState, *, source: Expression | None = None) -> Expression:
     """Return the approximate transport residual ``R~_i = b~_i . grad(c~_i) - s~_i``."""
-    residual = advective_velocity(state) * state.concentration_gradient
+    residual = state.ops.dot(state.wind, state.gradient)
     if source is not None:
         residual = residual - source
     return residual
@@ -198,13 +209,12 @@ def streamline_parameter(
     cutoff: float = STREAMLINE_CUTOFF,
 ) -> Expression:
     """Return the streamline parameter ``tau_i = (h_K / 2||b~_i||) psi(Pe_K)``."""
-    import ngsolve as ngs
-
-    h = element_size() if size is None else size
-    speed = _magnitude(advective_velocity(state))
+    ops = state.ops
+    h = ops.element_size() if size is None else size
+    speed = _magnitude(ops, state.wind)
     diffusivity = state.diffusivity
     peclet = speed * h / (2.0 * diffusivity)
-    return ngs.IfPos(
+    return ops.where_positive(
         peclet - cutoff,
         h / (2.0 * (speed + WIND_FLOOR)),
         h * h / (4.0 * cutoff * diffusivity),
@@ -213,11 +223,9 @@ def streamline_parameter(
 
 def crosswind_projector(state: TransportState) -> Expression:
     """Return the streamline-crosswind projector ``P_b = I - b^ (x) b^``."""
-    import ngsolve as ngs
-
-    direction = advective_velocity(state)
-    unit = direction / (_magnitude(direction) + WIND_FLOOR)
-    return ngs.Id(2) - ngs.OuterProduct(unit, unit)
+    ops = state.ops
+    unit = state.wind / (_magnitude(ops, state.wind) + WIND_FLOOR)
+    return state.geometry.identity - ops.outer(unit, unit)
 
 
 def crosswind_viscosity(
@@ -228,28 +236,21 @@ def crosswind_viscosity(
     coefficient: float = CROSSWIND_COEFFICIENT,
 ) -> Expression:
     """Return the crosswind viscosity ``nu_K``, zero below the wind threshold ``1/C_cw``."""
-    import ngsolve as ngs
-
-    h = element_size() if size is None else size
-    residual = _absolute(approximate_residual(state, source=source))
-    gradient = _magnitude(state.concentration_gradient)
+    ops = state.ops
+    h = ops.element_size() if size is None else size
+    residual = _absolute(ops, approximate_residual(state, source=source))
+    gradient = _magnitude(ops, state.gradient)
     raw = coefficient * h * residual / (2.0 * (gradient + WIND_FLOOR)) - state.diffusivity
-    return ngs.IfPos(
-        _magnitude(advective_velocity(state)) - WIND_THRESHOLD, _positive_part(raw), 0.0
+    return ops.where_positive(
+        _magnitude(ops, state.wind) - WIND_THRESHOLD, _positive_part(ops, raw), 0.0
     )
 
 
 def momentum_residual(state: FlowState) -> Expression:
-    """Return the approximate momentum residual ``R~_m``."""
-    import ngsolve as ngs
-
-    residual = ngs.grad(state.pressure)
-    if state.inertia:
-        residual = residual + state.coefficients.reynolds * state.density * (
-            ngs.grad(state.velocity) * state.velocity
-        )
-    if state.body_force is not None:
-        residual = residual - state.body_force
+    """Return the approximate momentum residual ``R~_m = grad(p~) - f - s``."""
+    residual = state.ops.grad(state.pressure)
+    if state.force is not None:
+        residual = residual - state.force
     if state.source is not None:
         residual = residual - state.source
     return residual
@@ -257,29 +258,21 @@ def momentum_residual(state: FlowState) -> Expression:
 
 def momentum_parameter(state: FlowState, *, size: Expression | None = None) -> Expression:
     """Return the momentum stabilisation parameter ``tau_m``, bounded at zero velocity."""
-    import ngsolve as ngs
-
-    h = element_size() if size is None else size
+    ops = state.ops
+    h = ops.element_size() if size is None else size
     convective = (
-        SHAKIB_CONVECTIVE
-        * state.coefficients.reynolds
-        * state.density
-        * _magnitude(state.velocity)
-        / h
+        SHAKIB_CONVECTIVE * state.reynolds * state.density * _magnitude(ops, state.velocity) / h
     )
-    viscous = SHAKIB_VISCOUS * state.coefficients.viscosity() / (h * h)
-    return 1.0 / ngs.sqrt(convective * convective + viscous * viscous)
+    viscous = SHAKIB_VISCOUS * state.viscosity / (h * h)
+    return 1.0 / ops.sqrt(convective * convective + viscous * viscous)
 
 
 def grad_div_parameter(state: FlowState, *, size: Expression | None = None) -> Expression:
     """Return the grad-div parameter ``tau_c = Re rho~ ||u~|| h_K / 2``."""
-    h = element_size() if size is None else size
+    ops = state.ops
+    h = ops.element_size() if size is None else size
     return (
-        GRAD_DIV_COEFFICIENT
-        * state.coefficients.reynolds
-        * state.density
-        * _magnitude(state.velocity)
-        * h
+        GRAD_DIV_COEFFICIENT * state.reynolds * state.density * _magnitude(ops, state.velocity) * h
     )
 
 
@@ -306,30 +299,6 @@ class StabilisationModel(Protocol):
     def permits_equal_order(self) -> bool:
         """Whether this mode supplies the flow stabilisation an equal-order pair requires."""
 
-    def transport_term(
-        self,
-        measures: Measures,
-        *,
-        trial: TransportState,
-        lagged: TransportState,
-        test: Expression,
-        source: Expression | None = None,
-        **kwargs: Option,
-    ) -> IntegralTerm | None:
-        """Return this mode's contribution to one species' residual, or ``None``."""
-
-    def flow_term(
-        self,
-        measures: Measures,
-        *,
-        trial: FlowState,
-        lagged: FlowState,
-        velocity_test: Expression,
-        pressure_test: Expression,
-        **kwargs: Option,
-    ) -> IntegralTerm | None:
-        """Return this mode's contribution to the flow residual, or ``None``."""
-
     def transport_contributions(
         self,
         *,
@@ -337,20 +306,18 @@ class StabilisationModel(Protocol):
         lagged: TransportState,
         test: Expression,
         source: Expression | None = None,
-    ) -> tuple[StabilisationIntegrand, ...]:
-        """Return one species' transport contributions as unweighted integrands."""
+    ) -> Mapping[str, Expression]:
+        """Return one species' transport integrands by slot family; empty for no term."""
 
-    def indicator_term(
+    def flow_contributions(
         self,
-        measures: Measures,
-        mesh: Mesh,
         *,
-        state: TransportState,
-        indicator: Expression,
-        source: Expression | None = None,
-        **kwargs: Option,
-    ) -> float:
-        """Return this mode's contribution to the indicator of the current."""
+        trial: FlowState,
+        lagged: FlowState,
+        velocity_test: Expression,
+        pressure_test: Expression,
+    ) -> Mapping[str, Expression]:
+        """Return the flow integrands by slot family; empty for no term."""
 
 
 @dataclass(frozen=True)
@@ -393,52 +360,22 @@ class NoStabilisation:
         lagged: TransportState,
         test: Expression,
         source: Expression | None = None,
-    ) -> tuple[StabilisationIntegrand, ...]:
-        """Return one species' transport contributions as unweighted integrands."""
+    ) -> Mapping[str, Expression]:
+        """Return one species' transport integrands by slot family; empty for no term."""
         del trial, lagged, test, source
-        return ()
+        return {}
 
-    def transport_term(
+    def flow_contributions(
         self,
-        measures: Measures,
-        *,
-        trial: TransportState,
-        lagged: TransportState,
-        test: Expression,
-        source: Expression | None = None,
-        **kwargs: Option,
-    ) -> IntegralTerm | None:
-        """Return this mode's contribution to one species' residual, or ``None``."""
-        del measures, trial, lagged, test, source, kwargs
-        return None
-
-    def flow_term(
-        self,
-        measures: Measures,
         *,
         trial: FlowState,
         lagged: FlowState,
         velocity_test: Expression,
         pressure_test: Expression,
-        **kwargs: Option,
-    ) -> IntegralTerm | None:
-        """Return this mode's contribution to the flow residual, or ``None``."""
-        del measures, trial, lagged, velocity_test, pressure_test, kwargs
-        return None
-
-    def indicator_term(
-        self,
-        measures: Measures,
-        mesh: Mesh,
-        *,
-        state: TransportState,
-        indicator: Expression,
-        source: Expression | None = None,
-        **kwargs: Option,
-    ) -> float:
-        """Return this mode's contribution to the indicator of the current."""
-        del measures, mesh, state, indicator, source, kwargs
-        return 0.0
+    ) -> Mapping[str, Expression]:
+        """Return the flow integrands by slot family; empty for no term."""
+        del trial, lagged, velocity_test, pressure_test
+        return {}
 
 
 @dataclass(frozen=True)
@@ -529,20 +466,13 @@ class StreamlineStabilisation:
         lagged: TransportState,
         test: Expression,
         source: Expression | None = None,
-    ) -> tuple[StabilisationIntegrand, ...]:
-        """Return the transport contributions as unweighted integrands."""
-        import ngsolve as ngs
-
-        size = element_size()
-        drift = advective_velocity(trial)
+    ) -> Mapping[str, Expression]:
+        """Return one species' transport integrands by slot family."""
+        ops = trial.ops
+        size = ops.element_size()
         residual = approximate_residual(trial, source=source)
         tau = streamline_parameter(lagged, size=size, cutoff=self.streamline_cutoff)
-        contributions = [
-            StabilisationIntegrand(
-                -tau * residual * (drift * ngs.grad(test)),
-                extra_order=STREAMLINE_BONUS_ORDER,
-            )
-        ]
+        contributions = {"streamline": -tau * residual * ops.dot(trial.wind, ops.grad(test))}
         if self.crosswind:
             viscosity = crosswind_viscosity(
                 lagged,
@@ -550,101 +480,41 @@ class StreamlineStabilisation:
                 size=size,
                 coefficient=self.crosswind_coefficient,
             )
-            projected = crosswind_projector(lagged) * trial.concentration_gradient
-            contributions.append(
-                StabilisationIntegrand(
-                    -viscosity * (projected * ngs.grad(test)),
-                    extra_order=CROSSWIND_BONUS_ORDER,
-                )
-            )
-        return tuple(contributions)
+            projected = ops.apply(crosswind_projector(lagged), trial.gradient)
+            contributions["crosswind"] = -viscosity * ops.dot(projected, ops.grad(test))
+        return contributions
 
-    def transport_term(
+    def flow_contributions(
         self,
-        measures: Measures,
-        *,
-        trial: TransportState,
-        lagged: TransportState,
-        test: Expression,
-        source: Expression | None = None,
-        **kwargs: Option,
-    ) -> IntegralTerm | None:
-        """Return this mode's contribution to one species' residual, or ``None``."""
-        contributions = self.transport_contributions(
-            trial=trial, lagged=lagged, test=test, source=source
-        )
-        return _assemble(measures, contributions, **kwargs)
-
-    def flow_term(
-        self,
-        measures: Measures,
         *,
         trial: FlowState,
         lagged: FlowState,
         velocity_test: Expression,
         pressure_test: Expression,
-        **kwargs: Option,
-    ) -> IntegralTerm | None:
-        """Return this mode's contribution to the flow residual, or ``None``."""
+    ) -> Mapping[str, Expression]:
+        """Return the flow integrands by slot family; empty without the flow terms."""
         if not self.flow:
-            return None
-        import ngsolve as ngs
-
-        size = element_size()
+            return {}
+        ops, geometry = trial.ops, trial.geometry
+        size = ops.element_size()
         tau_m = momentum_parameter(lagged, size=size)
         tau_c = grad_div_parameter(lagged, size=size)
         residual = momentum_residual(trial)
-        reynolds = trial.coefficients.reynolds
 
         # The velocity row is coercive, so its GLS part enters with a plus; the continuity row
         # is -int q rho~ div^(u~), minus that orientation, so its pressure-test part enters
         # with a minus. Grad-div is on the velocity row (plus) and carries 1/r through div^,
-        # so it is integrated with the singular rule.
-        convective_test = reynolds * lagged.density * (ngs.grad(velocity_test) * lagged.velocity)
-        return _assemble(
-            measures,
-            (
-                StabilisationIntegrand(
-                    tau_m * (residual * convective_test), extra_order=FLOW_BONUS_ORDER
-                ),
-                StabilisationIntegrand(
-                    -tau_m * (residual * ngs.grad(pressure_test)), extra_order=FLOW_BONUS_ORDER
-                ),
-                StabilisationIntegrand(
-                    tau_c
-                    * axisymmetric_divergence(velocity_test, measures)
-                    * axisymmetric_divergence(trial.velocity, measures),
-                    extra_order=FLOW_BONUS_ORDER,
-                    singular=True,
-                ),
-            ),
-            **kwargs,
+        # so its slot takes the singular rule.
+        convective_test = (
+            trial.reynolds * lagged.density * ops.apply(ops.grad(velocity_test), lagged.velocity)
         )
-
-    def indicator_term(
-        self,
-        measures: Measures,
-        mesh: Mesh,
-        *,
-        state: TransportState,
-        indicator: Expression,
-        source: Expression | None = None,
-        **kwargs: Option,
-    ) -> float:
-        """Return this mode's contribution to the indicator of the current."""
-        total = 0.0
-        for index, contribution in enumerate(
-            self.transport_contributions(trial=state, lagged=state, test=indicator, source=source)
-        ):
-            total += measures.integrate(
-                contribution.integrand,
-                mesh,
-                singular=contribution.singular,
-                extra_order=contribution.extra_order,
-                what=f"the {self.name!r} stabilisation term {index} of {state.species!r}",
-                **kwargs,
-            )
-        return total
+        return {
+            "flow.gls_momentum": tau_m * ops.dot(residual, convective_test),
+            "flow.gls_pressure": -tau_m * ops.dot(residual, ops.grad(pressure_test)),
+            "flow.grad_div": tau_c
+            * divergence(ops, geometry, velocity_test)
+            * divergence(ops, geometry, trial.velocity),
+        }
 
 
 @dataclass(frozen=True)
@@ -660,26 +530,40 @@ class ReferenceStabilisation(StreamlineStabilisation):
         return "reference"
 
 
-def _assemble(
-    measures: Measures,
-    contributions: tuple[StabilisationIntegrand, ...],
-    **kwargs: Option,
-) -> IntegralTerm | None:
-    if not contributions:
-        return None
-    terms = [
-        measures.volume(
-            contribution.integrand,
-            singular=contribution.singular,
-            extra_order=contribution.extra_order,
-            **kwargs,
+def transport_contribution(family: str) -> Build:
+    """Return the build of the mode's transport integrand of ``family`` for the species at hand."""
+
+    def build(context: Context) -> Expression | None:
+        if not context.stabilisation.terms:
+            return None
+        species = context.require_species()
+        field = context.require_field()
+        integrands = context.stabilisation.transport_contributions(
+            trial=transport_state(context, context.trial, species),
+            lagged=transport_state(context, context.lagged, species),
+            test=context.tests[field],
+            source=context.inputs.sources.get(field),
         )
-        for contribution in contributions
-    ]
-    total = terms[0]
-    for term in terms[1:]:
-        total = total + term
-    return total
+        return integrands.get(family)
+
+    return build
+
+
+def flow_contribution(family: str) -> Build:
+    """Return the build of the mode's flow integrand of ``family``."""
+
+    def build(context: Context) -> Expression | None:
+        if not context.stabilisation.terms:
+            return None
+        integrands = context.stabilisation.flow_contributions(
+            trial=flow_state(context, context.trial),
+            lagged=flow_state(context, context.lagged),
+            velocity_test=context.tests[VELOCITY],
+            pressure_test=context.tests[PRESSURE],
+        )
+        return integrands.get(family)
+
+    return build
 
 
 ModelBuilder: TypeAlias = Callable[[], StabilisationModel]

@@ -23,13 +23,14 @@ from nanopnp.geometry.pore import CylinderPore
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.physics import models
+from nanopnp.physics.backend import NGSOLVE_OPERATORS
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
     NondimensionalCoefficients,
     mesh_unit_scales,
 )
-from nanopnp.physics.flow import strain_rate
 from nanopnp.physics.nernst_planck import ConcentrationVariables, excess_potential_gradient
+from nanopnp.physics.operators import strain
 from nanopnp.solve.continuation import transfer
 from nanopnp.validation.attribution import Attribution
 from nanopnp.validation.geometry import pqr2grid_radius
@@ -160,7 +161,7 @@ def test_axisymmetric_strain_rate_omits_hoop_component_and_stress_contraction_is
     vec = ngs.VectorH1(mesh, order=2)
     u = ngs.GridFunction(vec)
     u.Set(ngs.CF((0.3 * ngs.x + 0.1 * ngs.y, -0.2 * ngs.x + 0.4 * ngs.y)))
-    sym = strain_rate(u)
+    sym = strain(NGSOLVE_OPERATORS, u)
     assert tuple(sym.dims) == (2, 2)
     point = mesh(0.4, 0.4)
     expected = ((0.3, -0.05), (-0.05, 0.4))
@@ -191,7 +192,7 @@ def test_ngsolve_physics_small_facts() -> None:
     c_cl = ngs.GridFunction(space)
     c_na.Set(1.0 + 0.1 * ngs.x)
     c_cl.Set(1.0 - 0.1 * ngs.y)
-    variables = ConcentrationVariables.primitive({"Na+": c_na, "Cl-": c_cl})
+    variables = ConcentrationVariables.primitive({"Na+": c_na, "Cl-": c_cl}, NGSOLVE_OPERATORS)
     coeffs = NondimensionalCoefficients(
         electrolyte=electrolyte,
         scales=scales,
@@ -199,7 +200,7 @@ def test_ngsolve_physics_small_facts() -> None:
         wall_distance_nm=SATURATED_WALL_DISTANCE_NM,
     )
     grad_phi_ex = excess_potential_gradient(
-        "Na+", coefficients=coeffs, variables=variables, potential=phi
+        "Na+", ops=NGSOLVE_OPERATORS, coefficients=coeffs, variables=variables, potential=phi
     )
     pt = mesh(0.4, 0.4)
     assert all(math.isfinite(float(grad_phi_ex[i](pt))) for i in range(2))
