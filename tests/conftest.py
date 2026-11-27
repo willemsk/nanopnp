@@ -110,6 +110,16 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     if deselected:
         config.hook.pytest_deselected(items=deselected)
         items[:] = kept
+    named_slow = sum(
+        1
+        for item in deselected
+        if item.get_closest_marker("slow") and Path(item.path).resolve() in named
+    )
+    reporter = config.pluginmanager.get_plugin("terminalreporter")
+    if named_slow and reporter is not None:
+        reporter.write_line(
+            f"{named_slow} slow test(s) of the named files deselected: pass {SLOW} to run them"
+        )
     for item in items:
         long = any(item.get_closest_marker(name) for name in LONG_MARKERS)
         if long and not item.get_closest_marker("timeout"):

@@ -16,8 +16,8 @@ and `slow` tests out, and so does any `-m`: `tests/conftest.py` deselects them w
 `uv run pytest --nightly` adds the `nightly` ones and `--slow` the `slow` ones; a test marked both is
 `slow`'s, which `--slow` selects and `--nightly` alone does not. Naming a `nightly` test's file runs
 it without the flag; a `slow` test always needs `--slow`. CI's nightly run calls pytest twice:
-`--slow -m "(tier1 or tier2) and slow"`, then `--nightly`. The per-push selection (§7.6) runs example 01, while it
-solves in under 60 s, and example 02's charged ePNP-NS walk; neither carries the marker. Never mark an analytic benchmark `nightly`: it is the test that localises a failure.
+`--slow -m "(tier1 or tier2) and slow"`, then `--nightly`. The per-push selection (§7.6) runs
+example 01, while it solves in under 60 s, and example 02's charged ePNP-NS walk; neither carries the marker. Never mark an analytic benchmark `nightly`: it is the test that localises a failure.
 `slow` is different: a `slow` test is measured and recorded, and no push gates it.
 
 Write a test only where it is in the test scope (`SPECIFICATION.md` §8.2.13 N1): physics and numerics,

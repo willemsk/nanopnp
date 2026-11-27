@@ -95,7 +95,8 @@ The jobs:
   visibly. That skip is missing evidence, not a defect.
 
 The default `pytest` selection is tiers 1 and 2 without the `nightly` and without the `slow` tests,
-both of which the nightly run adds. Tier 4 gates releases. `-m slow` is measured and never gated.
+both of which the nightly run adds. Tier 4 gates releases. `--slow` adds the `slow` tests, whatever
+`-m` says; they are measured and never gated.
 Nothing in the suite reaches the network or needs a COMSOL licence. A failure in `ruff`, `mypy` or
 `pytest` is therefore always a real one: a lint, a type error or a tier 1–2 assertion, never an
 environment excuse.
@@ -121,7 +122,7 @@ matrix leg, reproduce it under that interpreter (`uv run --python 3.11 pytest �
 | One Python version only | A compatibility gap | Fix across 3.11–3.14; **never** narrow `requires-python` (QR-09) |
 | Windows or macOS only | Paths, line endings, thread counts, float repr | `pathlib` everywhere; pin thread counts in the test |
 | A tier 1 test | A real regression | Root-cause it |
-| A `nightly` run | A test outside the per-push selection failed (a walk, a golden or a platform); the run opened an issue and blocks nothing | Reproduce it locally with `uv run pytest --nightly <node id>`, root-cause it and fix forward in a PR, under the Tier 2 rules below |
+| A `nightly` run | A test outside the per-push selection failed (a walk, a golden or a platform); the run opened an issue and blocks nothing | Reproduce it locally with `uv run pytest --nightly --slow <node id>`, root-cause it and fix forward in a PR, under the Tier 2 rules below |
 | `gmsh does not import` | The runner lacks the X and GL libraries | Install them (`knowledge/07-software-stack/04-geometry-meshing-and-io.md`); never unset the variable |
 | Fails under `-n`, passes serially | Order dependence or leaked state (a global, a patched attribute, a cwd) | Name the state and isolate it. Never drop `-n`, pin a worker or call it a flake |
 | A tier 2 analytic benchmark | **Evidence** | Read the next section first |
