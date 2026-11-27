@@ -9,7 +9,7 @@
 | run `/code-review`, start `np-reviewer` | hands back `REVIEW`, the main session running the hunt |
 | wait for CI, schedule a check-in | hands back `WAIT` |
 | gate and push, run `just land` | commits, and hands back with `land: yes` |
-| run a command that takes over about 4 minutes: a benchmark, a sweep, `pytest --nightly` | hands back `RUN` |
+| run a command that takes over about 4 minutes and that the push gate does not run: the nightly VER-62 walks, a benchmark, a sweep, `pytest --nightly`, a `slow` test the plan names | hands back `RUN` |
 | run `usage.py` or `checkpoint.sh`, subscribe to a PR or unsubscribe, cancel a check-in, use a task tool it lacks | skips it |
 | print a prompt, pause, report, end the turn | hands back `DONE` |
 
@@ -26,6 +26,12 @@ nothing longer than about 4 minutes. Commit under the commit hook, which stays, 
 main session lands your commits before it serves the hand-back. Where a level's file opens or
 updates the PR after a push, do it before the hand-back if `origin/<head>` exists, as the land
 brings the PR to your commits; if it does not, the next helper does it.
+
+**The land is the Tier 1–2 check.** The push gate runs `uv run pytest`, the default selection of
+Tiers 1 and 2, on every land. Where an item's done-criterion asks for the carried tests or Tier 2,
+run in the foreground only the test files the item touches, commit, and hand back with `land: yes`:
+the land runs the rest. Never hand back a `RUN` of a Tier 1 or 2 selection: `-m tier2` replaces
+the default's `not slow` and pulls in the `slow` tests, which run for hours.
 
 ## The hand-off note
 

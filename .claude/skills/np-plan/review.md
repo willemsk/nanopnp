@@ -51,7 +51,8 @@ for step 3.
    "ruled by the author" with the ruling, or "decided by the plan".
 3. Each choice that changes what a user sees, moves the scope or trades time against quality was put
    to the author (*Putting the decisions to the author* in `wp.md`).
-4. Each work item names its files, its decisions, its executor and a done-criterion; an implementer
+4. Each work item names its files, its decisions, its executor and a done-criterion, which names
+   its test files or "the land's push gate", never "Tier 2" or "the carried tests" alone; an implementer
    can write it without opening a file the plan does not name or choosing between two behaviours.
 5. Each verification row says how its test gets the object it checks; a decision that says *never*,
    *always* or *every* has one assertion per point of failure; each claimed in-scope `VER-`/`VAL-` has
