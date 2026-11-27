@@ -304,7 +304,7 @@ cores, on `apbs-binary` 3.4.1.1 from the `apbs` dependency group.
   protonation seeded. The raster of 2.7 M cells takes 10 s and the maps 3 s. APBS takes 29 s at
   193³ (1.83 GB high water) and 3.3 s at 97³ (0.24 GB). The test process peaks at 1.38 GB. Writing
   one 193³ OpenDX map takes 3.5 s and 126 MB, and GridDataFormats reads it back in 2.4 s. The
-  module, with the recorded leg and the focus under `-m slow`, takes 5 minutes.
+  module, with the recorded leg and the focus under `--slow`, takes 5 minutes.
 
 ---
 

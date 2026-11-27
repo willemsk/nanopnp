@@ -51,9 +51,8 @@ not take the seed.
 
 `-m tier2` on the command line *replaces* the default `-m` of `addopts`, so the `slow` tests are not
 left out there: `tests/conftest.py` leaves them out unless `--slow` is passed, whatever `-m` says, as
-it does the `nightly` ones unless `--nightly`. `-m tier2` therefore times what the gate runs. Until
-27 November 2026 the filter was `addopts`'s `and not slow`, and `-m tier2` ran the 24 `slow` Tier 2
-tests with the rest: 71 minutes in WP6.10's carry, where the per-push selection takes minutes.
+it does the `nightly` ones unless `--nightly` (source: `tests/conftest.py`,
+`pytest_collection_modifyitems`). `-m tier2` therefore times what the gate runs.
 
 The Qt widget tests, removed at WP5.27, ran serially and alone. A test that waited 60 s for a real browser
 page passed twice under `-n auto` on a 3-core macOS runner and then failed once, while the other two
