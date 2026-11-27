@@ -35,8 +35,7 @@ def velocity(mesh: ngs.Mesh) -> ngs.GridFunction:
 
 
 class _UnitCoefficients:
-    """Unit viscosity and Reynolds number, so that each form is the bare operator."""
-
+    # Unit viscosity and Reynolds number, so that each form is the bare operator.
     reynolds = 1.0
 
     def __init__(self, screening: float = 1.0) -> None:

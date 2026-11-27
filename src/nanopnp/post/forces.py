@@ -464,9 +464,12 @@ def _integrands(solution: ModelSolution, wall_distance_nm: Expression | None) ->
         korteweg = None
     else:
         gradient = permittivity_gradient(coefficients, variables, solid=solid)
-        # A fit or a blend moves eps~_r on this branch, so its gradient is not the zero None.
-        assert gradient is not None
-        korteweg = -0.5 * ngs.InnerProduct(field, field) * gradient
+        # None where the fit is selected with its concentration part off and no blend is given.
+        korteweg = (
+            ngs.CF((0.0, 0.0))
+            if gradient is None
+            else -0.5 * ngs.InnerProduct(field, field) * gradient
+        )
 
     velocity = functions[VELOCITY]
     return _Integrands(

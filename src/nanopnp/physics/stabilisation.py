@@ -1,4 +1,4 @@
-"""The residual stabilisation registry and its terms (NUM-11, NUM-12, NUM-14, NUM-15)."""
+"""The residual stabilisation registry and its terms."""
 
 from __future__ import annotations
 

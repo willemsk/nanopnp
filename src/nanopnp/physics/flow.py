@@ -1,4 +1,4 @@
-"""The flow equations' terms (PHY-07, PHY-08, PHY-23, NUM-04, NUM-05)."""
+"""The flow equations' terms."""
 
 from __future__ import annotations
 
@@ -68,7 +68,7 @@ def ionic_force(context: Context, side: Side) -> Expression:
 
 
 def dielectric_force(context: Context, side: Side) -> Expression | None:
-    """Return PHY-23's force density ``-1/2 |grad phi~|^2 grad(eps~_r)``; None where it is zero."""
+    """Return the dielectric force density ``-1/2 |grad phi~|^2 grad(eps~_r)``; None where zero."""
     gradient = permittivity_gradient(side.coefficients, side.variables, solid=context.inputs.solid)
     if gradient is None:
         return None

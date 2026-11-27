@@ -87,7 +87,6 @@ def _indicator_integrals(
     families: Sequence[str],
     distance: Expression,
 ) -> dict[str, float]:
-    """Integrate each species' slots of ``families`` closed with ``psi``, scaled to amperes."""
     model = _coupled(solution)
     mesh = solution.space.mesh
     functions = _functions(solution)
@@ -157,7 +156,7 @@ def indicator_currents(
             solution, measures, indicator, wall_distance_nm=distance
         )
     fluxes = _indicator_integrals(solution, measures, indicator, (kernel.FLUX,), distance)
-    # NUM-26: the reaction flux carries the stabilisation term, so this route must.
+    # The reaction flux carries the stabilisation term, so this route must.
     currents = {name: fluxes[name] + stabilisation[name] for name in model.species}
     logger.debug("indicator currents (A): %s", currents)
     return currents

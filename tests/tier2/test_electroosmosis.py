@@ -21,8 +21,7 @@ ZETA, FIELD = 1.0, 0.5
 
 
 class _UnitViscosity:
-    """A Stokes fluid of unit viscosity, so that the operator is the bare one."""
-
+    # A Stokes fluid of unit viscosity, so that the operator is the bare one.
     def viscosity(self) -> float:
         return 1.0
 

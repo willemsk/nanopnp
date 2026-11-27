@@ -50,7 +50,8 @@ def surface_charge_term(
         Which side of the equation the term is added to. Poisson's boundary term stands on the
         right-hand side, so it enters a ``load`` linear form as it is written and a ``residual``
         the Newton step reduces negated, exactly as the volumetric source does. The sign is
-        written here and nowhere else: flipped, a solve diverges or converges on the mirror
+        written here and, for the coupled models, in ``physics/coupled.py``'s surface-charge
+        contribution, which must agree: flipped, a solve diverges or converges on the mirror
         field, with no other symptom.
     """
     sign = 1.0 if side == "load" else -1.0

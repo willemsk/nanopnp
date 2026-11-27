@@ -1,4 +1,4 @@
-"""The size-modified Nernst-Planck equations' terms (PHY-04, PHY-05, PHY-23, NUM-02, NUM-04)."""
+"""The size-modified Nernst-Planck equations' terms."""
 
 from __future__ import annotations
 
@@ -200,7 +200,7 @@ def advection_drift(context: Context, side: Side, species: str) -> Expression | 
 
 
 def decrement_drift(context: Context, side: Side, species: str) -> Expression:
-    """Return PHY-23's decrement drift ``D~_i grad(mu~_ex,i)``."""
+    """Return the dielectric decrement's drift ``D~_i grad(mu~_ex,i)``."""
     coefficients = side.coefficients
     return coefficients.diffusivity(species) * excess_potential_gradient(
         species,

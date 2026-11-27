@@ -380,7 +380,7 @@ class WallDistanceGate:
 PECLET_WARNING = 1.0
 
 PECLET_EXPRESSION = "||b_i|| h_K / (2 D_i), b_i = z_i mu_i grad(phi~) + D_i beta_i - Pe u~"
-"""``Pe_K`` as NUM-12 prints it, the wind at the validated default."""
+"""``Pe_K`` with the printed wind, that of the validated default."""
 
 
 @dataclass(frozen=True)

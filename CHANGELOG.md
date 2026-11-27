@@ -45,7 +45,17 @@ validated defaults nothing changes for a user of the program: the thirteen store
   `nernst_planck_residual`; the flow's `viscous_operator`, `pressure_term`, `continuity_term`, `inertia_term`,
   `electrical_body_force`, `dielectric_gradient_force`, `strain_rate` and `axisymmetric_divergence`;
   `stabilisation.advective_velocity` and each mode's `transport_term`, `flow_term` and `indicator_term`;
-  `CoupledModel.transport_states`. The kernel's terms and slots replace them.
+  `CoupledModel.transport_states`; `stabilisation.element_size` and `StabilisationIntegrand`. The kernel's terms and
+  slots replace them, `Operators.element_size` the element size.
+- **Changed** (the Python interface of `nanopnp.physics`): `ConcentrationVariables.primitive` and
+  `logarithmic_branch` take the operators as a second argument, and `excess_potential_gradient` takes `ops=`
+  (pass `physics.backend.NGSOLVE_OPERATORS`); `CoupledModel.cell_peclet` and `TransportModel.cell_peclet` take
+  `measures` before `wall_distance_nm`, and the solid fraction and its gradient by keyword; `TransportModel` gains
+  `context` and `terms_in_force`; `TransportState` and `FlowState` hold the wind, the force and the operators in place
+  of the coefficients and the fields, and are built by `transport_state` and `flow_state`; a mode's
+  `transport_contributions` and `flow_contributions` return a mapping from slot family to integrand;
+  `flow.permittivity_gradient` returns None where the gradient is zero; `concentration_field_name` moves to
+  `io.vocabulary`, and `physics.models` still exports it.
 - **Added** (the tests, §7.2): VER-81, the kernel's composition; VER-65 holds the modules of the terms to no backend
   import.
 
