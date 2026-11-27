@@ -94,7 +94,8 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   Its content has no limit and it is no lane; a change that is not Markdown alone is reviewed once by
   `np-reviewer`, with the chore's statement for its plan, and always where it touches `.claude/settings*.json`,
   the hooks, the agents, the skills or the workflows of `.claude/` and `.github/`; where a changed path is
-  under `src/`, `tests/` or `.githooks/`, is a `.py`, `.sh` or `.cjs` file, or is `justfile`, the
+  under `src/`, `tests/`, `.githooks/` or `.claude/scripts/`, is a `.py`, `.sh` or `.cjs` file, or is
+  `justfile`, the
   `/code-review` hunt runs first, as at a ship. A commit made after the review
   is reviewed on its own diff at medium effort unless it is Markdown alone outside those paths. A session runs
   it only where no carry is running, which the author's start of the session ensures; it refuses on a dirty
@@ -104,7 +105,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   and on Opus 5.5 at high where it touches `src/` or `tests/`. An open package rebases on `main` at its
   ship, as `just land` never rebases on `main`. A numbered item that a chore adds takes the next number on `origin/main`; CI runs `duplicates.py`, and the
   chore runs it again after a rebase on a `main` that moved before its land. (§8.2.57 BG1 to BG6;
-  §8.2.58 BH1; §8.2.61 BK3, BK4; `.claude/skills/np-chore/`)
+  §8.2.58 BH1; §8.2.61 BK3 to BK5; `.claude/skills/np-chore/`)
 * A pull request's CI tests on Linux, and a package's `/np-ship` reads no platform leg. `/np-ship phase`
   dispatches `ci.yml` on the close's head and stops while a `platforms` leg on ubuntu, macOS or Windows is
   not `success`. (§7.6; §8.2.49 AY4; §8.2.50 AZ8; `.claude/skills/np-ship/phase.md`)
