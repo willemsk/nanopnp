@@ -509,7 +509,7 @@ This page lists the 580 that bind now. The 1,177 of a delivered plan, fixed, spe
 | REV-298 | author | `docs/project/review-findings.md` |  | WP6.08 | The log branch has no case key and no line in the manifest | left by WP6.08's plan, D4; ruled, a case key (§8.2.62 BL7); WP6.11 | open |
 | REV-299 | session, own call | `docs/project/review-findings.md` |  |  | A rebase merge rewrites the shas that a package's ticks and Outcome name | left by `/np-chore`'s review, CODE_REVIEW_096 | open |
 | REV-300 | author | `docs/project/review-findings.md` |  | WP6.09 | The stabilisation's wind leaves out PHY-23's decrement | left by WP6.09's prototype; ruled, the wind reads it (§8.2.62 BL5); WP6.10 | open |
-| REV-301 | session, own call | `docs/project/review-findings.md` |  | WP6.09 | Three messages in mesh/ cite CON-04 for the half-plane where CON-01 is meant | left by `/np-ship`'s review of WP6.09, CODE_REVIEW_097 | open |
+| REV-301 | session, own call | `docs/project/review-findings.md` |  | WP6.09 | Three messages in mesh/ cite CON-04 for the half-plane where CON-01 is meant | left by `/np-ship`'s review of WP6.09, CODE_REVIEW_097; WP6.14, the pore's 3D mesh (the Phase 6 plan) | open |
 | MOD-08 | author | `docs/project/modularity-findings.md` |  |  | Five registries in four shapes | §8.2.8 H5; brought forward by REV-272 and §8.2.50 AZ4; §8.2.53 BC3, BC7: Phase 7's library-shape package, its switches as data Phase 6's kernel | post-1.0 |
 | MOD-10 | author | `docs/project/modularity-findings.md` |  | WP6.10 | The backend interface of section 5.4.1 does not exist | §8.2.8 H3; §8.2.50 AZ1; §8.2.53 BC2; §8.2.54 BD1; §8.2.62 BL6: ruled, no term names the backend; WP6.10 to WP6.12 | deferred |
 | MOD-17 | author | `docs/project/modularity-findings.md` |  |  | The validated correction set is a default in eight signatures | §8.2.8 H5 | post-1.0 |
@@ -585,8 +585,8 @@ This page lists the 580 that bind now. The 1,177 of a delivered plan, fixed, spe
 | current.md bullet | author | `docs/plans/current.md` |  |  | A VER-62 miss is reverted or re-pinned by ruling** (G10); **in WP6.10 to WP6.12 a stored number the kernel moves is | VER-62 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | No term names the backend or a dimension** (BL6). **The wind reads every drift** (BL5). **The log branch is a case | unstated | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | 3D is in benchmarks alone, before the installed packages** (BL4, BL9; N4). | unstated | in force (cache) |
-| current.md bullet | author | `docs/plans/current.md` |  |  | The schema and `nanopnp.PUBLIC` may change until v1.0** (F4; BC20). | unstated | in force (cache) |
-| current.md bullet | author | `docs/plans/current.md` |  |  | The front end is NiceGUI, tried on its hardest view before the rebuild** (AF4; BC13; BC16). | unstated | in force (cache) |
+| current.md bullet | author | `docs/plans/current.md` |  |  | The schema and `nanopnp.PUBLIC` may change until v1.0** (F4); **from v1.0 the case file and the run record are | unstated | in force (cache) |
+| current.md bullet | author | `docs/plans/current.md` |  |  | The front end is NiceGUI, tried on its hardest view before the rebuild** (AF4; BC13); **the workbench's layout | unstated | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | The phases are kernel, library, workbench with the composer's tool, mutator, sketcher, analyte forces, | unstated | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | The channel axis's two limits stay** (BE1). **Six guard numbers are held on Linux alone** (BI1, BI2). | unstated | in force (cache) |
-| current.md bullet | author | `docs/plans/current.md` |  |  | An orchestrator carries a package; the three commands stay** (BC10; BD2). | unstated | in force (cache) |
+| current.md bullet | author | `docs/plans/current.md` |  |  | An orchestrator carries a package; the three commands stay** (BC10; BD2). **The continuation trial adopts its | unstated | in force (cache) |
