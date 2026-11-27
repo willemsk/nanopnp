@@ -28,6 +28,10 @@ in the foreground by a main session on Opus 5.5. [verified][^probe]
 
 - It has no `Agent` and no `AskUserQuestion`, and `ToolSearch` returns no schema for either. It
   cannot start an agent or ask the author: the main session does both for it.
+- It cannot run the `/code-review` skill. The skill starts its own review agents; inside an `Agent`
+  it returned no findings, and called directly from the main session it ran. So the main session
+  runs the hunt and passes its findings to `np-reviewer` (§8.2.61 BK1). A fork it starts takes the
+  main session's model (§8.2.56). [verified][^review]
 
 ### What it can do
 
@@ -111,5 +115,9 @@ It takes `model` (`sonnet`, `opus`, `haiku`, `fable`) and `effort`. Its descript
     of `ephemeral_1h_input_tokens`. The main session's 481 requests of the same transcript record
     `promptCacheRequested: "1h"`. The push gate's times are `<git dir>/nanopnp-gate.log`'s `run push`
     lines of that day.
+[^review]: `.claude/skills/np-ship/wp.md` at `5b1e7fb`, before WP6.07: "Inside an `Agent` the skill returns
+    no findings; called directly, it starts its own review agent." The model of its forks is
+    WP6.06's post-mortem's measure, recorded in §8.2.56: its three `code-review` forks ran on Fable,
+    the main session's model.
 [^api]: The Claude API skill bundled with Claude Code 2.1.332, its *Thinking & Effort* table: Opus 5.5's
     effort defaults to `medium`, Sonnet 5.5's to `high`.

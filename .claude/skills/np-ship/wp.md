@@ -71,22 +71,35 @@ a compaction.
 A PR that changes a screen runs `/np-gui review` and `/np-gui publish`, links the gallery under
 **Verification**, and runs `/np-gui collect` before the merge.
 
+**The hunt** comes first (§8.2.61 BK1, BK2). On the recorded head, checked out, call the skill
+directly from this session, never inside an `Agent`: it starts its own review agents, which a helper
+cannot. It reports and edits nothing:
+
+```
+Skill(skill="code-review", args="high --max-findings all <head branch> -- Report only: edit, commit and write nothing. Static review: run no tests, benchmark, sweep, gate.sh or pytest --nightly.")
+```
+
+Keep its findings as it gives them, each with its file:line and its claim, or `none`.
+
 **The review** is one pass by `np-reviewer`, on Opus 5.5 at high effort: standards, the
-specification and the physics and numerics together, and it fixes and commits what it confirms
-(§8.2.56 BF4). Start it in the foreground from this session with `Agent`, `subagent_type:
-"np-reviewer"`, passing no model and no effort. A helper of `/np-carry` hands back `REVIEW` with the
-prompt and ends; a fresh helper goes on with the reply. The prompt:
+specification and the physics and numerics together, and the hunt's findings; it fixes and commits
+what it confirms (§8.2.56 BF4). Start it in the foreground from this session with `Agent`,
+`subagent_type: "np-reviewer"`, passing no model and no effort. A helper of `/np-carry` hands back
+`REVIEW` with the prompt, its last line `The hunt's findings: <to be added>`, and ends; the main
+session runs the hunt, puts its findings on that line, and a fresh helper goes on with the reply.
+The prompt:
 
 ```text
 Review PR #<number> of WP<n>, base <sha>, head <sha>; its plan is <path>. The clauses it cites:
 <identifiers>. Drop each test outside the test scope in its own commit, `test: drop tests outside
 the test scope`. Run no benchmark, sweep, gate.sh or pytest --nightly.
+The hunt's findings: <the /code-review findings, or none>
 ```
 
 **The reply must show that the pass completed**: the reviewed base and head, which match the SHAs
 recorded above, or under `/np-carry` a head whose commits after the recorded one are `just land`'s
-own, as the land before the review may add them (§8.2.56 BF11), its commits, the report's path and each finding with its outcome. Zero findings is
-valid. If the reply lacks that evidence, start the reviewer once more, never two at a time; if it
+own, as the land before the review may add them (§8.2.56 BF11), its commits, the report's path and
+each finding with its outcome, each of the hunt's included. Zero findings is valid. If the reply lacks that evidence, start the reviewer once more, never two at a time; if it
 still lacks it, stop before §5 and report it. Then, in this session:
 
 1. **A small finding** the reviewer left is fixed now, by `np-builder` (a helper hands back `WORKER`), its

@@ -6,7 +6,7 @@
 |---|---|
 | ask the author | hands back `ASK` |
 | give an item or a read to an agent | hands back `WORKER` |
-| start `np-reviewer` | hands back `REVIEW` |
+| run `/code-review`, start `np-reviewer` | hands back `REVIEW`, the main session running the hunt |
 | wait for CI, schedule a check-in | hands back `WAIT` |
 | gate and push, run `just land` | commits, and hands back with `land: yes` |
 | run a command that takes over about 4 minutes: a benchmark, a sweep, `pytest --nightly` | hands back `RUN` |
@@ -69,7 +69,8 @@ pushed at that sha, its `HEAD`.
   worker's whole prompt.
 - `REVIEW`: `agent: np-reviewer`, `effort: medium` for the review of a finding the author pulled in
   (§8.2.56 BF8) or of a small finding fixed after the review (§8.2.58 BH1), then the reviewer's whole
-  prompt.
+  prompt. A full review's prompt ends `The hunt's findings: <to be added>`: the main session runs the
+  `/code-review` hunt and fills it in (§8.2.61 BK1).
 - `WAIT`: `pr: <number>` and the steward's check-in delay.
 - `RUN`: the command, with its output sent to a log under `<git dir>`; it writes no tracked file.
   The main session runs it in the background, waits, and gives the next helper the log's path.
