@@ -303,7 +303,7 @@ in a `git worktree` of `5332fbd`.
   > on a zero part; the finite assembly under PHY-23 and `reference` runs on a 1.5 nm mesh, 3.4 s. NUM-14's
   > *Approximate residual* bullet is reworded beside its added sentence, as "every second derivative is dropped"
   > contradicted the wind's `∇∇φ̃`. `test_current_routes.py` with `test_solution_state.py`: 39 passed.
-- [ ] 5. `docs/project/modularity-layering.yaml`, `tests/tier1/test_backend_guard.py` and VER-65's row (D8); done
+- [x] 5. b8ffdf7 `docs/project/modularity-layering.yaml`, `tests/tier1/test_backend_guard.py` and VER-65's row (D8); done
   when VER-65's tests pass. **Executor:** main
 - [ ] 6. The thirteen walks, a `RUN` hand-back with no commit (D7); done when the log shows thirteen walks, none
   failed or skipped. **Executor:** main, the run by the main session
