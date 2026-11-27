@@ -272,7 +272,7 @@ in a `git worktree` of `5332fbd`.
 - [x] 1. e482296 The stored operator, then `src/nanopnp/physics/operators.py`, `backend.py`, `kernel.py` and
   `tests/tier1/test_kernel.py` (D1, D2, D3, D9); done when the twelve variants are stored from the unedited
   tree and VER-81's first test passes. **Executor:** main
-- [ ] 2. `physics/nernst_planck.py`, `flow.py`, `stabilisation.py`, `coupled.py`, `models.py`, `coefficients.py`,
+- [x] 2. 750c63f `physics/nernst_planck.py`, `flow.py`, `stabilisation.py`, `coupled.py`, `models.py`, `coefficients.py`,
   `materials/fields.py`, `post/forces.py`, and the tests of *Grounding* D6 (D1, D2, D4 to D7); done when the comparison is within 10⁻¹² on
   the ten variants, and on the two PHY-23 variants under a stabilised mode with the decrement's drift left out of
   the wind in a local edit that is not committed, and VER-81's second test and the carried tests pass. The Outcome
@@ -290,7 +290,7 @@ in a `git worktree` of `5332fbd`.
   > `TRANSPORT_SLOTS` in this item, not item 4; `Context` binds the slot's test field (`field`) beside its species,
   > and `Slot.per_field` names the sources' slots `source.<field>`; `concentration_field_name` moves to
   > `io/vocabulary.py`, which `coupled.py` reads, and `models.py` re-exports it.
-- [ ] 3. Compaction checkpoint. **Executor:** main
+- [x] 3. Compaction checkpoint. **Executor:** main
 - [ ] 4. `post/qoi.py`, `models.py`, `solve/continuation.py`, `numerics/gates.py`, `nernst_planck.py`
   (`species_flux` deleted, its tests carried), `specification/06-numerics.md`, and VER-81's row in
   `specification/07-verification/02-tier-1.md` (D4, D9); done when VER-81's third test and
