@@ -2,35 +2,32 @@
 
 ## Step
 
-Implement: done. Items 1 to 7 ticked; the package waits for `/np-ship wp 6.10`.
+Ship: the preflight, the PR's body and the review's start are done. The review waits on the hunt.
 
 ## Done
 
-- `64112a8c` docs: WP6.10's records (item 6 ticked with its Outcome; item 7)
-- this note's commit, `docs: WP6.10 hand-off, implement`
-- PR #227's body brought to the tree by REST (`gh api -X PATCH repos/willemsk/nanopnp/pulls/227`); the GitHub MCP
-  server fails to connect and `gh pr view` hits GraphQL, which is refused.
+- Preflight: CHANGELOG carries `## [0.7.0-alpha.10]`; the branch is on `main` (base `5332fbdb`); `duplicates.py` passes.
+- PR #227's body: the implement Measured, the reading counts and the Tier 2 note added, and the reviewed base and head
+  under Verification (REST `gh api -X PATCH`; the GitHub MCP server fails to connect).
+- This note's commit, `docs: WP6.10 hand-off, ship`.
 
 ## Measured
 
-- The thirteen walks at `5eeb55e3`, linux-x86_64/X86_V3: 43 passed in 406.49 s, all same-mesh, none failed or
-  skipped; largest relative drift 2.898e-12 (`2wcd-charged`), none re-pinned.
+- Tier 2 with the `slow` tests: 220 passed in 71 min; `test_num07_weight_order_on_example_05` alone 3,974 s, the same on
+  `2ba10ab9` within 1%, so not a WP6.10 regression.
+- The thirteen walks: 43 passed in 406 s, largest drift 2.898e-12. REV-302 stays open.
+- Implement helpers' reading: 10,185, 8,942 and 6,790 words before the first edit.
 
 ## Decided
 
-- `holds-now.yaml`: BL5 now holds in NUM-12's and NUM-14's NOTEs, §5.4.4 and VER-81; BL6 in §5.4.1, QR-13 and VER-65,
-  open on WP6.12 for MOD-10; BL1 and BC1 open on WP6.11 and WP6.12.
-- MOD-10 stays `deferred`, with a *Built for the coupled models* paragraph in `docs/project/modularity.md`; it closes
-  at WP6.12.
-- `docs/design/kernel.md` keeps its pre-WP6.10 tense: a sentence under its opening says *today* means `5332fbd`.
-- No `usage.py` line was taken (a helper skips it); the PR's **Measured** keeps the plan's line alone.
+None.
 
 ## Open
 
-None put to the author. REV-302 (PHY-23 under a stabilised mode assembles fifty times slower) stays open for the
-ship's report.
+None put to the author.
 
 ## Next
 
-Run `/np-ship wp 6.10` (Sonnet 5.5, medium) from `.claude/skills/np-ship/wp.md` §0: PR #227, head
-`claude/relaxed-heisenberg-axbj47`; read the PR through `gh api repos/willemsk/nanopnp/pulls/227`.
+Reviewer reply in hand: §4 of `.claude/skills/np-ship/wp.md`, items 1 to 4: fix small findings by `WORKER`
+(`np-builder`), delete this note, record REV-302 in the PR's **Deliberately not done** (already there), write the
+`docs: WP6.10 review recorded` commit (current.md, Status lines, Outcome with the summed cost), and hand back `WAIT`.
