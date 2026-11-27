@@ -49,6 +49,7 @@ DODECAMER = "A,B,C,D,E,F,G,H,I,J,K,L"
 REQUIRE_GMSH = "NANOPNP_REQUIRE_GMSH"
 
 NIGHTLY = "--nightly"
+SLOW = "--slow"
 
 # A `nightly`, `slow`, Tier 3 or Tier 4 test is bounded here; every other test by
 # pyproject.toml's `timeout`, PER_TEST_TIMEOUT_S = 600, measured on the per-push selection,
@@ -72,29 +73,43 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="also run the tests marked nightly: the executed examples and the 2WCD "
         "walks, which CI runs every night (SPECIFICATION.md section 7.6)",
     )
+    parser.addoption(
+        SLOW,
+        action="store_true",
+        help="also run the tests marked slow: the measured budgets and benchmarks, which CI "
+        "runs every night and before a release; it alone selects a test marked both slow and "
+        "nightly (SPECIFICATION.md section 7.6)",
+    )
 
 
 @pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    if not config.getoption(NIGHTLY):
-        named = {
-            Path(argument.split("::")[0]).resolve()
-            for argument in config.args
-            if Path(argument.split("::")[0]).is_file()
-        }
-        kept, left_out = [], []
-        for item in items:
-            if (
-                item.get_closest_marker("nightly")
-                and not item.get_closest_marker("slow")
-                and Path(item.path).resolve() not in named
-            ):
-                left_out.append(item)
-            else:
-                kept.append(item)
-        if left_out:
-            config.hook.pytest_deselected(items=left_out)
-            items[:] = kept
+    # Whatever `-m` says, a `slow` test runs only under --slow, and a `nightly` one only under
+    # --nightly or where its file is named. A test marked both is `slow`'s alone: --slow selects
+    # it, with or without --nightly, and --nightly alone does not.
+    slow, nightly = config.getoption(SLOW), config.getoption(NIGHTLY)
+    named = {
+        Path(argument.split("::")[0]).resolve()
+        for argument in config.args
+        if Path(argument.split("::")[0]).is_file()
+    }
+
+    def left_out(item: pytest.Item) -> bool:
+        if item.get_closest_marker("slow"):
+            return not slow
+        return (
+            not nightly
+            and item.get_closest_marker("nightly") is not None
+            and Path(item.path).resolve() not in named
+        )
+
+    kept: list[pytest.Item] = []
+    deselected: list[pytest.Item] = []
+    for item in items:
+        (deselected if left_out(item) else kept).append(item)
+    if deselected:
+        config.hook.pytest_deselected(items=deselected)
+        items[:] = kept
     for item in items:
         long = any(item.get_closest_marker(name) for name in LONG_MARKERS)
         if long and not item.get_closest_marker("timeout"):

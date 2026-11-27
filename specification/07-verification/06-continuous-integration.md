@@ -10,8 +10,8 @@ description: "Maps each CI trigger, a pull request, a push to main, or the night
 |---|---|
 | A pull request | The per-push selection (Tier 1; Tier 2 without `nightly` or `slow`), on ubuntu, Python 3.14 |
 | A push to `main` | The per-push selection on ubuntu, macOS and Windows, Python 3.14 |
-| Nightly | 1 and 2 in full (`--nightly`, and the `slow` tests) on ubuntu, macOS and Windows, Python 3.14; 3, and 1 on Python 3.11 to 3.13 on the three platforms, recorded and not gated; a failed run opens an issue and blocks nothing |
-| Before a tagged release | 1 and 2 in full (`--nightly`, and the `slow` tests), Python 3.11 to 3.14, on the three platforms; 3 on ubuntu, Python 3.14, recorded and not gated; Tier 4 has no job until experimental fixtures exist (§7.5) |
+| Nightly | 1 and 2 in full (`--nightly`, and `--slow` for the `slow` tests) on ubuntu, macOS and Windows, Python 3.14; 3, and 1 on Python 3.11 to 3.13 on the three platforms, recorded and not gated; a failed run opens an issue and blocks nothing |
+| Before a tagged release | 1 and 2 in full (`--nightly`, and `--slow` for the `slow` tests), Python 3.11 to 3.14, on the three platforms; 3 on ubuntu, Python 3.14, recorded and not gated; Tier 4 has no job until experimental fixtures exist (§7.5) |
 | Every push, prose-only pushes included | The strict documentation build of VER-45; `.claude/scripts/decisions.py --check` and `ruff`, which the gate also runs at every commit; and `.claude/scripts/links.py`, every relative link of the tracked Markdown. A prose-only push changes only Markdown, `holds-now.yaml` and the workflow under `.claude/`, but `.claude/scripts/decisions.py`, which a test loads (`.github/scripts/prose-only.sh`; §8.2.56 BF11) |
 
 The per-push selection is Tier 1, the Tier 2 tests that neither walk the pipeline nor carry `slow`,
@@ -45,7 +45,9 @@ golden carries none, so a moved physics number is caught before the merge. The n
 release and a `--nightly` run include them. A failed nightly run opens an issue titled
 `Nightly failed: <date> <sha7>` and blocks nothing; a golden on another walk is caught the night
 after its merge. The selection leaves the
-`nightly` tests out unless `--nightly` is passed or the test's file is named. That selection is
+`nightly` tests out unless `--nightly` is passed or the test's file is named, and the `slow` tests
+out unless `--slow` is passed, whatever `-m` says. A test that carries both markers is `slow`'s:
+`--slow` selects it, and `--nightly` alone does not. That selection is
 what `uv run pytest` runs; the commit hook runs every Tier 1 test without the `nightly` marker and
 no Tier 2 test (§8.2.11 L2); the push gate (`gate.sh run`) runs the per-push selection. The marker
 never goes on an analytic benchmark, which is the test that localises a failure (§7.1).

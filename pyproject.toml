@@ -224,7 +224,9 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-m '(tier1 or tier2) and not slow' --strict-markers --strict-config"
+# The `slow` and `nightly` tests are left out in tests/conftest.py unless --slow or --nightly, so a
+# `-m` that replaces this one cannot pull them in (SPECIFICATION.md section 7.6).
+addopts = "-m '(tier1 or tier2)' --strict-markers --strict-config"
 # Each test's bound (pytest-timeout; SPECIFICATION.md section 7.6, NOTE (a stalled test); WP6.01 D2):
 # PER_TEST_TIMEOUT_S = 600, ten times the slowest per-push test measured. tests/conftest.py
 # gives a `nightly`, `slow`, Tier 3 or Tier 4 test LONG_TEST_TIMEOUT_S instead. A hang fails
@@ -235,7 +237,7 @@ markers = [
     "tier2: analytic benchmarks, minutes, every push (section 7.3)",
     "tier3: COMSOL cross-implementation comparison, hours, nightly (section 7.4)",
     "tier4: experimental reproduction, hours, before a tagged release (section 7.5)",
-    "slow: takes more than a minute regardless of tier",
+    "slow: takes more than a minute regardless of tier, and left out of every selection unless --slow (section 7.6)",
     "nightly: an end-to-end walk, run every night and by the release, and left out of the development selection unless --nightly (section 7.6)",
     "records: holds code to a Markdown record; the push gate runs it on a prose-only change too (.claude/hooks/gate.sh)",
 ]
