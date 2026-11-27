@@ -4,29 +4,29 @@ Updated 27 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-**What changes.** The first of three packages that rebuild the model's equations is built and waits for its review:
-the same equations, assembled from small registered pieces, none naming the finite-element library or two
-dimensions. A user notices nothing at the defaults; with the dielectric forces and a stabilisation both on, the
-stabilisation now reads the dielectric drift too, as you ruled.
+**What changes.** The first of three packages that rebuild the model's equations is built, reviewed and merges
+once CI is green: the same equations, assembled from small registered pieces, none naming the finite-element
+library or two dimensions. A user notices nothing at the defaults; with the dielectric forces and a stabilisation
+both on, the stabilisation now reads the dielectric drift too, as you ruled.
 
-**Cost.** Left: the review and the ship. The rest of the phase about 21 sessions, 17 to 30 agent hours and 33 times
-you act, the 3D pore's machine time not measured.
+**Cost.** Left: your merge. The rest of the phase about 21 sessions, 17 to 30 agent hours and 33 times you act, the
+3D pore's machine time not measured.
 
 **What could go wrong.** Nothing moved beyond round-off: the thirteen stored runs hold to 2.9 × 10⁻¹². That opt-in
 combination assembles about fifty times more slowly (REV-302).
 
-**Your call.** Nothing until the review. *Recommendation:* ship the package.
+**Your call.** Merge the pull request. *Recommendation:* merge; it tags `v0.7.0-alpha.10`.
 
 ## Position
 
 - Phases 1 to 5 **closed**, `v0.2.0` to `v0.6.0` ([Phase 5's report](phase-5/phase-5-workbench.md#end-of-phase-report)).
-- **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.09 merged**,
-  tagged to `v0.7.0-alpha.9`.
+- **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.10 merged**,
+  tagged to `v0.7.0-alpha.10`.
 - **The kernel's design is ruled** (§8.2.62; [the design](../design/kernel.md); §5.4.4).
-- **WP6.10, the composition, is built** ([the plan](phase-6/wp6.10-the-composition.md); VER-81; PR #227); tagged
-  `v0.7.0-alpha.10` once merged. **By scope:** WP6.11 and WP6.12, the kernel; WP6.13 to WP6.15, the 3D benchmarks;
-  WP6.16, the installed packages; the close.
-- **Next:** `/np-ship wp 6.10` (Sonnet 5.5, medium), within `/np-carry wp 6.10`.
+- **WP6.10, the composition, is merged and tagged `v0.7.0-alpha.10`** ([the plan](phase-6/wp6.10-the-composition.md);
+  VER-81; PR #227). **By scope:** WP6.11 and WP6.12, the kernel; WP6.13 to WP6.15, the 3D benchmarks; WP6.16, the
+  installed packages; the close.
+- **Next:** `/np-plan wp 6.11`, the switch records, the log branch's key and `post/forces.py` reading the densities.
 
 ## Not to be re-decided
 
