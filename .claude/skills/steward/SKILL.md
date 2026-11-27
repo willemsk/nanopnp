@@ -95,8 +95,8 @@ The jobs:
   visibly. That skip is missing evidence, not a defect.
 
 The default `pytest` selection is tiers 1 and 2 without the `nightly` and without the `slow` tests,
-both of which the nightly run adds. Tier 4 gates releases. `--slow` adds the `slow` tests, whatever
-`-m` says; they are measured and never gated.
+both of which the nightly run adds. Tier 4 gates releases. `--slow` adds the `slow` tests, which no
+`-m` selects without it; they are measured and never gated.
 Nothing in the suite reaches the network or needs a COMSOL licence. A failure in `ruff`, `mypy` or
 `pytest` is therefore always a real one: a lint, a type error or a tier 1–2 assertion, never an
 environment excuse.
