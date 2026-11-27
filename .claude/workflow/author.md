@@ -32,6 +32,8 @@ question dialog may be all the author sees, so the context lives in it, not in t
   open: what the specification, the phase or the design leaves undecided. An identifier only follows
   its words, in brackets.
 - **Each option's description**, one or two sentences: what the user will see or do differently.
+  Where the options differ in how much they leave open, the question says in plain words which is the more
+  general one, and what each means without its jargon.
 - **Each option's preview**, short lines in Markdown:
   - **You get:** the change for the user, with a concrete example: a command, a screen, a file;
   - **It costs:** sessions, agent hours and your touches (§8.3), and what it adds, delays or leaves

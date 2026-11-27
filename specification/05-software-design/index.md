@@ -16,5 +16,5 @@ The subsections, one file each:
 * [5.3.4 Sweep specification and dataset](03-4-sweeps.md) - Specifies sweeps, sets of runs described by their own declarative document that names a base case and the axes to vary.
 * [5.3.5 Project folder](03-5-project-folder.md) - Specifies the workbench project: a plain folder of models, studies, inputs, runs and sweeps, and how a case file imports into it and a project exports.
 * [5.4 Component design](04-component-design.md) - Specifies the component interfaces: the weak forms stated once against NGSolve, the correction-model interface and the physics-model interface.
-* [5.5 Extension points](05-extension-points.md) - Specifies the two levels of pluggability, the registries for discretisation backends, and how each extension is added by one registration.
+* [5.5 Extension points](05-extension-points.md) - Specifies the three levels of pluggability, the registries for discretisation backends, and how each extension is added by one registration.
 * [5.6 Architecture decisions](06-architecture-decisions.md) - Records the architecture decisions, beginning with NGSolve as the single production backend against which the weak forms are stated once (§5.4.1).

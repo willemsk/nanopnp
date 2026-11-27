@@ -1,14 +1,32 @@
 # Kernel design
 
 The design of the kernel of registered terms that Phase 6 builds (FR-40; §8.2.53 BC1, BC2), written by WP6.09 and
-tried in a prototype that is thrown away. **It is a proposal.** It amends no clause: the author rules it at the round
-on the design, `/np-plan amend 6`, which rewrites ADR-005, §5.4 and §5.5 from what is ruled and numbers the kernel's
-packages from WP6.10. Where this page and the specification disagree, the specification governs until then.
+tried in a prototype that is thrown away. **The author ruled it on 27 November 2026 (§8.2.62 BL1 to BL10), with the
+changes of *As ruled* below.** ADR-005, §5.4.1, §5.4.4 and §5.5 state the design as ruled and govern; this page holds
+the slots, the switch records, the names the workbench reads and what the prototype showed. WP6.10 to WP6.12 build it.
 
 The prototype is the branch
 [`prototype/wp6.09-kernel`](https://github.com/willemsk/nanopnp/tree/prototype/wp6.09-kernel), at `1b5f5e3`, forked
 from `main` and never merged (§8.2.60 BJ3). Its code survives while the branch does; the author deletes it after the
 kernel's last package. The kernel's packages write their code anew.
+
+## As ruled
+
+The author approved the five pieces below and put the more modular and maintainable structure before holding a
+number (BL1). Where the rest of this page differs, this list holds:
+
+- **A moved number is re-pinned once explained** (BL2; VER-62). The kernel's packages cut the slots and state each
+  rule for clarity, not along today's functions. A stored walk that moves is re-pinned in its package when the old
+  pin holds to 10⁻⁸ with the one named change undone, the move is within 10⁻³, and the analytic benchmarks pass
+  unchanged.
+- **The wind reads every drift** (BL5; REV-300). No flux term has a flag that keeps its drift from a reader.
+- **No term names the backend** (BL6; MOD-10; §5.4.1). A term takes its operators and its geometry, the dimension
+  and the axial direction among it, from the context, so it assumes neither NGSolve nor two dimensions.
+- **Readers take the switch records**; no name is kept for compatibility alone. The log branch is a fifth record, a
+  case key that excludes PHY-23's switch (BL7; REV-298).
+- **Three packages**, WP6.10 to WP6.12, the full check in the third (BL3).
+- **Two benchmarks in 3D** after them, WP6.13 to WP6.15, with the flow in 3D priced by a trial (BL4), then **the
+  installed packages through one registrar**, WP6.16 (BL8, BL9).
 
 ## The kernel in brief
 
@@ -40,8 +58,9 @@ rung past the second.
 
 ## Today's integrals as slots
 
-The slots are today's integrals, in today's order (`CoupledModel.residual_form` and `_flow_residual`). Another
-partition is a re-pin, which only a ruling makes (§8.2.7 G10). "Estimated" is NGSolve's order from the trial and test
+The prototype's slots are today's integrals, in today's order (`CoupledModel.residual_form` and `_flow_residual`).
+The kernel's packages may cut them otherwise and state each rule, a number that then moves being handled as VER-62
+says (*As ruled*). "Estimated" is NGSolve's order from the trial and test
 functions with the measure's bonus; "singular" takes the rule of order 3 or more that a `1/r` form needs (VER-07).
 
 | Slot | Test | Domain | Rule | Today's function | Terms that contribute |
@@ -143,8 +162,8 @@ paper, with VER-22's routes as its check.
 out PHY-23's decrement, so the stabilisation's wind and its approximate residual omit a part of the flux that the weak
 form keeps. The prototype reproduced this with a per-term flag, `in_drift=False` on the decrement, and the guard walks
 hold. NUM-12's NOTE writes the wind as `b_i = z_i μ_i ∇φ̃ + D_i β_i − Pe u`, without the decrement, and no clause
-says whether that holds under PHY-23: NUM-14's reference settings were recorded for a model without it. The design
-keeps the flag and puts the question to the author below (REV-300).
+says whether that holds under PHY-23: NUM-14's reference settings were recorded for a model without it. The author
+ruled that the wind reads it (BL5), so the kernel has no such flag, and WP6.10 amends NUM-12's NOTE.
 
 **A fourth reader the prototype left alone.** NUM-24's indicator current takes each species' flux from
 `nernst_planck.py:species_flux`, the function today's weak form integrates, so the two read one flux (PHY-23's NOTE;
@@ -223,10 +242,10 @@ the measure. These are the table's names but `grad`, which a term's body still w
 (`ngs.grad`, with `ngs.InnerProduct` and the coordinate `ngs.x`): in the prototype 11 of the kernel's functions import
 NGSolve.
 
-Two readings follow, put to the author below: the seam is the context, the slot and the measure, and a term keeps
-NGSolve's algebra until a second backend is planned (H3's argument stands: a wrapper with one implementation cannot
-be tested for what it exists for); or a term also reads its few operators from the context, which makes its body
-backend-neutral in form but tests nothing more today. VER-65 remains the guard either way.
+Two readings followed: the seam is the context, the slot and the measure, and a term keeps NGSolve's algebra until
+a second backend is planned; or a term also reads its operators from the context. The author ruled the second (BL6):
+the 3D benchmarks make a term take its geometry from the context under either reading and test that half, and the
+operators are a thin layer beside it. VER-65 asserts that no module holding a term imports the backend.
 
 ## What the prototype showed
 
@@ -299,43 +318,37 @@ The weak forms did not stop the trial; the measure and the mesh adapters did. Pr
 | B. A and VER-17 in 3D | A, and a 3D path in the mesher, the indicator current along a 3D axis, and a Newton solve of 260,406 unknowns at the coarsest size, whose direct factorisation is unmeasured | A, and about two more packages: 6 sessions, 5 to 10 agent hours, 10 touches, and machine time not known |
 | C. Neither | CON-01 stays a statement no test can fail; this list is its record | None |
 
+The author ruled option B, with a bounded trial that prices the flow in 3D (BL4). VER-17 solves `pnp`, the potential
+and the ions with no flow, so the two-vector velocity and the hoop terms above are the flow trial's, not B's.
+
 ## The kernel's packages
 
-Four packages, BC1's count, each pushed on the per-push selection (BA14), the last one holding the full check (BC4).
-The prices come from measured work: the prototype composed the whole coupled model, 1,405 lines with its two scripts,
-in 0.7 agent hours over two helpers and about 15 minutes of machine time; WP6.08, carried, took 1.5 agent hours and
-4 touches, and WP6.06 3.3 agent hours and 5 touches. A kept package adds its tests, its review, its ship and CI to a
-quick build, and writes the code anew.
+Three packages, as ruled (BL3), each pushed on the per-push selection (BA14), the last holding the full check (BC4;
+BL2). The page proposed four, the fourth holding the check alone. The prices come from measured work: the prototype
+composed the whole coupled model, 1,405 lines with its two scripts, in 0.7 agent hours over two helpers and about 15
+minutes of machine time; WP6.08, carried, took 1.5 agent hours and 4 touches, and WP6.06 3.3 agent hours and 5
+touches. A kept package adds its tests, its review, its ship and CI to a quick build, and writes the code anew.
 
 | Package | Scope | Tier 1 | Tier 2 | Price |
 |---|---|---|---|---|
-| 1. The composition | `physics/kernel.py`: term, slot, contribution, `compose`; the coupled residual composed and today's body removed; the stabilisation reads the drifts and densities, and NUM-24's indicator current the drifts in force | A slot with two contributions assembles as one integral, where the term-by-term sum under a moved rule does not (the silent failure D3 exists for); a term left out changes its own slots alone | VER-14 to VER-18, VER-42 and VER-77 unchanged; VER-62's two push walks; VER-80 nightly | 3 sessions, 2 to 4 agent hours, 5 touches |
-| 2. Switches as data and the forces | The switch records; `SWITCHES`, the switch paths and both deviation lists derived; the two refusals as `requires` and `excludes`; `post/forces.py` reads the densities (BC3); REV-298 as ruled | PHY-23's switch brings both terms or neither; each switch away from its default is a deviation in the manifest | VER-22's routes unchanged; VER-80's dielectric and log guards | 3 sessions, 2 to 4 agent hours, 5 touches |
-| 3. A model as a list of terms | `pnp`, `pnp-ns` and `epnp-ns` as term lists; `poisson`, `pb` and `pb-linear` composed; the declaration's terms derived; `physics/models.py` split; the three moved names, the shell following | VER-56 restated: a model registered as a list of terms runs from a case file; the declaration's terms are those assembled | VER-12, VER-13 and VER-31 unchanged, the single-field models' checks | 3 sessions, 3 to 5 agent hours, 5 touches |
-| 4. The full check | VER-62's seven walks and VER-80's six to 10⁻⁸ before the merge (BC4); VER-12 to VER-22, VER-31, VER-42 and VER-77 unchanged; §5.4.1's ruled reading written; MOD-10 closed | none new | the full check | 3 sessions, 2 to 3 agent hours, 4 touches |
+| WP6.10, the composition | The kernel's term, slot, contribution, context and `compose`; the context's operators and geometry, no term naming the backend; the coupled residual composed and today's body removed; the stabilisation reads every drift and density, and NUM-24's indicator current the drifts in force | A slot with two contributions assembles as one integral, where the term-by-term sum under a moved rule does not; a term left out changes its own slots alone; the wind is the sum of the drifts; no module holding a term imports the backend | VER-14 to VER-18, VER-42 and VER-77 unchanged; VER-62's two push walks; VER-80 nightly | 3 sessions, 3 to 7 agent hours, 5 touches |
+| WP6.11, switches as data and the forces | The switch records, the log branch's among them; every list of switches and deviations derived; the two refusals as `requires` and `excludes`; `post/forces.py` reads the densities (BC3) | PHY-23's switch brings both terms or neither; each switch away from its default is a deviation in the manifest | VER-22's routes unchanged; VER-80's dielectric and log guards | 3 sessions, 2 to 4 agent hours, 5 touches |
+| WP6.12, a model as a list of terms, and the full check | `pnp`, `pnp-ns` and `epnp-ns` as term lists; `poisson`, `pb` and `pb-linear` composed; the declaration's terms derived; `physics/models.py` split; the moved names, the shell following; then VER-62's seven walks and VER-80's six within 10⁻⁸ of their pins before the merge; MOD-10 closed | VER-56 restated: a model registered as a list of terms runs from a case file; the declaration's terms are those assembled | VER-12 to VER-22, VER-31, VER-42 and VER-77 unchanged | 3 sessions, 3 to 5 agent hours, 5 touches |
 
-Together about 12 sessions, 9 to 16 agent hours and 19 touches, against §8.3's 20 sessions, 12 to 24 agent hours and
-32 touches for the kernel. The installed packages' package follows at its own price (BC5), and the 3D benchmark, if
-ruled, after it.
+Together about 9 sessions, 8 to 16 agent hours and 15 touches, against §8.3's earlier 20 sessions, 12 to 24 agent
+hours and 32 touches for the kernel. The 3D benchmarks follow, then the installed packages (BL9).
 
-## What the author rules
+## What the author ruled
 
-Each choice with its options; the recommendation first.
+The seven choices this page put, with what the author ruled on 27 November 2026
+([§8.2.62](../../specification/history/62-the-kernels-design-ruled-phase-6-amended.md)):
 
-1. **The design**: term, slot, coefficient, switch record and model as above. *Approve* (recommended: the prototype
-   held every mark, the operator to 2.1 × 10⁻¹⁶); approve with named changes; or redesign before any package.
-2. **The decrement in the stabilisation's wind** (REV-300). *Keep it out*, as today, and say so in NUM-12's NOTE,
-   which writes `b_i` without it (recommended: the approximate residual is already inexact, and the guard numbers
-   hold today's operator); or read it, a re-pin of the stabilised modes under PHY-23 by ruling (G10).
-3. **The kernel's packages.** *Four, as above* (recommended); three, with the full check folded into the third; or
-   another cut the author names.
-4. **MOD-10, §5.4.1's interface.** *The seam is the context, the slot and the measure*, with NGSolve's algebra in the
-   terms until a second backend is planned (recommended: H3's argument stands); or the terms also read their operators
-   from the context.
-5. **REV-298, the log branch.** *A case key recorded as a deviation*, a switch record that excludes PHY-23
-   (recommended: with switches as data it costs a record, and a run that takes the branch is then reproducible from
-   its case file); or a library option that the manifest names.
-6. **REV-67, the public registering names.** *One registrar handed to each entry point*, the registries private
-   (recommended); or the `register_*` functions made public. The installed packages' package settles it (BC5).
-7. **The 3D benchmark.** *Option A, VER-13 in 3D* (recommended: one package makes CON-01 a test that can fail);
-   option B; or option C.
+1. **The design**: approved, the more modular structure before a held number (BL1, BL2).
+2. **The decrement in the stabilisation's wind** (REV-300): read, against this page's recommendation (BL5).
+3. **The kernel's packages**: three, against this page's four (BL3).
+4. **MOD-10, §5.4.1's interface**: a term reads its operators and its geometry from the context and names no
+   backend, against this page's recommendation (BL6).
+5. **REV-298, the log branch**: a case key recorded as a deviation (BL7).
+6. **REV-67, the public registering names**: one registrar handed to each entry point (BL8).
+7. **The 3D benchmark**: option B, with a trial that prices the flow in 3D (BL4); the 3D packages precede the
+   installed packages (BL9).

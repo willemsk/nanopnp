@@ -129,25 +129,27 @@ that starts the viewer from Python SHALL pass a timeout longer than the viewer's
 set `data-screen-ready` only when its viewer has built and drawn once. The author chose NiceGUI over
 a React application on the spike's six measures (`docs/design/spike/report.md`; §8.2.30 AF4).
 
-#### ADR-005 Two levels of pluggability
+#### ADR-005 Three levels of pluggability
 
-Decision: correction models as data files (level 1) and physics models as classes (level 2), per
-§5.5, so that a user comfortable with a little coding can modify or add implementations
-transparently and Poisson–Boltzmann is available alongside PNP-NS.
+Decision: correction models as data files (level 1), registered terms (level 2) and physics models as
+lists of terms (level 3), per §5.4.4 and §5.5, so that a user comfortable with a little coding can
+modify or add implementations transparently, a variant of a model is a difference of lists, and
+Poisson–Boltzmann is available alongside PNP-NS (FR-40; §8.2.53 BC1, BC2, BC5; §8.2.62 BL1).
 
 | Alternative | Assessment |
 |---|---|
 | One extension point, data files only | Insufficient: `pb` and `pb-linear` have a different field set and solve strategy, which no coefficient file expresses |
 | One extension point, code only | Makes a new electrolyte a patch to the source tree and loses per-result recording of the parameter version |
-| A general symbolic PDE framework | Rejected as N1; the validation surface would be unbounded |
+| Two levels, a physics model as one class | A switch is then code, each variant assembles again, and the stabilisation, the current and the forces write a term a second time (the ground-up review, GU-01) |
+| A general symbolic PDE framework | Rejected as N1; the validation surface would be unbounded. A term is written within electrolyte transport, so this stays rejected |
 
 Consequences: a new electrolyte or surface is a data file rather than a code change (FR-16); every
-result records which correction version produced it (FR-25); PNP-NS is a configuration of ePNP-NS
-rather than separate code (FR-18, PHY-21); Poisson–Boltzmann is a distinct model rather than the
-PNP solver at zero bias (PHY-24); correction-by-correction differential testing is a sweep (§7.4).
+result records which correction version produced it (FR-25); a term is stated once and read by the weak
+form, the stabilisation, the current and the forces (§5.4.4); a term may come from an installed package,
+and the manifest names it (§5.5); PNP-NS is a configuration of ePNP-NS rather than separate code (FR-18,
+PHY-21); Poisson–Boltzmann is a distinct model rather than the PNP solver at zero bias (PHY-24);
+correction-by-correction differential testing is a sweep (§7.4).
 
-NOTE (§8.2.53 BC1, BC2, BC5): the kernel of Phase 6 adds a third level between these two, the
-registered term, with a physics model as a composition of terms and a term found in any installed
-package (FR-40). The kernel's design package rewrites this decision, §5.4 and §5.5 once the author
-has ruled its design. A term is written within electrolyte transport, so the alternative rejected
-as N1 stays rejected.
+NOTE (§8.2.62 BL1, BL3, BL9): the author ruled the kernel's design on 27 November 2026. WP6.10 to WP6.12
+build levels 2 and 3 and WP6.16 the installed packages; until then a physics model is one class.
+
