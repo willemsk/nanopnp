@@ -16,7 +16,7 @@ from nanopnp.physics.coefficients import (
     mesh_unit_scales,
 )
 from nanopnp.physics.coupled import COUPLED_TERMS, coupled_slots
-from nanopnp.physics.nernst_planck import ConcentrationVariables, species_flux
+from nanopnp.physics.nernst_planck import ConcentrationVariables
 from nanopnp.physics.steric import steric_form
 
 CONCENTRATION_M = 1.0
@@ -228,21 +228,20 @@ def test_fr25_provenance_distinguishes_two_settings_of_the_same_mode() -> None:
 # PHY-04, PHY-05
 @pytest.mark.parametrize("steric", [False, True])
 @pytest.mark.parametrize("with_velocity", [False, True])
-def test_num14_advective_velocity_is_the_flux_bracket_of_species_flux(
+def test_num14_advective_velocity_is_the_bracket_of_the_flux_slot(
     mesh: ngs.Mesh, steric: bool, with_velocity: bool
 ) -> None:
     context, side = _built(mesh, steric=steric, with_velocity=with_velocity)
     state = stab.transport_state(context, side, "Na+")
-    flux = species_flux(
-        state.species,
-        coefficients=side.coefficients,
-        variables=side.variables,
-        potential=side.functions[POTENTIAL],
-        velocity=side.functions.get(VELOCITY),
-        steric=context.steric,
+    (slot,) = (
+        slot
+        for slot in coupled_slots(("Na+", "Cl-"), side.functions, None, ())
+        if slot.family == kernel.FLUX and slot.species == "Na+"
     )
+    bracket = kernel.contributions(context.terms, slot, context)
+    assert bracket is not None
     concentration = side.variables.values[state.species]
-    expected = (-flux - state.diffusivity * state.gradient) / concentration
+    expected = (bracket - state.diffusivity * state.gradient) / concentration
     difference = state.wind - expected
     scale = ngs.Integrate(_norm(expected) ** 2, mesh, order=6)
     assert scale > 1e-6, "the comparison must not be against a vanishing wind"
@@ -620,7 +619,7 @@ def _diagnostic(mode: str, potential: ngs.CoefficientFunction) -> object:
     fields[POTENTIAL].Set(potential)
     return PecletDiagnostic(
         FieldSampler(mesh, materials="electrolyte"),
-        model.cell_peclet(state, ngs.CF(1.0)),  # type: ignore[attr-defined]
+        model.cell_peclet(state, Measures(), ngs.CF(1.0)),  # type: ignore[attr-defined]
     )
 
 

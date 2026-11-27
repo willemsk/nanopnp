@@ -15,6 +15,7 @@ from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
 from nanopnp.numerics.gates import FieldSampler, PecletDiagnostic, PecletMeasurement
 from nanopnp.numerics.measures import AXISYMMETRIC, FixedCharge, Measures
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
+from nanopnp.physics.kernel import wind_text
 from nanopnp.physics.models import (
     DEFAULT_BOUNDARIES,
     LADDER_TARGETS,
@@ -488,7 +489,14 @@ def _report_peclet(solution: ModelSolution, measures: Measures) -> PecletMeasure
             coordinates=measures.coordinate_names,
             materials=model.fluid,
         ),
-        model.cell_peclet(solution.state, solution.wall_distance_nm),
+        model.cell_peclet(
+            solution.state,
+            measures,
+            solution.wall_distance_nm,
+            solid_fraction=solution.solid_fraction,
+            solid_fraction_gradient=solution.solid_fraction_gradient,
+        ),
+        expression=f"||b_i|| h_K / (2 D_i), b_i = {wind_text(model.terms_in_force())}",
     ).report()
 
 

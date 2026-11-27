@@ -379,6 +379,9 @@ class WallDistanceGate:
 
 PECLET_WARNING = 1.0
 
+PECLET_EXPRESSION = "||b_i|| h_K / (2 D_i), b_i = z_i mu_i grad(phi~) + D_i beta_i - Pe u~"
+"""``Pe_K`` as NUM-12 prints it, the wind at the validated default."""
+
 
 @dataclass(frozen=True)
 class PecletMeasurement:
@@ -390,7 +393,7 @@ class PecletMeasurement:
     exceeding: int
     samples: int
     per_species: Mapping[str, float]
-    expression: str = "||b_i|| h_K / (2 D_i), b_i = z_i mu_i grad(phi~) + D_i beta_i - Pe u~"
+    expression: str = PECLET_EXPRESSION
 
     @property
     def exceeding_fraction(self) -> float:
@@ -419,6 +422,7 @@ class PecletDiagnostic:
     peclet: Mapping[str, Expression]
     threshold: float = PECLET_WARNING
     name: str = "cell Peclet"
+    expression: str = PECLET_EXPRESSION
 
     def measure(self) -> PecletMeasurement:
         """Return the largest sampled ``Pe_K``, where, and how many samples exceed it."""
@@ -456,6 +460,7 @@ class PecletDiagnostic:
             exceeding=exceeding,
             samples=samples,
             per_species=per_species,
+            expression=self.expression,
         )
 
     def report(self) -> PecletMeasurement:

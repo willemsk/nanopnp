@@ -8,10 +8,6 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
 from nanopnp.core.typing import AssembledForm, Expression, GridFunction, Option
-from nanopnp.io.vocabulary import (
-    POTENTIAL,
-    VELOCITY,
-)
 from nanopnp.numerics.gates import FieldSampler
 from nanopnp.numerics.measures import Measures
 from nanopnp.physics import kernel
@@ -23,7 +19,6 @@ from nanopnp.physics.models import (
     concentration_field_name,
     transport_model,
 )
-from nanopnp.physics.nernst_planck import species_flux
 from nanopnp.physics.stabilisation import TRANSPORT_SLOTS
 from nanopnp.post.reaction_flux import boundary_reaction_flux
 
@@ -85,6 +80,52 @@ def _functions(solution: ModelSolution) -> dict[str, Expression]:
     return {field.name: solution.component(field.name) for field in solution.model.fields}
 
 
+def _indicator_integrals(
+    solution: ModelSolution,
+    measures: Measures,
+    indicator: GridFunction,
+    families: Sequence[str],
+    distance: Expression,
+) -> dict[str, float]:
+    """Integrate each species' slots of ``families`` closed with ``psi``, scaled to amperes."""
+    model = _coupled(solution)
+    mesh = solution.space.mesh
+    functions = _functions(solution)
+    context = model.context(
+        mesh,
+        measures,
+        trial=functions,
+        tests={concentration_field_name(name): indicator for name in model.species},
+        wall_distance_nm=distance,
+        solid_fraction=solution.solid_fraction,
+        solid_fraction_gradient=solution.solid_fraction_gradient,
+    )
+    slots = {
+        (slot.family, slot.species): slot
+        for slot in coupled_slots(model.species, functions, None, ())
+    }
+    scale = TWO_PI * model.scales.current_A
+    currents: dict[str, float] = {}
+    for name in model.species:
+        valence = float(model.electrolyte.ion(name).valence)
+        total = 0.0
+        for family in families:
+            slot = slots[(family, name)]
+            integrand = kernel.integrand(context.terms, slot, context)
+            if integrand is None:
+                continue
+            total += measures.integrate(
+                integrand,
+                mesh,
+                singular=slot.singular,
+                extra_order=slot.extra_order,
+                definedon=context.fluid,
+                what=f"the indicator {family} term of {name!r}",
+            )
+        currents[name] = valence * scale * total
+    return currents
+
+
 def indicator_currents(
     solution: ModelSolution,
     measures: Measures,
@@ -94,6 +135,9 @@ def indicator_currents(
     stabilisation: Mapping[str, float] | None = None,
 ) -> dict[str, float]:
     """Return the per-species current in amperes by the indicator form.
+
+    Each species' current is its ``flux`` slot closed with ``psi`` in place of the test
+    function, plus its stabilisation contribution.
 
     Parameters
     ----------
@@ -105,50 +149,16 @@ def indicator_currents(
     ValueError
         If the indicator is not on this solution's mesh and element order.
     """
-    import ngsolve as ngs
-
     model = _coupled(solution)
     _check_indicator_matches(solution, model, indicator)
-    mesh = solution.space.mesh
     distance = solution.wall_distance_nm if wall_distance_nm is None else wall_distance_nm
-    functions = _functions(solution)
-    variables = model.concentration_variables(functions)
-    coefficients = model.coefficients(variables, distance)
-    velocity = functions[VELOCITY] if model.flow else None
-    # The decrement as the solve assembled it: under a solid fraction, the blend's (PHY-23).
-    solid = (
-        model.solid_blend(mesh, solution.solid_fraction, solution.solid_fraction_gradient)
-        if model.dielectric_gradient_forces
-        else None
-    )
-    gradient = ngs.grad(indicator)
-    scale = TWO_PI * model.scales.current_A
-
     if stabilisation is None:
         stabilisation = stabilisation_currents(
             solution, measures, indicator, wall_distance_nm=distance
         )
-    currents: dict[str, float] = {}
-    for name in model.species:
-        flux = species_flux(
-            name,
-            coefficients=coefficients,
-            variables=variables,
-            potential=functions[POTENTIAL],
-            velocity=velocity,
-            steric=model.steric_form,
-            dielectric_gradient=model.dielectric_gradient_forces,
-            solid=solid,
-        )
-        integral = measures.integrate(
-            flux * gradient,
-            mesh,
-            definedon=mesh.Materials(model.fluid),
-            what=f"the indicator flux of {name!r}",
-        )
-        valence = float(model.electrolyte.ion(name).valence)
-        # NUM-26: the reaction flux carries the stabilisation term, so this route must.
-        currents[name] = valence * scale * integral + stabilisation[name]
+    fluxes = _indicator_integrals(solution, measures, indicator, (kernel.FLUX,), distance)
+    # NUM-26: the reaction flux carries the stabilisation term, so this route must.
+    currents = {name: fluxes[name] + stabilisation[name] for name in model.species}
     logger.debug("indicator currents (A): %s", currents)
     return currents
 
@@ -163,43 +173,11 @@ def stabilisation_currents(
     """Return each species' stabilisation contribution to the current, in amperes."""
     model = _coupled(solution)
     _check_indicator_matches(solution, model, indicator)
-    mesh = solution.space.mesh
     distance = solution.wall_distance_nm if wall_distance_nm is None else wall_distance_nm
-    stabilisation = model.stabilisation_model
-    scale = TWO_PI * model.scales.current_A
-    context = model.context(
-        mesh,
-        measures,
-        trial=_functions(solution),
-        tests={concentration_field_name(name): indicator for name in model.species},
-        wall_distance_nm=distance,
-        solid_fraction=solution.solid_fraction,
-        solid_fraction_gradient=solution.solid_fraction_gradient,
+    contributions = _indicator_integrals(solution, measures, indicator, TRANSPORT_SLOTS, distance)
+    logger.debug(
+        "stabilisation currents in %r (A): %s", model.stabilisation_model.name, contributions
     )
-    slots = {
-        (slot.family, slot.species): slot
-        for slot in coupled_slots(model.species, _functions(solution), None, ())
-    }
-
-    contributions: dict[str, float] = {}
-    for name in model.species:
-        valence = float(model.electrolyte.ion(name).valence)
-        total = 0.0
-        for family in TRANSPORT_SLOTS:
-            slot = slots[(family, name)]
-            integrand = kernel.integrand(context.terms, slot, context)
-            if integrand is None:
-                continue
-            total += measures.integrate(
-                integrand,
-                mesh,
-                singular=slot.singular,
-                extra_order=slot.extra_order,
-                definedon=context.fluid,
-                what=f"the {stabilisation.name!r} {family} term of {name!r}",
-            )
-        contributions[name] = valence * scale * total
-    logger.debug("stabilisation currents in %r (A): %s", stabilisation.name, contributions)
     return contributions
 
 
