@@ -52,3 +52,34 @@ The pass fixed seven findings and left one.
 - The skill's behaviour at run time: whether it writes nothing without `--fix` when its free text asks so, and
   which base it diffs a branch target against. Nothing was run here.
 - `just land` and the pull request's CI, which the session that started the review runs.
+
+## Addendum: the commit that rules finding 8 (§8.2.61 BK4)
+
+2026-11-27 · head `bef82af` on base `fec3c9c` · scope: one commit, 7 files, +18 and −15, read from
+`git diff fec3c9c...bef82af`, against BK3, BK4, §8.4.4 and the chore's step 6 · reviewer: `np-reviewer`, Opus 5.5
+at high effort · status: completed.
+
+Static review of Markdown and YAML alone. Probes: the tracked files outside `src/`, `tests/` and `.githooks/` that
+are code without a `.py`, `.sh` or `.cjs` ending; every text that states the chore's hunt trigger; the decisions
+page's rows for BK3 and BK4 against the convention of an earlier widened ruling (§8.2.53 BC3).
+
+| # | Severity | Where | Finding | Disposition |
+|---|---|---|---|---|
+| 9 | Low | BK4; `.claude/skills/np-chore/SKILL.md:37-38`; `.claude/scripts/gui/digest.tpl.html` | Axis 2, BK4 ("code without those endings"). `digest.tpl.html` holds 107 lines of inline JavaScript that `digest.py` fills in and writes out; it is one of the GUI's scripts in all but its ending, and a chore that changes it alone gets `np-reviewer` alone. `.devcontainer/Dockerfile` is the only other code-like file left out, and it is on no run path of the package or the gate. The `.js` under `docs/design/` are generated mockups, not code any path runs. Widening the test again moves BK4. Doubt | Left to the author. *Recommendation:* state the GUI's scripts as the directory, "under `.claude/scripts/`", which takes the template, the `.cjs` and the `.py` alike, and keep the Dockerfile with `np-reviewer` alone |
+
+The pass fixed none and left one.
+
+### Checked and found true
+
+- **One statement of the trigger.** BK4, §8.4.4's bullet and step 6 give the same paths in the same order; no other
+  text (`CLAUDE.md`, `np-reviewer.md`, `.claude/workflow/`, the ship and carry skills) states the chore's trigger, so
+  none is left at BK3's letter. Step 6 cites BK1 to BK4 and §8.4.4 cites BK3 and BK4.
+- **The records.** BK3 carries "*Its paths are widened by BK4.*" and its *Holds now* says so, as BC3 does for BI1;
+  BK4 has its *Holds now*; the decisions page gains one row, its counts one ruling and one binding row; the
+  history index and the record's description name the added paths. The garbled lead of BK3's and BK4's rows on the
+  decisions page is how `decisions.py` renders every row that opens with an italic note (BC3, AZ13).
+- **What a session could do with it.** The change adds no permission line and moves no path into or out of the
+  always-reviewed list; it only makes the report-only hunt run on more chores, from the session that already runs
+  it. A fix's own diff still gets the medium review without the hunt (BK3, unchanged by BK4). Finding 8's outcome
+  states the author's choice and that it went beyond the recommendation.
+- **Wrap.** The edited lines of §8.4.4 and step 6 run 77 to 98 characters.
