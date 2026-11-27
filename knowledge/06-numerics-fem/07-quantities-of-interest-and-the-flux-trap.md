@@ -285,7 +285,7 @@ of `F^em` there. **[tested: tests/tier2/test_force_convergence.py::test_rsk04_th
 **No `1/r` term, and `singular=True` is not needed.** For an axial `w`, `(∇w)_φφ = w_r/r = 0`, so
 the hoop components of both tensors are contracted against zero and `T:∇w = T_rz ∂_r w_z +
 T_zz ∂_z w_z`. The integrals still go through `Measures` for the `r` weight and the order floor.
-`physics/flow.strain_rate`'s documented omission of `ε_θθ = u_r/r` is harmless here for the same
+`physics/operators.strain`'s documented omission of `ε_θθ = u_r/r` is harmless here for the same
 reason. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_axisymmetric_strain_rate_omits_hoop_component_and_stress_contraction_is_2x2]**
 
 **The `2π` is restored once**, in `post/forces.py`, exactly as `post/qoi.py` does it: every solver

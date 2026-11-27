@@ -71,9 +71,9 @@ class Inputs:
     Parameters
     ----------
     permittivity
-        ``eps~_r`` over all of Omega, on the trial side.
+        ``eps~_r`` over all of Omega, on the trial side; None where no Poisson slot is closed.
     solid
-        The blend's solid side where a solid fraction is supplied and PHY-23 is in force.
+        The blend's solid side where a solid fraction is supplied and the dielectric forces are on.
     surface_region
         The boundary the surface charge is applied to.
     sources
@@ -202,7 +202,7 @@ class Slot:
         Turns the summed contributions into the integrand; the identity where each contribution
         carries its own test function.
     singular
-        Whether the integrand carries ``1/r``, which takes NUM-07's minimum order.
+        Whether the integrand carries ``1/r``, which takes the minimum order for an axis.
     rule_order
         A fixed rule for the slot, in place of the estimated one.
     per_field

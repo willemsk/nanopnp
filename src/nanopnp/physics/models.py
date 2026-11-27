@@ -874,7 +874,7 @@ class CoupledModel:
         state
             A grid function on this model's product space, normally the converged one.
         solid_fraction
-            The solid fraction the solve assembled with, which PHY-23's decrement drift blends.
+            The solid fraction the solve assembled with, which the decrement's drift blends.
         """
         context = self.context(
             state.space.mesh,
@@ -1065,6 +1065,8 @@ class CoupledModel:
         ----------
         trial
             Each field's function by name: the trial functions, or a state's components.
+        tests
+            Each field's test function by name; the permittivity is built only with the potential's.
         lagged
             The side the stabilisation parameters are read from; None takes the trial side.
         """
@@ -1075,10 +1077,14 @@ class CoupledModel:
             if self.dielectric_gradient_forces
             else None
         )
+        # Only Poisson's slots read it, and building it reports each solid it lacks once a call.
+        permittivity = (
+            self.permittivity(mesh, trial_side.coefficients, solid_fraction=solid_fraction)
+            if tests is not None and POTENTIAL in tests
+            else None
+        )
         inputs = Inputs(
-            permittivity=self.permittivity(
-                mesh, trial_side.coefficients, solid_fraction=solid_fraction
-            ),
+            permittivity=permittivity,
             solid=solid,
             fixed_charge=fixed_charge,
             surface_charge=surface_charge,

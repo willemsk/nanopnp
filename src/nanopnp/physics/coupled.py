@@ -164,7 +164,10 @@ def coupled_slots(
 def _permittivity_flux(context: Context) -> Expression:
     permittivity = context.inputs.permittivity
     if permittivity is None:
-        raise ValueError("Poisson's stiffness needs the permittivity among the inputs")
+        raise ValueError(
+            "Poisson's stiffness needs the permittivity among the inputs; a context built "
+            "without the potential's test function holds none"
+        )
     return permittivity * context.ops.grad(context.trial.functions[POTENTIAL])
 
 
@@ -180,6 +183,7 @@ def _fixed_charge(context: Context) -> Expression | None:
 
 def _surface_charge(context: Context) -> Expression | None:
     charge = context.inputs.surface_charge
+    # The residual's sign, which poisson.surface_charge_term(side="residual") writes too.
     return None if charge is None else -1.0 * charge
 
 
