@@ -44,15 +44,21 @@ class SolidBlend:
 
 
 def blend_gradient(
-    solid: SolidBlend, fluid_permittivity: Expression, fluid_gradient: Expression
+    solid: SolidBlend, fluid_permittivity: Expression, fluid_gradient: Expression | None
 ) -> Expression:
     """Return the blend's gradient, ``(1 - chi) grad eps_r,f + (eps_p - eps_r,f) grad chi``.
 
     ``eps_p`` is piecewise constant, so its own gradient is zero almost everywhere.
+
+    Parameters
+    ----------
+    fluid_gradient
+        ``grad eps_r,f``, or None where it is zero.
     """
-    return (1.0 - solid.chi) * fluid_gradient + (
-        solid.solid_permittivity - fluid_permittivity
-    ) * solid.gradient
+    step = (solid.solid_permittivity - fluid_permittivity) * solid.gradient
+    if fluid_gradient is None:
+        return step
+    return (1.0 - solid.chi) * fluid_gradient + step
 
 
 def blend_sensitivity(

@@ -5,20 +5,50 @@ import numpy as np
 import pytest
 from scipy.special import i0
 
+from nanopnp.io.vocabulary import POTENTIAL, PRESSURE, VELOCITY
 from nanopnp.mesh.primitives import CylinderGeometry
 from nanopnp.numerics.linear import solve_linear
 from nanopnp.numerics.measures import Measures
-from nanopnp.physics.flow import (
-    continuity_term,
-    electrical_body_force,
-    pressure_term,
-    viscous_operator,
-)
+from nanopnp.physics import kernel
+from nanopnp.physics.backend import NGSOLVE_OPERATORS, geometry_of
+from nanopnp.physics.coupled import COUPLED_TERMS, coupled_slots
 from nanopnp.physics.pb import solve_pb_recorded
+from nanopnp.physics.stabilisation import create as create_stabilisation
 
 AXISYMMETRIC = Measures(symmetry="axisymmetric", element_order=2)
 RADIUS_NM, LENGTH_NM = 2.0, 8.0
 ZETA, FIELD = 1.0, 0.5
+
+
+class _UnitViscosity:
+    """A Stokes fluid of unit viscosity, so that the operator is the bare one."""
+
+    def viscosity(self) -> float:
+        return 1.0
+
+
+def _stokes_context(
+    mesh: ngs.Mesh, space: ngs.FESpace, applied: ngs.GridFunction
+) -> kernel.Context:
+    trial_u, trial_p = space.TrialFunction()
+    test_u, test_p = space.TestFunction()
+    side = kernel.Side(
+        functions={VELOCITY: trial_u, PRESSURE: trial_p, POTENTIAL: applied},
+        variables=None,
+        coefficients=_UnitViscosity(),
+    )
+    return kernel.Context(
+        ops=NGSOLVE_OPERATORS,
+        geometry=geometry_of(mesh, AXISYMMETRIC),
+        measures=AXISYMMETRIC,
+        fluid=mesh.Materials(".*"),
+        trial=side,
+        lagged=side,
+        tests={VELOCITY: test_u, PRESSURE: test_p},
+        inputs=kernel.Inputs(),
+        steric=None,
+        stabilisation=create_stabilisation("none"),
+    )
 
 
 def _electroosmotic_flow(
@@ -47,20 +77,25 @@ def _electroosmotic_flow(
     velocity_space = ngs.VectorH1(mesh, order=2, dirichlet="wall", dirichletx="axis|end")
     pressure_space = ngs.H1(mesh, order=1)
     space = velocity_space * pressure_space
-    trial_u, trial_p = space.TrialFunction()
-    test_u, test_p = space.TestFunction()
+    context = _stokes_context(mesh, space, applied)
+    slots = coupled_slots((), {VELOCITY, PRESSURE}, None, ())
+    stokes = tuple(
+        term for term in COUPLED_TERMS if term.name in ("Momentum", "Velocity continuity")
+    )
+
+    def charge_force(context: kernel.Context, side: kernel.Side) -> ngs.CoefficientFunction:
+        return -screening * charge * ngs.grad(side.functions[POTENTIAL])
+
+    force = kernel.KernelTerm("Body force", "PHY-08", force=charge_force)
 
     operator = ngs.BilinearForm(space)
-    operator += viscous_operator(trial_u, test_u, AXISYMMETRIC)
-    operator += pressure_term(trial_p, test_u, AXISYMMETRIC)
-    operator += continuity_term(trial_u, test_p, AXISYMMETRIC)
+    operator += kernel.compose(stokes, slots, context)
     operator.Assemble()
 
-    # electrical_body_force returns the *residual* contribution, which the load
-    # form carries with the opposite sign; the negated coefficient is how that
-    # is expressed without rewriting the term.
+    # The force slot is the residual's, -int f.v; the load is its negative.
+    (force_slot,) = (slot for slot in slots if slot.family == kernel.FORCE)
     load = ngs.LinearForm(space)
-    load += electrical_body_force(charge, applied, test_u, AXISYMMETRIC, screening=-screening)
+    load += AXISYMMETRIC.volume(-kernel.integrand((force,), force_slot, context))
     load.Assemble()
 
     state = ngs.GridFunction(space, name="stokes")

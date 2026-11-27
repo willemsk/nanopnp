@@ -1,23 +1,26 @@
 """The stabilisation registry and its parameters (VER-41, NUM-11, NUM-12, NUM-14, NUM-15)."""
 
-from dataclasses import dataclass, field
-
 import ngsolve as ngs
 import pytest
 
+from nanopnp.io.vocabulary import POTENTIAL, VELOCITY
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
 from nanopnp.mesh.primitives import SlabGeometry
 from nanopnp.numerics.measures import Measures
+from nanopnp.physics import kernel
 from nanopnp.physics import stabilisation as stab
+from nanopnp.physics.backend import NGSOLVE_OPERATORS, geometry_of
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
     NondimensionalCoefficients,
     mesh_unit_scales,
 )
+from nanopnp.physics.coupled import COUPLED_TERMS, coupled_slots
 from nanopnp.physics.nernst_planck import ConcentrationVariables, species_flux
 from nanopnp.physics.steric import steric_form
 
 CONCENTRATION_M = 1.0
+TRANSPORT_TERMS = ("Nernst\N{EN DASH}Planck", "Steric flux", "Advection")
 REGISTERED = ("none", "reference", "supg")
 
 SAMPLE = (0.4, 0.3)
@@ -28,7 +31,7 @@ def mesh() -> ngs.Mesh:
     return SlabGeometry(width_nm=1.0, height_nm=1.0).generate(maxh_nm=0.3)
 
 
-def _state(
+def _built(
     mesh: ngs.Mesh,
     *,
     potential_slope: float = 1.0,
@@ -36,7 +39,7 @@ def _state(
     with_velocity: bool = False,
     classical: bool = True,
     aligned_gradient: bool = False,
-) -> stab.TransportState:
+) -> tuple[kernel.Context, kernel.Side]:
     scalar = ngs.H1(mesh, order=2)
     fields: dict[str, ngs.GridFunction] = {}
     # c_Na varies along both axes, so grad c is not parallel to the wind (bound strict).
@@ -60,21 +63,36 @@ def _state(
         if switches is not None
         else Electrolyte.from_parameter_file()
     )
-    variables = ConcentrationVariables.primitive(fields)
+    variables = ConcentrationVariables.primitive(fields, NGSOLVE_OPERATORS)
     coefficients = NondimensionalCoefficients(
         electrolyte=electrolyte,
         scales=mesh_unit_scales(electrolyte, CONCENTRATION_M),
         concentrations=variables.values,
         wall_distance_nm=SATURATED_WALL_DISTANCE_NM,
     )
-    return stab.TransportState(
-        species="Na+",
-        coefficients=coefficients,
-        variables=variables,
-        potential=potential,
-        velocity=velocity,
+    functions = {POTENTIAL: potential, **{f"c_{name}": f for name, f in fields.items()}}
+    if velocity is not None:
+        functions[VELOCITY] = velocity
+    side = kernel.Side(functions=functions, variables=variables, coefficients=coefficients)
+    context = kernel.Context(
+        ops=NGSOLVE_OPERATORS,
+        geometry=geometry_of(mesh, Measures(symmetry="planar")),
+        measures=Measures(symmetry="planar"),
+        fluid=mesh.Materials(".*"),
+        trial=side,
+        lagged=side,
+        tests={},
+        inputs=kernel.Inputs(),
         steric=steric_form("borukhov") if steric else None,
+        stabilisation=stab.create("none"),
+        terms=tuple(term for term in COUPLED_TERMS if term.name in TRANSPORT_TERMS),
     )
+    return context, side
+
+
+def _state(mesh: ngs.Mesh, **options: bool | float) -> stab.TransportState:
+    context, side = _built(mesh, **options)  # type: ignore[arg-type]
+    return stab.transport_state(context, side, "Na+")
 
 
 def _flow_state(mesh: ngs.Mesh) -> stab.FlowState:
@@ -84,12 +102,17 @@ def _flow_state(mesh: ngs.Mesh) -> stab.FlowState:
     velocity.Set(ngs.CF((0.3 + 0.1 * ngs.y, -0.2 * ngs.x)))
     pressure = ngs.GridFunction(scalar, name="p")
     pressure.Set(0.5 - ngs.y)
-    transport = _state(mesh)
+    _, side = _built(mesh)
     return stab.FlowState(
-        coefficients=transport.coefficients,
         velocity=velocity,
         pressure=pressure,
-        body_force=ngs.CF((0.0, 0.0)),
+        density=1.0,
+        viscosity=side.coefficients.viscosity(),
+        reynolds=side.coefficients.reynolds,
+        force=None,
+        source=None,
+        ops=NGSOLVE_OPERATORS,
+        geometry=geometry_of(mesh, Measures(symmetry="planar")),
     )
 
 
@@ -111,7 +134,7 @@ def test_ver41_element_size_is_the_square_root_of_twice_the_element_area(
     mesh: ngs.Mesh,
 ) -> None:
     areas = ngs.Integrate(ngs.CF(1.0), mesh, element_wise=True)
-    sizes = ngs.Integrate(stab.element_size(), mesh, element_wise=True)
+    sizes = ngs.Integrate(NGSOLVE_OPERATORS.element_size(), mesh, element_wise=True)
     assert len(areas) > 10, "the measurement needs an unstructured mesh, not one triangle"
     worst = 0.0
     for area, integral in zip(areas, sizes, strict=True):
@@ -153,10 +176,14 @@ def test_register_refuses_to_shadow_an_existing_mode() -> None:
 def test_phy22_off_is_a_named_model_that_assembles_nothing(mesh: ngs.Mesh) -> None:
     model = stab.create("none")
     assert isinstance(model, stab.NoStabilisation)
-    state = _state(mesh)
-    measures = Measures(symmetry="planar")
-    assert model.transport_term(measures, trial=state, lagged=state, test=state.potential) is None
-    assert model.indicator_term(measures, mesh, state=state, indicator=ngs.CF(1.0)) == 0.0
+    state, flow = _state(mesh), _flow_state(mesh)
+    assert model.transport_contributions(trial=state, lagged=state, test=ngs.CF(1.0)) == {}
+    assert (
+        model.flow_contributions(
+            trial=flow, lagged=flow, velocity_test=flow.velocity, pressure_test=flow.pressure
+        )
+        == {}
+    )
     assert model.parameters == {}
     assert model.provenance["mode"] == "none"
     assert model.provenance["terms"] == ""
@@ -204,18 +231,19 @@ def test_fr25_provenance_distinguishes_two_settings_of_the_same_mode() -> None:
 def test_num14_advective_velocity_is_the_flux_bracket_of_species_flux(
     mesh: ngs.Mesh, steric: bool, with_velocity: bool
 ) -> None:
-    state = _state(mesh, steric=steric, with_velocity=with_velocity)
+    context, side = _built(mesh, steric=steric, with_velocity=with_velocity)
+    state = stab.transport_state(context, side, "Na+")
     flux = species_flux(
         state.species,
-        coefficients=state.coefficients,
-        variables=state.variables,
-        potential=state.potential,
-        velocity=state.velocity,
-        steric=state.steric,
+        coefficients=side.coefficients,
+        variables=side.variables,
+        potential=side.functions[POTENTIAL],
+        velocity=side.functions.get(VELOCITY),
+        steric=context.steric,
     )
-    concentration = state.variables.values[state.species]
-    expected = (-flux - state.diffusivity * state.concentration_gradient) / concentration
-    difference = stab.advective_velocity(state) - expected
+    concentration = side.variables.values[state.species]
+    expected = (-flux - state.diffusivity * state.gradient) / concentration
+    difference = state.wind - expected
     scale = ngs.Integrate(_norm(expected) ** 2, mesh, order=6)
     assert scale > 1e-6, "the comparison must not be against a vanishing wind"
     assert ngs.Integrate(difference * difference, mesh, order=6) == pytest.approx(
@@ -228,14 +256,15 @@ def test_num12_cell_peclet_is_the_wind_times_h_over_twice_the_diffusivity(
     mesh: ngs.Mesh,
 ) -> None:
     slope = 3.0
-    state = _state(mesh, potential_slope=slope)
-    size = stab.element_size()
-    expected = _norm(stab.advective_velocity(state)) * size / (2.0 * state.diffusivity)
+    context, side = _built(mesh, potential_slope=slope)
+    state = stab.transport_state(context, side, "Na+")
+    size = NGSOLVE_OPERATORS.element_size()
+    expected = _norm(state.wind) * size / (2.0 * state.diffusivity)
     difference = stab.cell_peclet(state) - expected
     assert ngs.Integrate(difference**2, mesh, order=6) == pytest.approx(0.0, abs=1e-24)
 
     # The printed form differs from it by exactly mu~/D~, which is not 1.
-    mobility = float(state.coefficients.mobility(state.species))
+    mobility = float(side.coefficients.mobility(state.species))
     diffusivity = float(state.diffusivity)
     printed = 0.5 * slope * size
     ratio = ngs.Integrate(stab.cell_peclet(state) / printed, mesh, order=6) / ngs.Integrate(
@@ -255,12 +284,12 @@ def test_num14_streamline_parameter_takes_the_diffusive_branch_below_unit_peclet
     assert ngs.Integrate(ngs.IfPos(peclet - 1.0, 1.0, 0.0), mesh, order=6) == pytest.approx(
         0.0, abs=1e-14
     ), "the slope must keep every element below unit Peclet for this branch"
-    expected = stab.element_size() ** 2 / (4.0 * state.diffusivity)
+    expected = NGSOLVE_OPERATORS.element_size() ** 2 / (4.0 * state.diffusivity)
     difference = stab.streamline_parameter(state) - expected
     assert ngs.Integrate(difference**2, mesh, order=6) == pytest.approx(0.0, abs=1e-30)
 
     # tau ||b||^2 / D = Pe^2: the added diffusion measured against the physical one.
-    wind = _norm(stab.advective_velocity(state))
+    wind = _norm(state.wind)
     ratio = stab.streamline_parameter(state) * wind**2 / state.diffusivity
     assert ngs.Integrate((ratio - peclet**2) ** 2, mesh, order=6) == pytest.approx(0.0, abs=1e-30)
 
@@ -273,8 +302,8 @@ def test_num14_streamline_parameter_takes_the_convective_branch_above_unit_pecle
     assert ngs.Integrate(ngs.IfPos(peclet - 1.0, 0.0, 1.0), mesh, order=6) == pytest.approx(
         0.0, abs=1e-14
     ), "the slope must carry every element above unit Peclet for this branch"
-    wind = _norm(stab.advective_velocity(state))
-    expected = stab.element_size() / (2.0 * wind)
+    wind = _norm(state.wind)
+    expected = NGSOLVE_OPERATORS.element_size() / (2.0 * wind)
     difference = stab.streamline_parameter(state) - expected
     assert ngs.Integrate(difference**2, mesh, order=6) == pytest.approx(0.0, abs=1e-30)
 
@@ -285,9 +314,9 @@ def test_num14_streamline_parameter_is_continuous_across_the_crossover(
 ) -> None:
     point = mesh(*SAMPLE)
     unit = _state(mesh, potential_slope=1.0)
-    wind_at_unit_slope = float(_norm(stab.advective_velocity(unit))(point))
+    wind_at_unit_slope = float(_norm(unit.wind)(point))
     diffusivity = float(unit.diffusivity)
-    size = float(stab.element_size()(point))
+    size = float(NGSOLVE_OPERATORS.element_size()(point))
     critical = 2.0 * diffusivity / (size * wind_at_unit_slope)
 
     below = stab.streamline_parameter(_state(mesh, potential_slope=critical * (1.0 - 1e-9)))
@@ -303,9 +332,9 @@ def test_num14_streamline_parameter_stays_continuous_when_the_cutoff_is_retuned(
     cutoff = 2.5
     point = mesh(*SAMPLE)
     unit = _state(mesh, potential_slope=1.0)
-    wind_at_unit_slope = float(_norm(stab.advective_velocity(unit))(point))
+    wind_at_unit_slope = float(_norm(unit.wind)(point))
     diffusivity = float(unit.diffusivity)
-    size = float(stab.element_size()(point))
+    size = float(NGSOLVE_OPERATORS.element_size()(point))
     critical = 2.0 * cutoff * diffusivity / (size * wind_at_unit_slope)
 
     below = stab.streamline_parameter(
@@ -355,7 +384,7 @@ def test_num14_crosswind_viscosity_is_positive_and_bounded_above_unit_cell_pecle
 
 def test_num14_crosswind_viscosity_is_switched_off_without_a_wind(mesh: ngs.Mesh) -> None:
     state = _state(mesh, potential_slope=0.0)
-    assert ngs.Integrate(_norm(stab.advective_velocity(state)) ** 2, mesh, order=6) == 0.0
+    assert ngs.Integrate(_norm(state.wind) ** 2, mesh, order=6) == 0.0
     source = ngs.CF(1.0e6)
     assert ngs.Integrate(stab.crosswind_viscosity(state, source=source) ** 2, mesh, order=8) == 0.0
 
@@ -365,7 +394,7 @@ def test_ver41_crosswind_projector_annihilates_the_wind_and_is_idempotent(
 ) -> None:
     state = _state(mesh, potential_slope=7.0, with_velocity=True)
     projector = stab.crosswind_projector(state)
-    wind = stab.advective_velocity(state)
+    wind = state.wind
     projected = projector * wind
     scale = ngs.Integrate(wind * wind, mesh, order=6)
     assert scale > 1e-6
@@ -386,28 +415,16 @@ def test_num14_approximate_residual_carries_the_source(mesh: ngs.Mesh) -> None:
     with_source = stab.approximate_residual(state, source=source)
     difference = with_source - (without - source)
     assert ngs.Integrate(difference**2, mesh, order=6) == pytest.approx(0.0, abs=1e-24)
-    expected = stab.advective_velocity(state) * state.concentration_gradient
+    expected = state.wind * state.gradient
     assert ngs.Integrate((without - expected) ** 2, mesh, order=6) == pytest.approx(0.0, abs=1e-24)
 
 
 # -- quadrature -----------------------------------------------------------
 
 
-@dataclass(frozen=True)
-class RecordingMeasures(Measures):
-    calls: list[tuple[bool, int]] = field(default_factory=list, compare=False)
-
-    def volume(
-        self,
-        integrand: object,
-        *,
-        singular: bool = False,
-        extra_order: int = 0,
-        **kwargs: object,
-    ) -> int:
-        del integrand, kwargs
-        self.calls.append((singular, extra_order))
-        return 0
+def _bonuses(families: tuple[str, ...]) -> list[tuple[bool, int]]:
+    slots = coupled_slots(("Na+",), {"c_Na+", "velocity", "pressure"}, None, ())
+    return [(slot.singular, slot.extra_order) for slot in slots if slot.family in families]
 
 
 # NUM-07
@@ -415,35 +432,34 @@ def test_num15_transport_terms_request_the_specified_integration_bonus(
     mesh: ngs.Mesh,
 ) -> None:
     state = _state(mesh, potential_slope=2.0)
-    measures = RecordingMeasures(symmetry="axisymmetric")
-    stab.create("reference").transport_term(
-        measures, trial=state, lagged=state, test=state.potential
+    test = ngs.GridFunction(ngs.H1(mesh, order=2))
+    reference = stab.create("reference").transport_contributions(
+        trial=state, lagged=state, test=test
     )
-    assert measures.calls == [
+    assert tuple(reference) == stab.TRANSPORT_SLOTS
+    assert _bonuses(stab.TRANSPORT_SLOTS) == [
         (False, stab.STREAMLINE_BONUS_ORDER),
         (False, stab.CROSSWIND_BONUS_ORDER),
     ]
     assert (stab.STREAMLINE_BONUS_ORDER, stab.CROSSWIND_BONUS_ORDER) == (4, 6)
 
-    supg = RecordingMeasures(symmetry="axisymmetric")
-    stab.create("supg").transport_term(supg, trial=state, lagged=state, test=state.potential)
-    assert supg.calls == [(False, stab.STREAMLINE_BONUS_ORDER)]
+    supg = stab.create("supg").transport_contributions(trial=state, lagged=state, test=test)
+    assert tuple(supg) == ("streamline",)
 
 
 # VER-07
 def test_num07_only_the_grad_div_term_declares_the_singular_rule(mesh: ngs.Mesh) -> None:
     flow = _flow_state(mesh)
-    measures = RecordingMeasures(symmetry="axisymmetric")
     scalar = ngs.H1(mesh, order=1)
     vector = ngs.VectorH1(mesh, order=2)
-    stab.create("reference").flow_term(
-        measures,
+    contributions = stab.create("reference").flow_contributions(
         trial=flow,
         lagged=flow,
         velocity_test=ngs.GridFunction(vector),
         pressure_test=ngs.GridFunction(scalar),
     )
-    assert measures.calls == [
+    assert tuple(contributions) == stab.FLOW_SLOTS
+    assert _bonuses(stab.FLOW_SLOTS) == [
         (False, stab.FLOW_BONUS_ORDER),
         (False, stab.FLOW_BONUS_ORDER),
         (True, stab.FLOW_BONUS_ORDER),
@@ -452,20 +468,17 @@ def test_num07_only_the_grad_div_term_declares_the_singular_rule(mesh: ngs.Mesh)
 
 def test_num11_supg_assembles_no_flow_term(mesh: ngs.Mesh) -> None:
     flow = _flow_state(mesh)
-    measures = RecordingMeasures(symmetry="axisymmetric")
     scalar = ngs.H1(mesh, order=1)
     vector = ngs.VectorH1(mesh, order=2)
     assert (
-        stab.create("supg").flow_term(
-            measures,
+        stab.create("supg").flow_contributions(
             trial=flow,
             lagged=flow,
             velocity_test=ngs.GridFunction(vector),
             pressure_test=ngs.GridFunction(scalar),
         )
-        is None
+        == {}
     )
-    assert measures.calls == []
 
 
 # -- what the terms do to the assembled residual --------------------------

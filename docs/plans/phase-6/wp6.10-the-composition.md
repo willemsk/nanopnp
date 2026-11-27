@@ -269,7 +269,7 @@ in a `git worktree` of `5332fbd`.
 
 ### Work items
 
-- [ ] 1. The stored operator, then `src/nanopnp/physics/operators.py`, `backend.py`, `kernel.py` and
+- [x] 1. e482296 The stored operator, then `src/nanopnp/physics/operators.py`, `backend.py`, `kernel.py` and
   `tests/tier1/test_kernel.py` (D1, D2, D3, D9); done when the twelve variants are stored from the unedited
   tree and VER-81's first test passes. **Executor:** main
 - [ ] 2. `physics/nernst_planck.py`, `flow.py`, `stabilisation.py`, `coupled.py`, `models.py`, `coefficients.py`,
@@ -277,6 +277,19 @@ in a `git worktree` of `5332fbd`.
   the ten variants, and on the two PHY-23 variants under a stabilised mode with the decrement's drift left out of
   the wind in a local edit that is not committed, and VER-81's second test and the carried tests pass. The Outcome
   lists each difference. **Executor:** main
+
+  > **Outcome — ten variants at round-off, PHY-23 under a stabilised mode moved as ruled, and that pair assembles
+  > fifty times slower.** Against the operator stored at `2ba10ab9`, on the comparison's 118 elements: the ten
+  > design variants differ by at most 3.1 × 10⁻¹⁶ in the residual and 1.2 × 10⁻¹⁶ in the Jacobian, relative to the
+  > largest entry. `dielectric_gradient_forces` with `reference` moves by 7.4 × 10⁻⁶ and 2.1 × 10⁻⁵, with `supg` by
+  > 6.5 × 10⁻⁶ and 4.2 × 10⁻⁶: the decrement's drift in the wind (D4; BL5). With that drift left out of
+  > `kernel.wind` in an uncommitted edit, all twelve are within 2.1 × 10⁻¹⁶. No other difference. The pair's one
+  > assembly (`Apply` and `AssembleLinearization`) takes 69.6 s under `reference` and 33.8 s under `supg`, against
+  > 1.25 s and 0.48 s without PHY-23; the streamline and crosswind slots take 16 s and 18 s a species: REV-302.
+  > Beyond the plan, so that the build stays green: `post/qoi.py:stabilisation_currents` reads the kernel's
+  > `TRANSPORT_SLOTS` in this item, not item 4; `Context` binds the slot's test field (`field`) beside its species,
+  > and `Slot.per_field` names the sources' slots `source.<field>`; `concentration_field_name` moves to
+  > `io/vocabulary.py`, which `coupled.py` reads, and `models.py` re-exports it.
 - [ ] 3. Compaction checkpoint. **Executor:** main
 - [ ] 4. `post/qoi.py`, `models.py`, `solve/continuation.py`, `numerics/gates.py`, `nernst_planck.py`
   (`species_flux` deleted, its tests carried), `specification/06-numerics.md`, and VER-81's row in

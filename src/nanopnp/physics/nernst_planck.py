@@ -1,24 +1,33 @@
-"""The size-modified Nernst-Planck equations (PHY-04, PHY-05, NUM-02, NUM-04)."""
+"""The size-modified Nernst-Planck equations' terms (PHY-04, PHY-05, PHY-23, NUM-02, NUM-04)."""
 
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TypeAlias
+from typing import TYPE_CHECKING, TypeAlias
 
-from nanopnp.core.typing import Expression, IntegralTerm, Option
+from nanopnp.core.typing import Expression
+from nanopnp.io.vocabulary import POTENTIAL, VELOCITY
 from nanopnp.materials.fields import SolidBlend, blend_sensitivity
-from nanopnp.numerics.measures import Measures
+from nanopnp.physics.backend import NGSOLVE_OPERATORS
 from nanopnp.physics.coefficients import NondimensionalCoefficients
+from nanopnp.physics.operators import Operators
+
+if TYPE_CHECKING:
+    from nanopnp.physics.kernel import Context, Side
 
 __all__ = [
     "ConcentrationVariables",
     "StericForm",
+    "advection_drift",
     "borukhov_flux",
+    "decrement_drift",
+    "diffusion",
     "excess_potential_gradient",
-    "nernst_planck_residual",
+    "migration_drift",
     "packing_fraction",
     "species_flux",
+    "steric_drift",
     "steric_flux",
 ]
 
@@ -33,26 +42,24 @@ class ConcentrationVariables:
     logarithmic: bool = False
 
     @classmethod
-    def primitive(cls, fields: Mapping[str, Expression]) -> ConcentrationVariables:
+    def primitive(cls, fields: Mapping[str, Expression], ops: Operators) -> ConcentrationVariables:
         """Return primitive variables: the unknown is the concentration."""
-        import ngsolve as ngs
-
         return cls(
             values=dict(fields),
-            gradients={name: ngs.grad(field) for name, field in fields.items()},
+            gradients={name: ops.grad(field) for name, field in fields.items()},
             variables=dict(fields),
             logarithmic=False,
         )
 
     @classmethod
-    def logarithmic_branch(cls, fields: Mapping[str, Expression]) -> ConcentrationVariables:
+    def logarithmic_branch(
+        cls, fields: Mapping[str, Expression], ops: Operators
+    ) -> ConcentrationVariables:
         """Return log variables ``c~_i = exp(w_i)``, which keep positivity exact by construction."""
-        import ngsolve as ngs
-
-        values = {name: ngs.exp(field) for name, field in fields.items()}
+        values = {name: ops.exp(field) for name, field in fields.items()}
         return cls(
             values=values,
-            gradients={name: values[name] * ngs.grad(field) for name, field in fields.items()},
+            gradients={name: values[name] * ops.grad(field) for name, field in fields.items()},
             variables=dict(fields),
             logarithmic=True,
         )
@@ -113,6 +120,7 @@ def borukhov_flux(
 def excess_potential_gradient(
     species: str,
     *,
+    ops: Operators,
     coefficients: NondimensionalCoefficients,
     variables: ConcentrationVariables,
     potential: Expression,
@@ -130,33 +138,80 @@ def excess_potential_gradient(
     NotImplementedError
         In the log branch.
     """
-    import ngsolve as ngs
-
     if variables.logarithmic:
         raise NotImplementedError(
             "the dielectric-decrement term is not implemented for the NUM-02 log branch: "
             "d(eps~_r)/d(c~_i) would come back as the derivative in w_i and be wrong by a "
             "factor c~_i"
         )
-    field = ngs.grad(potential)
-    hessian = potential.Operator("hesse")
+    field = ops.grad(potential)
     sensitivity = coefficients.permittivity_sensitivity(species)
-    sensitivity_gradient = _sensitivity_gradient(sensitivity, variables)
+    sensitivity_gradient = _sensitivity_gradient(ops, sensitivity, variables)
     if solid is not None:
         sensitivity, sensitivity_gradient = blend_sensitivity(
             solid, sensitivity, sensitivity_gradient
         )
-    first = 2.0 * (hessian * field) * sensitivity
-    second = (field * field) * sensitivity_gradient
+    first = 2.0 * ops.apply(ops.hessian(potential), field) * sensitivity
+    second = ops.dot(field, field) * sensitivity_gradient
     return -(first + second) / (2.0 * coefficients.screening)
 
 
-def _sensitivity_gradient(sensitivity: Expression, variables: ConcentrationVariables) -> Expression:
+def _sensitivity_gradient(
+    ops: Operators, sensitivity: Expression, variables: ConcentrationVariables
+) -> Expression:
     names = list(variables.values)
-    total = sensitivity.Diff(variables.variables[names[0]]) * variables.gradients[names[0]]
+    total = (
+        ops.derivative(sensitivity, variables.variables[names[0]]) * variables.gradients[names[0]]
+    )
     for name in names[1:]:
-        total = total + sensitivity.Diff(variables.variables[name]) * variables.gradients[name]
+        total = total + (
+            ops.derivative(sensitivity, variables.variables[name]) * variables.gradients[name]
+        )
     return total
+
+
+def diffusion(context: Context) -> Expression:
+    """Return the diffusive part of the flux bracket, ``D~_i grad(c~_i)``, on the trial side."""
+    species = context.require_species()
+    trial = context.trial
+    return trial.coefficients.diffusivity(species) * trial.variables.gradients[species]
+
+
+def migration_drift(context: Context, side: Side, species: str) -> Expression:
+    """Return the migration drift ``z_i mu~_i grad(phi~)``."""
+    coefficients = side.coefficients
+    valence = float(coefficients.electrolyte.ion(species).valence)
+    return valence * coefficients.mobility(species) * context.ops.grad(side.functions[POTENTIAL])
+
+
+def steric_drift(context: Context, side: Side, species: str) -> Expression | None:
+    """Return the steric drift ``D~_i beta~_i``; None where no steric model is in force."""
+    if context.steric is None:
+        return None
+    coefficients = side.coefficients
+    return coefficients.diffusivity(species) * context.steric(side.variables, coefficients, species)
+
+
+def advection_drift(context: Context, side: Side, species: str) -> Expression | None:
+    """Return the advective drift ``-Pe u~``; None on a side with no velocity."""
+    del context, species
+    velocity = side.functions.get(VELOCITY)
+    if velocity is None:
+        return None
+    return -(side.coefficients.peclet * velocity)
+
+
+def decrement_drift(context: Context, side: Side, species: str) -> Expression:
+    """Return PHY-23's decrement drift ``D~_i grad(mu~_ex,i)``."""
+    coefficients = side.coefficients
+    return coefficients.diffusivity(species) * excess_potential_gradient(
+        species,
+        ops=context.ops,
+        coefficients=coefficients,
+        variables=side.variables,
+        potential=side.functions[POTENTIAL],
+        solid=context.inputs.solid,
+    )
 
 
 def species_flux(
@@ -198,6 +253,7 @@ def species_flux(
     if dielectric_gradient:
         bracket = bracket + diffusivity * concentration * excess_potential_gradient(
             species,
+            ops=NGSOLVE_OPERATORS,
             coefficients=coefficients,
             variables=variables,
             potential=potential,
@@ -206,15 +262,3 @@ def species_flux(
     if velocity is not None:
         bracket = bracket - coefficients.peclet * velocity * concentration
     return -bracket
-
-
-def nernst_planck_residual(
-    flux: Expression,
-    test: Expression,
-    measures: Measures,
-    **kwargs: Option,
-) -> IntegralTerm:
-    """Return the weak Nernst-Planck residual ``int J~_i . grad(w) r``."""
-    import ngsolve as ngs
-
-    return measures.volume(flux * ngs.grad(test), **kwargs)

@@ -165,14 +165,20 @@ class NondimensionalCoefficients:
         ion = self.electrolyte.ion(species)
         return (ion.steric_diameter / self.electrolyte.water_steric_diameter) ** 3
 
+    @property
+    def permittivity_varies(self) -> bool:
+        """Whether ``eps~_r`` in the electrolyte depends on the state; False with no fit."""
+        import ngsolve as ngs
+
+        return isinstance(self.relative_permittivity(), ngs.CoefficientFunction)
+
     def permittivity_sensitivity(self, species: str) -> Expression:
         """Return ``d eps~_r / d c~_i``, a deviation-only term."""
         import ngsolve as ngs
 
-        permittivity = self.relative_permittivity()
-        if not isinstance(permittivity, ngs.CoefficientFunction):
+        if not self.permittivity_varies:
             return ngs.CoefficientFunction(0.0)
-        return permittivity.Diff(self.concentrations[species])
+        return self.relative_permittivity().Diff(self.concentrations[species])
 
     @property
     def provenance(self) -> Mapping[str, Any]:

@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 __all__ = [
     "FLUX",
     "FORCE",
+    "Build",
     "Context",
     "Contribution",
     "Domain",
@@ -103,6 +104,8 @@ class Context:
         The terms of the assembly at hand, which the readers sum over.
     species
         The species of the slot at hand, or None.
+    field
+        The field whose test function the slot at hand takes, or None.
     """
 
     ops: Operators
@@ -117,12 +120,19 @@ class Context:
     stabilisation: StabilisationModel
     terms: tuple[KernelTerm, ...] = ()
     species: str | None = None
+    field: str | None = None
 
     def require_species(self) -> str:
         """Return the species at hand; RuntimeError on a slot that has none."""
         if self.species is None:
             raise RuntimeError("a per-species contribution was built for a slot with no species")
         return self.species
+
+    def require_field(self) -> str:
+        """Return the test field at hand; RuntimeError outside a slot."""
+        if self.field is None:
+            raise RuntimeError("a contribution that reads its slot's field was built outside one")
+        return self.field
 
 
 Build = Callable[[Context], Expression | None]
@@ -195,6 +205,8 @@ class Slot:
         Whether the integrand carries ``1/r``, which takes NUM-07's minimum order.
     rule_order
         A fixed rule for the slot, in place of the estimated one.
+    per_field
+        Whether the slot's name carries its test field, for a family with one slot per field.
     """
 
     family: str
@@ -206,11 +218,14 @@ class Slot:
     extra_order: int = 0
     rule_order: int | None = None
     species: str | None = None
+    per_field: bool = False
 
     @property
     def name(self) -> str:
-        """Return the slot's name: its family, and its species where it has one."""
-        return self.family if self.species is None else f"{self.family}:{self.species}"
+        """Return the slot's name: its family, with its species or its field where it has one."""
+        if self.species is not None:
+            return f"{self.family}:{self.species}"
+        return f"{self.family}.{self.test}" if self.per_field else self.family
 
 
 def _total(parts: Sequence[Expression]) -> Expression | None:
@@ -223,7 +238,7 @@ def _total(parts: Sequence[Expression]) -> Expression | None:
 
 
 def _bound(terms: Sequence[KernelTerm], slot: Slot, context: Context) -> Context:
-    return replace(context, terms=tuple(terms), species=slot.species)
+    return replace(context, terms=tuple(terms), species=slot.species, field=slot.test)
 
 
 def _parts(term: KernelTerm, family: str, context: Context) -> list[Expression]:

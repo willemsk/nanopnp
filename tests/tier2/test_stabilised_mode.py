@@ -386,13 +386,27 @@ def test_num17_plain_galerkin_trips_positivity_where_reference_converges(
     assert "r = " in message and "z = " in message
 
 
+def _transport_states(solution: ModelSolution) -> dict[str, stabilisation_module.TransportState]:
+    model = solution.model
+    functions = {field.name: solution.component(field.name) for field in model.fields}
+    context = model.context(
+        solution.space.mesh,
+        AXISYMMETRIC,
+        trial=functions,
+        wall_distance_nm=solution.wall_distance_nm,
+    )
+    return {
+        species: stabilisation_module.transport_state(context, context.trial, species)
+        for species in model.species
+    }
+
+
 # NUM-17, NUM-12
 def _crosswind_samples(solution: ModelSolution) -> dict[str, tuple[int, int, int, float]]:
     from nanopnp.numerics.gates import FieldSampler
 
+    states = _transport_states(solution)
     model = solution.model
-    functions = {field.name: solution.component(field.name) for field in model.fields}
-    states = model.transport_states(functions, solution.wall_distance_nm)
     sampler = FieldSampler(mesh=solution.space.mesh, materials=model.fluid)
 
     found: dict[str, tuple[int, int, int, float]] = {}
@@ -471,8 +485,7 @@ def test_num14_the_crosswind_contributes_exactly_zero_on_a_resolved_mesh(
     solution = result.solution
     model = solution.model
     mesh = solution.space.mesh
-    functions = {field.name: solution.component(field.name) for field in model.fields}
-    states = model.transport_states(functions, solution.wall_distance_nm)
+    states = _transport_states(solution)
     mode = model.stabilisation_model
 
     # Any test function serves: where nu_K vanishes the integrand vanishes whatever it multiplies,
@@ -482,16 +495,14 @@ def test_num14_the_crosswind_contributes_exactly_zero_on_a_resolved_mesh(
         contributions = mode.transport_contributions(
             trial=state, lagged=state, test=space.TestFunction()
         )
-        assert len(contributions) == 2, (
-            f"the {mode.name!r} mode produced {len(contributions)} transport contributions; "
-            "this test reads the second as the crosswind"
+        assert tuple(contributions) == stabilisation_module.TRANSPORT_SLOTS, (
+            f"the {mode.name!r} mode produced {tuple(contributions)}; this test reads the crosswind"
         )
         form = ngs.LinearForm(space)
         form += AXISYMMETRIC.volume(
-            contributions[1].integrand,
+            contributions["crosswind"],
             definedon=mesh.Materials(model.fluid),
-            extra_order=contributions[1].extra_order,
-            singular=contributions[1].singular,
+            extra_order=stabilisation_module.CROSSWIND_BONUS_ORDER,
         )
         form.Assemble()
         entries = np.asarray(form.vec.FV())

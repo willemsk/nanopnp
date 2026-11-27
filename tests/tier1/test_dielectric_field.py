@@ -26,6 +26,7 @@ from nanopnp.materials.fields import blend
 from nanopnp.mesh.primitives import SlabGeometry, mesh_cylinder_pore
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
+from nanopnp.physics.backend import NGSOLVE_OPERATORS
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
     NondimensionalCoefficients,
@@ -234,7 +235,7 @@ def _coefficients(mesh) -> NondimensionalCoefficients:
         bulk = ngs.GridFunction(space, name=ion.name)
         bulk.Set(1.0)
         fields[ion.name] = bulk
-    variables = ConcentrationVariables.primitive(fields)
+    variables = ConcentrationVariables.primitive(fields, NGSOLVE_OPERATORS)
     return NondimensionalCoefficients(
         electrolyte=electrolyte,
         scales=mesh_unit_scales(electrolyte, CONCENTRATION_M),

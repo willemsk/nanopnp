@@ -9,7 +9,9 @@ from pathlib import Path
 import pytest
 
 from nanopnp.geometry.pore import CylinderPore
+from nanopnp.io.vocabulary import POTENTIAL
 from nanopnp.mesh.primitives import mesh_cylinder_pore
+from nanopnp.physics.coupled import coupled_slots
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 RING = REPOSITORY / "examples" / "02-charged-pore" / "ring.field.yaml"
@@ -74,10 +76,29 @@ def test_qr03_every_fixed_charge_source_carries_the_charge_s_rule() -> None:
         and isinstance(node.args[0].value, ast.Name)
         and node.args[0].value.id == "fixed_charge"
     ]
-    assert len(calls) >= 2, "the coupled models and poisson each assemble a fixed charge"
+    assert len(calls) >= 1, "poisson assembles a fixed charge"
     for call in calls:
         keywords = {keyword.arg for keyword in call.keywords}
         assert "rule_order" in keywords, f"physics/models.py:{call.lineno} omits rule_order"
+    # The coupled models assemble it in the kernel's slot, which takes the charge's rule.
+    slots = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "coupled_slots"
+    ]
+    assert slots, "the coupled models assemble no slots"
+    for call in slots:
+        assert "fixed_charge.rule_order" in ast.unparse(call), (
+            f"physics/models.py:{call.lineno} omits the fixed charge's rule"
+        )
+    fixed = [
+        slot
+        for slot in coupled_slots((), {POTENTIAL}, 7, ())
+        if slot.family == "poisson.fixed_charge"
+    ]
+    assert [slot.rule_order for slot in fixed] == [7]
 
 
 def test_qr03_an_explicit_rule_below_num07_s_floor_is_refused() -> None:
