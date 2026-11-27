@@ -2,11 +2,11 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,743. By source: history ruling 502; plan decision row 828; REV row 301; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 8.
+Rows: 1,744. By source: history ruling 503; plan decision row 828; REV row 301; MOD row 18; OPN row 9; WB row 63; knowledge-base ruling 14; not-to-be-re-decided bullet 8.
 
-By decider: author 840; open 5; session, own call 895; session, put to the author 3.
+By decider: author 841; open 5; session, own call 895; session, put to the author 3.
 
-This page lists the 566 that bind now. The 1,177 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
+This page lists the 567 that bind now. The 1,177 of a delivered plan, fixed, spent, superseded, declined, closed or `wontfix` are in [the closed decisions](decisions-closed.md) (§8.2.50 AZ12).
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -430,7 +430,8 @@ This page lists the 566 that bind now. The 1,177 of a delivered plan, fixed, spe
 | §8.2.59 BI2 | author | `specification/history/59-wp608s-plan-the-guard-numbers.md` | 2026-11-26 | WP6.08 | The guard numbers are held in the reference environment alone.** A guard asks whether a change moved a number, which one environment answers (§7.6's NOTE on a golden asserted on more than one platform). Offered Linux on… | VER-80; §7.6's NOTE on the per-push selection | in force |
 | §8.2.61 BK1 | author | `specification/history/61-the-code-review-hunt-before-the-reviewer.md` | 2026-11-27 | phase ruling | The `/code-review` hunt runs first, report-only, and `np-reviewer` checks and fixes its findings.** Offered the hunt first with the reviewer fixing (*the recommendation*: one fixer, and the main session still edits noth… | §8.4.4; §8.4.5; `CLAUDE.md` *Implementation workflow*; `.claude/agents/np-reviewer.md`; `.claude/skills/` | in force |
 | §8.2.61 BK2 | author | `specification/history/61-the-code-review-hunt-before-the-reviewer.md` | 2026-11-27 | phase ruling | The hunt runs at `high`.** Offered `high` (*the recommendation*: the reviewer checks each finding, so `xhigh`'s extra uncertain findings mostly add sifting), `xhigh` as before WP6.07, and `medium`, the author chose "hig… | §8.4.4 | in force |
-| §8.2.61 BK3 | author | `specification/history/61-the-code-review-hunt-before-the-reviewer.md` | 2026-11-27 | phase ruling | The hunt runs at a package's ship and on a chore that changes code.** Offered ships and code chores (*the recommendation*), ships only, and every review, the medium-effort review of a pulled-in fix's diff included, the… | §8.4.4; `.claude/skills/np-chore/` | in force |
+| §8.2.61 BK3 | author | `specification/history/61-the-code-review-hunt-before-the-reviewer.md` | 2026-11-27 | phase ruling | Its paths are widened by BK4.* **The hunt runs at a package's ship and on a chore that changes code.** Offered ships and code chores (*the recommendation*), ships only, and every review, the medium-effort review of a pu… | §8.4.4; `.claude/skills/np-chore/`; its paths widened by BK4 | in force |
+| §8.2.61 BK4 | author | `specification/history/61-the-code-review-hunt-before-the-reviewer.md` | 2026-11-27 | phase ruling | The chore's hunt also covers the git hooks, the GUI's scripts and the justfile.** Ruled later the same day, on the chore's review (CODE_REVIEW_098): BK3's paths let code without those endings past the hunt, `.githooks/p…` | §8.4.4; `.claude/skills/np-chore/` | in force |
 | REV-35 | author | `docs/project/review-findings.md` |  |  | _second_crossings loops in Python | §8.2.9 I3 | post-1.0 |
 | REV-41 | author | `docs/project/review-findings.md` |  |  | No prepare command, upto on reproduce, or region export | §8.2.18 T3; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4; §8.2.53 BC7: Phase 7's tolerances and exports package | deferred |
 | REV-45 | author | `docs/project/review-findings.md` |  |  | The derived χ field has no export | §8.2.18 T3; §8.2.46 AV5; §8.2.49 AY6; §8.2.50 AZ4; §8.2.53 BC7: Phase 7's tolerances and exports package | deferred |
