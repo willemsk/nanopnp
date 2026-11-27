@@ -6,16 +6,22 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp.io.vocabulary import POTENTIAL, PRESSURE, PRESSURE_MEAN, VELOCITY
+from nanopnp.physics.coupled import COUPLED_TERMS, coupled_slots
 from nanopnp.validation.modularity import (
     PACKAGE,
     BackendImport,
     accepted_backend,
+    accepted_term_modules,
     backend_imports,
     compare_backend,
+    module_references,
 )
 
 AXIS = PACKAGE / "structure" / "axis.py"
 GRID = PACKAGE / "density" / "grid.py"
+FLOW = PACKAGE / "physics" / "flow.py"
+KERNEL_MODULES = ("physics/kernel.py", "physics/operators.py")
 
 
 def test_ver65_live_backend_set_equals_the_record() -> None:
@@ -110,3 +116,33 @@ def test_ver65_accepted_backend_refuses_a_repeated_entry(tmp_path: Path) -> None
     path.write_text("backend:\n  - mesh\n  - mesh\n", encoding="utf-8")
     with pytest.raises(ValueError, match="backend entry 2 repeats mesh"):
         accepted_backend(path)
+
+
+def _defining_modules() -> set[str]:
+    fields = {POTENTIAL, "c_Na+", VELOCITY, PRESSURE, PRESSURE_MEAN}
+    functions: list[object] = []
+    for term in COUPLED_TERMS:
+        functions += [contribution.build for contribution in term.contributions]
+        functions += [f for f in (term.drift, term.force) if f is not None]
+    functions += [slot.close for slot in coupled_slots(("Na+",), fields, None, fields)]
+    return {
+        f"{function.__module__.removeprefix('nanopnp.').replace('.', '/')}.py"
+        for function in functions
+    }
+
+
+def test_ver65_the_term_modules_are_the_record_and_reach_no_backend() -> None:
+    recorded = accepted_term_modules()
+    assert _defining_modules() == set(recorded)
+    references = module_references(backend_imports(), (*recorded, *KERNEL_MODULES))
+    assert references == (), "\n".join(
+        f"{r.path}:{r.line} names {r.target} ({r.kind})" for r in references
+    )
+
+
+def test_ver65_a_backend_import_in_a_term_module_fails_naming_it() -> None:
+    text = FLOW.read_text(encoding="utf-8")
+    use = backend_imports(sources={"physics/flow.py": f"import ngsolve\n{text}"})
+    assert module_references(use, accepted_term_modules()) == (
+        BackendImport("physics", "physics/flow.py", 1, "top", "ngsolve"),
+    )

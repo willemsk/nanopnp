@@ -38,6 +38,12 @@
 # asserts it equals the live set in both directions (QR-13): a new subpackage
 # reaching the backend is a decision recorded here, and one that stops reaching it
 # shrinks the record.
+#
+# `term_modules`: the modules, relative to src/nanopnp, that define a function of the
+# coupled terms (physics/coupled.py COUPLED_TERMS) or a slot's closing. None of them,
+# nor physics/kernel.py and physics/operators.py, makes a backend reference: a term reads
+# context.ops and context.geometry alone (section 5.4.4; QR-13). tests/tier1/test_backend_guard.py
+# asserts the record equals the defining modules in both directions.
 edges:
   - {from: api, to: core, relation: static, finding: null}
   - {from: api, to: io, relation: static, finding: null}
@@ -216,3 +222,8 @@ backend:
   - post
   - solve
   - validation
+term_modules:
+  - physics/coupled.py
+  - physics/flow.py
+  - physics/nernst_planck.py
+  - physics/stabilisation.py
