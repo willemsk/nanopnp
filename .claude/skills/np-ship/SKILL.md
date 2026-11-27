@@ -1,6 +1,6 @@
 ---
 name: np-ship
-description: Ship a finished nanopnp work package or close a phase — land it, reuse its PR, have np-reviewer review and fix it once, drive CI to green; a phase also checks its close and tags the release. Use when asked to ship, review or open the PR for a package, close a phase, or on /np-ship.
+description: Ship a finished nanopnp work package or close a phase — land it, reuse its PR, run the /code-review hunt and have np-reviewer review and fix it once, drive CI to green; a phase also checks its close and tags the release. Use when asked to ship, review or open the PR for a package, close a phase, or on /np-ship.
 argument-hint: "[wp n | phase n]"
 ---
 

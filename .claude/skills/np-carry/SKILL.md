@@ -8,7 +8,7 @@ argument-hint: "wp n"
 
 This session is the package's main session (§8.4.4). The author starts it on Sonnet 5.5 at medium
 effort (`/model sonnet`, `/effort medium`; §8.2.56 BF1). It asks the author, starts the helpers, the
-review and the workers, lands what they commit, holds the PR's subscription and check-in, and
+`/code-review` hunt, the review and the workers, lands what they commit, holds the PR's subscription and check-in, and
 measures. A helper keeps the task list. This session edits nothing, and commits only what `just land`
 commits itself: the registers and the navigation. Each step runs in a helper:
 `.claude/workflow/helper.md` says what a helper hands back. The three commands stay the way back.
@@ -89,12 +89,14 @@ first; a second failure at the same step is `BLOCKED`.
   unchanged, free text included.
 - `WORKER`: start the agent it names in the foreground, with its prompt unchanged: a project agent on
   its file's model and effort, another on the model named at `effort: "high"`. Pass the worker's reply.
-- `REVIEW`: where the prompt ends `The hunt's findings: <to be added>`, first run the hunt on the
-  landed head as `np-ship/wp.md` §4 says, directly, never inside an `Agent`, and put its findings on
-  that line (§8.2.61 BK1, BK2). Then start `np-reviewer` in the foreground with the prompt otherwise
-  unchanged, at `effort: "medium"` where the block asks for it (§8.2.56 BF8). Pass the reviewer's reply, with `usage.py --label
-  carry`'s line taken with no `--since`: the package's cost so far, which the plan's Outcome takes
-  whole, not summed (§8.3).
+- `REVIEW`: where the block asks no `effort: medium` and the prompt ends `The hunt's findings: <to be
+  added>`, first run the hunt on the landed head as `np-ship/wp.md` §4 says, directly, never inside
+  an `Agent`, and put its findings on that line (§8.2.61 BK1, BK2); a review at medium effort runs no
+  hunt (BK3). Then start `np-reviewer` in the foreground with the prompt otherwise unchanged, at
+  `effort: "medium"` where the block asks for it (§8.2.56 BF8). Pass the reviewer's reply, the hunt's
+  findings as the reviewer got them, against which the helper checks the reply and which a second
+  start of the reviewer takes unchanged, and `usage.py --label carry`'s line taken with no
+  `--since`: the package's cost so far, which the plan's Outcome takes whole, not summed (§8.3).
 - `WAIT`: subscribe to the PR once (`subscribe_pr_activity`), schedule a check-in at the delay it
   gives in place of an earlier one, and end the turn. Start a fresh `np-shipper` with §3's first
   prompt and the event that wakes you, unchanged: a `WAIT` leaves no note.

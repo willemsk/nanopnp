@@ -70,7 +70,9 @@ pushed at that sha, its `HEAD`.
 - `REVIEW`: `agent: np-reviewer`, `effort: medium` for the review of a finding the author pulled in
   (§8.2.56 BF8) or of a small finding fixed after the review (§8.2.58 BH1), then the reviewer's whole
   prompt. A full review's prompt ends `The hunt's findings: <to be added>`: the main session runs the
-  `/code-review` hunt and fills it in (§8.2.61 BK1).
+  `/code-review` hunt, fills it in and passes the findings back with the reply (§8.2.61 BK1). A
+  second start of the same review writes them in, so that the hunt does not run again; a review at
+  medium effort has no such line.
 - `WAIT`: `pr: <number>` and the steward's check-in delay.
 - `RUN`: the command, with its output sent to a log under `<git dir>`; it writes no tracked file.
   The main session runs it in the background, waits, and gives the next helper the log's path.
