@@ -291,10 +291,18 @@ in a `git worktree` of `5332fbd`.
   > and `Slot.per_field` names the sources' slots `source.<field>`; `concentration_field_name` moves to
   > `io/vocabulary.py`, which `coupled.py` reads, and `models.py` re-exports it.
 - [x] 3. Compaction checkpoint. **Executor:** main
-- [ ] 4. `post/qoi.py`, `models.py`, `solve/continuation.py`, `numerics/gates.py`, `nernst_planck.py`
+- [x] 4. 44d2dd8 `post/qoi.py`, `models.py`, `solve/continuation.py`, `numerics/gates.py`, `nernst_planck.py`
   (`species_flux` deleted, its tests carried), `specification/06-numerics.md`, and VER-81's row in
   `specification/07-verification/02-tier-1.md` (D4, D9); done when VER-81's third test and
   `tests/tier2/test_current_routes.py` pass. **Executor:** main
+
+  > **Outcome — the readers read the kernel; VER-81's third group is five tests.** `indicator_currents` and
+  > `stabilisation_currents` share one context and integrate the `flux`, `streamline` and `crosswind` slots closed
+  > with `ψ`. The third group asserts each reader within 10⁻¹² on the 0.4 nm cylinder, and that leaving out each of
+  > the four flux terms and the three force terms moves its reader by more than 10⁻⁶, so that no comparison passes
+  > on a zero part; the finite assembly under PHY-23 and `reference` runs on a 1.5 nm mesh, 3.4 s. NUM-14's
+  > *Approximate residual* bullet is reworded beside its added sentence, as "every second derivative is dropped"
+  > contradicted the wind's `∇∇φ̃`. `test_current_routes.py` with `test_solution_state.py`: 39 passed.
 - [ ] 5. `docs/project/modularity-layering.yaml`, `tests/tier1/test_backend_guard.py` and VER-65's row (D8); done
   when VER-65's tests pass. **Executor:** main
 - [ ] 6. The thirteen walks, a `RUN` hand-back with no commit (D7); done when the log shows thirteen walks, none

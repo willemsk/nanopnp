@@ -1055,6 +1055,30 @@ def accepted_backend(path: Path = LAYERING) -> tuple[str, ...]:
     return tuple(recorded)
 
 
+def accepted_term_modules(path: Path = LAYERING) -> tuple[str, ...]:
+    """Return the recorded modules that define the kernel's terms and closings.
+
+    Raises
+    ------
+    ValueError
+        If an entry is not a module path or repeats one.
+    """
+    recorded: list[str] = []
+    for number, row in enumerate(_rows(path, "term_modules"), start=1):
+        if not isinstance(row, str) or not row.endswith(".py"):
+            raise ValueError(f"{path}: term_modules entry {number} is not a module path")
+        if row in recorded:
+            raise ValueError(f"{path}: term_modules entry {number} repeats {row}")
+        recorded.append(row)
+    return tuple(recorded)
+
+
+def module_references(use: BackendUse, modules: Iterable[str]) -> tuple[BackendImport, ...]:
+    """Return each backend reference made in one of ``modules``, as package-relative paths."""
+    paths = set(modules)
+    return tuple(reference for reference in use.imports if reference.path in paths)
+
+
 @dataclass(frozen=True)
 class BackendComparison:
     """The difference between the subpackages reaching the backend and the record."""
