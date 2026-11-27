@@ -95,8 +95,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   `np-reviewer`, with the chore's statement for its plan, and always where it touches `.claude/settings*.json`,
   the hooks, the agents, the skills or the workflows of `.claude/` and `.github/`; where a changed path is
   under `src/`, `tests/`, `.githooks/` or `.claude/scripts/`, is a `.py`, `.sh` or `.cjs` file, or is
-  `justfile`, the
-  `/code-review` hunt runs first, as at a ship. A commit made after the review
+  `justfile`, the `/code-review` hunt runs first, as at a ship. A commit made after the review
   is reviewed on its own diff at medium effort unless it is Markdown alone outside those paths. A session runs
   it only where no carry is running, which the author's start of the session ensures; it refuses on a dirty
   tree, commits past `origin/main` or another worktree whose branch holds commits past `origin/main`, and

@@ -83,3 +83,34 @@ The pass fixed none and left one.
   it. A fix's own diff still gets the medium review without the hunt (BK3, unchanged by BK4). Finding 8's outcome
   states the author's choice and that it went beyond the recommendation.
 - **Wrap.** The edited lines of §8.4.4 and step 6 run 77 to 98 characters.
+
+## Addendum: the commit that rules finding 9 (§8.2.61 BK5)
+
+2026-11-27 · head `fdc8a75` on base `2db78c5` · scope: one commit, 7 files, +19 and −14, read from
+`git diff 2db78c5...fdc8a75`, against BK4, BK5, §8.4.4 and the chore's step 6 · reviewer: `np-reviewer`, Opus 5.5
+at high effort · status: completed.
+
+Static review of Markdown and YAML alone. Probes: every tracked file under `.claude/scripts/` and its ending; every
+text that states the chore's hunt trigger; a Markdown-only change under `.claude/scripts/`; the records of BK4 and
+BK5 against BK3's widened row.
+
+| # | Severity | Where | Finding | Disposition |
+|---|---|---|---|---|
+| 10 | Low | `specification/08-implementation-plan/04-development-process.md:98` | Prose (§8.4.2's wrap, as the first addendum checked it). The rewrap of the trigger left a 17-character line, "`justfile`, the", in the middle of the bullet. Confirmed | Fixed: the line joined to the next, 94 characters, in this addendum's commit |
+
+The pass fixed one and left none.
+
+### Checked and found true
+
+- **One statement of the trigger.** BK5, §8.4.4's bullet and step 6 give the same paths in the same order; no other
+  text states the chore's trigger. Step 6 cites BK1 to BK5 and §8.4.4 cites BK3 to BK5.
+- **The folder's files.** `.claude/scripts/` holds eleven `.py`, two `.cjs`, one `.sh` and `digest.tpl.html`;
+  the folder adds the template alone to what BK4's endings caught, and no Markdown file sits under it, so step 6's
+  "unless every changed path is `*.md`" leaves no change there unreviewed.
+- **The records.** BK4 carries "*Its paths are widened by BK5.*" and its *Holds now* says so, as BK3 does for BK4;
+  BK5 has its *Holds now*; the decisions page gains one row, its counts one ruling and one binding row. The
+  record's description and the history index say "the workflow's scripts", which names the folder rightly.
+  Finding 9's outcome states the author's choice and that it was the recommendation.
+- **What a session could do with it.** The change adds no permission line and moves no path into or out of the
+  always-reviewed list; it only makes the report-only hunt run on more chores, from the session that already runs
+  it. The gate's prose-only path (`.github/scripts/prose-only.sh`) is untouched.
