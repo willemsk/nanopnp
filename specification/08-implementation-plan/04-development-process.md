@@ -136,8 +136,10 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   is one pass by `np-reviewer` (§8.4.5), which fixes and commits each finding it confirms and each small
   one. Before it, the session that starts it, never a helper, calls the `/code-review` skill directly
   at `high`, report-only, on the reviewed head, and puts its findings in the reviewer's prompt; the
-  reviewer judges each on its axes and fixes it as one of its own. A small finding it leaves is
-  fixed by `np-builder`, a finding it leaves that outlives the session is an open `REV` row, the pull request merges as reviewed, and a finding the author pulls in is fixed;
+  reviewer judges each on its axes and fixes, leaves or refutes it in its one report, and a second
+  start of the reviewer takes the same findings. A small finding it leaves is fixed by `np-builder`,
+  a finding it leaves that outlives the session is an open `REV` row, the pull request merges as
+  reviewed, and a finding the author pulls in is fixed;
   the diff of either fix alone is reviewed at medium effort. Of a red CI the ship fixes only format and
   lint, with `ruff format` and `ruff check --fix`, and reruns a flaky runner once; `np-builder` fixes
   every other failure. (§8.2.11 L7; §8.2.16 R5; §8.2.33 AI4; §8.2.56 BF1, BF4, BF5, BF8; §8.2.58 BH1;
@@ -253,8 +255,8 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   standards, the specification and the physics and numerics, which fixes and commits what it
   confirms, the `/code-review` hunt's findings among them, and reviews a pulled-in finding's diff at
   medium. A helper can start no agent and ask the author nothing, so the main session does both for
-  it, and runs the hunt, a skill that starts its own agents; it keeps the task list and commits under the
-  commit gate, and the main session, on the longer prompt cache, runs the push gate and pushes
+  it, and runs the hunt, a skill that starts its own agents; the helper keeps the task list and
+  commits under the commit gate, and the main session, on the longer prompt cache, runs the push gate and pushes
   (§8.4.4). An agent file is loaded when a session starts. The note
   `knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md` holds what was measured, and
   on which version of Claude Code. (§8.2.54 BD2; §8.2.56 BF1, BF2, BF4, BF6, BF8, BF11; §8.2.61 BK1)

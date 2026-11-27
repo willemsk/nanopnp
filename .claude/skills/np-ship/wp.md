@@ -99,8 +99,11 @@ The hunt's findings: <the /code-review findings, or none>
 **The reply must show that the pass completed**: the reviewed base and head, which match the SHAs
 recorded above, or under `/np-carry` a head whose commits after the recorded one are `just land`'s
 own, as the land before the review may add them (§8.2.56 BF11), its commits, the report's path and
-each finding with its outcome, each of the hunt's included. Zero findings is valid. If the reply lacks that evidence, start the reviewer once more, never two at a time; if it
-still lacks it, stop before §5 and report it. Then, in this session:
+each finding with its outcome, each of the hunt's findings included; under `/np-carry` the main
+session passes the findings with the reply. Zero findings is valid. If the reply lacks that
+evidence, start the reviewer once more, never two at a time, with the same prompt, the hunt's
+findings written in, so that the hunt does not run again; if it still lacks it, stop before §5 and
+report it. Then, in this session:
 
 1. **A small finding** the reviewer left is fixed now, by `np-builder` (a helper hands back `WORKER`), its
    diff reviewed as below; it gets no row (§8.2.58 BH1). **Each other finding left to the author** is a

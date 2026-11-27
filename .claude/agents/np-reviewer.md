@@ -45,5 +45,5 @@ soften a finding to be agreeable.
 Write the report to `docs/code_reviews/CODE_REVIEW_NNN.md`, NNN one above the highest present, in
 the shape of the latest one, and commit it with your fixes, or alone as `docs: code review <NNN>`.
 Run `uv run .claude/scripts/index_records.py` before that commit. Your reply: the reviewed base and
-head, the commits you made, and each finding with its outcome: fixed (with the commit), or left to the
-author (with your recommendation). Nothing more.
+head, the commits you made, and each finding with its outcome: fixed (with the commit), left to the
+author (with your recommendation), or, for one of the hunt's, refuted (with the reason). Nothing more.
