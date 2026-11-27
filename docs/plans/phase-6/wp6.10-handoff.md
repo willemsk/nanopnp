@@ -2,64 +2,57 @@
 
 ## Step
 
-Plan: done, by one helper. The plan is written, self-checked (`np-plan/review.md`) and committed; no decision went
-to the author, so there was no `ASK` and no second helper. The author's approval is next, then the build.
+Implement: items 1 and 2 done, item 3 (the compaction checkpoint) ticked in this note's commit. Item 4 is next.
 
 ## Done
 
-- `21e1292` docs: WP6.10 implementation plan
-- this note's commit, `docs: WP6.10 hand-off, plan`
+- `e482296` feat: the kernel's records, operators and geometry (WP6.10 item 1)
+- `750c63f` feat: the coupled residual composed from registered terms (WP6.10 item 2)
+- this note's commit, `docs: WP6.10 hand-off, implement`: items 2 and 3 ticked
+
+PR #227, `feat: WP6.10 — the composition`, opened by REST (`gh api`); the GitHub MCP server failed to connect. Its
+body still describes the plan alone; item 7 brings it to the tree.
 
 ## Measured
 
-- 3,644 words in the plan: 896 in `### Grounding`, 1,099 in `### Implementation details`, 1,649 outside both; the
-  caps are 3,850, 1,100 and 1,650. The In brief has 273 words of 275.
-- 700 words in `docs/plans/current.md`, its limit. 2,750 words in the Phase 6 plan without its report, its limit: an
-  edit of it by the build's last item must not add a word.
-- 0 open pull requests for this package; `origin/claude/relaxed-heisenberg-axbj47` does not exist yet, and the
-  branch started at `origin/main`, `5332fbd`.
-- VER-80, REV-301, record 62 and letter BL are the highest in use; the plan claims VER-81 and no other.
-- D2's quadrature measurements are in the plan's `### Grounding`; their scripts were scratch and are gone.
+- The stored operator: `.git/wp6.10/stored.npz`, written from `2ba10ab9` by `.git/wp6.10/compare_operators.py
+  --write`; `--against <file>` compares (about 110 s, the two PHY-23 stabilised variants taking 100 s of it).
+  Both are uncommitted, in the git dir.
+- The comparison's numbers and the PHY-23 timing are in the plan's item 2 Outcome and REV-302.
+- Tier 1 green at `750c63f` (the commit hook). Tier 2 at the same tree is the `RUN` this note hands back.
 
 ## Decided
 
-- The planning model: the author chose Fable 5.2 at high effort (§8.2.56 BF9), and it wrote the plan.
-- Nothing was put to the author. The phase plan's open decision 19 hands the slots' cut, each slot's rule and the
-  operators' names to this plan; BL1, BL2, BL5 and BL6 rule the rest; no choice changes what a user sees beyond
-  BL5's.
-- The close calls, each in the plan and none in a record yet:
-  - D2 merges the inertia with the two forces as one slot, with the inertia stated as the force density
-    `−Re ρ̃ (∇ũ)ũ`, which the design's table kept apart. A bolder cut, the viscous stress with the pressure, moved
-    a rule by 6.0 × 10⁻⁴ and was refused.
-  - BL5 is read to keep the decrement's `∇∇φ̃` in the approximate residual; NUM-14's NOTE gains a sentence for it.
-  - The manifest's Péclet expression is derived from the drifts in force. At the default it is today's string; a
-    classical or `pnp` run's string loses the drifts it does not have.
-  - Item 6 runs all thirteen stored walks, where the phase entry asked for the two push walks and the stabilised
-    guards.
-- The clause amendments are written by the items that build them, not by the plan's commit, as WP6.08's were.
-- The self-check moved three things: `BackendImport`'s fields are `path` and `target`; `permittivity_gradient`
-  keeps its signature and returns `None`, so `post/forces.py` needs no operators; a source keeps its own slot
-  though it agrees with another in all four properties.
+- Item 2 rewrote `post/qoi.py:stabilisation_currents` on the kernel (`model.context`, `TRANSPORT_SLOTS`,
+  `kernel.integrand`, `Measures.integrate`), since it read the deleted `transport_states` and `indicator_term`.
+  Item 4 still owes `indicator_currents` (it calls `species_flux`), `cell_peclet`'s new signature with the solid
+  fraction, `_report_peclet`, `PecletDiagnostic.expression`, the two NOTEs and VER-81's row.
+- `CoupledModel.context` binds `terms=self.terms_in_force()`, so a reader calls `stabilisation.transport_state`
+  on it directly. `cell_peclet(state, wall_distance_nm)` already reads the whole wind through it, decrement
+  included; item 4 adds the solid fraction.
+- `Context.field` is the slot's test field, bound with its species; the flux closing and the stabilisation read
+  `context.tests[context.require_field()]`.
+- `test_stabilisation.py`'s `_built` builds a hand context with Nernst–Planck, Steric flux and Advection;
+  `test_num14_advective_velocity_is_the_flux_bracket_of_species_flux` still calls `species_flux`, so item 4
+  carries it to the flux slot's contributions, as `test_nernst_planck.py`'s `species_flux` tests.
 
 ## Open
 
-None. The plan's `### Open questions` is empty.
+None put to the author. REV-302 (PHY-23 with a stabilised mode assembles fifty times slower) is open for the
+ship's report. A parallel Tier 2 run at `750c63f` had passed two thirds with no failure when it was stopped;
+the main session runs it whole (`RUN`, its log `.git/wp6.10/tier2.log`). Already green before the stop:
+`test_stabilised_mode.py`, `test_current_routes.py`, `test_ladder.py`, `test_electroosmosis.py` (34 passed).
 
 ## Next
 
-1. The main session lands this branch. Then the package's pull request is opened, by the next helper if the main
-   session does not: title `docs: WP6.10 implementation plan`, base `main`, its body the plan's In brief, then
-   `.github/pull_request_template.md` filled in (`.claude/workflow/finish.md`, *The PR contract*): the plan is in
-   and the implementation follows; the code's review waits for the ship; no specification change in this commit.
-2. After the author approves, a fresh `np-builder` for `/np-implement wp 6.10`: read
-   `docs/plans/phase-6/wp6.10-the-composition.md` and start at work item 1. Its first action, before any edit of
-   `src/`:
+First read `.git/wp6.10/tier2.log`. A failure there is item 2's: fix it, with its test's assertion and tolerance
+kept, and commit before item 4. Then a fresh `np-builder` for `/np-implement wp 6.10`: read `docs/plans/phase-6/wp6.10-the-composition.md`, then start
+item 4 at `src/nanopnp/post/qoi.py:indicator_currents`, which becomes the `flux` slot's integrand closed with `ψ`
+(the plan's *Item 4, the readers*); then delete `nernst_planck.py:species_flux` and its `NGSOLVE_OPERATORS`
+import, and run
 
-   ```bash
-   git fetch origin prototype/wp6.09-kernel
-   mkdir -p "$(git rev-parse --git-dir)/wp6.10"
-   git show FETCH_HEAD:prototype/compare_operators.py > "$(git rev-parse --git-dir)/wp6.10/compare_operators.py"
-   ```
+```bash
+uv run pytest tests/tier1/test_kernel.py tests/tier1/test_nernst_planck.py tests/tier1/test_stabilisation.py tests/tier2/test_current_routes.py -q
+```
 
-   Then change the script as *The comparison* says and write the twelve variants' file from the unedited tree.
-3. Item 6 is a `RUN` hand-back; item 3 is a compaction checkpoint.
+Item 6 is a `RUN` hand-back.
