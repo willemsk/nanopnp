@@ -340,6 +340,11 @@ general: a term takes its operators and its geometry from the kernel's context a
 asserts that no module holding a term imports one. §5.4.1 states the layer; WP6.10 builds it and the finding closes
 at WP6.12. That it fits a second backend stays unshown.
 
+**Built for the coupled models** (WP6.10, 27 November 2026; [its plan](../plans/phase-6/wp6.10-the-composition.md)):
+`physics/operators.py` states the operators and the geometry, `physics/backend.py` holds NGSolve's, and the coupled
+terms in `coupled.py`, `nernst_planck.py`, `flow.py` and `stabilisation.py` name no backend, which VER-65 asserts
+through `term_modules:`. The single-field models remain for WP6.12.
+
 ### MOD-11 — with_section and register are outside PUBLIC
 
 *Area:* surface. *Severity:* low.

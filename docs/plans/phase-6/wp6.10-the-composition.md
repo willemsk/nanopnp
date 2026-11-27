@@ -1,6 +1,15 @@
 # WP6.10 — The composition
 
-**Status: planned, not started.** Written 27 November 2026 by Fable 5.2 at high effort, on the code at `5332fbd`. Inherits §8.2.62 BL1, BL2, BL5 and BL6, [the kernel's design](../../design/kernel.md), REV-300 and the test
+**Status: delivered, 27 November 2026.** The coupled residual of `pnp`, `pnp-ns` and `epnp-ns` is composed from
+registered terms in slots, one integral each (`physics/kernel.py`, `coupled.py`; FR-40 in part; §5.4.4); no term
+names NGSolve or a dimension, its operators and geometry the context's (`operators.py`, `backend.py`; QR-13 for the
+coupled models; BL6). The wind, the approximate residual, the cell Péclet number and NUM-24's indicator current read
+the drifts in force, PHY-23's decrement among them (BL5; NUM-12's and NUM-14's NOTEs; REV-300 fixed). VER-81, new,
+Tier 1, and VER-65's `term_modules:` rule pass; the operator equals the stored one to 3.1 × 10⁻¹⁶ (item 2) and the
+thirteen walks hold to 2.9 × 10⁻¹² (item 6). Live: `CoupledModel.terms_in_force()` decides until WP6.11; the
+single-field models until WP6.12; REV-302, PHY-23 under a stabilised mode assembles fifty times slower.
+
+Written 27 November 2026 by Fable 5.2 at high effort, on the code at `5332fbd`. Inherits §8.2.62 BL1, BL2, BL5 and BL6, [the kernel's design](../../design/kernel.md), REV-300 and the test
 scope (§8.2.13 N1). Its last commit on `main`
 takes `v0.7.0-alpha.10` (§8.4.1).
 
@@ -305,13 +314,28 @@ in a `git worktree` of `5332fbd`.
   > contradicted the wind's `∇∇φ̃`. `test_current_routes.py` with `test_solution_state.py`: 39 passed.
 - [x] 5. b8ffdf7 `docs/project/modularity-layering.yaml`, `tests/tier1/test_backend_guard.py` and VER-65's row (D8); done
   when VER-65's tests pass. **Executor:** main
-- [ ] 6. The thirteen walks, a `RUN` hand-back with no commit (D7); done when the log shows thirteen walks, none
+- [x] 6. The thirteen walks, a `RUN` hand-back with no commit (D7); done when the log shows thirteen walks, none
   failed or skipped. **Executor:** main, the run by the main session
-- [ ] 7. The records: `specification/05-software-design/04-component-design.md`,
+
+  > **Outcome — the thirteen walks hold, the largest drift 2.9 × 10⁻¹².** At `5eeb55e3` on linux-x86_64/X86_V3,
+  > VER-62's walks (`.git/wp6.10/walks.log`): 43 passed in 406 s, none failed or skipped, every walk on the same
+  > mesh. The largest relative drift of each: `2wcd-charged` 2.898 × 10⁻¹² (`currents_A[Cl-]`), `2wcd-shell`
+  > 1.347 × 10⁻¹² (`currents_A[Cl-]`), `example-01` 4.627 × 10⁻¹⁴ (`eof_m3_s`), `example-02-classical`
+  > 1.684 × 10⁻¹⁶, `example-02-epnpns` 3.566 × 10⁻¹⁶, `example-03-charged` 6.074 × 10⁻¹⁶, `example-07`
+  > 1.490 × 10⁻¹⁵, `guard-constant-density` 2.246 × 10⁻¹⁶, `guard-dielectric` 0, `guard-log` 4.093 × 10⁻¹⁶,
+  > `guard-no-inertia` 4.111 × 10⁻¹⁶, `guard-reference` 3.809 × 10⁻¹⁶, `guard-supg` 5.046 × 10⁻¹⁶. All within
+  > VER-62's 10⁻⁸; no stored value is re-pinned (D7).
+- [x] 7. The records: `specification/05-software-design/04-component-design.md`,
   `specification/a-traceability-matrix.md`, `docs/design/kernel.md`, `CHANGELOG.md`,
   `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md`, `knowledge/log.md`,
   `docs/project/review-findings.md`, `review-items.md`, this plan, the Phase 6 plan, `docs/plans/current.md`; done
   when the code and review say so. **Executor:** main
+
+  > **Outcome — the records follow the tree.** Beyond the list: `holds-now.yaml` (BL5 held by NUM-12's and NUM-14's
+  > NOTEs and VER-81; BL6 by VER-65, WP6.12 open for MOD-10; BL1 and BC1 open on WP6.11 and WP6.12), MOD-10's row and
+  > section in `modularity-findings.md` and `modularity.md` (built for the coupled models), and the decisions pages.
+  > `docs/design/kernel.md` says that *today* means the tree at `5332fbd`, and NUM-24's indicator now reads the `flux`
+  > slot. The knowledge base's §8.7 replaces the prototype's open points with WP6.10's measurements.
 
 ### Verification
 

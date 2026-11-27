@@ -1986,6 +1986,12 @@ this recommendation. The round checked `tests/tier2/data/number_stability.json`:
 with a stabilised mode and none holds a cell Péclet number, so no pin moves. WP6.10 writes it with its Tier 1 test and
 amends NUM-12's NOTE.
 
+**Fixed** (WP6.10, 27 November 2026, `750c63f` and `44d2dd8`): the Nernst–Planck, steric, advection and decrement
+terms each state their drift once; the wind, the approximate residual, the cell Péclet number and the indicator
+current read their sum, and NUM-12's and NUM-14's NOTEs say so. VER-81's third group checks each reader on the
+decrement's drift; the operator under PHY-23 with `reference` moved by 7.4 × 10⁻⁶ in the residual, and no stored walk
+takes the pair. Its assembly cost is REV-302.
+
 ### REV-301: Three messages in mesh/ cite CON-04 for the half-plane where CON-01 is meant
 
 Left by `/np-ship`'s review of WP6.09, [CODE_REVIEW_097](../code_reviews/CODE_REVIEW_097.md). The refusals of a

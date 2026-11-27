@@ -25,6 +25,30 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.7.0-alpha.10]
+
+WP6.10: the composition; tag `v0.7.0-alpha.10` once merged (FR-40 in part; QR-13; VER-65, VER-81; NUM-12, NUM-14;
+§8.2.62 BL1, BL5, BL6; REV-300). The [plan](docs/plans/phase-6/wp6.10-the-composition.md) records the work. At the
+validated defaults nothing changes for a user of the program: the thirteen stored runs repeat to 2.9 × 10⁻¹².
+
+- **Changed** (the physics, §5.4.4):
+  - The coupled models, `pnp`, `pnp-ns` and `epnp-ns`, are assembled from registered terms, each integral of the
+    equations summed from its terms and integrated once. No term names NGSolve or assumes two dimensions: it takes
+    its operators and its geometry from the kernel's context (§5.4.1).
+  - With `dielectric_gradient_forces` and a stabilised mode (`reference` or `supg`), the stabilisation's wind, its
+    approximate residual and the cell Péclet number take the dielectric decrement's drift, as the weak form does
+    (NUM-12's NOTE; REV-300). That combination computes slightly differently from the last release and assembles
+    about fifty times more slowly (REV-302); no stored number takes it.
+  - The indicator current of NUM-24 integrates each species' composed flux, and the manifest's Péclet expression
+    lists the drifts in force.
+- **Removed** (the Python interface of `nanopnp.physics`): `nernst_planck.species_flux` and
+  `nernst_planck_residual`; the flow's `viscous_operator`, `pressure_term`, `continuity_term`, `inertia_term`,
+  `electrical_body_force`, `dielectric_gradient_force`, `strain_rate` and `axisymmetric_divergence`;
+  `stabilisation.advective_velocity` and each mode's `transport_term`, `flow_term` and `indicator_term`;
+  `CoupledModel.transport_states`. The kernel's terms and slots replace them.
+- **Added** (the tests, §7.2): VER-81, the kernel's composition; VER-65 holds the modules of the terms to no backend
+  import.
+
 ## [0.7.0-alpha.9]
 
 WP6.09: the kernel's design; tag `v0.7.0-alpha.9` once merged (FR-40; §8.2.53 BC2, BC5; §8.2.60 BJ1 to BJ3). The

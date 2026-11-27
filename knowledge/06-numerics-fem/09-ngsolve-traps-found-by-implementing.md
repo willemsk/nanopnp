@@ -158,6 +158,10 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_qoi.py::test_num26_round_off_currents_at_zero_bias_fail_the_relative_check
   at: '2026-10-18T00:00:00Z'
+- by: process:tests/tier1/test_kernel.py::test_ver81_one_slot_is_one_integral_where_term_by_term_moves_the_rule
+  at: '2026-11-27T00:00:00Z'
+- by: process:tests/tier1/test_kernel.py::test_ver81_a_term_left_out_changes_its_own_slots_alone
+  at: '2026-11-27T00:00:00Z'
 tested_with:
   ngsolve: 6.2.2606
   netgen-mesher: 6.2.2606
@@ -759,25 +763,35 @@ cycle is collected with the mesh. **[tested: tests/tier1/test_ngsolve_traps.py::
 ### 8.7 What a residual composed from terms must keep **[verified][^wp609-prototype]** {#87-what-a-residual-composed-from-terms-must-keep}
 
 WP6.09's prototype composed `CoupledModel.residual_form` from terms that add expressions to slots, one integral each
-(the design: `docs/design/kernel.md`), and compared it with today's form on ten variants at one smooth state on a
-118-element cylinder.
+(the design: `docs/design/kernel.md`), and compared it with the form before it on ten variants at one smooth state on
+a 118-element cylinder; WP6.10 built the kernel (`physics/kernel.py`, §5.4.4) and compared it with the operator stored
+from the tree before its first edit.
 
-- **One integral per slot holds the operator.** With each of today's integrals a slot, and a slot's contributions
-  summed before it is integrated once, the composed residual and Jacobian equal today's to 2.1 × 10⁻¹⁶ and
-  1.2 × 10⁻¹⁶ of their largest entry, in all three stabilisation modes. NGSolve estimates an integral's order from
-  the trial and test functions it carries (`02-axisymmetric-weak-forms.md`), so summing before integrating keeps each
-  slot's rule; the prototype did not measure a slot split term by term.
+- **One integral per slot holds the operator; a slot split term by term moves it.** With each integral a slot, and a
+  slot's contributions summed before it is integrated once, the composed residual and Jacobian equal the stored ones
+  to 3.1 × 10⁻¹⁶ and 1.2 × 10⁻¹⁶ of their largest entry, in all three stabilisation modes.[^wp610-composition]
+  NGSolve estimates an integral's order from the trial and test functions it carries (`02-axisymmetric-weak-forms.md`),
+  not from its coefficients. On a P2 product space the diffusion and the migration integrated apart differ from their
+  one integral by 7.9 × 10⁻⁵ where `D~` is constant, and by 1.8 × 10⁻¹⁶ where it is corrected; the viscous stress
+  and the pressure in one integral differ from two by 6.0 × 10⁻⁴; the inertia and the two forces, which share a test
+  function, a domain and a closing, merge at 1.9 × 10⁻¹⁶.[^wp610-composition] **[tested: tests/tier1/test_kernel.py::test_ver81_one_slot_is_one_integral_where_term_by_term_moves_the_rule]**
 - **The order of a sum is round-off.** Summing PHY-23's decrement into the flux bracket in another order moves its
-  slot by 3.0 × 10⁻¹⁶; writing the drift as `c~_i b` moves the flux slots to at most 3.2 × 10⁻¹⁶.
+  slot by 3.0 × 10⁻¹⁶; writing the drift as `c~_i b` moves the flux slots to at most 3.2 × 10⁻¹⁶. The thirteen walks
+  of VER-62 and VER-80 repeat their stored values on the composed form to 2.9 × 10⁻¹² at most
+  (`2wcd-charged`).[^wp610-composition]
 - **A slot owns its closing and its rule.** The stabilisation's integrands carry their own test function, so their
   slots close with the identity, and each takes the mode's bonus order; the hoop slot has no contribution under a
   planar measure.
-- **Today's wind is not the flux's drift.** `advective_velocity` leaves out PHY-23's decrement, so a composed wind
-  reproduces today's operator only where the decrement's drift is marked as not read (REV-300).
-- **A dropped term is seen at once.** Dropping the steric flux and the inertia moves every variant by 6.9 × 10⁻⁶ to
-  3.3 × 10⁻². Dropping the steric flux alone from example 02's ePNP-NS walk stops the run at NUM-26's route check:
-  the reaction flux, taken from the composed form, and the indicator current, which writes the steric flux from the
-  state, differ by 6.5 × 10⁻³ against 10⁻³.
+- **The decrement's drift in the wind is costly to assemble.** With the wind reading every drift (§8.2.62 BL5), the
+  operator under PHY-23 moves by 7.4 × 10⁻⁶ in the residual under `reference` and 6.5 × 10⁻⁶ under `supg`, and one
+  assembly on the 118-element cylinder takes 69.6 s and 33.8 s against 1.25 s and 0.48 s without PHY-23: the
+  streamline and crosswind integrands carry a Hessian of `φ~` and the permittivity's derivatives in each
+  concentration, on both sides (REV-302).[^wp610-composition]
+- **A dropped term is seen at once by the operator, not by the route check.** Dropping the steric flux and the
+  inertia moves every variant by 6.9 × 10⁻⁶ to 3.3 × 10⁻². In the prototype, whose indicator current wrote the flux
+  apart, dropping the steric flux alone from example 02's ePNP-NS walk stopped the run at NUM-26's route check, 6.5 ×
+  10⁻³ against 10⁻³. Since WP6.10 the indicator integrates the composed `flux` slot, so the route check no longer sees
+  a dropped term; the stored walks and VER-81's term-left-out test do. **[tested: tests/tier1/test_kernel.py::test_ver81_a_term_left_out_changes_its_own_slots_alone]**
 - **A 3D mesh is mishandled without a word below the adapters.** `Measures.volume(rule_order=)` builds an explicit
   rule for `SEGM`, `TRIG` and `QUAD` alone and falls back to NGSolve's estimate on a tetrahedron (at order 20 an
   explicit `TET` rule moves the vector by 8.5 × 10⁻⁴), and `AXISYMMETRIC` weights by `ngs.x` on any mesh. Only
@@ -791,4 +805,5 @@ WP6.09's prototype composed `CoupledModel.residual_form` from terms that add exp
 [^wp45-numerics-strip]: `git show 7597814`, prose strip of `src/nanopnp/numerics/gates.py` recording the 144,628-element `FieldSampler` timings (WP45, 13 October 2026).
 [^wp3-singular-system]: `git show 0f8b57b:.knowledge/06-numerics-fem.md`, trap 9 (singular five-field block system, solver norms and residuals, WP3 review).
 [^wp609-prototype]: `git show 1b5f5e3` on the branch `prototype/wp6.09-kernel` (WP6.09, 26 November 2026): `uv run python prototype/compare_operators.py --slots` at `0867e2d` and `uv run python prototype/three_d.py`; the control's run is item 5's Outcome in `docs/plans/phase-6/wp6.09-the-kernels-design.md`.
+[^wp610-composition]: WP6.10, 27 November 2026: the Outcomes of items 2 and 6 in `docs/plans/phase-6/wp6.10-the-composition.md` (`750c63f`; the walks at `5eeb55e3`), and its *Grounding* D2, measured at `5332fbd` on NGSolve 6.2.2606.
 [^wp11-sweep-timings]: `git show 5abcf42:.knowledge/06-numerics-fem.md`, section 8.4 (WP11 toy-pore setup, one thread per worker, worker counts 1/2/4 and pool lifetime).

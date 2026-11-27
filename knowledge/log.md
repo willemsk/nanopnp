@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-27
+* **Update**: The kernel's composed residual equals the stored operator to 3.1e-16 and the thirteen walks hold to 2.9e-12; a slot split term by term moves the rule, by 7.9e-5 for the diffusion and migration apart; the decrement's drift in the wind moves PHY-23 under `reference` by 7.4e-6 and makes its assembly fifty times slower; the route check no longer sees a dropped term (WP6.10; §8.2.62 BL5). ([NGSolve traps and measured numerics facts](06-numerics-fem/09-ngsolve-traps-found-by-implementing.md))
 * **Update**: A helper cannot run the `/code-review` skill, which starts its own agents, so the main session runs the hunt and `np-reviewer` checks its findings (§8.2.61 BK1). ([26. What a Claude Code helper can do](07-software-stack/26-what-a-claude-code-helper-can-do.md))
 
 ## 2026-11-26
