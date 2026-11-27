@@ -1995,3 +1995,6 @@ restriction. The citations predate WP6.09, which changes no code.
 
 *Recommendation:* change the three identifiers to CON-01 in the next package or chore that edits `mesh/`; no behaviour
 moves.
+
+**Placed** (the Phase 6 plan as amended, 27 November 2026): WP6.14, which gives the mesher its 3D path, changes the
+three citations.

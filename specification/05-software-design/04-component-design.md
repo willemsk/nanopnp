@@ -28,9 +28,10 @@ mesh adapters; continuation, warm start and linear-solver selection, held by `so
 caching, held by `core/` and `io/`; any construct required by only one backend.
 
 NOTE (QR-13; §8.2.8 H3; §8.2.50 AZ1; §8.2.62 BL6): the kernel's packages of Phase 6, WP6.10 to WP6.12,
-build this layer, and VER-65 takes the rule on a term's module with the first. Until the last merges,
-`physics/models.py` `CoupledModel` assembles the forms directly against NGSolve, its reach pinned by
-VER-65 alone. The layer's geometry is tested under a second measure by Phase 6's benchmarks in 3D
+build this layer, and VER-65 takes the rule on a term's module with the first. Until the first merges,
+`physics/models.py` `CoupledModel` assembles the coupled forms directly against NGSolve, and the
+single-field models theirs until the last, their reach pinned by VER-65 alone. The layer's geometry is
+tested under a second measure by Phase 6's benchmarks in 3D
 (CON-01's NOTE). That the layer fits a second backend, DOLFINx for 3D and MPI, is not shown: with one
 backend it cannot be tested for that, and it is the shape such a backend would take when N4 is planned.
 A stage outside `physics/` on VER-65's list still reaches NGSolve directly.
@@ -101,8 +102,8 @@ preferred to holding a stored number, and a number that the kernel moves is hand
 
 The kernel's own tests (FR-40) are of Tier 1: a slot with two contributions assembles as one integral,
 where their sum integrated term by term under a moved rule does not; a term left out changes its own slots
-alone; PHY-23's switch brings both terms or neither; the stabilisation's wind is the sum of the drifts in
-force; a model registered as a list of terms runs from a case file, its declared terms those assembled. Of
+alone; the stabilisation's wind is the sum of the drifts in force; PHY-23's switch brings both terms or
+neither; a model registered as a list of terms runs from a case file, its declared terms those assembled. Of
 Tier 2 it has the analytic benchmarks, unchanged. Each takes its clause in §7 with the package that writes it.
 
 NOTE (§8.2.62 BL1, BL3): WP6.10 to WP6.12 build the kernel, and until the last merges `CoupledModel`

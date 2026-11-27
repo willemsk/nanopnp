@@ -80,7 +80,7 @@ with the published results (BC8).
 ## Work packages
 
 WP6.10 to WP6.16 take `v0.7.0-alpha.10` to `v0.7.0-alpha.16`; the close takes `v0.7.0` alone (§8.4.1; BD1). A
-package's plan claims its proposed clause.
+package's plan claims its proposed clause, numbered on from VER-80.
 
 ### WP6.01 to WP6.09 — delivered
 
@@ -102,7 +102,7 @@ package's plan claims its proposed clause.
 the operators and the geometry, so no term names the backend or a dimension (§5.4.1), and VER-65 takes that rule.
 The coupled residual is composed and `residual_form`'s body removed. The stabilisation reads every drift and force
 density, PHY-23's decrement among them, which amends NUM-12's NOTE; NUM-24's indicator current reads the drifts in
-force. Proposed, Tier 1: the kernel's composition (§5.4.4's first four tests). About 3 sessions, 3 to 7 agent hours
+force. Proposed VER-81, Tier 1: the kernel's composition (§5.4.4's first three tests). About 3 sessions, 3 to 7 agent hours
 and 5 touches.
 
 ### WP6.11 — Switches as data and the forces (BC3; BL7; REV-298)
@@ -110,7 +110,8 @@ and 5 touches.
 *Planned by scope.* The switch records, the log branch's among them: a case key, off by default, that excludes
 PHY-23's switch and is a deviation in the manifest. Every list of switches and deviations is derived from the
 records, or its reader reads them; the two refusals become `requires` and `excludes`; `post/forces.py` reads the
-force densities. The schema gains a key (F4). About 3 sessions, 2 to 4 agent hours and 5 touches.
+force densities. The schema gains a key (F4). Proposed VER-82, Tier 1: PHY-23's switch brings both terms or
+neither, and a run on the log key names it as a deviation. About 3 sessions, 2 to 4 agent hours and 5 touches.
 
 ### WP6.12 — A model as a list of terms, and the full check (BC1, BC4; BL2, BL3; MOD-10)
 
@@ -122,7 +123,7 @@ sessions, 3 to 5 agent hours and 5 touches.
 
 *Planned by scope.* A planar 3D symmetry in `Measures`, with rules for tetrahedra, and the axisymmetric measure
 refused on a 3D mesh. The benchmark meshes its cylinder in its own fixture and checks criterion 13.
-Proposed, Tier 2: Debye–Hückel in a cylinder on a 3D mesh. About 3 sessions, 2 to 4 agent hours and 5 touches.
+Proposed VER-83, Tier 2: Debye–Hückel in a cylinder on a 3D mesh. About 3 sessions, 2 to 4 agent hours and 5 touches.
 
 ### WP6.14 — The pore's 3D mesh, its solve measured first (BL4; REV-301)
 
@@ -135,14 +136,14 @@ REV-301's three citations with it. About 3 sessions, 3 to 5 agent hours and 5 to
 
 *Planned by scope.* The indicator current along a 3D axis, and VER-17's conductance on WP6.14's mesh with the
 potential and the ions (criterion 14). Then a bounded trial prices the flow in 3D on a branch that is never merged,
-as BJ3 has it. Proposed, Tier 2: the access conductance on a 3D mesh. About 3 sessions, 3 to 6 agent hours and 5
+as BJ3 has it. Proposed VER-84, Tier 2: the access conductance on a 3D mesh. About 3 sessions, 3 to 6 agent hours and 5
 touches.
 
 ### WP6.16 — The installed packages (BC5; BL8; REV-67; QR-14)
 
 *Planned by scope.* §5.5's NOTE built: one registrar, a failed extension refused, each registration named in the
 manifest, a term with no analytic case marked unverified. `register_model` and `registered_models` leave
-`nanopnp.PUBLIC` (F4); QR-14 is amended, and the reference of registered terms written. Proposed, Tier 2: a term
+`nanopnp.PUBLIC` (F4); QR-14 is amended, and the reference of registered terms written. Proposed VER-85, Tier 2: a term
 from an installed package. About 3 sessions, 2 to 3 agent hours and 4 touches.
 
 ### The close
@@ -155,12 +156,11 @@ The end-of-phase report, the three platforms' full run and `v0.7.0`; `/np-ship p
 | # | Decision | Owner and status |
 |---|---|---|
 | 1 to 14, 17, 18 | The cleanup, the review, the numbering, the guard numbers, the main session's model | **Settled**, 22 to 26 November 2026; the record holds the rows. 6 and 7 moved to Phase 7 (BC7) |
-| 15 | The target for the author's touches a package | **Settled by the author, 27 November 2026**: none; each package reports its count (BL10) |
-| 16 | The kernel's design, its packages, the 3D benchmark | **Settled by the author, 27 November 2026** (BL1 to BL9) |
+| 15, 16 | The touches target; the kernel's design, its packages, the 3D benchmark | **Settled by the author, 27 November 2026**: no target (BL10); BL1 to BL9 |
 | 19 | The slots' cut, each slot's rule, and the names of the context's operators | WP6.10's plan |
-| 20 | The path of the log branch's case key | WP6.11's plan |
-| 21 | The floor of VER-13's observed order on a 3D mesh | WP6.13's plan, argued before any run |
-| 22 | The marks of the 3D direct solve: peak memory and time | WP6.14's plan, before any run; a miss is the author's |
+| 20 | The path of the log branch's case key; where the records live for `io/` (VER-61) | WP6.11's plan |
+| 21 | The floor of VER-13's observed order on a 3D mesh, and its three sizes | WP6.13's plan, argued before any run |
+| 22 | The marks of the 3D direct solve, on CI's runners: peak memory and time; the benchmark's marker | WP6.14's plan, before any run; a miss is the author's |
 | 23 | Whether the flow in 3D is built | **Author**, after WP6.15's trial, on its price |
 | 24 | Whether a script may take the registrar | WP6.16's plan |
 
@@ -185,12 +185,13 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP6.05, WP6.09 | none kept | Outside N1's scope, or the prototype's runs (BJ1) |
 | WP6.06 | 1 | VER-48 |
 | WP6.08 | 2 | VER-80 |
-| WP6.10 | 1, 2 | The kernel's composition, proposed; VER-65; VER-14 to VER-18, VER-42, VER-77; VER-62's push walks |
-| WP6.11 | 1, 2 | PHY-23's switch brings both terms or neither, proposed; VER-22; VER-80's dielectric and log guards |
-| WP6.12 | 1, 2 | VER-56 restated; VER-12, VER-13, VER-31; criterion 3's full check |
-| WP6.13 | 2 | VER-13 on a 3D mesh, proposed |
-| WP6.15 | 2 | VER-17 on a 3D mesh, proposed; WP6.14's mesh has its quality gates' Tier 1 tests |
-| WP6.16 | 2 | A term from an installed package, proposed |
+| WP6.10 | 1, 2 | VER-81, proposed; VER-65; VER-14 to VER-18, VER-42, VER-77; VER-62's push walks; VER-80's stabilised guards |
+| WP6.11 | 1, 2 | VER-82, proposed; VER-22; VER-80's dielectric and log guards |
+| WP6.12 | 1, 2 | VER-56 and QR-14's one class restated; VER-12, VER-13, VER-31; criterion 3's full check |
+| WP6.13 | 2 | VER-83, proposed |
+| WP6.14 | 1 | VER-10, restated for a 3D mesh |
+| WP6.15 | 2 | VER-84, proposed |
+| WP6.16 | 2 | VER-85, proposed, its fixture distribution found by a fresh process |
 
 **The phase is complete when** (§8.1's gate):
 
@@ -199,8 +200,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
    other five (BA14). A miss is reverted, or re-pinned only by ruling (G10).
 3. **WP6.12 holds all seven walks and the guard numbers (VER-80) within 10⁻⁸ of their pins before it merges, and
    VER-12 to VER-22, VER-31, VER-42 and VER-77 pass unchanged** (BC4). A walk that the kernel's structure moved is
-   re-pinned in its package when the old pin holds to 10⁻⁸ with the one named change undone, each quantity is
-   within 10⁻³ of its old pin, and those benchmarks pass, the pull request listing old and new (BL2; VER-62).
+   re-pinned in its package on VER-62's three conditions, the pull request listing old and new (BL2).
    Prediction: round-off alone where a slot is today's integral (the prototype: at most 2.9 × 10⁻¹²); a slot cut
    otherwise may move a walk by its quadrature error. A move that fails one of the three stops the package for the
    author; any other miss is fixed or reverted.
@@ -211,7 +211,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
    the command line and the workbench and named in the manifest, with its test** (BC5; WP6.16).
 7. **VER-61 and VER-65 hold**, VER-65 with the rule that no module holding a term imports the backend (BL6). A
    cycle or a new backend subpackage goes to the author (H6).
-8. **Each row the phase owns is `fixed` or ruled** (AM4): REV-279, REV-67, REV-298, REV-300, MOD-10.
+8. **Each row the phase owns is `fixed` or ruled** (AM4): REV-279, REV-67, REV-298, REV-300, REV-301, MOD-10.
 9. **Each proposal of the ground-up review is ruled or carried with its owner** (BA13). Met by §8.2.53.
 10. **The wall with a ragged rim recovers its axis to VER-48's 10⁻⁶ rad.** Met on Linux by WP6.06; the close
     repeats it on the three platforms.
