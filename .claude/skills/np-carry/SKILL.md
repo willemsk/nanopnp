@@ -102,11 +102,13 @@ first; a second failure at the same step is `BLOCKED`.
   prompt and the event that wakes you, unchanged: a `WAIT` leaves no note. Only a CI result, a
   review or a person's comment, the merge, or the check-in starts one; a `subscription.created`
   event or a bot's comment starts none, and the turn ends again.
-- `RUN`: serve none whose command is a test selection the land's push gate already ran on that head;
-  answer it with the land's log. Otherwise start its command with Bash `run_in_background` and
-  `timeout: 7200000`, as the default stops it at 30 minutes, and wait on its log in the foreground,
-  as the core waits on a land. Decide on the log's `exit` line, never on a partial log. Start a
-  fresh helper with §3's prompt after a hand-back and the log's path.
+- `RUN`: serve none whose command reruns the push gate's tests, as a marker selection such as
+  `-m tier2` or the carried tests do; answer it with the land's log of that head. Otherwise start
+  `<command>; echo "exit $?" >> <log>` with Bash `run_in_background` and `timeout: 7200000`, the most
+  Bash allows, as the default stops it at 30 minutes, and wait on the log in the foreground, as the
+  core waits on a land. Decide on the log's `exit` line, never on a partial log. A command the limit
+  stops writes none, and Bash says it stopped: give the next helper the log and that it was stopped
+  at 2 hours. Start a fresh helper with §3's prompt after a hand-back and the log's path.
 - `BLOCKED`: tell the author the reason and the command that continues, and stop.
 - `DONE`: go on by its stage:
   - **plan**: print the manager's summary it carries and ask the author, with `AskUserQuestion`, to
