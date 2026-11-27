@@ -93,7 +93,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   change, a review, `just land` and a `chore:` pull request that the author merges, and that nothing tags.
   Its content has no limit and it is no lane; a change that is not Markdown alone is reviewed once by
   `np-reviewer`, with the chore's statement for its plan, and always where it touches `.claude/settings*.json`,
-  the hooks, the agents, the skills or the workflows of `.claude/` and `.github/`. A commit made after the review
+  the hooks, the agents, the skills or the workflows of `.claude/` and `.github/`; where a changed path is
+  under `src/` or `tests/`, or is a `.py` or `.sh` file, the `/code-review` hunt runs first, as at a
+  ship. A commit made after the review
   is reviewed on its own diff at medium effort unless it is Markdown alone outside those paths. A session runs
   it only where no carry is running, which the author's start of the session ensures; it refuses on a dirty
   tree, commits past `origin/main` or another worktree whose branch holds commits past `origin/main`, and
@@ -102,7 +104,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   and on Opus 5.5 at high where it touches `src/` or `tests/`. An open package rebases on `main` at its
   ship, as `just land` never rebases on `main`. A numbered item that a chore adds takes the next number on `origin/main`; CI runs `duplicates.py`, and the
   chore runs it again after a rebase on a `main` that moved before its land. (§8.2.57 BG1 to BG6;
-  §8.2.58 BH1; `.claude/skills/np-chore/`)
+  §8.2.58 BH1; §8.2.61 BK3; `.claude/skills/np-chore/`)
 * A pull request's CI tests on Linux, and a package's `/np-ship` reads no platform leg. `/np-ship phase`
   dispatches `ci.yml` on the close's head and stops while a `platforms` leg on ubuntu, macOS or Windows is
   not `success`. (§7.6; §8.2.49 AY4; §8.2.50 AZ8; `.claude/skills/np-ship/phase.md`)
@@ -132,12 +134,14 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   starts. `/np-implement` stops at the pull request and pauses for a compaction; `/np-ship` then runs
   in a fresh session, or in the implementing session where that runs on the ship's model. Its review
   is one pass by `np-reviewer` (§8.4.5), which fixes and commits each finding it confirms and each small
-  one; a small finding it leaves is fixed by `np-builder`, a finding it leaves that outlives the session
-  is an open `REV` row, the pull request merges as reviewed, and a finding the author pulls in is fixed;
+  one. Before it, the session that starts it, never a helper, calls the `/code-review` skill directly
+  at `high`, report-only, on the reviewed head, and puts its findings in the reviewer's prompt; the
+  reviewer judges each on its axes and fixes it as one of its own. A small finding it leaves is
+  fixed by `np-builder`, a finding it leaves that outlives the session is an open `REV` row, the pull request merges as reviewed, and a finding the author pulls in is fixed;
   the diff of either fix alone is reviewed at medium effort. Of a red CI the ship fixes only format and
   lint, with `ruff format` and `ruff check --fix`, and reruns a flaky runner once; `np-builder` fixes
   every other failure. (§8.2.11 L7; §8.2.16 R5; §8.2.33 AI4; §8.2.56 BF1, BF4, BF5, BF8; §8.2.58 BH1;
-  `.claude/workflow/finish.md`)
+  §8.2.61 BK1, BK2; `.claude/workflow/finish.md`)
 * `just land` runs the push's mechanics in one command: the registers and their commit, the
   documentation build where a source changed, the rebase, the push gate and the push with retries
   (`.claude/scripts/land.sh`; `.claude/workflow/core.md`, *Gate and push*). A main session runs it,
@@ -247,12 +251,13 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   its front matter, so the main session passes neither model nor effort, but Opus at `xhigh` for a
   plan the author put on it. The review is `np-reviewer`, on Opus 5.5 at high effort: one pass over
   standards, the specification and the physics and numerics, which fixes and commits what it
-  confirms, and reviews a pulled-in finding's diff at medium. A helper can start no agent and ask the
-  author nothing, so the main session does both for it; it keeps the task list and commits under the
+  confirms, the `/code-review` hunt's findings among them, and reviews a pulled-in finding's diff at
+  medium. A helper can start no agent and ask the author nothing, so the main session does both for
+  it, and runs the hunt, a skill that starts its own agents; it keeps the task list and commits under the
   commit gate, and the main session, on the longer prompt cache, runs the push gate and pushes
   (§8.4.4). An agent file is loaded when a session starts. The note
   `knowledge/07-software-stack/26-what-a-claude-code-helper-can-do.md` holds what was measured, and
-  on which version of Claude Code. (§8.2.54 BD2; §8.2.56 BF1, BF2, BF4, BF6, BF8, BF11)
+  on which version of Claude Code. (§8.2.54 BD2; §8.2.56 BF1, BF2, BF4, BF6, BF8, BF11; §8.2.61 BK1)
 * Seven agents are kept: the three helpers and the reviewer above; the physics reviewer and the GUI
   reviewer, both read-only and on Opus at high effort (§8.2.38 AN9); and the CI-log classifier, on
   Haiku. A plugin of the author's account is the author's to disable: a project's settings do not

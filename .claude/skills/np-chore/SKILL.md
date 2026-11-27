@@ -33,10 +33,19 @@ Opus 5.5 at high where the change touches `src/` or `tests/` (§8.4.5; BG6).
 5. Commit with a conventional subject, the identifiers in the body.
 6. **Review**, unless every changed path is `*.md`. Always review a change to
    `.claude/settings*.json`, `.claude/hooks/`, `.githooks/`, `.claude/agents/`, `.claude/skills/`,
-   `.claude/workflow/` or `.github/workflows/`. Start `np-reviewer` in the foreground, its model and effort its own,
+   `.claude/workflow/` or `.github/workflows/`. Where a changed path is under `src/` or `tests/`, or
+   is a `.py` or `.sh` file, first run the hunt on the committed head, directly from this session,
+   never inside an `Agent` (§8.2.61 BK1 to BK3):
+
+   ```
+   Skill(skill="code-review", args="high --max-findings all <branch> -- Report only: edit, commit and write nothing. Static review: run no tests, benchmark, sweep, gate.sh or pytest --nightly.")
+   ```
+
+   Start `np-reviewer` in the foreground, its model and effort its own,
    with the base `origin/main`, the head sha, and the chore's statement in a paragraph in place of
    a plan: what it changes and why, and every permission line it adds. Add: "judge a permission or
-   workflow change for what a session could do with it that the statement does not say". A finding
+   workflow change for what a session could do with it that the statement does not say". End it
+   with `The hunt's findings: <the findings, or none>` where the hunt ran. A finding
    it leaves to the author, that outlives the session, is a `REV` row in
    `docs/project/review-findings.md`, with a section in `review-items.md`, owned by the current phase
    (§8.4.6); commit it before the land. A small finding it leaves is fixed in this session, its diff

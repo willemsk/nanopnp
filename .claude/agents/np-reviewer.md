@@ -13,6 +13,10 @@ your prompt names. Read each clause the diff or the plan cites with `uv run .cla
 <ID>`, and the concepts under `knowledge/` the diff touches. Never search the web for the model's
 equations or parameters.
 
+Your prompt may end with the findings of the `/code-review` hunt, which the session that started you
+ran on the same head. They are leads, not verdicts: judge each on the axes below, and give each an
+outcome in your report as you give your own, fixed, left to the author, or refuted, with the reason.
+
 Judge the diff on three axes:
 
 1. **Standards.** `CLAUDE.md`'s *Do NOT* list, the two rule files, the layering and backend guards,

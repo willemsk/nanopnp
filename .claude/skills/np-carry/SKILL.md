@@ -89,8 +89,10 @@ first; a second failure at the same step is `BLOCKED`.
   unchanged, free text included.
 - `WORKER`: start the agent it names in the foreground, with its prompt unchanged: a project agent on
   its file's model and effort, another on the model named at `effort: "high"`. Pass the worker's reply.
-- `REVIEW`: start `np-reviewer` in the foreground with its prompt unchanged, at `effort: "medium"`
-  where the block asks for it (§8.2.56 BF8). Pass the reviewer's reply, with `usage.py --label
+- `REVIEW`: where the prompt ends `The hunt's findings: <to be added>`, first run the hunt on the
+  landed head as `np-ship/wp.md` §4 says, directly, never inside an `Agent`, and put its findings on
+  that line (§8.2.61 BK1, BK2). Then start `np-reviewer` in the foreground with the prompt otherwise
+  unchanged, at `effort: "medium"` where the block asks for it (§8.2.56 BF8). Pass the reviewer's reply, with `usage.py --label
   carry`'s line taken with no `--since`: the package's cost so far, which the plan's Outcome takes
   whole, not summed (§8.3).
 - `WAIT`: subscribe to the PR once (`subscribe_pr_activity`), schedule a check-in at the delay it

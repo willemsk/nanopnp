@@ -114,8 +114,9 @@ One work package per PR, green on tiers 1–2 before the next one in its lane (a
 - `/np-plan <project | phase n | amend n | wp n>` puts the decisions to the author and commits the
   plan; with `review` after the level it reviews the plan and summarises it for approval.
 - `/np-implement [wp <n>]` executes the plan, gates, pushes and opens the PR.
-- `/np-ship [wp <n> | phase <n>]` has `np-reviewer` review and fix the package once, drives CI to
-  green and prints the tag commands. A phase's close also tags the release.
+- `/np-ship [wp <n> | phase <n>]` runs the `/code-review` hunt in the main session, has `np-reviewer`
+  review the package and its findings and fix them once, drives CI to green and prints the tag
+  commands. A phase's close also tags the release.
 - `/np-carry wp <n>` runs all three in one session through fresh helpers, which commit; the main
   session lands each hand-back's commits with `just land`.
 - `/np-chore <what>` makes one change no package owns, in a session of its own where no carry runs:
