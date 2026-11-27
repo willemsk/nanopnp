@@ -1,19 +1,19 @@
 ---
 type: Specification
 title: "5.5 Extension points"
-description: "Specifies the two levels of pluggability, the registries for discretisation backends, and how each extension is added by one registration."
+description: "Specifies the three levels of pluggability, the registries for discretisation backends, and how each extension is added by one registration."
 ---
 
 ### 5.5 Extension points
 
-Pluggability has two levels, matching the two kinds of change users make (QR-14). Below them, the
+Pluggability has three levels, matching the kinds of change users make (QR-14; ADR-005). Below them, the
 backends of the discretisation are registries as well (§8.2.8 H7): a mesher (`numerics.mesh.backend`,
 `mesh/meshers.py`), a linear solver (`numerics.linear.solver`, `numerics/linear.py`) and a
 stabilisation mode (`numerics.stabilisation`, `physics/stabilisation.py`) are each added by one
 registration, and each key is a string checked against its registry when a case is loaded, as
 `physics.model` is. Registering the Gmsh mesher imports nothing (CON-10), and `sparsecholesky`
-cannot be registered (NUM-21). Whether those registering functions are public is REV-67's, with the
-composer phase (§8.2.18 T3). The outputs a case may select (`outputs:`, `post/outputs.py`) and the steric models
+cannot be registered (NUM-21). An installed package registers through one registrar, below; the
+registering functions stay internal (REV-67; §8.2.62 BL8). The outputs a case may select (`outputs:`, `post/outputs.py`) and the steric models
 (`electrolyte.corrections.steric.model`, `physics/steric.py`) are registries of the same kind, each added by one
 registration and checked against its registry when a case is loaded (MOD-09; §8.2.18 T4); an output states what it needs of a
 model's declaration, and a model provides every output whose need it meets (§5.4.3; §8.2.32 AH1). A pipeline stage is extended through one call on a `Session`, below;
@@ -63,7 +63,19 @@ so a stage whose `deviations` takes no `inputs` is found by the test and not ski
 | Level | Unit of extension | Requires | Obtained free |
 |---|---|---|---|
 | 1, correction models | A versioned data file naming a registered model and its coefficients | No code | Recording of the model version on every result; correction-by-correction switching as a configuration sweep |
-| 2, physics models | One class against the §5.4.3 interface | One file | Meshing, geometry, charge assembly, continuation, QoI extraction, sweeps, provenance and the GUI |
+| 2, terms | One registered term of the kernel (§5.4.4), within electrolyte transport (N1) | One function, which names no backend (§5.4.1) | Every reader of the term: the weak form, the stabilisation, the indicator current, the forces, the displayed equations and the manifest |
+| 3, physics models | A registered list of terms with a field set, a boundary vocabulary and a strategy (§5.4.3); one class until WP6.12 | One file | Meshing, geometry, charge assembly, continuation, QoI extraction, sweeps, provenance and the GUI |
+
+NOTE (an installed package; FR-40; §8.2.53 BC5; §8.2.62 BL8): an installed package declares its terms,
+corrections, shapes or solvers through one entry point in the group `nanopnp.extensions`, which resolves to
+a function that receives one registrar and registers through it. The library reads the group at the first
+use of any registry, once a process, so the command line, the workbench and the Python interface find the
+same set. An extension that fails to import or to register SHALL be refused, naming its package and
+version, and never skipped: a run that silently lacks a term is a plausible wrong answer. Each registration
+is recorded with its package and version, and a run's manifest names every extension whose registration
+the run used (FR-25). A term states the analytic case that verifies it, a `VER-` identifier or a
+manufactured solution; one that states none is marked unverified in the manifest and beside the displayed
+equations. WP6.16 builds this; until it merges nothing reads the group.
 
 Shipped physics models (PHY-21, FR-18, FR-19).
 

@@ -1,6 +1,6 @@
 # Phases 6 to 12: the input to each phase's round
 
-**Status: input note, written 22 November 2026 at `/np-plan project` (§8.2.49), Phase 6's section planned the same day (§8.2.50), rescoped 23 November 2026 (§8.2.51), and written again on 24 November 2026 after the rulings on the ground-up review (§8.2.53), Phase 6's packages numbered the same day (§8.2.54); each `/np-plan phase <n>` reads its
+**Status: input note, written 22 November 2026 at `/np-plan project` (§8.2.49), Phase 6's section planned the same day (§8.2.50), rescoped 23 November 2026 (§8.2.51), and written again on 24 November 2026 after the rulings on the ground-up review (§8.2.53), Phase 6's packages numbered the same day (§8.2.54), and Phase 6's section amended on 27 November 2026 after the rulings on the kernel's design (§8.2.62); each `/np-plan phase <n>` reads its
 section, numbers and orders its packages, may regroup them (§8.2.46 AV5) and estimates the phase again.**
 
 Planning, not requirements: `SPECIFICATION.md` governs. §8.1 holds each phase's deliverable, gate and estimate, §2.7
@@ -9,10 +9,9 @@ package below is provisional and named by its scope. The file keeps its first na
 
 ## Phase 6 — the cleanup and the kernel (`v0.7`)
 
-**In flight** ([the plan](../phase-6/phase-6-library-foundations.md)); WP6.01 to WP6.04 are delivered, and the
-author has ruled the ground-up review's proposals (§8.2.53). The plan holds what follows, in this order (BC3),
-numbered as the packages are built (§8.2.54 BD1). The round on the kernel's design, a further `/np-plan amend 6`,
-numbers the kernel's packages from WP6.10, then the installed packages and the close.
+**In flight** ([the plan](../phase-6/phase-6-library-foundations.md)); WP6.01 to WP6.09 are delivered, and the
+author has ruled the ground-up review's proposals (§8.2.53) and the kernel's design (§8.2.62). The plan holds what
+follows, in this order (BC3; BL9), numbered as the packages are built (§8.2.54 BD1).
 
 | Package | Its items |
 |---|---|
@@ -20,8 +19,9 @@ numbers the kernel's packages from WP6.10, then the installed packages and the c
 | The channel axis's fault, firm, WP6.06 (BA8; BB1) | REV-279: a plane's centre made robust to a broken tie at a ragged rim; 2WCD's axis measured again (VER-48). It runs under the orchestrator and is measured; the target for the author's touches is set from the first two packages carried, this one and WP6.08 |
 | The guard numbers, WP6.08 (BC3; BI1, BI2) | Reference numbers stored for six settings off their default: PHY-23's terms, the log branch, NUM-14's mode, SUPG, and a constant density and no inertia with the flow solved. Its plan checked that none of VER-62's walks takes one; the numbers are held on Linux |
 | The kernel's design, WP6.09 (BC2) | A design page and a throwaway prototype: the term, a correction as a shared coefficient, the rule that binds terms (PHY-08), each flux integrated once, the nine names the workbench reads, how an installed package registers. The prototype holds example 01's walk to 10⁻⁸ or the miss goes to the author. It prices the benchmark on a coarse 3D mesh (BC5). The author rules the design; it rewrites ADR-005, §5.4 and §5.5 |
-| The kernel (BC1, BC4) | FR-40's library half, in about four packages until the design sets the number; MOD-10 and §5.4.1's interface with it; the library's step "switches as data" and the forces' share of the weak form's terms. The last package reproduces all seven walks of VER-62 and the guard numbers to 10⁻⁸ before it merges |
-| The installed packages (BC5) | A term, a correction, a shape or a solver found in any installed package and named in the manifest; a term with no analytic case marked unverified; REV-67; QR-14 and §5.5 |
+| The kernel, WP6.10 to WP6.12 (BC1, BC4; BL1 to BL3, BL5 to BL7) | FR-40's library half as §5.4.4 states it, the more modular structure before a held number: the composition, with no term naming the backend (MOD-10) and the wind reading every drift (REV-300); switches as data, the log branch a case key (REV-298), and the forces' share of the terms; a model as a list of terms. WP6.12 holds all seven walks of VER-62 and the guard numbers within 10⁻⁸ of their pins before it merges, a walk the kernel moved re-pinned once explained |
+| The 3D benchmarks, WP6.13 to WP6.15 (BL4) | VER-13 on a 3D mesh; the pore's 3D mesh, its direct solve measured first against marks registered before any run; VER-17 on a 3D mesh, potential and ions, and the flow in 3D priced by a trial |
+| The installed packages, WP6.16 (BC5; BL8, BL9) | A term, a correction, a shape or a solver found in any installed package through one registrar and named in the manifest; a term with no analytic case marked unverified; REV-67; QR-14 and §5.5 |
 | The close | The end-of-phase report; `v0.7.0` |
 
 ## Phase 7 — the library's foundations (`v0.8`)
@@ -93,7 +93,7 @@ fixed: from v1.0 the case file and the run record are converted (BC20).
 
 | Item | Needed by | If it does not arrive |
 |---|---|---|
-| The ruling on the kernel's design | The round after WP6.09 | No kernel package is planned |
+| A ruling if the 3D direct solve misses its marks; the ruling on the flow in 3D (BL4) | WP6.15; after WP6.15's trial | WP6.15 waits and WP6.16 is built meanwhile; the flow in 3D is not built |
 | The paper's figure data (D6) | Phase 7's close, for the recorded comparison | The table holds the values the paper states in its text, and no curve |
 | The boundary conditions of unequal reservoirs | The plan of Phase 7's reservoirs package | The package waits; §4 is not amended on a guess |
 | A session on a machine with a GPU | Phase 8's performance package | The headless numbers stand and the measure is carried |
@@ -110,10 +110,10 @@ fixed: from v1.0 the case file and the run record are converted (BC20).
 
 | Decision | Owner |
 |---|---|
-| The numbers of Phase 6's kernel packages, its installed packages and its close, from WP6.10 | `/np-plan amend 6`, the round on the kernel's design (§8.2.54 BD1) |
-| The kernel's design, the number of its packages, and the cost of the benchmark on a coarse 3D mesh | The author, at the round after WP6.09 (BC2, BC5) |
+| The kernel's design, its packages and their numbers, and the benchmarks in 3D | Settled by the author, 27 November 2026 (§8.2.62 BL1 to BL9) |
+| Whether the flow in 3D is built | The author, after WP6.15's trial, on its price (BL4) |
 | Whether the push gate chooses the browser tests by path | WP6.05, by its count (BC15) |
-| The target for the author's touches a package | The author, at the round after WP6.09, from WP6.06's and WP6.08's measured lines (BC10) |
+| The target for the author's touches a package | Settled by the author, 27 November 2026: none (BL10) |
 | What the reading limit counts once an orchestrator carries a package | Settled by the author, 24 November 2026: every helper that implements (BD3) |
 | Phase 7's packages, their numbers and grouping | `/np-plan phase 7` (BA4; BC7) |
 | What AM2's "moves one of them" means, and the drift that stops the re-pin | The author, at the plan of Phase 7's equations package, before any measurement |

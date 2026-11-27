@@ -43,12 +43,12 @@ G6: §5.3.1 NOTE on the compatibility rule
 G7: §8.4.6; its push-gate execution superseded by N4
 G8: superseded by N3
 G9: spent
-G10: VER-62
+G10: 'VER-62; for the kernel''s packages amended by BL2'
 G11: §8.4.1
 G12: spent
 H1: spent
 H2: spent
-H3: 'QR-13, §5.4.1 NOTE, VER-65; its "Phase 6" amended by AZ1'
+H3: 'QR-13, §5.4.1 NOTE, VER-65; its "Phase 6" amended by AZ1; its unbuilt interface amended by BL6'
 H4: spent (deferred to Phase 5)
 H5: spent (post-1.0)
 H6: VER-61
@@ -146,7 +146,7 @@ S23: the WP5.01 plan
 S24: 'the design document''s *The areas*; its naming of QR-10''s observer by the close amended by AW2'
 T1: spent
 T2: 'REV-28, REV-30, REV-32, REV-39, REV-52, REV-62; MOD-13'
-T3: 'REV-41, REV-45, REV-67; open: Phase 7''s tolerances and exports package (FR-28) and Phase 6''s installed packages (BC5)'
+T3: 'REV-41, REV-45, REV-67; REV-67 ruled by BL8; open: Phase 7''s tolerances and exports package (FR-28) and WP6.16 (BC5; BL8)'
 T4: §5.5
 T5: spent
 T6: 'FR-43; placed by BA9'
@@ -397,7 +397,7 @@ AY5: §8.4.4; the git tag copilot-host
 AY6: 'the review register; FR-28''s Release; NUM-04''s NOTE; its packages numbered by AZ4; the analyte forces placed by BA5'
 AY7: '§8.4.5; its implementing and shipping models set by AZ20 and AZ21'
 AY8: '§8.4.4; its limit set by AZ13 and AZ14'
-AZ1: '§5.4.1 NOTE; Appendix A''s QR-13 row; MOD-10; its round amended by BC1 and BC2; open: the ruling on the kernel''s design at /np-plan amend 6'
+AZ1: '§5.4.1 NOTE; Appendix A''s QR-13 row; MOD-10; its round amended by BC1 and BC2; ruled by BL6'
 AZ2: '§2.7; §8.1''s Phase 7 row and GUI increment 7; REV-270; open: Phase 7''s fields package'
 AZ3: 'FR-35''s NOTE; REV-254, REV-242; open: Phase 7''s error base and its refusals reworded, numbered by /np-plan phase 7 (BA4; BC7)'
 AZ4: '§8.1''s Phase 7 row; §8.3; the review register; MOD-08; its packages'' number amended by BA4, their phase by BC7'
@@ -440,16 +440,16 @@ BB4: docs/project/ground-up-review.md
 BB5: 'spent; its ship amended by BB7'
 BB6: 'spent with WP6.04'
 BB7: 'spent with WP6.04'
-BC1: 'FR-40; FR-20; ADR-005''s NOTE; §5.4.1''s NOTE; §2.7; §8.1''s Phase 6 row; open: Phase 6''s kernel packages'
-BC2: '§8.1''s Phase 6 row and gate; ADR-005''s NOTE; its prototype''s reach widened by BJ1; open: the ruling on the kernel''s design at /np-plan amend 6'
-BC3: '§8.1''s Phase 6 row; the Phase 6 plan (§8.2.54); its stored numbers widened by BI1, held by VER-80'
-BC4: '§8.1''s Phase 6 gate; open: the kernel''s last package'
-BC5: 'N1, with §5.5''s sentence on it; FR-40; ADR-005''s NOTE; open: Phase 6''s installed packages (QR-14, §5.5, REV-67) and, for the 3D benchmark, the ruling on the kernel''s design'
+BC1: 'FR-40; FR-20; ADR-005; §5.4.1; §5.4.4; §2.7; §8.1''s Phase 6 row; open: WP6.10 to WP6.12 (BL3)'
+BC2: '§8.1''s Phase 6 row and gate; ADR-005; its prototype''s reach widened by BJ1; ruled by BL1'
+BC3: '§8.1''s Phase 6 row; the Phase 6 plan (§8.2.54); its stored numbers widened by BI1, held by VER-80; its order after the kernel amended by BL9'
+BC4: '§8.1''s Phase 6 gate; a moved walk amended by BL2; open: WP6.12'
+BC5: 'N1, with §5.5''s sentence on it; FR-40; ADR-005; §5.5''s NOTE on an installed package; its 3D benchmark ruled by BL4 and REV-67 by BL8; open: WP6.16 (QR-14)'
 BC6: '§2.7; §8.1''s Phase 8 row; FR-40''s Release; open: /np-plan phase 8'
 BC7: '§2.7; §8.1; §8.3; the Release of FR-28, FR-32 and FR-36; §5.3.5; the Phase 6 plan (§8.2.54); open: /np-plan phase 7'
 BC8: 'RSK-15; §8.1''s Phase 7 row and gate; open: Phase 7''s close'
 BC9: 'FR-45, FR-46; FR-29; NUM-32''s NOTE; open: Phase 7''s ledger and mesh-error packages'
-BC10: '§8.1''s Phase 6 row; §8.3; §8.4.4; §8.4.5; its fallback amended by BD2; open: its measure on WP6.06 and WP6.08'
+BC10: '§8.1''s Phase 6 row; §8.3; §8.4.4; §8.4.5; its fallback amended by BD2; its target withdrawn by BL10'
 BC11: 'QR-11, withdrawn; ADR-004''s Consequences; §7.2''s five rows that cited it; Appendix A'
 BC12: 'FR-03; CON-08; ADR-001; NUM-21''s NOTE; §2.7''s post-1.0 row; docs/design/workbench.md; open: Phase 7''s speed-up, for QR-07''s numbers'
 BC13: '§8.1''s Phase 8 row and gate; REV-284, REV-287; open: Phase 8''s first package'
@@ -504,3 +504,13 @@ BK2: §8.4.4
 BK3: '§8.4.4; `.claude/skills/np-chore/`; its paths widened by BK4'
 BK4: '§8.4.4; `.claude/skills/np-chore/`; its paths widened by BK5'
 BK5: '§8.4.4; `.claude/skills/np-chore/`'
+BL1: 'ADR-005; §5.4.1; §5.4.3; §5.4.4; §5.5; §8.4.4; open: WP6.10 to WP6.12'
+BL2: 'VER-62; VER-80; §8.1''s Phase 6 gate; §8.4.4'
+BL3: '§8.1''s Phase 6 row; §8.3; the Phase 6 plan'
+BL4: 'CON-01''s NOTE; N4; §8.1''s Phase 6 row; §8.3; open: WP6.13 to WP6.15, and the author''s ruling on the flow in 3D after WP6.15''s trial'
+BL5: 'open: WP6.10 (NUM-12''s NOTE; REV-300)'
+BL6: '§5.4.1; QR-13; open: WP6.10 (VER-65) and WP6.12 (MOD-10)'
+BL7: 'open: WP6.11 (§5.3.1; NUM-02; REV-298)'
+BL8: '§5.5''s NOTE on an installed package; open: WP6.16 (QR-14; `nanopnp.PUBLIC`; REV-67)'
+BL9: '§8.1''s Phase 6 row; the Phase 6 plan'
+BL10: §8.3

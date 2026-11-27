@@ -154,7 +154,10 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   guard (VER-61) and the backend guard (VER-65). The nightly run holds the other walks. A change of specified behaviour still edits
   its clause, and a break of the public surface or the case schema is still listed in `CHANGELOG.md`
   with its migration. The pull request names the restructure. A study package that its plan says
-  changes no code changes none. (§8.2.51 BA7, BA13, BA14; `.claude/rules/python.md`)
+  changes no code changes none. Where a clearer structure and a held number disagree, the more modular and
+  maintainable structure is taken; in the kernel's packages, WP6.10 to WP6.12, a stored number it moves is
+  re-pinned once the move is explained, as VER-62 says, and elsewhere a miss of VER-62 is still reverted or
+  re-pinned by ruling. (§8.2.51 BA7, BA13, BA14; §8.2.7 G10; §8.2.62 BL1, BL2; `.claude/rules/python.md`)
 * At most two lanes are in flight. The current phase runs one package at a time; the second lane is
   the next phase's design study, which changes no `src/`, `tests/`, case schema or public API before
   the current phase's release. A clause that the study restates before that release is added beside

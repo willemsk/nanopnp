@@ -172,4 +172,4 @@ scope opinions belong in the specification.
 - Write the weak forms twice, or put backend-specific constructs in `physics/` (QR-13).
 - Hard-code correction coefficients, `ε_protein` or any fitted parameter in Python.
 - Add COMSOL import or export (N7), transient solves (N3), 3D (N4) or off-axis analytes (N5). The
-  architecture must not preclude them.
+  architecture must not preclude them. 3D is solved in Phase 6's benchmarks alone (CON-01's NOTE).

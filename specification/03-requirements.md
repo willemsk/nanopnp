@@ -256,7 +256,7 @@ cell–annulus overlaps. §5.2's NOTE on stage 3 is the contract.
 | **QR-10** | A nanopore experimentalist without Python knowledge SHALL be able to install the workbench, load a structure, accept defaults and obtain a conductance prediction and a field visualisation in it unaided. | Usability |
 | **QR-11** | Withdrawn (§8.2.53 BC11); the identifier is not reused. A capability is built and tested in the library first, and IF-09, FR-31 and §8.1 require the workbench. | Usability |
 | **QR-12** | Every automatic gate failure SHALL abort the run with a diagnostic naming the gate, the offending quantity and its location. | Usability |
-| **QR-13** | The ePNP-NS weak forms SHALL be expressed once and SHALL NOT be duplicated per backend. Until a second backend is planned they are expressed against NGSolve directly, and the subpackages that import NGSolve or Netgen SHALL stay within a recorded set, which may shrink and grows only by the author's ruling (§5.4.1 NOTE). | Maintainability |
+| **QR-13** | The ePNP-NS weak forms SHALL be expressed once and SHALL NOT be duplicated per backend. They are expressed as terms of the kernel that name no backend (§5.4.4; §8.2.62 BL6), and against NGSolve directly until the kernel's last package merges; the subpackages that import NGSolve or Netgen SHALL stay within a recorded set, which may shrink and grows only by the author's ruling (§5.4.1 NOTE). | Maintainability |
 | **QR-14** | Adding a correction parameterisation SHALL require only a data file; adding a physics model SHALL require only one class (FR-20); adding a mesher, a linear solver or a stabilisation mode SHALL require only a registration, with no file of the package edited (§5.5; §8.2.8 H7). | Maintainability |
 | **QR-15** | v0.13 (Phase 12; §8.2.49 AY2; §8.2.51 BA5) SHALL ship user documentation, tutorials, a JOSS submission and a DOI-archived release. | Maintainability |
 | **QR-16** | The workbench SHALL meet WCAG 2.2 AA in its shipped light and dark themes, the contrast of controls, focus rings and colour bars included, and SHALL be operable by keyboard alone, every action on a canvas having a keyboard path; a theme a user makes sets its own contrast (WB-19, WB-24). | Usability |
@@ -318,6 +318,14 @@ comparison would, which is why the Tier-2 benchmarks, which localise to a single
 | **CON-13** | SHALL support Windows, macOS and Linux on desktop hardware, and Linux for headless and HPC execution. |
 | **CON-14** | The repository SHALL carry a `CITATION.cff` pointing at the Nanoscale paper and the software DOI. |
 
+NOTE (CON-01, what stands for the 3D extension; §8.2.53 BC5; §8.2.62 BL4): that the architecture does not
+preclude 3D is held by benchmarks of Tier 2 that solve on a 3D mesh: VER-13's cylinder, and VER-17's uncharged
+pore with the potential and the ions and no flow, each under a planar 3D measure. They are Phase 6's, and each
+takes its clause in §7.3 with its package. 3D is reached by those benchmarks alone: the case schema offers no
+3D geometry, stage 6's adapters refuse a 3D mesh of a case, and the axisymmetric measure SHALL refuse a 3D
+mesh. The flow, the forces and the corrections are not solved in 3D; the flow's cost there is measured by a
+trial, and whether it is built is the author's ruling.
+
 NOTE (CON-08, CON-11): the library's default is `numerics/linear.py:DEFAULT_SOLVER`, `"umfpack"`; the
 workbench ships no bundle (§8.2.17 S12). `src/nanopnp/THIRD-PARTY-LICENSES.md` is the installation's licence
 notice, `nanopnp --env` names its path (REV-141), and `nanopnp gui --selftest` fails naming it where it is
@@ -332,7 +340,7 @@ Outside the scope of v1.
 | N1 | A general-purpose PDE framework. A developer writes terms within electrolyte transport, and a physics model may be swapped, extended or composed of them (FR-40); an unrelated multiphysics problem may not be posed (§8.2.53 BC5). |
 | N2 | Molecular dynamics. MD is an input; the product consumes trajectories and does not produce them. |
 | N3 | Time-dependent or transient simulation, including translocation event traces, Brownian dynamics and simulated current traces. |
-| N4 | Full 3D solution. The architecture must not preclude it; v1 does not ship it. |
+| N4 | Full 3D solution. The architecture must not preclude it; v1 does not ship it. Two benchmarks of Tier 2 solve in 3D, and no case file offers it (CON-01's NOTE; §8.2.62 BL4). |
 | N5 | Flexible or deforming analytes, and analytes off the symmetry axis. |
 | N6 | Parameterisation of corrections from MD. The product consumes correction parameter files; deriving new ones is a separate, later tool. |
 | N7 | COMSOL file import or export. |

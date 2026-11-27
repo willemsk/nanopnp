@@ -335,6 +335,11 @@ design package of Phase 6 decides it (§8.2.53 BC1, BC2, 24 November 2026).
 is the kernel's context, slot and measure, which hold §5.4.1's names; a term keeps NGSolve's algebra until a second
 backend is planned, and VER-65 stays the guard. The round on the design rules it.
 
+**Ruled** (§8.2.62 BL6, 27 November 2026): against the proposal, after the author asked which reading is the more
+general: a term takes its operators and its geometry from the kernel's context and names no backend, and VER-65
+asserts that no module holding a term imports one. §5.4.1 states the layer; WP6.10 builds it and the finding closes
+at WP6.12. That it fits a second backend stays unshown.
+
 ### MOD-11 — with_section and register are outside PUBLIC
 
 *Area:* surface. *Severity:* low.

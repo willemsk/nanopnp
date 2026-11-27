@@ -8,8 +8,8 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 
 ## Phase 6
 
-- [Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read](phase-6/phase-6-library-foundations.md): in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08, WP6.09. Amended 24 to 26 November 2026 (§8.2.53; §8.2.54; §8.2.56 BF10; §8.2.59; §8.2.60): WP6.06 to WP6.09 are numbered in build o…
-- [Phase 6 plan: the record](phase-6/phase-6-record.md): a record of replaced text, last added to on 26 November 2026 (§8.2.59 BI1); it states nothing that holds now.
+- [Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read](phase-6/phase-6-library-foundations.md): in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08, WP6.09. Amended 27 November 2026 (§8.2.62): the author ruled the kernel's design; WP6.10 to WP6.16 and the close are planned by sco…
+- [Phase 6 plan: the record](phase-6/phase-6-record.md): a record of replaced text, last added to on 27 November 2026 (§8.2.62); it states nothing that holds now.
 - [WP6.01 — The Windows leg: the stall named and bounded, the failures fixed](phase-6/wp6.01-the-windows-leg.md): delivered, 22 November 2026.
 - [WP6.02 — The cleanup: the reading measured, the instructions audited, the records cut](phase-6/wp6.02-the-cleanup-measure-audit-records.md): delivered, 22 November 2026.
 - [WP6.03 — The cleanup: the instructions cut, the Copilot host retired](phase-6/wp6.03-the-cleanup-instructions-copilot-host.md): delivered, 23 November 2026.

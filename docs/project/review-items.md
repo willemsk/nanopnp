@@ -168,6 +168,9 @@ left out of WP20, and nothing in `src/` or the specification owns them.
 registrar handed to each entry point of the group `nanopnp.extensions`, the registries behind it private. The
 installed packages' package settles it.
 
+**Ruled** (§8.2.62 BL8, 27 November 2026): one registrar, as proposed; `register_model` and `registered_models` leave
+`nanopnp.PUBLIC` for it. WP6.16 builds it, and its plan says whether a script may take the registrar.
+
 ### REV-91 — About 400 tests name their requirement only in a comment
 
 *Area:* documentation. *Severity:* low. *Found:* WP45.
@@ -1947,6 +1950,9 @@ a deviation, or stays a library option that the manifest still names.
 **Proposed** (WP6.09, 26 November 2026; [the kernel's design](../design/kernel.md), *What the author rules*, 5): a case
 key recorded as a deviation, a switch record that excludes PHY-23's switch. The round on the design rules it.
 
+**Ruled** (§8.2.62 BL7, 27 November 2026): a case key, off by default, recorded as a deviation. WP6.11 adds it, and
+its plan sets the key's path.
+
 ### REV-299: A rebase merge rewrites the shas that a package's ticks and Outcome name
 
 Left by `/np-chore`'s review, [CODE_REVIEW_096](../code_reviews/CODE_REVIEW_096.md). A package's ticks and the plan's
@@ -1974,6 +1980,11 @@ drift as one the stabilisation does not read.
 
 *Recommendation:* keep it out, as today, and say so in NUM-12's NOTE, at the round on the kernel's design; reading it
 is a re-pin of the stabilised modes under PHY-23, by ruling (§8.2.7 G10).
+
+**Ruled** (§8.2.62 BL5, 27 November 2026): the wind reads every drift in force, the decrement among them, against
+this recommendation. The round checked `tests/tier2/data/number_stability.json`: no stored walk takes PHY-23's switch
+with a stabilised mode and none holds a cell Péclet number, so no pin moves. WP6.10 writes it with its Tier 1 test and
+amends NUM-12's NOTE.
 
 ### REV-301: Three messages in mesh/ cite CON-04 for the half-plane where CON-01 is meant
 
