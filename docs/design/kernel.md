@@ -4,6 +4,9 @@ The design of the kernel of registered terms that Phase 6 builds (FR-40; §8.2.5
 tried in a prototype that is thrown away. **The author ruled it on 27 November 2026 (§8.2.62 BL1 to BL10), with the
 changes of *As ruled* below.** ADR-005, §5.4.1, §5.4.4 and §5.5 state the design as ruled and govern; this page holds
 the slots, the switch records, the names the workbench reads and what the prototype showed. WP6.10 to WP6.12 build it.
+WP6.10 built the terms, the slots, `compose` and the readers of the drifts and densities;
+[its plan](../plans/phase-6/wp6.10-the-composition.md)'s item 2 lists the slots as built, the inertia and the two
+forces one slot, `momentum.force`. Where this page says *today*, it means the tree before WP6.10, at `5332fbd`.
 
 The prototype is the branch
 [`prototype/wp6.09-kernel`](https://github.com/willemsk/nanopnp/tree/prototype/wp6.09-kernel), at `1b5f5e3`, forked
@@ -84,8 +87,8 @@ functions with the measure's bonus; "singular" takes the rule of order 3 or more
 | `flow.grad_div` | u | fluid | flow bonus, singular | the mode's `flow_term` | Stabilisation |
 | `source.<field>` | each field | Ω for φ, fluid otherwise | estimated | in `residual_form` | Sources (manufactured solutions) |
 
-The `flux` slot is the one that D3 of the plan exists for: `species_flux` sums diffusion, migration, the steric part,
-the decrement and advection into one bracket and negates it once, and the slot closes the same way, `−(Σ) · ∇v_i`.
+The `flux` slot is the one that D3 of the plan exists for: `species_flux` summed diffusion, migration, the steric part,
+the decrement and advection into one bracket and negated it once, and the slot closes the same way, `−(Σ) · ∇v_i`.
 With two species the coupled model has 4 + 3·2 + 11 slots and a source slot for each field; a slot that no term in
 force fills is left out.
 
@@ -165,12 +168,12 @@ hold. NUM-12's NOTE writes the wind as `b_i = z_i μ_i ∇φ̃ + D_i β_i − Pe
 says whether that holds under PHY-23: NUM-14's reference settings were recorded for a model without it. The author
 ruled that the wind reads it (BL5), so the kernel has no such flag, and WP6.10 amends NUM-12's NOTE.
 
-**A fourth reader the prototype left alone.** NUM-24's indicator current takes each species' flux from
-`nernst_planck.py:species_flux`, the function today's weak form integrates, so the two read one flux (PHY-23's NOTE;
-FR-23). The prototype composed the flux from the drifts and left the indicator on `species_flux`, so its flux is
-written twice; that is why the control below was refused at NUM-26's route check. With the indicator reading the
-drifts in force, as D4 asks, a term dropped from the model is dropped from both routes, and the route check no longer
-sees it: the stored walks and the Tier 1 check that a term left out changes its own slots alone remain the guards.
+**A fourth reader the prototype left alone.** NUM-24's indicator current took each species' flux from
+`nernst_planck.py:species_flux`, the function the weak form integrated before WP6.10, so the two read one flux
+(PHY-23's NOTE; FR-23); since WP6.10 it integrates each species' `flux` slot closed with `ψ`. The prototype
+composed the flux from the drifts and left the indicator on `species_flux`, so its flux was written twice; that is
+why the control below was refused at NUM-26's route check. With the indicator reading the drifts in force, as D4
+asks, a term dropped from the model is dropped from both routes, and the route check no longer sees it: the stored walks and the Tier 1 check that a term left out changes its own slots alone remain the guards.
 
 ## A model as a list of terms
 

@@ -4,18 +4,18 @@ Updated 27 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-**What changes.** The first of three packages that rebuild the model's equations is planned and awaits your
-approval: the same equations, assembled from small registered pieces, none naming the finite-element library or
-two dimensions. A user notices nothing at the defaults.
+**What changes.** The first of three packages that rebuild the model's equations is built and waits for its review:
+the same equations, assembled from small registered pieces, none naming the finite-element library or two
+dimensions. A user notices nothing at the defaults; with the dielectric forces and a stabilisation both on, the
+stabilisation now reads the dielectric drift too, as you ruled.
 
-**Cost.** This package: about 3 sessions, 3 to 7 agent hours and 5 times you act; the rest of the phase about 21,
-17 to 30 and 33, the 3D pore's machine time not measured.
+**Cost.** Left: the review and the ship. The rest of the phase about 21 sessions, 17 to 30 agent hours and 33 times
+you act, the 3D pore's machine time not measured.
 
-**What could go wrong.** A piece could be lost in the move: the new assembly is compared with the old entry by
-entry, and the stored runs are repeated. The 3D pore's solve may not fit a machine; a miss comes to you.
+**What could go wrong.** Nothing moved beyond round-off: the thirteen stored runs hold to 2.9 × 10⁻¹². That opt-in
+combination assembles about fifty times more slowly (REV-302).
 
-**Your call.** Approve the composition's plan? *Recommendation:* approve; it follows your rulings and leaves no
-decision open.
+**Your call.** Nothing until the review. *Recommendation:* ship the package.
 
 ## Position
 
@@ -23,10 +23,10 @@ decision open.
 - **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.09 merged**,
   tagged to `v0.7.0-alpha.9`.
 - **The kernel's design is ruled** (§8.2.62; [the design](../design/kernel.md); §5.4.4).
-- **WP6.10, the composition, is planned** ([the plan](phase-6/wp6.10-the-composition.md); VER-81). **By scope:**
-  WP6.11 and WP6.12, the kernel; WP6.13 to WP6.15, the 3D benchmarks; WP6.16, the installed packages; the close.
-- **Next:** the author approves it (`/np-plan wp 6.10 review` repeats its self-check); then `/np-carry wp 6.10`
-  builds (Opus 5.5, high).
+- **WP6.10, the composition, is built** ([the plan](phase-6/wp6.10-the-composition.md); VER-81; PR #227); tagged
+  `v0.7.0-alpha.10` once merged. **By scope:** WP6.11 and WP6.12, the kernel; WP6.13 to WP6.15, the 3D benchmarks;
+  WP6.16, the installed packages; the close.
+- **Next:** `/np-ship wp 6.10` (Sonnet 5.5, medium), within `/np-carry wp 6.10`.
 
 ## Not to be re-decided
 
