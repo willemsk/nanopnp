@@ -481,7 +481,13 @@ class TransportModel(PhysicsModel, Protocol):
         ...
 
     def cell_peclet(
-        self, state: GridFunction, wall_distance_nm: Expression
+        self,
+        state: GridFunction,
+        measures: Measures,
+        wall_distance_nm: Expression,
+        *,
+        solid_fraction: Expression | None = None,
+        solid_fraction_gradient: Expression | None = None,
     ) -> dict[str, Expression]:
         """Return ``Pe_K`` per species (NUM-12)."""
         ...
@@ -851,20 +857,32 @@ class CoupledModel:
         return ConcentrationVariables.primitive(fields, NGSOLVE_OPERATORS)
 
     def cell_peclet(
-        self, state: GridFunction, wall_distance_nm: Expression
+        self,
+        state: GridFunction,
+        measures: Measures,
+        wall_distance_nm: Expression,
+        *,
+        solid_fraction: Expression | None = None,
+        solid_fraction_gradient: Expression | None = None,
     ) -> dict[str, Expression]:
         """Return ``Pe_K`` per species at ``state``, the cell-Peclet diagnostic.
+
+        The wind is the sum of the drifts of the terms in force, as the solve assembled it.
 
         Parameters
         ----------
         state
             A grid function on this model's product space, normally the converged one.
+        solid_fraction
+            The solid fraction the solve assembled with, which PHY-23's decrement drift blends.
         """
         context = self.context(
             state.space.mesh,
-            Measures(element_order=self.order),
+            measures,
             trial=self._split(list(state.components)),
             wall_distance_nm=wall_distance_nm,
+            solid_fraction=solid_fraction,
+            solid_fraction_gradient=solid_fraction_gradient,
         )
         return {
             name: species_cell_peclet(transport_state(context, context.trial, name))

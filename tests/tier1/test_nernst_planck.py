@@ -5,23 +5,27 @@ import math
 import ngsolve as ngs
 import pytest
 
+from nanopnp.io.vocabulary import POTENTIAL, concentration_field_name
 from nanopnp.materials.electrolyte import CorrectionChoice, CorrectionSwitches, Electrolyte
 from nanopnp.materials.fields import SolidBlend, blend
 from nanopnp.mesh.primitives import SlabGeometry
 from nanopnp.numerics.gates import PackingFractionGate
-from nanopnp.physics import steric
-from nanopnp.physics.backend import NGSOLVE_OPERATORS
+from nanopnp.numerics.measures import Measures
+from nanopnp.physics import kernel, steric
+from nanopnp.physics import stabilisation as stab
+from nanopnp.physics.backend import NGSOLVE_OPERATORS, geometry_of
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
     NondimensionalCoefficients,
     mesh_unit_scales,
 )
+from nanopnp.physics.coupled import COUPLED_TERMS, coupled_slots
 from nanopnp.physics.flow import permittivity_gradient
 from nanopnp.physics.nernst_planck import (
     ConcentrationVariables,
+    StericForm,
     excess_potential_gradient,
     packing_fraction,
-    species_flux,
     steric_flux,
 )
 from nanopnp.physics.steric import steric_form
@@ -53,6 +57,46 @@ def _build(
         wall_distance_nm=SATURATED_WALL_DISTANCE_NM,
     )
     return variables, coefficients
+
+
+FLUX_TERMS = ("Nernst\N{EN DASH}Planck", "Steric flux")
+
+
+def _species_flux(
+    species: str,
+    *,
+    coefficients: NondimensionalCoefficients,
+    variables: ConcentrationVariables,
+    potential: ngs.GridFunction,
+    steric: StericForm | None,
+) -> ngs.CoefficientFunction:
+    # J~_i, the negated sum of the contributions to the species' flux slot.
+    mesh = potential.space.mesh
+    side = kernel.Side(
+        functions={POTENTIAL: potential}, variables=variables, coefficients=coefficients
+    )
+    measures = Measures(symmetry="planar")
+    context = kernel.Context(
+        ops=NGSOLVE_OPERATORS,
+        geometry=geometry_of(mesh, measures),
+        measures=measures,
+        fluid=mesh.Materials(".*"),
+        trial=side,
+        lagged=side,
+        tests={},
+        inputs=kernel.Inputs(),
+        steric=steric,
+        stabilisation=stab.create("none"),
+    )
+    (slot,) = (
+        slot
+        for slot in coupled_slots((species,), {concentration_field_name(species)}, None, ())
+        if slot.family == kernel.FLUX and slot.species == species
+    )
+    terms = tuple(term for term in COUPLED_TERMS if term.name in FLUX_TERMS)
+    bracket = kernel.contributions(terms, slot, context)
+    assert bracket is not None
+    return -bracket
 
 
 def _linear_state(
@@ -103,14 +147,14 @@ def test_phy05_steric_flux_drives_ions_out_of_crowded_regions(mesh: ngs.Mesh) ->
     potential = ngs.GridFunction(ngs.H1(mesh, order=2))
     potential.Set(ngs.CF(0.0))
 
-    with_steric = species_flux(
+    with_steric = _species_flux(
         "Na+",
         coefficients=coefficients,
         variables=variables,
         potential=potential,
         steric=steric_form("borukhov"),
     )
-    without = species_flux(
+    without = _species_flux(
         "Na+",
         coefficients=coefficients,
         variables=variables,
@@ -144,7 +188,7 @@ def test_phy04_flux_vanishes_on_a_uniform_state(mesh: ngs.Mesh) -> None:
     variables, coefficients = _build(mesh, {"Na+": ngs.CF(1.0), "Cl-": ngs.CF(1.0)})
     potential = ngs.GridFunction(ngs.H1(mesh, order=2))
     potential.Set(ngs.CF(0.7))
-    flux = species_flux(
+    flux = _species_flux(
         "Na+",
         coefficients=coefficients,
         variables=variables,
@@ -197,14 +241,14 @@ def test_num02_branches_agree_where_both_are_exact() -> None:
 
     point = mesh(*SAMPLE)
     for species in ("Na+", "Cl-"):
-        expected = species_flux(
+        expected = _species_flux(
             species,
             coefficients=coefficients,
             variables=primitive,
             potential=potential,
             steric=steric_form("borukhov"),
         )(point)
-        computed = species_flux(
+        computed = _species_flux(
             species,
             coefficients=log_coefficients,
             variables=logarithmic,
@@ -317,7 +361,7 @@ def test_phy05_a_registered_steric_form_is_added_once_to_the_bracket(
     steric.register_steric_model("doubled", doubled)
 
     def flux(form: steric.StericForm | None) -> tuple[float, ...]:
-        expression = species_flux(
+        expression = _species_flux(
             "Na+",
             coefficients=coefficients,
             variables=variables,

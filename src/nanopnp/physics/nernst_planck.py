@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, TypeAlias
 from nanopnp.core.typing import Expression
 from nanopnp.io.vocabulary import POTENTIAL, VELOCITY
 from nanopnp.materials.fields import SolidBlend, blend_sensitivity
-from nanopnp.physics.backend import NGSOLVE_OPERATORS
 from nanopnp.physics.coefficients import NondimensionalCoefficients
 from nanopnp.physics.operators import Operators
 
@@ -26,7 +25,6 @@ __all__ = [
     "excess_potential_gradient",
     "migration_drift",
     "packing_fraction",
-    "species_flux",
     "steric_drift",
     "steric_flux",
 ]
@@ -212,53 +210,3 @@ def decrement_drift(context: Context, side: Side, species: str) -> Expression:
         potential=side.functions[POTENTIAL],
         solid=context.inputs.solid,
     )
-
-
-def species_flux(
-    species: str,
-    *,
-    coefficients: NondimensionalCoefficients,
-    variables: ConcentrationVariables,
-    potential: Expression,
-    velocity: Expression | None = None,
-    steric: StericForm | None,
-    dielectric_gradient: bool = False,
-    solid: SolidBlend | None = None,
-) -> Expression:
-    """Return the dimensionless total flux ``J~_i`` of one species.
-
-    Parameters
-    ----------
-    velocity
-        The dimensionless velocity, or None for a model with no flow.
-    steric
-        The form of ``beta~_i``, or None for the classical PNP flux.
-    dielectric_gradient
-        Whether the dielectric-decrement term is included.
-    solid
-        The blend's solid side where a solid fraction is supplied; None for the sharp split.
-    """
-    ion = coefficients.electrolyte.ion(species)
-    concentration = variables.values[species]
-    diffusivity = coefficients.diffusivity(species)
-
-    import ngsolve as ngs
-
-    bracket = diffusivity * variables.gradients[species]
-    bracket = bracket + float(ion.valence) * coefficients.mobility(
-        species
-    ) * concentration * ngs.grad(potential)
-    if steric is not None:
-        bracket = bracket + diffusivity * concentration * steric(variables, coefficients, species)
-    if dielectric_gradient:
-        bracket = bracket + diffusivity * concentration * excess_potential_gradient(
-            species,
-            ops=NGSOLVE_OPERATORS,
-            coefficients=coefficients,
-            variables=variables,
-            potential=potential,
-            solid=solid,
-        )
-    if velocity is not None:
-        bracket = bracket - coefficients.peclet * velocity * concentration
-    return -bracket

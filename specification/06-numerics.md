@@ -185,8 +185,9 @@ NOTE (NUM-12, which `Pe_h`): the form printed above assumes the Einstein relatio
 PHY-14 and VER-05 forbid at finite concentration — `D` and `μ` carry different concentration
 corrections and `D_i/μ_i` drifts upward with concentration (PHY-14's rationale). The implementation SHALL
 therefore evaluate the cell Péclet as `Pe_K = ‖b_i‖ h_K / (2 D_i)` on the advective velocity it
-actually assembles, `b_i = z_i μ_i ∇φ̃ + D_i β_i − Pe u`, and SHALL record which expression produced
-the number. The printed form is the `c → 0` limit of that one and overestimates it by
+actually assembles, the sum of the drifts of the flux terms in force (§5.4.4): `b_i = z_i μ_i ∇φ̃ +
+D_i β_i − Pe u` at the validated default, with `D_i ∇μ̃_ex,i` added under PHY-23's switch, and SHALL
+record which expression produced the number, listing those drifts. The printed form is the `c → 0` limit of that one and overestimates it by
 `D_i/(μ_i V_T)`, so it errs towards warning early rather than late.
 
 NOTE (NUM-12, when): there is no `∇φ̃` before a solve, so "on the assembled mesh" means on that mesh's
@@ -219,9 +220,11 @@ reproduces the reference's *settings* and not its operator, and the difference b
 irreducible systematic in any §7.4 comparison, bounded only by mesh refinement. Three readings are
 therefore fixed here rather than left to the implementation.
 
-- **Approximate residual** means every second derivative of a trial field is dropped from the
-  residual the stabilisation is built on, leaving the advective residual and its sources. The
-  streamline term is then inconsistent by construction — its residual does not vanish on the exact
+- **Approximate residual** means the second derivatives of the trial fields that the flux's
+  divergence brings are dropped from the residual the stabilisation is built on, leaving the
+  advective residual and its sources. What is dropped is the divergence of the diffusive flux and of
+  the wind; the wind is taken whole, a second derivative inside a drift with it, as PHY-23's
+  decrement carries `∇∇φ̃`. The streamline term is then inconsistent by construction — its residual does not vanish on the exact
   solution — and the resulting loss of one order in the L² convergence rate of VER-18 is a property
   of the mode rather than a defect, and SHALL be measured and reported rather than assumed away.
 - **Crosswind diffusion, Do Carmo and Galeão** means a term of that family: residual-scaled, acting
