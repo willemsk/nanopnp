@@ -4,30 +4,29 @@ Updated 27 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-**What changes.** You ruled the kernel's design. Three packages rebuild the model's equations from small registered
-pieces, the cleaner structure winning over an old number. Three more solve two benchmarks on a 3D mesh and price the
-flow in 3D, and a last one lets an installed package add a term.
+**What changes.** The first of three packages that rebuild the model's equations is planned and awaits your
+approval: the same equations, assembled from small registered pieces, none naming the finite-element library or
+two dimensions. A user notices nothing at the defaults.
 
-**Cost.** About 24 sessions, 20 to 37 agent hours and 38 times you act, the 3D
-pore's machine time not measured.
+**Cost.** This package: about 3 sessions, 3 to 7 agent hours and 5 times you act; the rest of the phase about 21,
+17 to 30 and 33, the 3D pore's machine time not measured.
 
-**What could go wrong.** A lost term could hide behind a re-pinned number; a package that moves one must show the old
-value returns with its one change undone. The 3D pore's solve may not fit a machine; a miss comes to you.
+**What could go wrong.** A piece could be lost in the move: the new assembly is compared with the old entry by
+entry, and the stored runs are repeated. The 3D pore's solve may not fit a machine; a miss comes to you.
 
-**Your call.** Approve the amended plan, by merging its pull request? *Recommendation:* approve; it
-records your ten rulings and departs from none.
+**Your call.** Approve the composition's plan? *Recommendation:* approve; it follows your rulings and leaves no
+decision open.
 
 ## Position
 
 - Phases 1 to 5 **closed**, `v0.2.0` to `v0.6.0` ([Phase 5's report](phase-5/phase-5-workbench.md#end-of-phase-report)).
 - **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.09 merged**,
   tagged to `v0.7.0-alpha.9`.
-- **The kernel's design is ruled** (§8.2.62; [the design](../design/kernel.md); §5.4.4); the amended plan is
-  reviewed ([CODE_REVIEW_099](../code_reviews/CODE_REVIEW_099.md)) and not merged.
-- **Planned by scope:** WP6.10 to WP6.12, the kernel; WP6.13 to WP6.15, the 3D benchmarks; WP6.16, the installed
-  packages; the close.
-- **Next:** the author merges the amendment's pull request, then `/np-carry wp 6.10` (Sonnet 5.5,
-  medium).
+- **The kernel's design is ruled** (§8.2.62; [the design](../design/kernel.md); §5.4.4).
+- **WP6.10, the composition, is planned** ([the plan](phase-6/wp6.10-the-composition.md); VER-81). **By scope:**
+  WP6.11 and WP6.12, the kernel; WP6.13 to WP6.15, the 3D benchmarks; WP6.16, the installed packages; the close.
+- **Next:** the author approves it (`/np-plan wp 6.10 review` repeats its self-check); then `/np-carry wp 6.10`
+  builds (Opus 5.5, high).
 
 ## Not to be re-decided
 

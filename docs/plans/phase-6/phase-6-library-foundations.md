@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08, WP6.09. Amended 27 November 2026 (§8.2.62): the author ruled the kernel's design; WP6.10 to WP6.16 and the close are planned by scope. This amendment was written by Fable 5.2 at high effort. Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08, WP6.09. Amended 27 November 2026 (§8.2.62): the author ruled the kernel's design; WP6.10 is planned; WP6.11 to WP6.16 and the close by scope. This amendment was written by Fable 5.2 at high effort. Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -98,11 +98,12 @@ package's plan claims its proposed clause, numbered on from VER-80.
 
 ### WP6.10 — The composition (FR-40; §5.4.4; BL1, BL5, BL6; REV-300)
 
-*Planned by scope.* The kernel's term, slot, contribution, context and `compose`, in `physics/`. The context holds
+*Planned 27 November 2026* ([the plan](wp6.10-the-composition.md)). The kernel's term, slot, contribution, context
+and `compose`, in `physics/`. The context holds
 the operators and the geometry, so no term names the backend or a dimension (§5.4.1), and VER-65 takes that rule.
 The coupled residual is composed and `residual_form`'s body removed. The stabilisation reads every drift and force
 density, PHY-23's decrement among them, which amends NUM-12's NOTE; NUM-24's indicator current reads the drifts in
-force. Proposed VER-81, Tier 1: the kernel's composition (§5.4.4's first three tests). About 3 sessions, 3 to 7 agent hours
+force. VER-81, Tier 1: the kernel's composition (§5.4.4's first three tests). About 3 sessions, 3 to 7 agent hours
 and 5 touches.
 
 ### WP6.11 — Switches as data and the forces (BC3; BL7; REV-298)
@@ -157,7 +158,7 @@ The end-of-phase report, the three platforms' full run and `v0.7.0`; `/np-ship p
 |---|---|---|
 | 1 to 14, 17, 18 | The cleanup, the review, the numbering, the guard numbers, the main session's model | **Settled**, 22 to 26 November 2026; the record holds the rows. 6 and 7 moved to Phase 7 (BC7) |
 | 15, 16 | The touches target; the kernel's design, its packages, the 3D benchmark | **Settled by the author, 27 November 2026**: no target (BL10); BL1 to BL9 |
-| 19 | The slots' cut, each slot's rule, and the names of the context's operators | WP6.10's plan |
+| 19 | The slots' cut, each slot's rule, and the names of the context's operators | **Settled**, WP6.10's plan (D2, D3) |
 | 20 | The path of the log branch's case key; where the records live for `io/` (VER-61) | WP6.11's plan |
 | 21 | The floor of VER-13's observed order on a 3D mesh, and its three sizes | WP6.13's plan, argued before any run |
 | 22 | The marks of the 3D direct solve, on CI's runners: peak memory and time; the benchmark's marker | WP6.14's plan, before any run; a miss is the author's |
@@ -185,7 +186,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP6.05, WP6.09 | none kept | Outside N1's scope, or the prototype's runs (BJ1) |
 | WP6.06 | 1 | VER-48 |
 | WP6.08 | 2 | VER-80 |
-| WP6.10 | 1, 2 | VER-81, proposed; VER-65; VER-14 to VER-18, VER-42, VER-77; VER-62's push walks; VER-80's stabilised guards |
+| WP6.10 | 1, 2 | VER-81; VER-65; VER-14 to VER-18, VER-42, VER-77; VER-62's and VER-80's thirteen walks |
 | WP6.11 | 1, 2 | VER-82, proposed; VER-22; VER-80's dielectric and log guards |
 | WP6.12 | 1, 2 | VER-56 and QR-14's one class restated; VER-12, VER-13, VER-31; criterion 3's full check |
 | WP6.13 | 2 | VER-83, proposed |
