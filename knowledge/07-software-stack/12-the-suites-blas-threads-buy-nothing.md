@@ -49,10 +49,10 @@ store. The store is content-addressed, so the bytes are the ones the test's own 
 Tests that assert a *cold* computation (VER-55's build, the example executors, the VER-49 budget) do
 not take the seed.
 
-`-m tier2` on the command line *replaces* the default `-m` of `addopts`, so the `slow` tests are not
-left out there: `tests/conftest.py` leaves them out unless `--slow` is passed, whatever `-m` says, as
-it does the `nightly` ones unless `--nightly` (source: `tests/conftest.py`,
-`pytest_collection_modifyitems`). `-m tier2` therefore times what the gate runs.
+`-m tier2` on the command line *replaces* the `-m` of `addopts`, so `addopts` cannot be what leaves
+the `slow` and `nightly` tests out: `tests/conftest.py` leaves them out, whatever `-m` says, unless
+`--slow` or `--nightly` is passed (§7.6; source: `tests/conftest.py`,
+`pytest_collection_modifyitems`). `-m tier2` therefore times the Tier 2 part of what the gate runs.
 
 The Qt widget tests, removed at WP5.27, ran serially and alone. A test that waited 60 s for a real browser
 page passed twice under `-n auto` on a 3-core macOS runner and then failed once, while the other two

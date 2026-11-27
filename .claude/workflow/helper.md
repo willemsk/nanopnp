@@ -31,8 +31,8 @@ brings the PR to your commits; if it does not, the next helper does it.
 Tiers 1 and 2, on every land. Where an item's done-criterion names the land's push gate, the carried
 tests or Tier 2, run in the foreground only the test files the item touches, within the 4 minutes
 above, commit, and hand back with `land: yes`: the land runs the rest. Never hand back a `RUN` of a
-marker selection such as `-m tier2`, or of the carried tests, nor one with `--slow` or `--nightly`,
-which add tests that run for hours. A `RUN` names its tests by file or node id.
+marker selection such as `-m tier2`, or of the carried tests: it reruns the tests the land runs. A
+`RUN` names its tests by file or node id, with `--slow` where one of them is `slow`.
 
 ## The hand-off note
 
