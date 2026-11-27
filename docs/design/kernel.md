@@ -340,8 +340,8 @@ hours and 32 touches for the kernel. The 3D benchmarks follow, then the installe
 
 ## What the author ruled
 
-The seven choices this page put, with what the author ruled on 27 November 2026
-([§8.2.62](../../specification/history/62-the-kernels-design-ruled-phase-6-amended.md)):
+The seven choices this page put, with what the author ruled on 27 November 2026 (§8.2.62, in the specification's
+history):
 
 1. **The design**: approved, the more modular structure before a held number (BL1, BL2).
 2. **The decrement in the stabilisation's wind** (REV-300): read, against this page's recommendation (BL5).
