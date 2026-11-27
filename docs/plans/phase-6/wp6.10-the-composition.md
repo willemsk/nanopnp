@@ -336,6 +336,16 @@ in a `git worktree` of `5332fbd`.
   > section in `modularity-findings.md` and `modularity.md` (built for the coupled models), and the decisions pages.
   > `docs/design/kernel.md` says that *today* means the tree at `5332fbd`, and NUM-24's indicator now reads the `flux`
   > slot. The knowledge base's §8.7 replaces the prototype's open points with WP6.10's measurements.
+  > **Outcome — the review.** [CODE_REVIEW_100](../../code_reviews/CODE_REVIEW_100.md), base `5332fbd`, head `640c88b`:
+  > eight findings from the hunt, seven fixed in `7d34a25` (the force computation's zero vector when a fitted
+  > permittivity has no concentration part, the permittivity built only for the potential's test function, the
+  > CHANGELOG's interface entry, requirement identifiers out of in-code prose, docstrings off private code, the
+  > surface-charge sign named in both places, the knowledge page's operator name), one refuted (NUM-26's two routes
+  > already shared code at the base; VER-81 (b) and the stored walks guard a dropped term). No row opened; REV-302
+  > stays open.
+  > **Measured cost** (carry, whole, before this record): 1 session, 8 sub-agents, 4.0 agent hours, 7 touches;
+  > claude-fable-5-2 0.16 M out, 22 M cached, claude-opus-5-5 0.29 M out, 56 M cached, claude-sonnet-5-5 0.01 M out,
+  > 2 M cached; the estimate was about 3 sessions, 3 to 7 agent hours and 5 touches.
 
 ### Verification
 
