@@ -99,9 +99,14 @@ first; a second failure at the same step is `BLOCKED`.
   `--since`: the package's cost so far, which the plan's Outcome takes whole, not summed (§8.3).
 - `WAIT`: subscribe to the PR once (`subscribe_pr_activity`), schedule a check-in at the delay it
   gives in place of an earlier one, and end the turn. Start a fresh `np-shipper` with §3's first
-  prompt and the event that wakes you, unchanged: a `WAIT` leaves no note.
-- `RUN`: start its command with Bash `run_in_background` and wait on its log in the foreground, as
-  the core waits on a land. Start a fresh helper with §3's prompt after a hand-back and the log's path.
+  prompt and the event that wakes you, unchanged: a `WAIT` leaves no note. Only a CI result, a
+  review or a person's comment, the merge, or the check-in starts one; a `subscription.created`
+  event or a bot's comment starts none, and the turn ends again.
+- `RUN`: serve none whose command is a test selection the land's push gate already ran on that head;
+  answer it with the land's log. Otherwise start its command with Bash `run_in_background` and
+  `timeout: 7200000`, as the default stops it at 30 minutes, and wait on its log in the foreground,
+  as the core waits on a land. Decide on the log's `exit` line, never on a partial log. Start a
+  fresh helper with §3's prompt after a hand-back and the log's path.
 - `BLOCKED`: tell the author the reason and the command that continues, and stop.
 - `DONE`: go on by its stage:
   - **plan**: print the manager's summary it carries and ask the author, with `AskUserQuestion`, to
