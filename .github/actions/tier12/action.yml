@@ -2,7 +2,7 @@ name: Tiers 1 and 2
 description: >-
   The steps of the `platforms` and `full-matrix` jobs of ci.yml (section 7.6;
   section 8.2.13 N4): install uv, the system libraries and the extras, then
-  run Tiers 1 and 2 (with --nightly and the slow tests when asked), then the
+  run Tiers 1 and 2 (with --nightly, and --slow for the slow tests, when asked), then the
   installation's self-test. The checkout and the job's environment stay in the job.
 inputs:
   python-version:
@@ -36,7 +36,7 @@ runs:
         run=(uv run pytest -rs --durations=20 -n auto --dist loadfile)
         status=0
         if [[ $NIGHTLY == true ]]; then
-          "${run[@]}" --nightly -m "(tier1 or tier2) and slow" || status=$?
+          "${run[@]}" --slow -m "(tier1 or tier2) and slow" || status=$?
           run+=(--nightly)
         fi
         "${run[@]}" || status=$?

@@ -12,9 +12,11 @@ applied by each directory's `conftest.py`, so placing a file decides its tier.
 
 A test that walks the pipeline end to end, an executed example or the 2WCD entry through the
 stages, is marked `nightly` (`pytestmark = pytest.mark.nightly`). `uv run pytest` leaves `nightly`
-and `slow` tests out; `uv run pytest --nightly` adds the `nightly` ones, and the `slow` ones need
-`-m "(tier1 or tier2) and slow"` as well (with `--nightly` for those that are also `nightly`), which
-is how CI's nightly run calls pytest twice. The per-push selection (§7.6) runs example 01, while it
+and `slow` tests out, and so does any `-m`: `tests/conftest.py` deselects them whatever `-m` says.
+`uv run pytest --nightly` adds the `nightly` ones and `--slow` the `slow` ones; a test marked both is
+`slow`'s, which `--slow` selects and `--nightly` alone does not. Naming a `nightly` test's file runs
+it without the flag; a `slow` test always needs `--slow`. CI's nightly run calls pytest twice:
+`--slow -m "(tier1 or tier2) and slow"`, then `--nightly`. The per-push selection (§7.6) runs example 01, while it
 solves in under 60 s, and example 02's charged ePNP-NS walk; neither carries the marker. Never mark an analytic benchmark `nightly`: it is the test that localises a failure.
 `slow` is different: a `slow` test is measured and recorded, and no push gates it.
 
