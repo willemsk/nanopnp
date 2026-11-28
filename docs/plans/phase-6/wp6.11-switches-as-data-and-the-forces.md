@@ -229,9 +229,18 @@ Verified at `e42272a`.
 **The run (item 5).**
 
 ```bash
-uv run pytest --slow tests/tier2/test_guard_numbers.py tests/tier2/test_force_convergence.py \
+NPY_DISABLE_CPU_FEATURES="X86_V4 AVX512_ICL AVX512_SPR" \
+  OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  uv run pytest --slow tests/tier2/test_guard_numbers.py tests/tier2/test_force_convergence.py \
   -q -rsfE -n auto --dist loadfile > "$(git rev-parse --git-dir)/wp6.11/run.log" 2>&1
 ```
+
+The cap is the gate's (`.claude/hooks/gate.sh`; §7.6): without it an AVX-512 host is not the reference
+environment, and the guard walks skip (BI2).
+
+> **Outcome — the first run skipped the guard walks.** On `2d7936d`, without the cap, on a
+> `linux-x86_64/AVX512_SPR` host: `test_force_convergence.py` 5 passed, the six guard walks skipped, 104 s.
+> The guard walks run again under the cap.
 
 ### Work items
 
