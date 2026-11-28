@@ -1099,20 +1099,23 @@ def _check_outputs(document: CaseDocument) -> None:
     model = document.physics.model
     declared = declaration(model)
     permittivity = document.electrolyte.corrections.permittivity
-    fitted = "electrolyte.corrections.permittivity.concentration"
-    if (
-        "analyte_force" in document.outputs
-        and document.numerics.log_variables
-        and fitted not in declared.unread
-        and permittivity.concentration
-        and applies_part(permittivity.model, "permittivity", "concentration")
-    ):
+    # Any fit makes the permittivity vary with the state, and its gradient is then refused on
+    # the log branch, the wall's fit as the concentration's.
+    fitted = [
+        f"electrolyte.corrections.permittivity.{part}"
+        for part in ("concentration", "wall")
+        if f"electrolyte.corrections.permittivity.{part}" not in declared.unread
+        and getattr(permittivity, part)
+        and applies_part(permittivity.model, "permittivity", part)
+    ]
+    if "analyte_force" in document.outputs and document.numerics.log_variables and fitted:
         raise CaseValidationError(
             "outputs asks for analyte_force beside numerics.log_variables: true, and "
-            f"{fitted} applies the fit of permittivity model '{permittivity.model}'. The force "
-            "differentiates that fit in each concentration, which the NUM-02 log branch does not "
-            f"give. Remove analyte_force, set numerics.log_variables: false, or set {fitted}: "
-            "false."
+            f"permittivity model '{permittivity.model}' applies its fit at "
+            f"{' and '.join(fitted)}. The force differentiates the permittivity that fit varies, "
+            "which the NUM-02 log branch does not give. Remove analyte_force, set "
+            "numerics.log_variables: false, or "
+            f"set {' and '.join(f'{path}: false' for path in fitted)}."
         )
     offered = provided(declared)
     unoffered = [

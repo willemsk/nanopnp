@@ -36,8 +36,8 @@ analyte forces to 2.6 × 10⁻¹⁶.
 - **Added** (the case file, §5.3.1): `numerics.log_variables`, a Boolean, off by default. It solves NUM-02's log
   branch, which only the Python interface reached before; the case's deviations and the manifest name it when on. It
   excludes `physics.dielectric_gradient_forces`, the NUM-18 ladder refuses it (set `numerics.continuation: none`),
-  and `outputs: [analyte_force]` beside it is refused at the case check where the permittivity's concentration fit
-  applies. The workbench's Equations tool lists it as "Log concentrations".
+  and `outputs: [analyte_force]` beside it is refused at the case check where a permittivity fit applies, its
+  concentration or its wall part. The workbench's Equations tool lists it as "Log concentrations".
 - **Changed** (the physics, §5.4.4): each switch is a record of `nanopnp.io.switches` (its name, case path, validated
   default, the terms it brings in force, and what it requires and excludes), and every list of switches, the
   validated default, the deviations, the case checks, the ladder's refusal and the terms in force are read from the
@@ -48,6 +48,9 @@ analyte forces to 2.6 × 10⁻¹⁶.
 - **Removed** (the Python interface): `nanopnp.physics.models.SWITCHES`, the tuple of four names; read
   `nanopnp.io.switches.SWITCHES`, the tuple of records, and each record's `name` and `path`. `physics.terms.Term`
   loses its `switches` field and argument; `Term.switches` is a property derived from the records.
+- **Changed** (the Python interface): a `ModelDeclaration` given to `register_model` states the honoured values of
+  every switch record, `log_variables` among them; one that lists only the four `physics:` switches raises
+  `ValueError` at registration.
 - **Added** (the Python interface): `CoupledModel.switch_values()`; `physics.coupled` exports `BODY_FORCE`,
   `DIELECTRIC_FORCE` and `term(name)`.
 - **Added** (the tests, §7.2): VER-82, the switch records; VER-81 (c) gains the force split; VER-80's `guard-log`

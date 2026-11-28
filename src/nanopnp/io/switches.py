@@ -30,14 +30,14 @@ class Relation:
 
 @dataclass(frozen=True)
 class Switch:
-    """One switch of the model equations (section 5.4.4).
+    """One switch of the model equations.
 
     Parameters
     ----------
     path
         The case leaf that sets it.
     default
-        Its value in the validated model; any other value is a deviation (FR-25).
+        Its value in the validated model; any other value is a deviation in the manifest.
     terms
         The names of the display terms it brings in force; a term is in force only while every
         record naming it is true.
@@ -134,12 +134,18 @@ def switch_at(path: str) -> Switch | None:
 
 
 def governing(term: str) -> tuple[Switch, ...]:
-    """Return the records that name ``term``, with each switch they require, in record order."""
+    """Return the records that name ``term``, with every switch they require, in record order."""
     named = {record.name for record in SWITCHES if term in record.terms}
-    for record in SWITCHES:
-        if record.name in named:
-            named |= {relation.switch for relation in record.requires}
-    return tuple(record for record in SWITCHES if record.name in named)
+    while True:
+        wider = named | {
+            relation.switch
+            for record in SWITCHES
+            if record.name in named
+            for relation in record.requires
+        }
+        if wider == named:
+            return tuple(record for record in SWITCHES if record.name in named)
+        named = wider
 
 
 def _value(record: Switch, values: Mapping[str, bool]) -> bool:
