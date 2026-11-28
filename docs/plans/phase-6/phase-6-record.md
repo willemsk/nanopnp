@@ -706,3 +706,20 @@ The verification table's rows and the criteria read:
 The end-of-phase report's second bullet ended "at the kernel's last package (stabilisation mode named);", and it had no
 line for the 3D benchmarks.
 
+## Amended 28 November 2026, at WP6.11's plan (§8.2.63 BM1 to BM3)
+
+WP6.11's plan read the entry against the code: the model's four switches sit under `physics:`, the ladder fixes them
+and refuses a case that sets one differently, and the workbench's Equations tool lists them from a tuple the package
+replaces by the records. The author ruled that the log branch's key is `numerics.log_variables`, that the ladder
+refuses it, and that the Equations tool shows it. The package keeps its size. The entry of WP6.11 read:
+
+> ### WP6.11 — Switches as data and the forces (BC3; BL7; REV-298)
+>
+> *Planned by scope.* The switch records, the log branch's among them: a case key, off by default, that excludes
+> PHY-23's switch and is a deviation in the manifest. Every list of switches and deviations is derived from the
+> records, or its reader reads them; the two refusals become `requires` and `excludes`; `post/forces.py` reads the
+> force densities. The schema gains a key (F4). Proposed VER-82, Tier 1: PHY-23's switch brings both terms or
+> neither, and a run on the log key names it as a deviation. About 3 sessions, 2 to 4 agent hours and 5 touches.
+
+Open decision 20 read "WP6.11's plan" as its owner and status, and the verification table's row for WP6.11 began
+"VER-82, proposed".

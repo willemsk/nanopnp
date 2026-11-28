@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08, WP6.09, WP6.10. Amended 27 November 2026 (§8.2.62): the author ruled the kernel's design; WP6.11 to WP6.16 and the close by scope. This amendment was written by Fable 5.2 at high effort. Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08, WP6.09, WP6.10. Amended 27 November 2026 (§8.2.62): the author ruled the kernel's design; WP6.11 is planned; WP6.12 to WP6.16 and the close by scope. This amendment was written by Fable 5.2 at high effort. Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -25,7 +25,7 @@ departs from none.
 
 ## Context
 
-`SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 to §8.2.62 (AY to BL). The
+`SPECIFICATION.md` governs; identifiers here are pointers, and the rulings are §8.2.49 to §8.2.63 (AY to BM). The
 text each amendment replaced is in [the record](phase-6-record.md). This file keeps its first name: the library's
 foundations are Phase 7 (BC7), in [the input note](../sessions/phases-6-to-11.md).
 
@@ -97,13 +97,15 @@ package's plan claims its proposed clause, numbered on from VER-80.
 | [WP6.09](wp6.09-the-kernels-design.md), the kernel's design (BC2, BC5; BJ1 to BJ3), 26 November 2026 | The prototype's branch, `prototype/wp6.09-kernel` at `1b5f5e3`, stays until WP6.12 merges (BJ3) |
 | [WP6.10](wp6.10-the-composition.md), the composition (FR-40; §5.4.4; BL1, BL5, BL6; REV-300; VER-81), 27 November 2026 | No term names the backend, its module on `term_modules:` (VER-65); `CoupledModel.terms_in_force()` decides until WP6.11; PHY-23 under a stabilised mode assembles fifty times slower (REV-302) |
 
-### WP6.11 — Switches as data and the forces (BC3; BL7; REV-298)
+### WP6.11 — Switches as data and the forces (BC3; BL7; BM1 to BM3; REV-298)
 
-*Planned by scope.* The switch records, the log branch's among them: a case key, off by default, that excludes
-PHY-23's switch and is a deviation in the manifest. Every list of switches and deviations is derived from the
-records, or its reader reads them; the two refusals become `requires` and `excludes`; `post/forces.py` reads the
-force densities. The schema gains a key (F4). Proposed VER-82, Tier 1: PHY-23's switch brings both terms or
-neither, and a run on the log key names it as a deviation. About 3 sessions, 2 to 4 agent hours and 5 touches.
+*Planned 28 November 2026* ([the plan](wp6.11-switches-as-data-and-the-forces.md)). The switch records, the log
+branch's among them: a case key, `numerics.log_variables`, off by default, that excludes PHY-23's switch and is a
+deviation in the manifest; the ladder refuses it and the workbench's Equations tool lists it (BM1 to BM3). Every
+list of switches and deviations is derived from the records, or its reader reads them; the two refusals become
+`requires` and `excludes`; `post/forces.py` reads the force densities. The schema gains a key (F4). VER-82, Tier 1:
+PHY-23's switch brings both terms or neither, and a run on the log key names it as a deviation. About 3 sessions,
+2 to 4 agent hours and 5 touches.
 
 ### WP6.12 — A model as a list of terms, and the full check (BC1, BC4; BL2, BL3; MOD-10)
 
@@ -150,7 +152,7 @@ The end-of-phase report, the three platforms' full run and `v0.7.0`; `/np-ship p
 | 1 to 14, 17, 18 | The cleanup, the review, the numbering, the guard numbers, the main session's model | **Settled**, 22 to 26 November 2026; the record holds the rows. 6 and 7 moved to Phase 7 (BC7) |
 | 15, 16 | The touches target; the kernel's design, its packages, the 3D benchmark | **Settled by the author, 27 November 2026**: no target (BL10); BL1 to BL9 |
 | 19 | The slots' cut, each slot's rule, and the names of the context's operators | **Settled**, WP6.10's plan (D2, D3) |
-| 20 | The path of the log branch's case key; where the records live for `io/` (VER-61) | WP6.11's plan |
+| 20 | The path of the log branch's case key; where the records live for `io/` (VER-61) | **Settled**, WP6.11's plan: `numerics.log_variables` (BM1); `io/switches.py` (D1) |
 | 21 | The floor of VER-13's observed order on a 3D mesh, and its three sizes | WP6.13's plan, argued before any run |
 | 22 | The marks of the 3D direct solve, on CI's runners: peak memory and time; the benchmark's marker | WP6.14's plan, before any run; a miss is the author's |
 | 23 | Whether the flow in 3D is built | **Author**, after WP6.15's trial, on its price |
@@ -178,7 +180,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP6.06 | 1 | VER-48 |
 | WP6.08 | 2 | VER-80 |
 | WP6.10 | 1, 2 | VER-81; VER-65; VER-14 to VER-18, VER-42, VER-77; VER-62's and VER-80's thirteen walks |
-| WP6.11 | 1, 2 | VER-82, proposed; VER-22; VER-80's dielectric and log guards |
+| WP6.11 | 1, 2 | VER-82; VER-22; VER-80's dielectric and log guards |
 | WP6.12 | 1, 2 | VER-56 and QR-14's one class restated; VER-12, VER-13, VER-31; criterion 3's full check |
 | WP6.13 | 2 | VER-83, proposed |
 | WP6.14 | 1 | VER-10, restated for a 3D mesh |

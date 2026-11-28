@@ -1,32 +1,32 @@
 # Current work
 
-Updated 27 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged branch is not shipped.
+Updated 28 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-**What changes.** The first of three packages that rebuild the model's equations is built, reviewed and merges
-once CI is green: the same equations, assembled from small registered pieces, none naming the finite-element
-library or two dimensions. A user notices nothing at the defaults; with the dielectric forces and a stabilisation
-both on, the stabilisation now reads the dielectric drift too, as you ruled.
+**What changes.** The second of three packages that rebuild the model's equations is planned, for your
+approval: each on-off setting becomes one record, a case file can ask for the logarithm of the concentrations, and
+a particle's force is read from the equations' own statements. A user notices nothing at the defaults.
 
-**Cost.** Left: your merge. The rest of the phase about 21 sessions, 17 to 30 agent hours and 33 times you act, the
-3D pore's machine time not measured.
+**Cost.** This package: about 3 sessions, 2 to 4 agent hours and 5 times you act; the rest of the phase about 18,
+15 to 26 and 28, the 3D pore's machine time unmeasured.
 
-**What could go wrong.** Nothing moved beyond round-off: the thirteen stored runs hold to 2.9 × 10⁻¹². That opt-in
-combination assembles about fifty times more slowly (REV-302).
+**What could go wrong.** A record could bring in the wrong piece: a test checks every combination of settings, and
+the stored runs are repeated. The 3D pore's solve may not fit a machine; a miss comes to you.
 
-**Your call.** Merge the pull request. *Recommendation:* merge; it tags `v0.7.0-alpha.10`.
+**Your call.** Approve the plan? *Recommendation:* approve; it holds your three answers and leaves none
+open.
 
 ## Position
 
 - Phases 1 to 5 **closed**, `v0.2.0` to `v0.6.0` ([Phase 5's report](phase-5/phase-5-workbench.md#end-of-phase-report)).
 - **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.10 merged**,
-  tagged to `v0.7.0-alpha.10`.
-- **The kernel's design is ruled** (§8.2.62; [the design](../design/kernel.md); §5.4.4).
-- **WP6.10, the composition, is merged and tagged `v0.7.0-alpha.10`** ([the plan](phase-6/wp6.10-the-composition.md);
-  VER-81; PR #227). **By scope:** WP6.11 and WP6.12, the kernel; WP6.13 to WP6.15, the 3D benchmarks; WP6.16, the
-  installed packages; the close.
-- **Next:** `/np-plan wp 6.11`, the switch records, the log branch's key and `post/forces.py` reading the densities.
+  tagged to `v0.7.0-alpha.10`. **The kernel's design is ruled** (§8.2.62; [the design](../design/kernel.md)).
+- **WP6.11, switches as data and the forces, is planned**
+  ([the plan](phase-6/wp6.11-switches-as-data-and-the-forces.md); VER-82; §8.2.63). **By scope:** WP6.12 to WP6.16
+  and the close.
+- **Next:** the author approves it (`/np-plan wp 6.11 review` repeats its self-check); then `/np-carry wp 6.11`
+  builds (Opus 5.5, high).
 
 ## Not to be re-decided
 
@@ -38,7 +38,7 @@ combination assembles about fifty times more slowly (REV-302).
 - **A VER-62 miss is reverted or re-pinned by ruling** (G10); **in WP6.10 to WP6.12 a stored number the kernel moves is
   re-pinned once explained** (VER-62; BL2). **The full check runs at WP6.12** (BC4; BL3).
 - **No term names the backend or a dimension** (BL6). **The wind reads every drift** (BL5). **The log branch is a case
-  key** (BL7). **An installed package registers through one registrar** (BL8).
+  key** (BL7; BM1 to BM3). **An installed package registers through one registrar** (BL8).
 - **3D is in benchmarks alone, before the installed packages** (BL4, BL9; N4).
 - **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4); **from v1.0 the case file and the run record are
   converted** (BC20).
