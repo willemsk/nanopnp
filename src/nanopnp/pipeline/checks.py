@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import difflib
 import math
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -23,7 +23,6 @@ from nanopnp.io.case import (
     Contour,
     Density,
     Membrane,
-    Physics,
     Reservoir,
     Smearing,
     SuppliedArtefact,
@@ -39,6 +38,7 @@ from nanopnp.io.case_paths import (
     value_at,
 )
 from nanopnp.io.resolved import ResolvedCase, contour_spacing_nm
+from nanopnp.io.switches import SWITCHES, Conflict, away, conflicts, switch
 from nanopnp.materials.electrolyte import NO_STERIC_MODEL, Electrolyte
 from nanopnp.materials.models import PropertyKind, applies_part
 from nanopnp.mesh.ingest import SOLID_MATERIALS, fluid_permittivity_refusal
@@ -46,7 +46,6 @@ from nanopnp.mesh.meshers import registered_meshers
 from nanopnp.numerics.linear import registered_solvers, rejection
 from nanopnp.physics.models import (
     LADDER_STRATEGY,
-    SWITCHES,
     declaration,
     inf_sup_problem,
     registered_models,
@@ -389,7 +388,7 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:  # noqa
     _check_driver(document)
     _check_strategy(document)
     if document.numerics.continuation == LADDER_STRATEGY:
-        _check_ladder_can_honour(document.physics)
+        _check_ladder_can_honour(document)
     _check_outputs(document)
     return mesh
 
@@ -784,28 +783,23 @@ def _check_generation(document: CaseDocument) -> None:
         )
 
 
-# default_ladder reads none of these from the case: flow is on from the stage-6 rung and
-# the other three sit at the CoupledModel defaults, so a case setting one would be ignored.
-_LADDER_PHYSICS: dict[str, bool] = {
-    "flow": True,
-    "variable_density": True,
-    "inertia": True,
-    "dielectric_gradient_forces": False,
-}
+def _switch_values(document: CaseDocument) -> dict[str, bool]:
+    return {record.name: bool(value_at(document, record.path)) for record in SWITCHES}
 
 
-def _check_ladder_can_honour(physics: Physics) -> None:
-    mismatched = [
-        name for name, fixed in _LADDER_PHYSICS.items() if getattr(physics, name) != fixed
-    ]
+def _check_ladder_can_honour(document: CaseDocument) -> None:
+    # default_ladder reads no switch from the case: flow is on from the stage-6 rung and the
+    # others sit at the CoupledModel defaults, so a case setting one would be ignored.
+    mismatched = away(_switch_values(document))
     if not mismatched:
         return
-    named = ", ".join(f"physics.{name}" for name in mismatched)
+    named = ", ".join(record.path for record in mismatched)
+    held = ", ".join(f"{record.path}: {str(record.default).lower()}" for record in SWITCHES)
     raise CaseValidationError(
         f"The NUM-18 ladder ignores {named}. The ladder fixes the path. It does not read "
-        "these keys from the case. It sets flow on from stage 6, variable_density and inertia "
-        "on, and dielectric_gradient_forces off. Set numerics.continuation: none to run a "
-        "single rung with the switches as given. Or set the switches to match the ladder."
+        "these keys from the case. It holds each switch at its validated default, "
+        f"{held}, the flow on from stage 6. Set numerics.continuation: none to run a single "
+        "rung with the switches as given. Or set the switches to match the ladder."
     )
 
 
@@ -838,32 +832,42 @@ def _check_solid_permittivity_keys(document: CaseDocument) -> None:
             )
 
 
+def _conflict_message(
+    conflict: Conflict, model: str, honoured: Mapping[str, tuple[bool, ...]]
+) -> str:
+    path = switch(conflict.switch).path
+    other = switch(conflict.other).path
+    why = conflict.why[0].upper() + conflict.why[1:]
+    if conflict.kind == "excludes":
+        return (
+            f"{path} is true, and so is {other}. {why}. Set {other}: false, or set {path}: false."
+        )
+    remedy = (
+        f"Set {other}: true, or set {path}: false."
+        if True in honoured[conflict.other]
+        else f"physics.model {model!r} runs with {other}: false only. Set {path}: false."
+    )
+    return f"{path} is true, but {other} is false. {why}. {remedy}"
+
+
 def _check_physics_switches(document: CaseDocument) -> None:
     physics = document.physics
     model = physics.model
     declared = declaration(model)
-    if physics.dielectric_gradient_forces and not physics.flow:
-        remedy = (
-            "Set physics.flow: true, or set physics.dielectric_gradient_forces: false."
-            if True in declared.switches["flow"]
-            else f"physics.model {model!r} has no flow. Set physics.dielectric_gradient_forces: "
-            "false."
-        )
-        raise CaseValidationError(
-            "physics.dielectric_gradient_forces is true, but the flow is off. PHY-23 adds the "
-            "force on the fluid and the term in each ion's flux together. A model with no flow "
-            f"has no force term. {remedy}"
-        )
-    for name in SWITCHES:
-        value = getattr(physics, name)
-        honoured = declared.switches[name]
+    values = _switch_values(document)
+    refused = conflicts(values)
+    if refused:
+        raise CaseValidationError(_conflict_message(refused[0], model, declared.switches))
+    for record in SWITCHES:
+        value = values[record.name]
+        honoured = declared.switches[record.name]
         if value not in honoured:
             admitted = " or ".join(str(choice).lower() for choice in honoured)
             raise CaseValidationError(
-                f"physics.model {model!r} accepts physics.{name}: {admitted} only (PHY-21). "
-                f"physics.{name} must be {admitted}. The manifest records "
+                f"physics.model {model!r} accepts {record.path}: {admitted} only (PHY-21). "
+                f"{record.path} must be {admitted}. The manifest records "
                 f"{str(value).lower()} and the run does not apply it. Models that accept "
-                f"{str(value).lower()}: {_honouring(name, value)}"
+                f"{str(value).lower()}: {_honouring(record.name, value)}"
             )
     transition = (document.charge or Charge()).dielectric_transition_nm
     if transition > 0.0 and "solid_fraction" not in declared.coefficients:

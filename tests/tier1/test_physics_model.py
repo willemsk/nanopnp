@@ -16,6 +16,7 @@ from nanopnp.io.case import FieldValue
 from nanopnp.io.case_paths import schema_default
 from nanopnp.io.models import leaves, owner_of
 from nanopnp.io.store import Store
+from nanopnp.io.switches import SWITCHES
 from nanopnp.physics import models
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import keyed_walk
@@ -128,10 +129,10 @@ def test_ver56_choosing_a_model_leaves_no_value_its_declaration_refuses(paired: 
             declared = models.declaration(model)
             own = dict(leaves(_body(paired, start)))
             assert own["physics.model"] == model
-            for switch in models.SWITCHES:
-                path = f"physics.{switch}"
+            for record in SWITCHES:
+                path = record.path
                 value = own[path] if path in own else schema_default(path)[1]
-                assert value in declared.switches[switch], (start, model, switch)
+                assert value in declared.switches[record.name], (start, model, record.name)
             for path, value in own.items():
                 if path in declared.unread:
                     has_default, default = schema_default(path)

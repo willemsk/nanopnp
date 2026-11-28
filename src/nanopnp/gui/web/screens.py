@@ -7,7 +7,7 @@ from typing import Literal
 
 from nanopnp.io.project import ItemKind
 from nanopnp.io.project import Suite as SuiteId
-from nanopnp.physics.models import SWITCHES
+from nanopnp.io.switches import SWITCHES
 
 __all__ = [
     "CORRECTED",
@@ -241,7 +241,7 @@ SUITES: tuple[Suite, ...] = (
                 "Equations",
                 (
                     "physics.model",
-                    *(f"physics.{switch}" for switch in SWITCHES),
+                    *(record.path for record in SWITCHES),
                     *(f"numerics.elements.{name}" for name in ("phi", "c", "u", "p")),
                     "numerics.stabilisation",
                 ),

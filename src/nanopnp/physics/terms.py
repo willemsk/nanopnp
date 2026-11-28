@@ -7,6 +7,7 @@ import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
+from nanopnp.io.switches import governing
 from nanopnp.materials.electrolyte import CONCENTRATION_FLOOR_M
 
 __all__ = [
@@ -45,9 +46,6 @@ class Term:
         The PHY or NUM clause the term is written from.
     equation
         The term in LaTeX: a whole equation, or, with ``joins``, the part it adds to another.
-    switches
-        The ``physics:`` switches that must all be true for the term to be assembled; empty
-        for a term no switch leaves out.
     correction
         The case leaf whose ``none`` model leaves the term out, or None.
     joins
@@ -66,13 +64,17 @@ class Term:
     name: str
     clause: str
     equation: str
-    switches: tuple[str, ...] = ()
     correction: str | None = None
     joins: str | None = None
     left: bool = False
     defines: tuple[str, ...] = ()
     note: str = ""
     absent: tuple[str, str] | None = None
+
+    @property
+    def switches(self) -> tuple[str, ...]:
+        """Return the switches that must all be true for the term to be in force: its records'."""
+        return tuple(record.name for record in governing(self.name))
 
 
 @dataclass(frozen=True)
@@ -252,18 +254,16 @@ _STERIC = Term(
         r"{1 - \sum_j N_A a_j^3\, c_j}",
     ),
 )
-_ADVECTION = Term("Advection", "PHY-04", r"- \mathbf{u}\, c_i", ("flow",), joins="Nernst–Planck")
+_ADVECTION = Term("Advection", "PHY-04", r"- \mathbf{u}\, c_i", joins="Nernst–Planck")
 _BODY_FORCE = Term(
     "Body force",
     "PHY-08",
     r"\mathbf{f} = -\left( F \sum_i z_i c_i \right) \nabla \phi<parts>",
-    ("flow",),
 )
 _DIELECTRIC_FORCE = Term(
     "Dielectric-gradient force",
     "PHY-23",
     r"- \tfrac{1}{2}\, \varepsilon_0\, |\nabla \phi|^2\, \nabla \varepsilon_r",
-    ("flow", "dielectric_gradient_forces"),
     joins="Body force",
     defines=(
         r"\nabla \varepsilon_r = (1 - \chi)\, \nabla \varepsilon_{r,f} + "
@@ -275,7 +275,6 @@ _DECREMENT = Term(
     "Dielectric decrement",
     "PHY-23",
     r"+ \frac{D_i(\langle c \rangle, d)\, c_i}{R T}\, \nabla \mu_i^{\mathrm{ex}}",
-    ("flow", "dielectric_gradient_forces"),
     joins="Nernst–Planck",
     defines=(
         r"\mu_i^{\mathrm{ex}} = -\tfrac{1}{2}\, \varepsilon_0\, |\nabla \phi|^2\, "
@@ -305,7 +304,6 @@ def _momentum(viscosity: str) -> Term:
         "Momentum",
         "PHY-07",
         r"<left>\nabla \cdot \boldsymbol{\sigma} = \mathbf{f}",
-        ("flow",),
         defines=(
             rf"\boldsymbol{{\sigma}} = p\, \mathbf{{I}} - {viscosity} \left[ \nabla \mathbf{{u}} + "
             r"(\nabla \mathbf{u})^{\top} \right]",
@@ -318,7 +316,6 @@ def _inertia(density: str) -> Term:
         "Inertia",
         "NUM-04",
         rf"{density}\, (\mathbf{{u}} \cdot \nabla) \mathbf{{u}} +",
-        ("flow", "inertia"),
         joins="Momentum",
         left=True,
         # With the density held constant the two inertias are one, and nothing is said.
@@ -341,14 +338,12 @@ EPNP_NS_TERMS: tuple[Term, ...] = (
         "Velocity continuity",
         "NUM-04",
         r"\varrho\, \nabla \cdot \mathbf{u} = 0",
-        ("flow",),
         note=r"The model leaves out PHY-07's term $\mathbf{u} \cdot \nabla \varrho$.",
     ),
     Term(
         "Variable density",
         "NUM-04",
         r"\varrho = \varrho(\langle c \rangle)",
-        ("flow", "variable_density"),
         note="The inertia and the continuity use it.",
         absent=(r"\varrho", r"\varrho^0"),
     ),
@@ -379,7 +374,7 @@ PNP_NS_TERMS: tuple[Term, ...] = (
     _ADVECTION,
     _momentum(r"\eta^0"),
     _inertia(r"\varrho^0"),
-    Term("Velocity continuity", "NUM-04", r"\varrho^0\, \nabla \cdot \mathbf{u} = 0", ("flow",)),
+    Term("Velocity continuity", "NUM-04", r"\varrho^0\, \nabla \cdot \mathbf{u} = 0"),
     _BODY_FORCE,
     Term(
         "No corrections",

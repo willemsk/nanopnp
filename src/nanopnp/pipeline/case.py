@@ -33,6 +33,7 @@ from nanopnp.io.case import (
     Geometry,
     SuppliedArtefact,
 )
+from nanopnp.io.case_paths import value_at
 from nanopnp.io.models import read_case, read_case_text
 from nanopnp.io.resolved import (
     ResolvedCase,
@@ -41,6 +42,7 @@ from nanopnp.io.resolved import (
     ResolvedStructure,
     parse_chain_groups,
 )
+from nanopnp.io.switches import SWITCHES
 from nanopnp.materials.electrolyte import CorrectionChoice, CorrectionSwitches, Electrolyte
 from nanopnp.mesh.primitives import DEFAULT_BOUNDARIES
 from nanopnp.numerics.newton import DEFAULT_SETTINGS, NewtonSettings
@@ -303,14 +305,11 @@ def _model_options(
     physics = document.physics
     candidates: dict[str, Any] = {
         "solid_permittivities": dict(physics.solid_permittivities),
-        "variable_density": physics.variable_density,
-        "inertia": physics.inertia,
-        "dielectric_gradient_forces": physics.dielectric_gradient_forces,
+        **{record.name: value_at(document, record.path) for record in SWITCHES},
         "order": order,
         "velocity_order": velocity_order,
         "pressure_order": pressure_order,
         "stabilisation": document.numerics.stabilisation,
-        "flow": physics.flow,
     }
     declared = declaration(physics.model).options
     return {key: value for key, value in candidates.items() if key in declared}
