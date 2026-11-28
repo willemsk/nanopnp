@@ -25,6 +25,7 @@ __all__ = [
     "excess_potential_gradient",
     "migration_drift",
     "packing_fraction",
+    "state_gradient",
     "steric_drift",
     "steric_flux",
 ]
@@ -144,7 +145,7 @@ def excess_potential_gradient(
         )
     field = ops.grad(potential)
     sensitivity = coefficients.permittivity_sensitivity(species)
-    sensitivity_gradient = _sensitivity_gradient(ops, sensitivity, variables)
+    sensitivity_gradient = state_gradient(ops, sensitivity, coefficients, variables)
     if solid is not None:
         sensitivity, sensitivity_gradient = blend_sensitivity(
             solid, sensitivity, sensitivity_gradient
@@ -154,18 +155,29 @@ def excess_potential_gradient(
     return -(first + second) / (2.0 * coefficients.screening)
 
 
-def _sensitivity_gradient(
-    ops: Operators, sensitivity: Expression, variables: ConcentrationVariables
+def state_gradient(
+    ops: Operators,
+    expression: Expression,
+    coefficients: NondimensionalCoefficients,
+    variables: ConcentrationVariables,
 ) -> Expression:
+    """Return ``grad(expression)`` of a coefficient, by the chain rule in ``c~_i`` and ``d``.
+
+    The wall distance's part is taken where the distance is a field, not a number; it comes
+    back zero, and adds nothing, where ``expression`` takes no wall fit.
+    """
     names = list(variables.values)
     total = (
-        ops.derivative(sensitivity, variables.variables[names[0]]) * variables.gradients[names[0]]
+        ops.derivative(expression, variables.variables[names[0]]) * variables.gradients[names[0]]
     )
     for name in names[1:]:
         total = total + (
-            ops.derivative(sensitivity, variables.variables[name]) * variables.gradients[name]
+            ops.derivative(expression, variables.variables[name]) * variables.gradients[name]
         )
-    return total
+    distance = coefficients.wall_distance_nm
+    if isinstance(distance, int | float):
+        return total
+    return total + ops.derivative(expression, distance) * ops.grad(distance)
 
 
 def diffusion(context: Context) -> Expression:

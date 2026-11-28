@@ -1047,15 +1047,15 @@ def _check_switch_partners(document: CaseDocument) -> None:
         physics.dielectric_gradient_forces
         and not blended
         and permittivity_path not in decl.unread
-        and not (
-            permittivity.concentration
-            and applies_part(permittivity.model, "permittivity", "concentration")
+        and not any(
+            getattr(permittivity, part) and applies_part(permittivity.model, "permittivity", part)
+            for part in ("concentration", "wall")
         )
     ):
         lines.append(
             "  physics.dielectric_gradient_forces: true (permittivity model "
-            f"'{permittivity.model}' applies no concentration fit. d(eps)/d(c) is zero, so "
-            "the force is zero)"
+            f"'{permittivity.model}' applies neither a concentration nor a wall fit. grad(eps) "
+            "is zero, so the force is zero)"
         )
     if lines:
         raise CaseValidationError(

@@ -511,9 +511,10 @@ same reason `electrolyte.driver: ionic_strength` SHALL be refused for an electro
 of unit valence, for which `I = ½ Σ z_i² c_i` equals `⟨c⟩` exactly (PHY-01; VER-71). Two switches
 beside a partner leaf are refused on the same ground (REV-73): `variable_density: false` where the
 density correction applies no fit that varies the density (the flow is of constant density already),
-and `dielectric_gradient_forces: true` where the permittivity correction applies no concentration fit
-and no solid fraction reaches the electrolyte: no `inputs.eps_r`, and no derived `χ` whose half-width
-`δ/2` passes the exclusion offset (`dε/dc = 0` and `∇χ = 0` there, so the force vanishes).
+and `dielectric_gradient_forces: true` where the permittivity correction applies neither a
+concentration nor a wall fit and no solid fraction reaches the electrolyte: no `inputs.eps_r`, and no
+derived `χ` whose half-width `δ/2` passes the exclusion offset (`∇ε_r,f = 0` and `∇χ = 0` there, so
+the force vanishes).
 
 **PHY-23.** `dielectric_gradient_forces` SHALL enable both the momentum term
 `−½|∇φ|²∇(ε_0 ε_r)` and the Nernst–Planck term `−½|∇φ|² ∂ε/∂c_i` together, and SHALL NOT permit
@@ -537,6 +538,14 @@ cell by cell: the derivative of the coefficient itself comes back zero for a gri
 error. The indicator current takes the same Nernst–Planck term as the solve (FR-23). NUM-28's split
 takes the same blended `ε_r` in the Maxwell stress of its domain route and the same gradient in
 `f_KH`, so its consistency terms cancel as they do without `χ`.
+
+NOTE (PHY-23, a wall fit of the permittivity; REV-303): where the correction file fits the solvent's
+permittivity to the wall distance (`fw`, PHY-02's `d`), `ε_r,f` varies with `d` as well as with `⟨c⟩`.
+`∇ε_r,f` in the momentum term SHALL then be the whole gradient,
+`Σ_i (∂ε_r,f/∂c_i) ∇c_i + (∂ε_r,f/∂d) ∇d`, with `∇d` the gradient of the distance field the
+corrections are evaluated with, and the gradient of `∂ε_r/∂c_i` in the Nernst–Planck term's drift
+takes its `d` part in the same way. NUM-28's `f_KH` takes the same gradient, so the split sums to the
+Maxwell stress with a wall fit as without one. `willems2020_nacl` has no such fit.
 
 **PHY-24.** Poisson–Boltzmann SHALL be implemented as a distinct model, not as the PNP solver
 evaluated at zero bias (see PHY-14 and ADR-005).

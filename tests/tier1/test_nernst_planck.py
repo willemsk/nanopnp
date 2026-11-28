@@ -1,6 +1,7 @@
 """Nernst-Planck flux assembly: the PHY-05 sign discipline and the NUM-02 branches."""
 
 import math
+from pathlib import Path
 
 import ngsolve as ngs
 import pytest
@@ -297,10 +298,23 @@ def test_phy23_the_permittivity_sensitivity_is_zero_when_the_correction_is_off(
     assert tuple(gradient(point)) == (0.0, 0.0)
 
 
+@pytest.mark.parametrize("wall", [False, True], ids=["no wall fit", "permittivity wall fit"])
 def test_phy23_the_dielectric_terms_differentiate_the_blend_not_the_fluid_alone(
-    mesh: ngs.Mesh,
+    mesh: ngs.Mesh, permittivity_wall_fit: Path, wall: bool
 ) -> None:
     variables, coefficients = _linear_state(mesh)
+    if wall:
+        # Both terms differentiate eps~_r in d too: a wall fit's d(eps~_r)/dd grad(d) left out
+        # moves neither the force nor the decrement off a plausible value.
+        distance = ngs.GridFunction(ngs.H1(mesh, order=2))
+        distance.Set(0.1 + 0.4 * ngs.x + 0.3 * ngs.y * ngs.y)
+        electrolyte = Electrolyte.from_parameter_file(str(permittivity_wall_fit))
+        coefficients = NondimensionalCoefficients(
+            electrolyte=electrolyte,
+            scales=coefficients.scales,
+            concentrations=variables.values,
+            wall_distance_nm=distance,
+        )
     chi = 0.2 + 0.3 * ngs.x + 0.1 * ngs.y
     solid = SolidBlend(chi=chi, gradient=ngs.CF((0.3, 0.1)), solid_permittivity=ngs.CF(0.256))
     potential = ngs.GridFunction(ngs.H1(mesh, order=2))
@@ -315,7 +329,7 @@ def test_phy23_the_dielectric_terms_differentiate_the_blend_not_the_fluid_alone(
         * coefficients.permittivity_sensitivity("Na+")
         / (2.0 * coefficients.screening)
     )
-    force = permittivity_gradient(coefficients, variables, solid=solid)
+    force = permittivity_gradient(NGSOLVE_OPERATORS, coefficients, variables, solid=solid)
     decrement = excess_potential_gradient(
         "Na+",
         ops=NGSOLVE_OPERATORS,

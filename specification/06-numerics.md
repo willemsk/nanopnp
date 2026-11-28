@@ -568,7 +568,10 @@ force the Maxwell tensor implies, that is when `f = f_ion + f_KH`. The validated
 force by exactly `−∫ f_KH·w`. That term SHALL be reported alongside the force rather than absorbed
 into it, so that the omission is a recorded measurement and not an unexplained route discrepancy.
 It vanishes identically in a classical configuration and whenever the dielectric-gradient body force
-is enabled, which is why VER-22 gates classically.
+is enabled, which is why VER-22 gates classically. `∇ε` in `f_KH` is the whole gradient of the
+corrected permittivity, its wall fit's `(∂ε/∂d) ∇d` included where the correction file gives one
+(PHY-23's NOTE): a gradient over the concentrations alone leaves the split short of the Maxwell
+stress by that part.
 
 NOTE (NUM-28): the contraction carries no `1/r` factor. For an axial `w`, `(∇w)_φφ = w_r/r = 0`, so the hoop
 components of both tensors are contracted against zero and `T : ∇w = T_rz ∂_r w_z + T_zz ∂_z w_z`.

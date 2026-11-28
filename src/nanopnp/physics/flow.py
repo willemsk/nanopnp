@@ -8,8 +8,8 @@ from nanopnp.core.typing import Expression
 from nanopnp.io.vocabulary import POTENTIAL, PRESSURE, PRESSURE_MEAN, VELOCITY
 from nanopnp.materials.fields import SolidBlend, blend_gradient
 from nanopnp.physics.coefficients import NondimensionalCoefficients
-from nanopnp.physics.nernst_planck import ConcentrationVariables
-from nanopnp.physics.operators import divergence, hoop, strain
+from nanopnp.physics.nernst_planck import ConcentrationVariables, state_gradient
+from nanopnp.physics.operators import Operators, divergence, hoop, strain
 
 if TYPE_CHECKING:
     from nanopnp.physics.kernel import Context, Side
@@ -69,7 +69,9 @@ def ionic_force(context: Context, side: Side) -> Expression:
 
 def dielectric_force(context: Context, side: Side) -> Expression | None:
     """Return the dielectric force density ``-1/2 |grad phi~|^2 grad(eps~_r)``; None where zero."""
-    gradient = permittivity_gradient(side.coefficients, side.variables, solid=context.inputs.solid)
+    gradient = permittivity_gradient(
+        context.ops, side.coefficients, side.variables, solid=context.inputs.solid
+    )
     if gradient is None:
         return None
     field = context.ops.grad(side.functions[POTENTIAL])
@@ -83,12 +85,13 @@ def pressure_constraint(context: Context) -> Expression:
 
 
 def permittivity_gradient(
+    ops: Operators,
     coefficients: NondimensionalCoefficients,
     variables: ConcentrationVariables,
     *,
     solid: SolidBlend | None = None,
 ) -> Expression | None:
-    """Return ``grad(eps~_r)`` in the electrolyte, by the chain rule over the concentrations.
+    """Return ``grad(eps~_r)`` in the electrolyte, by the chain rule in ``c~_i`` and ``d``.
 
     Parameters
     ----------
@@ -111,10 +114,7 @@ def permittivity_gradient(
             "d(eps~_r)/d(c~_i) would come back as the derivative in w_i"
         )
     else:
-        names = list(variables.values)
-        total = coefficients.permittivity_sensitivity(names[0]) * variables.gradients[names[0]]
-        for name in names[1:]:
-            total = total + coefficients.permittivity_sensitivity(name) * variables.gradients[name]
+        total = state_gradient(ops, fluid, coefficients, variables)
     if solid is None:
         return total
     return blend_gradient(solid, fluid, total)
