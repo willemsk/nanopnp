@@ -20,7 +20,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP6.08 — The guard numbers](phase-6/wp6.08-the-guard-numbers.md): delivered, 26 November 2026.
 - [WP6.09 — The kernel's design](phase-6/wp6.09-the-kernels-design.md): delivered, 26 November 2026.
 - [WP6.10 — The composition](phase-6/wp6.10-the-composition.md): delivered, 27 November 2026.
-- [WP6.11 — Switches as data and the forces](phase-6/wp6.11-switches-as-data-and-the-forces.md): in progress, items 1 to 3 of 6 done.
+- [WP6.11 — Switches as data and the forces](phase-6/wp6.11-switches-as-data-and-the-forces.md): in progress, items 1 to 4 of 6 done.
 
 ## Phase 5
 
