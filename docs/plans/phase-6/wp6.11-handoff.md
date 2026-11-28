@@ -6,7 +6,7 @@ Plan, first helper of two: the draft is committed and three decisions are with t
 
 ## Done
 
-- `docs: WP6.11 plan draft`, with this note: `docs/plans/phase-6/wp6.11-switches-as-data-and-the-forces.md`, every
+- `74503c2` `docs: WP6.11 plan draft`: `docs/plans/phase-6/wp6.11-switches-as-data-and-the-forces.md`, every
   section drafted on the recommended answers.
 
 ## Measured
