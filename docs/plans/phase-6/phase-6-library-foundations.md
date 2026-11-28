@@ -1,6 +1,6 @@
 # Phase 6 (Cleanup and the kernel): a physics model composed of registered terms, on records a session can read
 
-**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08, WP6.09, WP6.10. Amended 27 November 2026 (§8.2.62): the author ruled the kernel's design; WP6.11 is planned; WP6.12 to WP6.16 and the close by scope. This amendment was written by Fable 5.2 at high effort. Release: v0.7 (`v0.7.0`).**
+**Status: in progress. Delivered: WP6.01, WP6.02, WP6.03, WP6.04, WP6.05, WP6.06, WP6.07, WP6.08, WP6.09, WP6.10, WP6.11. Amended 27 November 2026 (§8.2.62): the author ruled the kernel's design; WP6.12 to WP6.16 and the close by scope. This amendment was written by Fable 5.2 at high effort. Release: v0.7 (`v0.7.0`).**
 
 ## In brief
 
@@ -82,7 +82,7 @@ with the published results (BC8).
 WP6.10 to WP6.16 take `v0.7.0-alpha.10` to `v0.7.0-alpha.16`; the close takes `v0.7.0` alone (§8.4.1; BD1). A
 package's plan claims its proposed clause, numbered on from VER-80.
 
-### WP6.01 to WP6.10 — delivered
+### WP6.01 to WP6.11 — delivered
 
 | Package | Live |
 |---|---|
@@ -95,17 +95,8 @@ package's plan claims its proposed clause, numbered on from VER-80.
 | [WP6.07](wp6.07-the-lean-carry.md), the lean carry (BF1 to BF11), 26 November 2026 | A helper commits and the main session lands (BF11) |
 | [WP6.08](wp6.08-the-guard-numbers.md), the guard numbers (BC3; BI1, BI2; VER-80), 26 November 2026 | Six guard walks held at 10⁻⁸, nightly, in the reference environment alone |
 | [WP6.09](wp6.09-the-kernels-design.md), the kernel's design (BC2, BC5; BJ1 to BJ3), 26 November 2026 | The prototype's branch, `prototype/wp6.09-kernel` at `1b5f5e3`, stays until WP6.12 merges (BJ3) |
-| [WP6.10](wp6.10-the-composition.md), the composition (FR-40; §5.4.4; BL1, BL5, BL6; REV-300; VER-81), 27 November 2026 | No term names the backend, its module on `term_modules:` (VER-65); `CoupledModel.terms_in_force()` decides until WP6.11; PHY-23 under a stabilised mode assembles fifty times slower (REV-302) |
-
-### WP6.11 — Switches as data and the forces (BC3; BL7; BM1 to BM3; REV-298)
-
-*Planned 28 November 2026* ([the plan](wp6.11-switches-as-data-and-the-forces.md)). The switch records, the log
-branch's among them: a case key, `numerics.log_variables`, off by default, that excludes PHY-23's switch and is a
-deviation in the manifest; the ladder refuses it and the workbench's Equations tool lists it (BM1 to BM3). Every
-list of switches and deviations is derived from the records, or its reader reads them; the two refusals become
-`requires` and `excludes`; `post/forces.py` reads the force densities. The schema gains a key (F4). VER-82, Tier 1:
-PHY-23's switch brings both terms or neither, and a run on the log key names it as a deviation. About 3 sessions,
-2 to 4 agent hours and 5 touches.
+| [WP6.10](wp6.10-the-composition.md), the composition (FR-40; §5.4.4; BL1, BL5, BL6; REV-300; VER-81), 27 November 2026 | No term names the backend, its module on `term_modules:` (VER-65); `CoupledModel.terms_in_force()` decides from the switch records since WP6.11; PHY-23 under a stabilised mode assembles fifty times slower (REV-302) |
+| [WP6.11](wp6.11-switches-as-data-and-the-forces.md), switches as data and the forces (FR-40; FR-25; NUM-02; BL7; BM1 to BM3; REV-298; VER-82), 28 November 2026 | Readers take `io/switches.py`'s records; `numerics.log_variables` is a deviation the ladder refuses (BM2); `CoupledModel` holds the three coupled models until WP6.12 |
 
 ### WP6.12 — A model as a list of terms, and the full check (BC1, BC4; BL2, BL3; MOD-10)
 

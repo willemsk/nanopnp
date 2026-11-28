@@ -1,6 +1,16 @@
 # WP6.11 — Switches as data and the forces
 
-**Status: in progress, items 1 to 4 of 6 done.** Written 28 November 2026 by Fable 5.2 at high effort, on the code at `e42272a`.
+**Status: delivered, 28 November 2026.** Each switch is a record of `io/switches.py`: name, case path, validated
+default, the terms it brings in force, `requires` and `excludes` (D1; FR-40 in part; §5.4.4). Every list of switches,
+the validated default, the deviations, the case checks, the ladder's refusal and the terms in force read the records;
+`physics.models.SWITCHES` and `Term`'s field are gone (D3; BL1). NUM-02's log branch is the fifth record, the case key
+`numerics.log_variables`, which excludes PHY-23's switch, is a deviation in the manifest and is refused by the ladder
+(BL7; BM1 to BM3; FR-25; REV-298 fixed). `post/forces.py` reads the kernel's force densities (NUM-28). VER-82, new,
+Tier 1, and VER-81 (c)'s force split pass; eight variants' forces hold to 2.6 × 10⁻¹⁶ (item 4) and the six guard
+walks to 5.0 × 10⁻¹⁶, `guard-log` entered by the key (item 5). Live: `CoupledModel` holds the three coupled models
+until WP6.12; the ladder does not carry the log branch (BM2); REV-302.
+
+Written 28 November 2026 by Fable 5.2 at high effort, on the code at `e42272a`.
 Inherits §8.2.62 BL1, BL2 and BL7, §8.2.63 BM1 to BM3, [the kernel's design](../../design/kernel.md),
 [WP6.10](wp6.10-the-composition.md)'s kernel, REV-298 and the test scope (§8.2.13 N1). Its last commit on `main`
 takes `v0.7.0-alpha.11` (§8.4.1).
@@ -242,6 +252,12 @@ environment, and the guard walks skip (BI2).
 > `linux-x86_64/AVX512_SPR` host: `test_force_convergence.py` 5 passed, the six guard walks skipped, 104 s.
 > The guard walks run again under the cap.
 
+> **Outcome — the guard walks hold.** On `2ac73dd`, under the cap, on `linux-x86_64/X86_V3`:
+> `tests/tier2/test_guard_numbers.py` 6 passed, none skipped, in 230 s. The largest relative drift on the same
+> mesh, against VER-62's 10⁻⁸: `guard-supg` 5.0 × 10⁻¹⁶, `guard-no-inertia` 4.1 × 10⁻¹⁶, `guard-log`, now entered
+> by the key, 4.1 × 10⁻¹⁶, `guard-reference` 3.8 × 10⁻¹⁶, `guard-constant-density` 2.2 × 10⁻¹⁶,
+> `guard-dielectric` 0. The force tests passed in the first run.
+
 ### Work items
 
 - [x] 1. cd0d299 `src/nanopnp/io/switches.py` with four records; `io/defaults.py`, `physics/terms.py`,
@@ -271,9 +287,9 @@ environment, and the guard walks skip (BI2).
   > logarithm. There the inertia moves the hydrodynamic half by 1.6 × 10⁻⁵ and the omitted term is 1.1 × 10⁻³ of
   > the electromagnetic half. The log branch with a varying permittivity now raises `flow.py`'s
   > `NotImplementedError` from the dielectric density, where `_Integrands.korteweg` raised its own.
-- [ ] 5. The run, a `RUN` hand-back with no commit (D9); done when the log shows the six guard walks and the
+- [x] 5. The run, a `RUN` hand-back with no commit (D9); done when the log shows the six guard walks and the
   force tests, none failed or skipped. **Executor:** main, the run by the main session
-- [ ] 6. The records: `CHANGELOG.md`, `specification/a-traceability-matrix.md`, `docs/design/kernel.md`,
+- [x] 6. The records: `CHANGELOG.md`, `specification/a-traceability-matrix.md`, `docs/design/kernel.md`,
   `docs/model/index.md`, `docs/project/physics-models.md`, `knowledge/06-numerics-fem/01-discretisation.md`,
   `knowledge/log.md`, `docs/project/review-findings.md`, `review-items.md` (REV-298 fixed),
   `specification/history/holds-now.yaml`, this plan, the Phase 6 plan, `docs/plans/current.md`; done when the code
