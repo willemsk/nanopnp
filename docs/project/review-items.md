@@ -2024,3 +2024,14 @@ and no stored walk takes it, but at a pore's element count a Newton step under i
 *Recommendation:* measure which side dominates first. If it is the lagged one, the kernel can interpolate the lagged
 wind into a vector grid function once a step; if the trial one, compiling the integrand in the backend
 (`CoefficientFunction.Compile`) is the cheaper trial. Either stays out of the terms (§5.4.1).
+
+### REV-303: A solvent-permittivity wall fit leaves its gradient out of PHY-23's force
+
+Left by `/np-ship`'s review of WP6.11, [CODE_REVIEW_103](../code_reviews/CODE_REVIEW_103.md). `permittivity_gradient`
+(`src/nanopnp/physics/flow.py:85-117`) takes the chain rule over the concentrations alone, so a wall fit's
+`∂ε/∂d ∇d` enters neither PHY-23's force nor NUM-28's `f_KH` and omitted term. The Maxwell stress carries it, so the
+force split could come out plausible but wrong. `PermittivityBlock` accepts an `fw`, but the shipped correction file
+has none: no shipped case reaches this.
+
+*Recommendation:* refuse a solvent-permittivity `fw` when a correction file is loaded, as `_IonPropertyBlock` does per
+species, until a package writes the wall term. That changes what a correction file accepts, so it is a ruling.
