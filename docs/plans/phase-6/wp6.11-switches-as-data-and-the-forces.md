@@ -289,7 +289,7 @@ environment, and the guard walks skip (BI2).
   > `NotImplementedError` from the dielectric density, where `_Integrands.korteweg` raised its own.
 - [x] 5. The run, a `RUN` hand-back with no commit (D9); done when the log shows the six guard walks and the
   force tests, none failed or skipped. **Executor:** main, the run by the main session
-- [x] 6. The records: `CHANGELOG.md`, `specification/a-traceability-matrix.md`, `docs/design/kernel.md`,
+- [x] 6. 8e18208 The records: `CHANGELOG.md`, `specification/a-traceability-matrix.md`, `docs/design/kernel.md`,
   `docs/model/index.md`, `docs/project/physics-models.md`, `knowledge/06-numerics-fem/01-discretisation.md`,
   `knowledge/log.md`, `docs/project/review-findings.md`, `review-items.md` (REV-298 fixed),
   `specification/history/holds-now.yaml`, this plan, the Phase 6 plan, `docs/plans/current.md`; done when the code
