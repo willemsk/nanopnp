@@ -43,6 +43,14 @@ span six decades within one solve. The log form (Metti, Xu & Liu, *J. Comput. Ph
 2016) gives provable positivity and a discrete energy law, at the cost of a harder nonlinear
 problem.
 
+NOTE (NUM-02, the flag; §8.2.62 BL7; §8.2.63 BM1): the flag is the case key `numerics.log_variables`, off
+by default and owned by the physics model's file. It is a switch record (§5.4.4) that excludes PHY-23's
+switch, whose terms differentiate the permittivity in `c~_i`, so a case or a model with both is refused;
+on, it is a deviation in the FR-25 manifest. Off, the key is left out of the case artefact's parameters
+and of `model_options`, so a case that never sets it keeps its keys. A case asking for `analyte_force`
+beside it is refused at resolution where the permittivity's concentration fit applies, the force
+differentiating that fit in `c~_i`.
+
 **NUM-03.** The velocity–pressure element pair SHALL be configurable. Equal-order P1/P1 SHALL be
 selectable only together with the flow stabilisation of §6.4.2. The element degree of every field
 SHALL be recorded in the run provenance record.
@@ -337,14 +345,16 @@ from the converged state of the previous one.
 Rationale: enabling the corrections last isolates their contribution to any convergence failure.
 
 NOTE (NUM-18): the ladder above is a fixed path, not a configuration. Flow is enabled at rung 6 and the
-corrections at rung 7, so a run with `physics.flow` off, `variable_density` off, `inertia` off, or
-the PHY-23 dielectric-gradient forces on is not a rung of this ladder but a different run. An
-implementation SHALL NOT read those four switches from the case when `numerics.continuation` selects
-the ladder, and SHALL refuse such a case rather than solve it: the FR-25 manifest would otherwise
-record a deviation the solve never carried, which §5.3.3 exists to make impossible. The same applies
-to `physics.model: pnp`, whose flow-free transport no rung above 6 carries. Single-rung runs
-(`numerics.continuation: none`) take all four switches as given; that is how an ablation asks for a
-configuration the ladder cannot express.
+corrections at rung 7, so a run with a switch record (§5.4.4) off its validated default, `physics.flow`,
+`variable_density` or `inertia` off, the PHY-23 dielectric-gradient forces on or NUM-02's log branch
+(`numerics.log_variables`) on, is not a rung of this ladder but a different run. An implementation SHALL
+NOT read the switch records from the case when `numerics.continuation` selects the ladder, and SHALL
+refuse a case that sets one off its default rather than solve it, naming its path and
+`numerics.continuation: none`: the FR-25 manifest would otherwise record a deviation the solve never
+carried, which §5.3.3 exists to make impossible. The same applies to `physics.model: pnp`, whose
+flow-free transport no rung above 6 carries. Single-rung runs (`numerics.continuation: none`) take every
+switch as given; that is how an ablation asks for a configuration the ladder cannot express
+(§8.2.63 BM2).
 
 NOTE (NUM-18, the trial of another path; §8.2.53 BC24; REV-283): Phase 7's speed-up package tries a path that
 ramps the salt in the classical model and switches the corrections on at the target concentration, at the

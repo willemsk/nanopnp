@@ -650,11 +650,6 @@ class CoupledModel:
                 raise ValueError(problem)
         if self.pressure_constraint and not self.flow:
             raise ValueError("pressure_constraint has no meaning without a flow block")
-        if self.dielectric_gradient_forces and self.log_variables:
-            raise ValueError(
-                "dielectric_gradient_forces cannot be combined with the NUM-02 log branch: the "
-                "permittivity sensitivity d(eps~_r)/d(c~_i) would be differentiated in w_i"
-            )
         refused = conflicts(self.switch_values())
         if refused:
             raise ValueError("; ".join(str(conflict) for conflict in refused))
@@ -1882,6 +1877,7 @@ _COUPLED_OPTIONS: tuple[str, ...] = (
     "variable_density",
     "inertia",
     "dielectric_gradient_forces",
+    "log_variables",
     "order",
     "velocity_order",
     "pressure_order",

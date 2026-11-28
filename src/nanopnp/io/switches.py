@@ -97,6 +97,18 @@ SWITCHES: tuple[Switch, ...] = (
             ),
         ),
     ),
+    Switch(
+        "log_variables",
+        "numerics.log_variables",
+        False,
+        excludes=(
+            Relation(
+                "dielectric_gradient_forces",
+                "PHY-23's terms read the permittivity sensitivity d(eps~_r)/d(c~_i), which the "
+                "NUM-02 log branch would differentiate in w_i",
+            ),
+        ),
+    ),
 )
 """Every switch, in the order a reader lists them."""
 

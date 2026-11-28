@@ -81,6 +81,7 @@ numerics:
   stabilisation: none                # NUM-11; `supg` is its flag, `reference` matches §6.4
   wall_distance: {sources: wall, max_distance_nm: 3.0}                         # PHY-02
   linear: {solver: umfpack}          # see §6.6; MUMPS requires a source build
+  log_variables: false               # NUM-02's log branch; a deviation when true
 
 outputs: [current, transport_numbers, rectification, eof_rate, fields]
 ```
@@ -135,6 +136,7 @@ numerics:
   stabilisation: none                # NUM-11; `supg` is its flag, `reference` matches §6.4
   wall_distance: {sources: wall, max_distance_nm: 3.0}                         # PHY-02
   linear: {solver: umfpack}          # see §6.6; MUMPS requires a source build
+  log_variables: false               # NUM-02's log branch; a deviation when true
 
 outputs: [current, transport_numbers, rectification, eof_rate, fields]
 ```
@@ -320,7 +322,7 @@ prefix decides; every path with no row is the study's. The molecular model owns 
 `charge.forcefield`, `charge.titration`, `charge.edits` and `inputs.pqr`. The continuum model owns `geometry`,
 `charge.exclusion_offset_nm`, `numerics.mesh`, `inputs.mesh` and `inputs.profile`. The physics model owns `physics`
 (the registered model, its switches and the solid permittivities), `electrolyte`, `boundary_conditions`,
-`numerics.elements`, `numerics.stabilisation` and `numerics.wall_distance`, the PHY-02 field the wall corrections
+`numerics.elements`, `numerics.stabilisation`, `numerics.log_variables` and `numerics.wall_distance`, the PHY-02 field the wall corrections
 read, so the bias and the walls are the physics model's defaults, which a study overrides for a sweep or a ramp
 (WB-16). The study owns the rest: `schema`, `name`, `outputs`, `models`, `charge.smearing`,
 `charge.dielectric_transition_nm`, `inputs.charge`, `inputs.eps_r` and the Newton, continuation and linear-solver
@@ -741,6 +743,11 @@ the registered modes, shipped as `none | supg | reference`; a mode registered at
 and crosswind on the transport operator together with the flow stabilisation of §6.4.2, and is the
 only shipped value permitting an equal-order velocity–pressure pair; a registered mode permits
 one by declaring it (`permits_equal_order`).
+
+NOTE (`numerics.log_variables`, NUM-02): `true` solves for `w_i = ln c~_i` in place of each concentration,
+the fallback branch of NUM-02, which the validated model does not take; it is a deviation in the FR-25
+manifest. It excludes `physics.dielectric_gradient_forces` and the NUM-18 ladder refuses it (§8.2.63 BM1,
+BM2), so a case sets it beside `numerics.continuation: none`. Off, it is left out of the case's hash.
 
 NOTE (`numerics.wall_distance`): `sources` is the boundary-name pattern the PHY-02 distance field
 `d` is measured from, and its validated default is the pore wall alone. PHY-02 excludes the

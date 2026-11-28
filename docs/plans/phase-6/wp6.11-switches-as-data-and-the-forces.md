@@ -235,7 +235,7 @@ uv run pytest --slow tests/tier2/test_guard_numbers.py tests/tier2/test_force_co
 
 ### Work items
 
-- [ ] 1. `src/nanopnp/io/switches.py` with four records; `io/defaults.py`, `physics/terms.py`,
+- [x] cd0d299 1. `src/nanopnp/io/switches.py` with four records; `io/defaults.py`, `physics/terms.py`,
   `physics/models.py`, `pipeline/checks.py`, `pipeline/case.py`, `api/project.py`, `gui/web/screens.py`,
   `gui/web/physics_tools.py`; `tests/tier1/test_switches.py` and the tests *Grounding* D3 and D4 name; the NOTEs
   of §5.4.3 and §5.4.4 and VER-82's row (D1, D3, D4, D11); done when `tests/tier1/test_switches.py`,

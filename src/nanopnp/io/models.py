@@ -83,6 +83,7 @@ OWNERS: dict[str, Kind] = {
     "numerics.elements": "physics",
     "numerics.stabilisation": "physics",
     "numerics.wall_distance": "physics",
+    "numerics.log_variables": "physics",
 }
 
 # The values a model lists first when its file has no `exposes:`, as (name, path).

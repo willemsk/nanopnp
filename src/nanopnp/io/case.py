@@ -615,6 +615,14 @@ class Numerics(_Strict):
     )
     wall_distance: WallDistance = Field(default_factory=WallDistance)
     linear: Linear = Field(default_factory=Linear)
+    log_variables: bool = Field(
+        default=False,
+        description=(
+            "Solve for w_i = ln(c~_i) in place of each concentration (NUM-02): a numerical "
+            "fallback, off by default and a deviation when on. It excludes "
+            "physics.dielectric_gradient_forces, and the NUM-18 ladder refuses it."
+        ),
+    )
 
 
 def _installed(name: str, installed: Sequence[str]) -> bool:

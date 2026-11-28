@@ -177,6 +177,9 @@ class CaseArtefact(Artefact):
         # A part size typed nowhere is left out, so a case that types none keeps its key.
         if all(size is None for size in mesh["sizes"].values()):
             del mesh["sizes"]
+        # Likewise the log branch's key while it is off.
+        if not parameters["numerics"]["log_variables"]:
+            del parameters["numerics"]["log_variables"]
         super().__init__(schema=CASE_SCHEMA, parameters=parameters, summary=summary or {})
 
 

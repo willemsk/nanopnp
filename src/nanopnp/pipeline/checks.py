@@ -1097,7 +1097,24 @@ def _check_strategy(document: CaseDocument) -> None:
 
 def _check_outputs(document: CaseDocument) -> None:
     model = document.physics.model
-    offered = provided(declaration(model))
+    declared = declaration(model)
+    permittivity = document.electrolyte.corrections.permittivity
+    fitted = "electrolyte.corrections.permittivity.concentration"
+    if (
+        "analyte_force" in document.outputs
+        and document.numerics.log_variables
+        and fitted not in declared.unread
+        and permittivity.concentration
+        and applies_part(permittivity.model, "permittivity", "concentration")
+    ):
+        raise CaseValidationError(
+            "outputs asks for analyte_force beside numerics.log_variables: true, and "
+            f"{fitted} applies the fit of permittivity model '{permittivity.model}'. The force "
+            "differentiates that fit in each concentration, which the NUM-02 log branch does not "
+            f"give. Remove analyte_force, set numerics.log_variables: false, or set {fitted}: "
+            "false."
+        )
+    offered = provided(declared)
     unoffered = [
         word for word in document.outputs if word in registered_outputs() and word not in offered
     ]

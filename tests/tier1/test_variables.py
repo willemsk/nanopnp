@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 
 from nanopnp.api.case import Case
 from nanopnp.api.session import Session
@@ -197,10 +198,11 @@ def test_ver62_a_case_without_variables_writes_what_it_did(tmp_path: Path) -> No
     # A case with no variables must not gain a `variables` key in its text or its manifest.
     case = Case.loads(QUICKSTART.read_text(encoding="utf-8"))
     assert case.variables_record is None
-    assert "variables" not in dumps_case(case)
+    # The key alone: numerics.log_variables holds the word and is no variables key.
+    assert "variables" not in yaml.safe_load(dumps_case(case))
     run = Session(tmp_path / "store", write=False).run(case, upto="mesh")
     assert "variables" not in run.manifest.inputs
-    assert "variables" not in run.manifest.case_text
+    assert "variables" not in yaml.safe_load(run.manifest.case_text)
 
 
 def test_fr39_an_edit_of_a_variable_moves_the_fields_that_use_it() -> None:

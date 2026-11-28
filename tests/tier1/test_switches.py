@@ -6,6 +6,7 @@ import ngsolve as ngs
 import pytest
 from pydantic import BaseModel
 
+from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case import CaseDocument
 from nanopnp.io.case_paths import schema_default
 from nanopnp.io.defaults import VALIDATED_DEFAULT_CASE, deviations, value_at
@@ -18,6 +19,7 @@ from nanopnp.physics import kernel, models
 from nanopnp.physics.coupled import COUPLED_TERMS
 from nanopnp.physics.models import CoupledModel
 from nanopnp.physics.terms import EPNP_NS_TERMS
+from nanopnp.pipeline.case import resolve
 
 PHY23 = ("Dielectric decrement", "Dielectric-gradient force")
 
@@ -161,3 +163,21 @@ def test_ver82_the_records_are_the_schemas_and_every_declarations() -> None:
     assert deviations(VALIDATED_DEFAULT_CASE) == ()
     for model in models.registered_models():
         assert sorted(models.declaration(model).switches) == sorted(names), model
+
+
+# Recorded on the tree before the key existed (WP6.11's plan, item 2).
+DEFAULT_CASE_HASH = "fddada5f03d5e951e54a95804e19f2006f056412c4b4a7d9ae86d08d9fed071c"
+
+
+def test_ver82_an_unset_log_key_moves_no_case_hash_and_no_model_option() -> None:
+    assert CaseArtefact(VALIDATED_DEFAULT_CASE).hash == DEFAULT_CASE_HASH
+    single = VALIDATED_DEFAULT_CASE.model_copy(update={"charge": None, "geometry": None})
+    single = _assigned(single, "numerics.continuation", "none")
+    for value in (False, True):
+        document = _assigned(single, "numerics.log_variables", value)
+        parameters = CaseArtefact(document).parameters
+        assert ("log_variables" in parameters["numerics"]) is value
+        options = resolve(document).model_options
+        assert ("log_variables" in options) is value
+        if value:
+            assert options["log_variables"] is True

@@ -275,21 +275,29 @@ def test_phy24_an_electrostatic_model_has_no_transport_to_continue() -> None:
 
 # NUM-18
 @pytest.mark.parametrize(
-    ("switch", "given"),
+    ("path", "was", "now"),
     [
-        ("flow", "false"),
-        ("variable_density", "false"),
-        ("inertia", "false"),
-        ("dielectric_gradient_forces", "true"),
+        ("physics.flow", "flow: true", "flow: false"),
+        ("physics.variable_density", "variable_density: true", "variable_density: false"),
+        ("physics.inertia", "inertia: true", "inertia: false"),
+        (
+            "physics.dielectric_gradient_forces",
+            "dielectric_gradient_forces: false",
+            "dielectric_gradient_forces: true",
+        ),
+        (
+            "numerics.log_variables",
+            "stabilisation: none",
+            "stabilisation: none\n  log_variables: true",
+        ),
     ],
 )
 def test_fr25_a_switch_the_ladder_cannot_honour_is_refused_not_dropped(
-    switch: str, given: str
+    path: str, was: str, now: str
 ) -> None:
-    was = f"{switch}: " + ("true" if given == "false" else "false")
-    text = REFERENCE_CASE.replace(was, f"{switch}: {given}")
-    assert f"{switch}: {given}" in text
-    with pytest.raises(CaseValidationError, match=re.escape(f"physics.{switch}")) as raised:
+    text = REFERENCE_CASE.replace(was, now)
+    assert now in text
+    with pytest.raises(CaseValidationError, match=re.escape(path)) as raised:
         resolve(loads_case(text))
     assert "numerics.continuation: none" in str(raised.value)
 

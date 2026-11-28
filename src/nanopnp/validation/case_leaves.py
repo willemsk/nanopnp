@@ -80,6 +80,9 @@ LEAVES: dict[str, Leaf] = {
     "numerics.stabilisation": Leaf(
         "solve", "solve", "stabilisation method for advection-dominated transport"
     ),
+    "numerics.log_variables": Leaf(
+        "solve", "solve", "solves for the logarithm of each ion concentration (NUM-02)"
+    ),
     "numerics.wall_distance.sources": Leaf(
         "solve", "solve", "boundary tags used as sources for the wall distance field"
     ),
