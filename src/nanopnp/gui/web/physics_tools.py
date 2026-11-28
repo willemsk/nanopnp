@@ -27,10 +27,11 @@ from nanopnp.gui.web.screens import CORRECTED, Tool, field_control
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import FIELDS, _Pane, _value_of, current_name
 from nanopnp.io.models import Kind, owner_of
+from nanopnp.io.switches import SWITCHES, governing, switch_at
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.mesh.ingest import SOLID_MATERIALS
 from nanopnp.mesh.primitives import PERMITTIVITY_EXEMPT
-from nanopnp.physics.models import SWITCHES, Term, case_model, declaration, role_conditions
+from nanopnp.physics.models import Term, case_model, declaration, role_conditions
 from nanopnp.physics.terms import CONDITIONS, Symbol, symbols_in, written
 from nanopnp.pipeline.checks import APPLIED_WALLS, options_at
 
@@ -255,13 +256,14 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         except KeyError:
             return
         why = None
-        if path.startswith("physics.") and path.removeprefix("physics.") in SWITCHES:
-            honoured = declared.switches[path.removeprefix("physics.")]
+        record = switch_at(path)
+        if record is not None:
+            honoured = declared.switches[record.name]
             # A switch held at a value the model runs with is disabled; one the model cannot
             # run with stays free, so the refusal's remedy can be made.
             state = "on" if honoured[0] else "off"
             if len(honoured) == 1 and bool(model.shown(path)) == honoured[0]:
-                why = f"{name} keeps {FIELDS[path].label.lower()} {state}. It cannot change."
+                why = f"{name} keeps {_label(path).lower()} {state}. It cannot change."
                 if path == VARIABLE_DENSITY and any(
                     DENSITY_CORRECTION.startswith(leaf) for leaf in declared.unread
                 ):
@@ -269,9 +271,7 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                     why = f"{name} reads no density correction, so the density is constant."
             elif len(honoured) == 1:
                 with self.rows[path]:
-                    ui.label(f"{name} needs {FIELDS[path].label.lower()} {state}.").classes(
-                        "field-hint"
-                    )
+                    ui.label(f"{name} needs {_label(path).lower()} {state}.").classes("field-hint")
             elif path == DIELECTRIC and not model.shown(FLOW):
                 # PHY-23 adds the force and each ion's term together, and the force needs a flow.
                 if not model.shown(path):
@@ -340,20 +340,21 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         return next((key for key in sorted(FIELDS, key=len, reverse=True) if key in problem), None)
 
     def lead(self, path: str | None) -> str | None:
-        switch = None if path is None else path.removeprefix("physics.")
-        if self.model is not None and path is not None and switch in SWITCHES:
+        record = None if path is None else switch_at(path)
+        if self.model is not None and path is not None and record is not None:
             name = str(self.model.shown(MODEL))
             try:
                 declared = declaration(name)
-                honoured = declared.switches[switch]
+                honoured = declared.switches[record.name]
             except KeyError:
                 return super().lead(path)
             if len(honoured) == 1:
                 # Each switch the model cannot run with, in one line: each is its own refusal.
                 wrong = [
-                    (FIELDS[f"physics.{each}"].label.lower(), held[0])
-                    for each, held in declared.switches.items()
-                    if len(held) == 1 and bool(self.model.shown(f"physics.{each}")) != held[0]
+                    (_label(each.path).lower(), held[0])
+                    for each in SWITCHES
+                    if len(held := declared.switches[each.name]) == 1
+                    and bool(self.model.shown(each.path)) != held[0]
                 ]
                 turns = [
                     f"{_listed([label for label, on in wrong if on is state])} "
@@ -751,10 +752,9 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         """Return why a term is not in force, or None where it is."""
         if self.model is None:
             return None
-        for switch in term.switches:
-            path = f"physics.{switch}"
-            if not self.model.shown(path):
-                return f"{FIELDS[path].label} is off."
+        for record in governing(term.name):
+            if not self.model.shown(record.path):
+                return f"{_label(record.path)} is off."
         if term.correction is not None and self.model.shown(term.correction) == "none":
             return f"{FIELDS[term.correction].label} is none."
         return None
@@ -880,6 +880,10 @@ class _PhysicsPane(_Pane[PhysicsModel]):
 
 ELEMENTS = {"h1": "Lagrange, scalar", "vector_h1": "Lagrange, vector"}
 """The words for each finite-element family a field takes."""
+
+
+def _label(path: str) -> str:
+    return FIELDS[path].label if path in FIELDS else path
 
 
 def _field_tex(name: str) -> str:

@@ -24,6 +24,7 @@ from nanopnp.geometry.pore import CylinderPore
 from nanopnp.io.artefact import SOLUTION_SCHEMA
 from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
+from nanopnp.io.switches import SWITCHES
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
@@ -276,7 +277,7 @@ def test_ver56_every_registered_model_states_its_terms() -> None:
             assert term.clause in defined, (name, term)
             assert term.equation.strip(), (name, term)
             for switch in term.switches:
-                assert switch in models.SWITCHES, (name, term)
+                assert switch in {record.name for record in SWITCHES}, (name, term)
                 assert True in declared.switches[switch], (name, term)
             if term.correction is not None:
                 assert term.correction not in declared.unread, (name, term)

@@ -77,9 +77,10 @@ from nanopnp.io.project import (
     write_project,
 )
 from nanopnp.io.store import LOCKS, StaleEntry, Store, StoreUsage, atomic_write_bytes
+from nanopnp.io.switches import SWITCHES
 from nanopnp.io.variables import field_unit
 from nanopnp.materials.corrections import load_corrections
-from nanopnp.physics.models import SWITCHES, declaration
+from nanopnp.physics.models import declaration
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import keyed_walk, selected_stages
 from nanopnp.sweep.plan import PLAN_FILENAME
@@ -908,9 +909,9 @@ class Project:
         body = _body(self.path("physics", name))
         own = dict(leaves(body))
         wanted: dict[str, FieldValue | None] = {"physics.model": model}
-        for switch in SWITCHES:
-            path = f"physics.{switch}"
-            honoured = declared.switches[switch]
+        for record in SWITCHES:
+            path = record.path
+            honoured = declared.switches[record.name]
             value = own[path] if path in own else schema_default(path)[1]
             if value not in honoured:
                 _, default = schema_default(path)

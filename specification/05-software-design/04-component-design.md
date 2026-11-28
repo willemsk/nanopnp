@@ -56,11 +56,11 @@ changes none of them.
 NOTE (what a model declares; WP26): a model is registered by name
 together with a declaration that can be read without building it. The declaration states the
 case-derived options its builder takes, which are the resolved `model_options`; the value set of each
-`physics:` switch it honours; whether it carries solid materials, and which supplied coefficients it
+switch record (§5.4.4) it honours; whether it carries solid materials, and which supplied coefficients it
 accepts (the fixed charge, `χ`); whether it reads the PHY-02 distance field; the values of
 `numerics.continuation` it admits; whether it solves ionic transport; and its terms, each the PHY or
 NUM clause it is written from, its equation in that clause's symbols as the model assembles it, the
-`physics:` switches it is assembled under, each a switch the model honours true, and the correction
+switches it is assembled under, read from the switch records and each one the model honours true, and the correction
 leaf, one the model reads, whose `none` model leaves it out, so a reader shows the equations a case
 solves without building the model (WP5.18). It lists no quantities of
 interest: a registered output states what it needs of a declaration, ionic transport or the flow
@@ -108,8 +108,9 @@ neither; a model registered as a list of terms runs from a case file, its declar
 Tier 2 it has the analytic benchmarks, unchanged. Each takes its clause in §7 with the package that writes it.
 
 NOTE (§8.2.62 BL1, BL3): WP6.10 to WP6.12 build the kernel. WP6.10 built the terms, the slots and
-`compose`, and the coupled models' residual is composed from them (VER-81); until WP6.11's switch records,
-`CoupledModel.terms_in_force()` decides from the display records' switches and correction leaves which
-terms are in force, and until WP6.12's model records `CoupledModel` holds the three coupled models in one
-class. [The kernel's design](../../docs/design/kernel.md) holds the
+`compose`, and the coupled models' residual is composed from them (VER-81). WP6.11 built the switch records
+(VER-82): `CoupledModel.terms_in_force()` decides from them and the correction leaves which terms are in force,
+a term being in force when each record naming it is true, with each switch those records require, and a model
+refuses at its construction, as the case check does, a record true beside one it requires false or one it
+excludes true. Until WP6.12's model records `CoupledModel` holds the three coupled models in one class. [The kernel's design](../../docs/design/kernel.md) holds the
 slots, the switch records, the names the workbench reads and what the prototype showed.

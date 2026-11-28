@@ -18,6 +18,7 @@ from nanopnp.core.typing import (
     Mesh,
     Option,
 )
+from nanopnp.io.switches import SWITCHES, away, conflicts, in_force
 from nanopnp.io.vocabulary import (
     POTENTIAL,
     PRESSURE,
@@ -110,7 +111,6 @@ __all__ = [
     "DIRICHLET_BULK",
     "LADDER_STRATEGY",
     "LADDER_TARGETS",
-    "SWITCHES",
     "CoupledBoundaries",
     "CoupledModel",
     "ElectrostaticModel",
@@ -140,8 +140,6 @@ logger = logging.getLogger(__name__)
 _STERIC_LEAF = "electrolyte.corrections.steric.model"
 
 ElementKind: TypeAlias = Literal["h1", "vector_h1", "number"]
-
-SWITCHES: tuple[str, ...] = ("flow", "variable_density", "inertia", "dielectric_gradient_forces")
 
 COEFFICIENTS: tuple[str, ...] = ("fixed_charge", "solid_fraction", "surface_charge")
 
@@ -293,10 +291,11 @@ class ModelDeclaration:
         object.__setattr__(
             self, "switches", {name: tuple(values) for name, values in self.switches.items()}
         )
-        if sorted(self.switches) != sorted(SWITCHES) or not all(self.switches.values()):
+        names = [record.name for record in SWITCHES]
+        if sorted(self.switches) != sorted(names) or not all(self.switches.values()):
             raise ValueError(
                 f"a model declaration states the honoured values of every switch of "
-                f"{', '.join(SWITCHES)}; this one states {dict(self.switches)}"
+                f"{', '.join(names)}; this one states {dict(self.switches)}"
             )
         for term in self.terms:
             if term.correction is not None and term.correction in self.unread:
@@ -656,12 +655,13 @@ class CoupledModel:
                 "dielectric_gradient_forces cannot be combined with the NUM-02 log branch: the "
                 "permittivity sensitivity d(eps~_r)/d(c~_i) would be differentiated in w_i"
             )
-        if self.dielectric_gradient_forces and not self.flow:
-            raise ValueError(
-                "dielectric_gradient_forces needs the flow: PHY-23 adds the force on the fluid "
-                "and the term in each ion's flux together, and a model with no flow has no "
-                "force term"
-            )
+        refused = conflicts(self.switch_values())
+        if refused:
+            raise ValueError("; ".join(str(conflict) for conflict in refused))
+
+    def switch_values(self) -> dict[str, bool]:
+        """Return the value of each switch record, by its name."""
+        return {record.name: bool(getattr(self, record.name)) for record in SWITCHES}
 
     @property
     def resolved_velocity_order(self) -> int:
@@ -787,15 +787,7 @@ class CoupledModel:
         }
 
     def _deviations(self) -> set[str]:
-        deviations: set[str] = set()
-        if not self.flow:
-            deviations.add("physics.flow")
-        if not self.variable_density:
-            deviations.add("physics.variable_density")
-        if not self.inertia:
-            deviations.add("physics.inertia")
-        if self.dielectric_gradient_forces:
-            deviations.add("physics.dielectric_gradient_forces")
+        deviations = {record.path for record in away(self.switch_values())}
         if self.electrolyte.switches.steric != VALIDATED_STERIC_MODEL:
             deviations.add("electrolyte.corrections.steric.model")
         return deviations
@@ -1024,7 +1016,7 @@ class CoupledModel:
         display = term.display
         if display is None:
             raise ValueError(f"the term {term.name!r} has no display record and no rule")
-        if not all(bool(getattr(self, switch)) for switch in display.switches):
+        if not in_force(display.name, self.switch_values()):
             return False
         if display.correction is None:
             return True
@@ -1916,7 +1908,7 @@ LINEAR = frozenset({"numerics.nonlinear.max_iter", "numerics.nonlinear.rtol"})
 
 _COUPLED = ModelDeclaration(
     options=(*_COUPLED_OPTIONS, "flow"),
-    switches=dict.fromkeys(SWITCHES, _BOTH),
+    switches={record.name: _BOTH for record in SWITCHES},
     solids=True,
     coefficients=COEFFICIENTS,
     wall_distance=True,
@@ -1927,10 +1919,7 @@ _COUPLED = ModelDeclaration(
 )
 
 _ELECTROSTATIC_SWITCHES: dict[str, tuple[bool, ...]] = {
-    "flow": (False,),
-    "variable_density": (False,),
-    "inertia": (False,),
-    "dielectric_gradient_forces": (False,),
+    record.name: (False,) for record in SWITCHES
 }
 
 register_model("epnp-ns", _build_epnp_ns, _COUPLED)
@@ -1955,7 +1944,7 @@ register_model(
         _COUPLED,
         options=_COUPLED_OPTIONS,
         switches={
-            **dict.fromkeys(SWITCHES, _BOTH),
+            **_COUPLED.switches,
             "flow": (False,),
             "variable_density": (False,),
             "inertia": (False,),

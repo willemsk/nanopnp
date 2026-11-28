@@ -13,6 +13,7 @@ from nanopnp.io.case import CaseDocument
 from nanopnp.io.case_paths import UnknownCasePathError, schema_default
 from nanopnp.io.case_paths import value_at as case_value_at
 from nanopnp.io.models import METADATA_KEYS, Kind, leaves, owner_of
+from nanopnp.io.switches import SWITCHES
 
 SwitchValue: TypeAlias = Any
 
@@ -36,10 +37,7 @@ SWITCH_PATHS: tuple[str, ...] = (
     "electrolyte.corrections.density.concentration",
     "electrolyte.corrections.density.wall",
     "electrolyte.corrections.steric.model",
-    "physics.flow",
-    "physics.variable_density",
-    "physics.inertia",
-    "physics.dielectric_gradient_forces",
+    *(record.path for record in SWITCHES),
     "boundary_conditions.walls.ion_flux",
     "boundary_conditions.walls.slip",
     # Floats, so the walk does not type them as switches; classified here by hand.
@@ -62,13 +60,7 @@ SWITCH_PATHS: tuple[str, ...] = (
 )
 
 MODEL_SWITCH_PATHS: frozenset[str] = frozenset(
-    {
-        "physics.flow",
-        "physics.variable_density",
-        "physics.inertia",
-        "physics.dielectric_gradient_forces",
-        "electrolyte.corrections.steric.model",
-    }
+    {*(record.path for record in SWITCHES), "electrolyte.corrections.steric.model"}
 )
 
 CONFIGURATION_PATHS: dict[str, str] = {
@@ -159,13 +151,7 @@ _VALIDATED_DEFAULTS: dict[str, Any] = {
         "exclusion_offset_nm": 0.0,
         "dielectric_transition_nm": 0.0,
     },
-    "physics": {
-        "model": "epnp-ns",
-        "flow": True,
-        "variable_density": True,
-        "inertia": True,
-        "dielectric_gradient_forces": False,
-    },
+    "physics": {"model": "epnp-ns"},
     "numerics": {
         "elements": {"phi": "P2", "c": "P2", "u": "P2", "p": "P1"},
         "nonlinear": {"strategy": "newton", "damping": "residual"},
@@ -175,6 +161,18 @@ _VALIDATED_DEFAULTS: dict[str, Any] = {
         "linear": {"solver": "umfpack"},
     },
 }
+
+
+def _write_switch_defaults(document: dict[str, Any]) -> None:
+    for record in SWITCHES:
+        *blocks, leaf = record.path.split(".")
+        target = document
+        for block in blocks:
+            target = target.setdefault(block, {})
+        target[leaf] = record.default
+
+
+_write_switch_defaults(_VALIDATED_DEFAULTS)
 
 VALIDATED_DEFAULT_CASE: CaseDocument = CaseDocument.model_validate(_VALIDATED_DEFAULTS)
 
