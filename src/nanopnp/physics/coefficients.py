@@ -110,7 +110,7 @@ class NondimensionalCoefficients:
         return value / self.electrolyte.mass_density_0
 
     def relative_permittivity(self) -> Expression:
-        """Return ``eps~_r = eps_r,f(<c>) / eps_r,f^0`` in the electrolyte."""
+        """Return ``eps~_r = eps_r,f(<c>, d) / eps_r,f^0`` in the electrolyte."""
         value = self.electrolyte.relative_permittivity(
             self.driver_M, self.wall_distance_nm, self.ops
         )

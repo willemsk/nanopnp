@@ -223,6 +223,26 @@ def shared_directory(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return base.parent if os.environ.get("PYTEST_XDIST_WORKER") else base
 
 
+# No shipped file fits the solvent permittivity to the wall distance; the tests that check its
+# gradient build one from the shipped file, with the ion wall function's form.
+PERMITTIVITY_WALL_FIT: Mapping[str, object] = {
+    "form": "exponential_saturation_plus",
+    "P1": 1.5,
+    "P2": 0.3,
+}
+
+
+@pytest.fixture(scope="session")
+def permittivity_wall_fit(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    from nanopnp.core.paths import correction_file
+
+    document = yaml.safe_load(correction_file("willems2020_nacl").read_text(encoding="utf-8"))
+    document["solvent"]["permittivity"]["fw"] = dict(PERMITTIVITY_WALL_FIT)
+    path = tmp_path_factory.mktemp("corrections") / "permittivity_wall_fit.yaml"
+    path.write_text(yaml.safe_dump(document), encoding="utf-8")
+    return path
+
+
 @pytest.fixture(scope="session")
 def prepared_2wcd(
     dodecamer_2wcd: mda.AtomGroup, tmp_path_factory: pytest.TempPathFactory

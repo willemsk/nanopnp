@@ -1,6 +1,7 @@
 """The NUM-28 axial force on an analyte: w, the tensors and the route record (VER-22)."""
 
 import math
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -310,12 +311,14 @@ def test_num29_a_force_surface_meeting_two_materials_is_refused() -> None:
 
 
 FLUID_BOUNDARIES = "analyte|outer"
-SPLIT_VARIANTS: dict[str, tuple[dict[str, bool], bool]] = {
-    "default": ({}, False),
-    "no inertia": ({"inertia": False}, False),
-    "dielectric switch": ({"dielectric_gradient_forces": True}, False),
-    "solid fraction, switch off": ({}, True),
-    "solid fraction, switch on": ({"dielectric_gradient_forces": True}, True),
+SPLIT_VARIANTS: dict[str, tuple[dict[str, bool], bool, bool]] = {
+    "default": ({}, False, False),
+    "no inertia": ({"inertia": False}, False, False),
+    "dielectric switch": ({"dielectric_gradient_forces": True}, False, False),
+    "solid fraction, switch off": ({}, True, False),
+    "solid fraction, switch on": ({"dielectric_gradient_forces": True}, True, False),
+    "permittivity wall fit, switch off": ({}, False, True),
+    "permittivity wall fit, switch on": ({"dielectric_gradient_forces": True}, False, True),
 }
 
 
@@ -330,13 +333,25 @@ def sphere_in_a_box() -> tuple[object, object, object]:
     return mesh, axial_extension(mesh, inner_nm=1.0, outer_nm=4.0), fraction
 
 
-def _smooth_solution(mesh: object, solid: object, **options: bool) -> ModelSolution:
+def _smooth_solution(
+    mesh: object,
+    solid: object,
+    *,
+    corrections: str = "willems2020_nacl",
+    distance: object = None,
+    **options: bool,
+) -> ModelSolution:
     import ngsolve as ngs
 
     from nanopnp.mesh.primitives import CoupledBoundaries
+    from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
 
     model = models.create(
-        "epnp-ns", concentration_M=0.1, solid_permittivities={"analyte": 20.0}, **options
+        "epnp-ns",
+        concentration_M=0.1,
+        solid_permittivities={"analyte": 20.0},
+        corrections=corrections,
+        **options,
     )
     boundaries = CoupledBoundaries(
         potential=FLUID_BOUNDARIES,
@@ -360,6 +375,7 @@ def _smooth_solution(mesh: object, solid: object, **options: bool) -> ModelSolut
         model=model,
         space=space,
         state=state,
+        wall_distance_nm=SATURATED_WALL_DISTANCE_NM if distance is None else distance,
         solid_fraction=solid,
         solid_fraction_gradient=None if solid is None else ngs.grad(solid),
     )
@@ -367,20 +383,32 @@ def _smooth_solution(mesh: object, solid: object, **options: bool) -> ModelSolut
 
 @pytest.mark.parametrize("variant", list(SPLIT_VARIANTS))
 def test_ver81_the_force_split_reads_each_density_in_force(
-    sphere_in_a_box: tuple[object, object, object], variant: str
+    sphere_in_a_box: tuple[object, object, object], permittivity_wall_fit: Path, variant: str
 ) -> None:
+    # A permittivity wall fit whose gradient the dielectric density leaves out gives a split
+    # that looks plausible and is wrong: it no longer sums to the Maxwell stress's work.
     import ngsolve as ngs
+    from tests.conftest import PERMITTIVITY_WALL_FIT
 
-    from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
     from nanopnp.post.forces import dielectric_gradient_residual, domain_force
 
     mesh, extension, fraction = sphere_in_a_box
-    options, solid = SPLIT_VARIANTS[variant]
-    solution = _smooth_solution(mesh, fraction if solid else None, **options)
+    options, solid, wall = SPLIT_VARIANTS[variant]
+    distance = None
+    if wall:
+        distance = ngs.GridFunction(ngs.H1(mesh, order=2))
+        distance.Set(0.2 + 0.05 * ngs.x * ngs.x + 0.02 * ngs.y * ngs.y)
+    solution = _smooth_solution(
+        mesh,
+        fraction if solid else None,
+        corrections=str(permittivity_wall_fit) if wall else "willems2020_nacl",
+        distance=distance,
+        **options,
+    )
     model = solution.model
     functions = {field.name: solution.component(field.name) for field in model.fields}
     variables = model.concentration_variables(functions)
-    coefficients = model.coefficients(variables, SATURATED_WALL_DISTANCE_NM)
+    coefficients = model.coefficients(variables, solution.wall_distance_nm)
     velocity, field = functions[VELOCITY], ngs.grad(functions[POTENTIAL])
 
     # PHY-08, PHY-23 and the inertia written here, from the coefficients alone.
@@ -399,6 +427,18 @@ def test_ver81_the_force_split_reads_each_density_in_force(
         ),
         ngs.CF((0.0, 0.0)),
     )
+    wall_gradient = ngs.CF((0.0, 0.0))
+    if wall:
+        # eps~_r = eps~_c(<c>) (1 - exp(-P1 (d + P2))), so d(eps~_r)/dd = eps~_r P1 e / (1 - e).
+        decay = ngs.exp(-PERMITTIVITY_WALL_FIT["P1"] * (distance + PERMITTIVITY_WALL_FIT["P2"]))
+        wall_gradient = (
+            fluid_permittivity
+            * PERMITTIVITY_WALL_FIT["P1"]
+            * decay
+            / (1.0 - decay)
+            * ngs.grad(distance)
+        )
+        fluid_gradient = fluid_gradient + wall_gradient
     if solid:
         blend = model.solid_blend(mesh, fraction, ngs.grad(fraction))
         permittivity_gradient = (1.0 - fraction) * fluid_gradient + (
@@ -444,3 +484,6 @@ def test_ver81_the_force_split_reads_each_density_in_force(
     # Each density must move its half, or the agreements above would hold without it.
     assert abs(works["inertia"]) > 1e-9 * abs(hd)
     assert abs(works["dielectric"]) > 1e-9 * abs(em)
+    if wall:
+        wall_work = work(-0.5 * ngs.InnerProduct(field, field) * (wall_gradient * extension))
+        assert abs(wall_work) > 1e-3 * abs(works["dielectric"])

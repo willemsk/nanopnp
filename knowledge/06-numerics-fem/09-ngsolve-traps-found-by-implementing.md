@@ -603,8 +603,10 @@ gradient- or cross-section-based extraction.
   curves the mesh, before it reads a rate. **[tested: tests/tier2/test_charge_potential_axis.py::test_ver58_deposited_potential_converges_at_the_potentials_own_rate_on_the_axis]** **[tested: tests/tier2/test_charge_potential_off_axis.py::test_ver58_deposited_potential_converges_at_the_potentials_own_rate_off_the_axis]**
 - **`CoefficientFunction.Diff` and `Operator("hesse")` both work on a component of a product
   space**, and `Diff` works with respect to a `GridFunction` as well as a trial proxy. That is what
-  makes the PHY-23 dielectric terms expressible: `∇ε_r = Σ_i (∂ε_r/∂c_i) ∇c_i` by the chain rule,
-  with the sensitivities taken symbolically rather than by finite differences. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts]** **[tested: tests/tier1/test_nernst_planck.py::test_phy23_the_permittivity_sensitivity_is_zero_when_the_correction_is_off]**
+  makes the PHY-23 dielectric terms expressible: `∇ε_r = Σ_i (∂ε_r/∂c_i) ∇c_i + (∂ε_r/∂d) ∇d` by
+  the chain rule, the last term where a wall fit makes `ε_r` depend on the distance field `d`, with
+  the sensitivities taken symbolically rather than by finite differences. The `d` term is
+  REV-303's. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts]** **[tested: tests/tier1/test_nernst_planck.py::test_phy23_the_permittivity_sensitivity_is_zero_when_the_correction_is_off]** **[tested: tests/tier1/test_nernst_planck.py::test_phy23_the_dielectric_terms_differentiate_the_blend_not_the_fluid_alone]**
 - **A `BilinearForm` term carrying no trial function assembles and linearises correctly.**
   `a += (-f*v)*dx` with `f` a coefficient function contributes to `Apply` and contributes nothing to
   `AssembleLinearization`, which is exactly right for a manufactured or body source in a nonlinear

@@ -325,7 +325,7 @@ class Electrolyte:
     def relative_permittivity(
         self, c_avg_M: Numeric, wall_distance_nm: Numeric = 0.0, ops: MathOps = NUMPY_OPS
     ) -> Numeric:
-        """Return the electrolyte ``eps_r,f(<c>)``; there is no wall correction."""
+        """Return the electrolyte ``eps_r,f(<c>, d)``, its wall fit where the file gives one."""
         factor = self.correction("permittivity").evaluate(c_avg_M, wall_distance_nm, ops)
         return self.permittivity_0 * factor
 

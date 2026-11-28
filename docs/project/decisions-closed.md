@@ -1,6 +1,6 @@
 # Decisions register, closed
 
-The 1,199 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
+The 1,200 decisions of [the register](decisions.md) that bind nothing now, written by `uv run .claude/scripts/decisions.py`.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1188,6 +1188,7 @@ The 1,199 decisions of [the register](decisions.md) that bind nothing now, writt
 | REV-297 | author | `docs/project/review-findings.md` |  |  | The chore's worktree refusal names a branch pattern that package branches lack | fixed by `/np-chore` with §8.2.58 BH1; left by `/np-chore`'s review of its ruled doubts, CODE_REVIEW_093 | fixed |
 | REV-298 | author | `docs/project/review-findings.md` |  | WP6.11 | The log branch has no case key and no line in the manifest | fixed by WP6.11 (§8.2.62 BL7; VER-82); left by WP6.08's plan, D4 | fixed |
 | REV-300 | author | `docs/project/review-findings.md` |  | WP6.10 | The stabilisation's wind leaves out PHY-23's decrement | fixed by WP6.10 (§8.2.62 BL5; VER-81); left by WP6.09's prototype | fixed |
+| REV-303 | session, own call | `docs/project/review-findings.md` |  | WP6.11 | A solvent-permittivity wall fit leaves its gradient out of PHY-23's force | fixed by WP6.11 at its ship, the author's ruling (PHY-23; NUM-28); left by `/np-ship`'s review of WP6.11, CODE_REVIEW_103 | fixed |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |

@@ -2035,3 +2035,13 @@ has none: no shipped case reaches this.
 
 *Recommendation:* refuse a solvent-permittivity `fw` when a correction file is loaded, as `_IonPropertyBlock` does per
 species, until a package writes the wall term. That changes what a correction file accepts, so it is a ruling.
+
+**Ruled** (the author, at WP6.11's ship, 28 November 2026): write the wall term, against the recommendation.
+
+**Fixed** (WP6.11, 28 November 2026): `physics/nernst_planck.py`'s `state_gradient` takes the chain rule in each
+`c~_i` and in the wall distance wherever the distance is a field, and `permittivity_gradient` and the decrement's
+gradient of `∂ε~_r/∂c~_i` both read it, so PHY-23's force, its Nernst–Planck drift and NUM-28's `f_KH` and omitted
+term carry `(∂ε~_r/∂d) ∇d`. A wall fit alone now satisfies the check that PHY-23's switch has something to switch.
+VER-81's force split holds to 10⁻¹² relative against the Maxwell stress with a permittivity wall fit built in the
+test, the switch off and on, and PHY-23's finite-difference check of both terms takes the same fit; PHY-23's and
+NUM-28's NOTEs say so. Without such a fit the derivative in `d` is NGSolve's zero and the expression is unchanged.
