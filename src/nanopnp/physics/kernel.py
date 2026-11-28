@@ -292,6 +292,7 @@ def integrals(
         closed = integrand(terms, slot, context)
         if closed is None:
             continue
+        closed = context.ops.compile(closed)
         options: dict[str, Option] = {}
         region = _region(slot, context)
         if region is not None:

@@ -95,7 +95,7 @@ package's plan claims its proposed clause, numbered on from VER-80.
 | [WP6.07](wp6.07-the-lean-carry.md), the lean carry (BF1 to BF11), 26 November 2026 | A helper commits and the main session lands (BF11) |
 | [WP6.08](wp6.08-the-guard-numbers.md), the guard numbers (BC3; BI1, BI2; VER-80), 26 November 2026 | Six guard walks held at 10⁻⁸, nightly, in the reference environment alone |
 | [WP6.09](wp6.09-the-kernels-design.md), the kernel's design (BC2, BC5; BJ1 to BJ3), 26 November 2026 | The prototype's branch, `prototype/wp6.09-kernel` at `1b5f5e3`, stays until WP6.12 merges (BJ3) |
-| [WP6.10](wp6.10-the-composition.md), the composition (FR-40; §5.4.4; BL1, BL5, BL6; REV-300; VER-81), 27 November 2026 | No term names the backend, its module on `term_modules:` (VER-65); `CoupledModel.terms_in_force()` decides from the switch records since WP6.11; PHY-23 under a stabilised mode assembles fifty times slower (REV-302) |
+| [WP6.10](wp6.10-the-composition.md), the composition (FR-40; §5.4.4; BL1, BL5, BL6; REV-300; VER-81), 27 November 2026 | No term names the backend, its module on `term_modules:` (VER-65); `CoupledModel.terms_in_force()` decides from the switch records since WP6.11; PHY-23 under a stabilised mode assembled fifty times slower until WP6.11's ship compiled each slot (REV-302, fixed) |
 | [WP6.11](wp6.11-switches-as-data-and-the-forces.md), switches as data and the forces (FR-40; FR-25; NUM-02; BL7; BM1 to BM3; REV-298; VER-82), 28 November 2026 | Readers take `io/switches.py`'s records; `numerics.log_variables` is a deviation the ladder refuses (BM2); `CoupledModel` holds the three coupled models until WP6.12 |
 
 ### WP6.12 — A model as a list of terms, and the full check (BC1, BC4; BL2, BL3; MOD-10)

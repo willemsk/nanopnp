@@ -8,7 +8,7 @@ the validated default, the deviations, the case checks, the ladder's refusal and
 (BL7; BM1 to BM3; FR-25; REV-298 fixed). `post/forces.py` reads the kernel's force densities (NUM-28). VER-82, new,
 Tier 1, and VER-81 (c)'s force split pass; eight variants' forces hold to 2.6 × 10⁻¹⁶ (item 4) and the six guard
 walks to 5.0 × 10⁻¹⁶, `guard-log` entered by the key (item 5). Live: `CoupledModel` holds the three coupled models
-until WP6.12; the ladder does not carry the log branch (BM2); REV-302.
+until WP6.12; the ladder does not carry the log branch (BM2). REV-302 and REV-303 were fixed at the ship.
 
 Written 28 November 2026 by Fable 5.2 at high effort, on the code at `e42272a`.
 Inherits §8.2.62 BL1, BL2 and BL7, §8.2.63 BM1 to BM3, [the kernel's design](../../design/kernel.md),

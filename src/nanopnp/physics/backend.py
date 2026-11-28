@@ -69,6 +69,12 @@ class NGSolveOperators(NGSolveOps):
 
         return ngs.specialcf.mesh_size
 
+    def compile(self, expression: Expression) -> Expression:
+        """Return ``expression`` as NGSolve's list of steps; no C++ compiler is called."""
+        # A tree evaluates a shared subexpression once per path to it. The decrement's drift
+        # in the stabilisation's wind made that a hundred times the compiled assembly.
+        return expression.Compile(realcompile=False)
+
 
 NGSOLVE_OPERATORS: Operators = NGSolveOperators()
 

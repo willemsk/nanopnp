@@ -2025,6 +2025,18 @@ and no stored walk takes it, but at a pore's element count a Newton step under i
 wind into a vector grid function once a step; if the trial one, compiling the integrand in the backend
 (`CoefficientFunction.Compile`) is the cheaper trial. Either stays out of the terms (§5.4.1).
 
+**Fixed** (WP6.11's ship, 28 November 2026, the author's pull-in): `physics/kernel.py:integrals` compiles each slot's
+closed integrand through the operators, `ops.compile`, which `physics/backend.py` implements as NGSolve's
+`Compile(realcompile=False)`: no C++ compiler (CON-07), and no term names the backend (§5.4.1). Measured on the same
+118-element cylinder after REV-303's fix, one thread, another machine than the row's: one `Apply` with one
+`AssembleLinearization` under PHY-23 took 39.8 s under `reference` and 19.1 s under `supg` (0.73 s and 0.40 s without
+PHY-23); compiled, 0.38 s and 0.28 s. Both sides cost, the lagged more: with the decrement's drift dropped from the
+lagged wind the `supg` streamline slot's 8.2 s fell to 2.6 s, from the trial wind to 4.5 s, and `Freeze()` on the
+lagged state gave nothing, so the compile, which serves both, was taken over a lagged grid function, which would
+interpolate the wind and move it by the interpolation's error. Over twelve variants the residual is unchanged bit for
+bit and the Jacobian moves by at most 1.3 × 10⁻¹⁷ of its largest entry; the default's assembly falls from 0.09 s to
+0.02 s. Building the compiled form adds 0.3 s at most, once a solve.
+
 ### REV-303: A solvent-permittivity wall fit leaves its gradient out of PHY-23's force
 
 Left by `/np-ship`'s review of WP6.11, [CODE_REVIEW_103](../code_reviews/CODE_REVIEW_103.md). `permittivity_gradient`
