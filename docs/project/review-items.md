@@ -1953,6 +1953,12 @@ key recorded as a deviation, a switch record that excludes PHY-23's switch. The 
 **Ruled** (§8.2.62 BL7, 27 November 2026): a case key, off by default, recorded as a deviation. WP6.11 adds it, and
 its plan sets the key's path.
 
+**Fixed** (WP6.11, 28 November 2026, `cd0d299` and `0dd7ec9`): `numerics.log_variables`, a Boolean off by default,
+is the fifth switch record, which excludes PHY-23's switch. At true it reaches the model through `model_options`, and
+the case's deviations and the model's provenance name it (FR-25; NUM-02); at false it leaves the case artefact's hash
+and the solve keys unchanged. The NUM-18 ladder refuses it. `guard-log` enters by the key and asserts its deviation
+in the manifest (VER-80); VER-82 (b) and (d) check the rest.
+
 ### REV-299: A rebase merge rewrites the shas that a package's ticks and Outcome name
 
 Left by `/np-chore`'s review, [CODE_REVIEW_096](../code_reviews/CODE_REVIEW_096.md). A package's ticks and the plan's

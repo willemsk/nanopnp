@@ -23,7 +23,7 @@ what they admit.
 | Field | What reads it | What it decides |
 |---|---|---|
 | `options` | `resolve` | Which of the case-derived keywords reach the builder (the resolved `model_options`) |
-| `switches` | `resolve` | The values of `flow`, `variable_density`, `inertia` and `dielectric_gradient_forces` the model honours; any other value is refused |
+| `switches` | `resolve` | The values of each switch record of `io/switches.py` the model honours (`flow`, `variable_density`, `inertia`, `dielectric_gradient_forces`, `log_variables`); any other value is refused |
 | `solids` | `resolve`, the mesh gate | Whether `physics.solid_permittivities` means anything, and whether a mesh may carry a solid domain |
 | `coefficients` | `resolve`, the solve | Whether `inputs.charge` (`fixed_charge`) and `inputs.eps_r` (`solid_fraction`) are accepted and passed |
 | `wall_distance` | the mesh gate, the solve | Whether the PHY-02 distance field is computed, gated and passed |
@@ -120,15 +120,11 @@ register_model(
     _build_poisson,
     ModelDeclaration(
         options=("order", "solid_permittivities"),
-        switches={
-            "flow": (False,),
-            "variable_density": (False,),
-            "inertia": (False,),
-            "dielectric_gradient_forces": (False,),
-        },
+        switches={record.name: (False,) for record in SWITCHES},
         solids=True,
-        coefficients=("fixed_charge", "solid_fraction"),
+        coefficients=COEFFICIENTS,
         unread=ELECTROSTATIC | LINEAR | frozenset({"electrolyte.concentration_M"}),
+        terms=POISSON_TERMS,
     ),
 )
 ```

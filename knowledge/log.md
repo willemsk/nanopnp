@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-28
+* **Update**: NUM-02's log branch is the case key `numerics.log_variables`, a switch record that excludes PHY-23's switch, is a deviation and is refused by the ladder; `guard-log` holds to 4.1e-16 entered by it (WP6.11; §8.2.62 BL7; REV-298). ([1. Discretisation](06-numerics-fem/01-discretisation.md))
+
 ## 2026-11-27
 * **Update**: `-m tier2` no longer pulls in the `slow` tests: `tests/conftest.py` leaves them out unless `--slow`, whatever `-m` says (a chore after WP6.10's carry). ([12. The suite's BLAS threads buy nothing; parallelism has to come from workers](07-software-stack/12-the-suites-blas-threads-buy-nothing.md))
 * **Update**: The kernel's composed residual equals the stored operator to 3.1e-16 and the thirteen walks hold to 2.9e-12; a slot split term by term moves the rule, by 7.9e-5 for the diffusion and migration apart; the decrement's drift in the wind moves PHY-23 under `reference` by 7.4e-6 and makes its assembly fifty times slower; the route check no longer sees a dropped term (WP6.10; §8.2.62 BL5). ([NGSolve traps and measured numerics facts](06-numerics-fem/09-ngsolve-traps-found-by-implementing.md))

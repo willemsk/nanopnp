@@ -117,30 +117,30 @@ the functions, the coefficients of each side and the inputs, so a term states wh
 
 ## Switches as data and PHY-08's rule
 
-Today a switch is code. `physics/models.py:SWITCHES` is a closed tuple of four names, read by the case checks,
-`api/project.py` and two screens; `io/defaults.py:SWITCH_PATHS` holds the same four once more; and
-`CoupledModel._deviations` and `io/defaults.py:deviations` each list the deviations from the validated default.
+Before WP6.11 a switch was code: `physics/models.py:SWITCHES`, a closed tuple of four names, read by the case
+checks, `api/project.py` and two screens; `io/defaults.py:SWITCH_PATHS` held the same four once more; and
+`CoupledModel._deviations` and `io/defaults.py:deviations` each listed the deviations from the validated default.
 
-The kernel holds one record for each switch and derives all four lists from the records:
+`io/switches.py` holds one record for each switch, and every list is derived from the records (WP6.11):
 
 | Switch | Case path | Default | Terms in force | Requires | Excludes |
 |---|---|---|---|---|---|
-| `flow` | `physics.flow` | true | Advection, Momentum, Inertia, Velocity continuity, Body force | | |
+| `flow` | `physics.flow` | true | Advection, Momentum, Inertia, Velocity continuity, Variable density, Body force | | |
 | `variable_density` | `physics.variable_density` | true | Variable density | | |
 | `inertia` | `physics.inertia` | true | Inertia | | |
-| `dielectric_gradient_forces` | `physics.dielectric_gradient_forces` | false | Dielectric-gradient force, Dielectric decrement | `flow` | `log_variables` |
+| `dielectric_gradient_forces` | `physics.dielectric_gradient_forces` | false | Dielectric decrement, Dielectric-gradient force | `flow` | |
+| `log_variables` | `numerics.log_variables` | false | | | `dielectric_gradient_forces` |
 
-PHY-08 and PHY-23 bind the force and the decrement: either alone is thermodynamically inconsistent. The record states
-the binding once, as one switch that brings both terms in force; nothing can switch one without the other, because no
-record names one alone. `requires` and `excludes` replace the two refusals in `CoupledModel.__post_init__` and no
-more. `variable_density` and `inertia` require nothing: their terms already need `flow` through their display
-switches, and `epnp-ns` with the flow off and both at their defaults runs today, so a `requires` there would refuse
-it. The prototype's records carry `requires=("flow",)` on both, written and never read. A
-model's declaration names the records it honours, with the value sets of §5.4.3's NOTE. A value away from the default is a deviation in the manifest (FR-25), read from the record.
-
-**What the prototype did not try.** It wrote the four records and decided "in force" from each display `Term`'s
-switches, as today; `SWITCHES`, `SWITCH_PATHS` and the two deviation lists were not touched. Switches as data is on
-paper.
+A term is in force while every record that names it is true, with each record those require. `flow` names Variable
+density too, so that the term is out with the flow off. PHY-08 and PHY-23 bind the force and the decrement: either
+alone is thermodynamically inconsistent. The record states the binding once, as one switch that brings both terms in
+force; nothing can switch one without the other, because no record names one alone. `requires` and `excludes`
+replace the two refusals in `CoupledModel.__post_init__` and no more, and the case check refuses the same conflicts.
+`variable_density` and `inertia` require nothing: their terms already need `flow` through its record, and `epnp-ns`
+with the flow off and both at their defaults runs, so a `requires` there would refuse it. The log branch's record
+brings no term in force; it sits with the numerical settings, and the NUM-18 ladder refuses it, as each record off its
+default. A model's declaration names the records it honours, with the value sets of §5.4.3's NOTE. A value away from
+the default is a deviation in the manifest (FR-25), read from the record.
 
 ## One expression and its three readers
 
@@ -158,8 +158,10 @@ states its density `f` once, and its slot takes `−f · v`. The three readers r
 3. **The forces** of `post/forces.py`, which take the densities in force at the converged state.
 
 The prototype built the first two readers: `advective_velocity` and `_flow_state` read the terms in force, and the
-operator was unchanged to 3.2 × 10⁻¹⁶. `post/forces.py` was not edited (the plan's scope), so the third reader is on
-paper, with VER-22's routes as its check.
+operator was unchanged to 3.2 × 10⁻¹⁶. `post/forces.py` was not edited (the plan's scope), so the third reader was on
+paper. WP6.11 built it: the hydrodynamic half's consistency term is the work of the densities in force, the
+electromagnetic half's that of the ionic and the dielectric density, and eight variants' forces held to 2.6 × 10⁻¹⁶,
+with VER-22's routes and VER-81 as its checks.
 
 **Where the prototype contradicted D4.** Not every drift is read by every reader. Today `advective_velocity` leaves
 out PHY-23's decrement, so the stabilisation's wind and its approximate residual omit a part of the flux that the weak
@@ -203,7 +205,7 @@ and derives one:
 
 | Name | Today | In the kernel |
 |---|---|---|
-| `SWITCHES` | `physics.models`, a tuple of four | Derived from the switch records |
+| `SWITCHES` | `physics.models`, a tuple of four | `io.switches`, a tuple of the switch records (WP6.11) |
 | `Term` | `physics.terms`, re-exported by `physics.models` | Kept: the display part of a kernel term |
 | `case_model` | `physics.models` | Moved to the registry's module |
 | `declaration` | `physics.models` | Moved to the registry's module; its `terms` derived |
@@ -213,8 +215,8 @@ and derives one:
 | `symbols_in` | `physics.terms` | Kept |
 | `written` | `physics.terms` | Kept |
 
-The shell follows a moved name, and no screen changes (BC1). `SWITCHES` keeps its name and its type, a tuple of
-names, so its four readers do not change.
+The shell follows a moved name, and no screen changes (BC1). `SWITCHES` keeps its name and becomes the tuple of
+switch records; its readers take each record's `name` and `path`, with no alias kept (BL7).
 
 ## Installed packages
 

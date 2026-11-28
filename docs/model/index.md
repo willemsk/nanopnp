@@ -43,6 +43,7 @@ table says where the specification defines what it does.
 | `numerics.stabilisation` | NUM-11–NUM-15 (§6.4) |
 | `numerics.nonlinear.*` | NUM-16, NUM-17 (damped Newton and its per-step gates), NUM-20 (fallbacks) |
 | `numerics.continuation` | NUM-18 (the ladder, and its NOTE on what it refuses) |
+| `numerics.log_variables` | NUM-02 (the log-concentration branch, a numerical fallback and a deviation; it excludes PHY-23's switch) |
 | `numerics.linear.solver` | NUM-21 (sparse direct), CON-11 (the licence of the default solver) |
 | `outputs` | NUM-23–NUM-29 (§6.7: the current's two routes, the derived quantities, the analyte force) |
 

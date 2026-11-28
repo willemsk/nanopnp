@@ -25,6 +25,34 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.7.0-alpha.11]
+
+WP6.11: switches as data and the forces; tag `v0.7.0-alpha.11` once merged (FR-40 in part; FR-25; NUM-02; NUM-28;
+VER-80, VER-81, VER-82; §8.2.62 BL1, BL7; §8.2.63 BM1 to BM3; REV-298). The
+[plan](docs/plans/phase-6/wp6.11-switches-as-data-and-the-forces.md) records the work. At the validated defaults no
+number changes: a case file's hash and the solve keys are unchanged, the six guard walks hold to 5.0 × 10⁻¹⁶ and the
+analyte forces to 2.6 × 10⁻¹⁶.
+
+- **Added** (the case file, §5.3.1): `numerics.log_variables`, a Boolean, off by default. It solves NUM-02's log
+  branch, which only the Python interface reached before; the case's deviations and the manifest name it when on. It
+  excludes `physics.dielectric_gradient_forces`, the NUM-18 ladder refuses it (set `numerics.continuation: none`),
+  and `outputs: [analyte_force]` beside it is refused at the case check where the permittivity's concentration fit
+  applies. The workbench's Equations tool lists it as "Log concentrations".
+- **Changed** (the physics, §5.4.4): each switch is a record of `nanopnp.io.switches` (its name, case path, validated
+  default, the terms it brings in force, and what it requires and excludes), and every list of switches, the
+  validated default, the deviations, the case checks, the ladder's refusal and the terms in force are read from the
+  records.
+- **Changed** (the analyte force, NUM-28): the domain route's force split reads the kernel's force densities in
+  force, so the electromagnetic and hydrodynamic halves and the omitted term are no longer written a second time. On
+  the log branch with a varying permittivity the dielectric density raises `NotImplementedError`, as before.
+- **Removed** (the Python interface): `nanopnp.physics.models.SWITCHES`, the tuple of four names; read
+  `nanopnp.io.switches.SWITCHES`, the tuple of records, and each record's `name` and `path`. `physics.terms.Term`
+  loses its `switches` field and argument; `Term.switches` is a property derived from the records.
+- **Added** (the Python interface): `CoupledModel.switch_values()`; `physics.coupled` exports `BODY_FORCE`,
+  `DIELECTRIC_FORCE` and `term(name)`.
+- **Added** (the tests, §7.2): VER-82, the switch records; VER-81 (c) gains the force split; VER-80's `guard-log`
+  enters by the case key and asserts its deviation in the manifest.
+
 ## [0.7.0-alpha.10]
 
 WP6.10: the composition; tag `v0.7.0-alpha.10` once merged (FR-40 in part; QR-13; VER-65, VER-81; NUM-12, NUM-14;
