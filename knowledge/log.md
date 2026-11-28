@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-28
+* **Update**: The kernel compiles each slot's integrand (`Compile()`, no C++ compiler): PHY-23 under `reference` assembles in 0.38 s, not 39.8 s, on the 118-element cylinder, the residual unchanged and the Jacobian within 1.3e-17 (REV-302). ([NGSolve traps and measured numerics facts](06-numerics-fem/09-ngsolve-traps-found-by-implementing.md))
 * **Update**: PHY-23's terms and NUM-28's `f_KH` differentiate the permittivity in the wall distance too, where a correction file fits it to `d` (REV-303). ([NGSolve traps and measured numerics facts](06-numerics-fem/09-ngsolve-traps-found-by-implementing.md))
 * **Update**: NUM-02's log branch is the case key `numerics.log_variables`, a switch record that excludes PHY-23's switch, is a deviation and is refused by the ladder; `guard-log` holds to 4.1e-16 entered by it (WP6.11; §8.2.62 BL7; REV-298). ([1. Discretisation](06-numerics-fem/01-discretisation.md))
 

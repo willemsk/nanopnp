@@ -47,6 +47,9 @@ class Operators(MathOps, Protocol):
     def element_size(self) -> Expression:
         """Return ``h_K``, the size of the element a point lies in."""
 
+    def compile(self, expression: Expression) -> Expression:
+        """Return ``expression`` arranged to evaluate each shared part once, its values kept."""
+
 
 @dataclass(frozen=True)
 class Geometry:

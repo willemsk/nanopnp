@@ -789,6 +789,13 @@ from the tree before its first edit.
   assembly on the 118-element cylinder takes 69.6 s and 33.8 s against 1.25 s and 0.48 s without PHY-23: the
   streamline and crosswind integrands carry a Hessian of `φ~` and the permittivity's derivatives in each
   concentration, on both sides (REV-302).[^wp610-composition]
+- **`Compile()` makes a deep integrand cheap, with no C++ compiler.** `CoefficientFunction.Compile(realcompile=False)`
+  turns a tree into a list of steps that evaluates each shared node once. On the same cylinder, after REV-303 and on
+  another machine, PHY-23's assembly took 39.8 s under `reference` and 19.1 s under `supg`; compiled, 0.38 s and
+  0.28 s, below the 0.73 s and 0.40 s of the uncompiled assembly without PHY-23. Over twelve variants the residual is
+  unchanged bit for bit and the Jacobian moves by at most 1.3 × 10⁻¹⁷ of its largest entry. Both sides cost: with
+  the decrement's drift dropped from the lagged wind the `supg` streamline slot's 8.2 s fell to 2.6 s, from the trial
+  wind to 4.5 s; `Freeze()` on the lagged state gave nothing. The kernel compiles every slot (REV-302).[^rev302-compile]
 - **A dropped term is seen at once by the operator, not by the route check.** Dropping the steric flux and the
   inertia moves every variant by 6.9 × 10⁻⁶ to 3.3 × 10⁻². In the prototype, whose indicator current wrote the flux
   apart, dropping the steric flux alone from example 02's ePNP-NS walk stopped the run at NUM-26's route check, 6.5 ×
@@ -808,4 +815,5 @@ from the tree before its first edit.
 [^wp3-singular-system]: `git show 0f8b57b:.knowledge/06-numerics-fem.md`, trap 9 (singular five-field block system, solver norms and residuals, WP3 review).
 [^wp609-prototype]: `git show 1b5f5e3` on the branch `prototype/wp6.09-kernel` (WP6.09, 26 November 2026): `uv run python prototype/compare_operators.py --slots` at `0867e2d` and `uv run python prototype/three_d.py`; the control's run is item 5's Outcome in `docs/plans/phase-6/wp6.09-the-kernels-design.md`.
 [^wp610-composition]: WP6.10, 27 November 2026: the Outcomes of items 2 and 6 in `docs/plans/phase-6/wp6.10-the-composition.md` (`750c63f`; the walks at `5eeb55e3`), and its *Grounding* D2, measured at `5332fbd` on NGSolve 6.2.2606.
+[^rev302-compile]: REV-302's section in `docs/project/review-items.md` and the `perf:` commit that fixes it (WP6.11's ship, 28 November 2026): `CylinderGeometry(radius_nm=2.0, length_nm=4.0).generate(maxh_nm=0.4)`, 118 elements, WP6.09's `compare_operators.py` state with the wall distance a P2 field, one thread, NGSolve 6.2.2606; one `Apply` and one `AssembleLinearization` timed.
 [^wp11-sweep-timings]: `git show 5abcf42:.knowledge/06-numerics-fem.md`, section 8.4 (WP11 toy-pore setup, one thread per worker, worker counts 1/2/4 and pool lifetime).
