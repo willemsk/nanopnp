@@ -161,10 +161,10 @@ def state_gradient(
     coefficients: NondimensionalCoefficients,
     variables: ConcentrationVariables,
 ) -> Expression:
-    """Return ``grad(expression)`` of a coefficient, by the chain rule in ``c~_i`` and ``d``.
+    """Return the gradient of ``eps~_r`` or its sensitivity, by the chain rule in c~_i and d.
 
-    The wall distance's part is taken where the distance is a field, not a number; it comes
-    back zero, and adds nothing, where ``expression`` takes no wall fit.
+    The wall distance's part is taken where ``eps~_r`` takes a wall fit and the distance is a
+    field, not a number.
     """
     names = list(variables.values)
     total = (
@@ -175,7 +175,9 @@ def state_gradient(
             ops.derivative(expression, variables.variables[name]) * variables.gradients[name]
         )
     distance = coefficients.wall_distance_nm
-    if isinstance(distance, int | float):
+    # The backend takes no gradient of a composite distance, such as an analytic one; without a
+    # wall fit the term is zero, so it is not asked for.
+    if isinstance(distance, int | float) or not coefficients.permittivity_reads_wall:
         return total
     return total + ops.derivative(expression, distance) * ops.grad(distance)
 

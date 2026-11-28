@@ -172,6 +172,14 @@ class NondimensionalCoefficients:
 
         return isinstance(self.relative_permittivity(), ngs.CoefficientFunction)
 
+    @property
+    def permittivity_reads_wall(self) -> bool:
+        """Whether ``eps~_r`` takes a wall fit, so that it varies with the distance field."""
+        correction = self.electrolyte.correction("permittivity")
+        return bool(getattr(correction, "use_wall", False)) and (
+            getattr(correction, "wall_form", None) is not None
+        )
+
     def permittivity_sensitivity(self, species: str) -> Expression:
         """Return ``d eps~_r / d c~_i``, a deviation-only term."""
         import ngsolve as ngs
