@@ -1,6 +1,6 @@
 # WP6.11 — Switches as data and the forces
 
-**Status: planned, not started.** Written 28 November 2026 by Fable 5.2 at high effort, on the code at `e42272a`.
+**Status: in progress, items 1 to 3 of 6 done.** Written 28 November 2026 by Fable 5.2 at high effort, on the code at `e42272a`.
 Inherits §8.2.62 BL1, BL2 and BL7, §8.2.63 BM1 to BM3, [the kernel's design](../../design/kernel.md),
 [WP6.10](wp6.10-the-composition.md)'s kernel, REV-298 and the test scope (§8.2.13 N1). Its last commit on `main`
 takes `v0.7.0-alpha.11` (§8.4.1).
@@ -235,20 +235,20 @@ uv run pytest --slow tests/tier2/test_guard_numbers.py tests/tier2/test_force_co
 
 ### Work items
 
-- [x] cd0d299 1. `src/nanopnp/io/switches.py` with four records; `io/defaults.py`, `physics/terms.py`,
+- [x] 1. cd0d299 `src/nanopnp/io/switches.py` with four records; `io/defaults.py`, `physics/terms.py`,
   `physics/models.py`, `pipeline/checks.py`, `pipeline/case.py`, `api/project.py`, `gui/web/screens.py`,
   `gui/web/physics_tools.py`; `tests/tier1/test_switches.py` and the tests *Grounding* D3 and D4 name; the NOTEs
   of §5.4.3 and §5.4.4 and VER-82's row (D1, D3, D4, D11); done when `tests/tier1/test_switches.py`,
   `test_model_interface.py`, `test_manifest.py`, `test_physics_models.py`, `test_physics_model.py`,
   `test_case_schema.py`, `test_case_leaves.py` and `test_kernel.py` pass. **Executor:** main
-- [ ] 2. The fifth record and the key: `io/switches.py`, `io/case.py`, `io/artefact.py`, `io/models.py`,
+- [x] 2. 0dd7ec9 The fifth record and the key: `io/switches.py`, `io/case.py`, `io/artefact.py`, `io/models.py`,
   `validation/case_leaves.py`, `physics/models.py`, `pipeline/case.py`, `pipeline/checks.py`,
   `gui/web/tools.py`, `tests/tier1/test_switches.py`, `test_case_leaves.py`, `test_case_schema.py`,
   `tests/tier2/test_guard_numbers.py`;
   §5.3.1, NUM-02, NUM-18's NOTE, VER-80's and VER-82's rows (D2, D5 to D7, D10, D11); done when
   `tests/tier1/test_switches.py`, `test_case_leaves.py`, `test_case_schema.py`, `test_case_json_schema.py`,
   `test_gui_screens.py` and `test_model_interface.py`, no hash re-recorded, pass. **Executor:** main
-- [ ] 3. Compaction checkpoint. **Executor:** main
+- [x] 3. Compaction checkpoint. **Executor:** main
 - [ ] 4. The stored forces, then `post/forces.py`, `physics/coupled.py`, `tests/tier1/test_forces.py` and VER-81's
   row (D8, D9, D11); done when the eight variants are stored from the unedited tree and equal after within
   10⁻¹², and `tests/tier1/test_forces.py` and `tests/tier2/test_force_routes.py` pass. The Outcome lists each
