@@ -68,6 +68,7 @@ SOLVE_PROBES: tuple[tuple[str, tuple[Any, ...]], ...] = (
     ("numerics.elements.u", ("P3",)),
     ("numerics.elements.p", ("P2",)),
     ("numerics.stabilisation", ("supg", "reference")),
+    ("numerics.log_variables", (True,)),
     ("numerics.wall_distance.sources", ("wall|membrane",)),
     ("numerics.wall_distance.max_distance_nm", (2.5,)),
 )

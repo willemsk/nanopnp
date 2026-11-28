@@ -150,6 +150,7 @@ FIELDS: dict[str, Field] = {
     "physics.variable_density": Field("Variable density", "switch"),
     "physics.inertia": Field("Inertia", "switch"),
     "physics.dielectric_gradient_forces": Field("Dielectric forces", "switch"),
+    "numerics.log_variables": Field("Log concentrations", "switch"),
     "numerics.elements.phi": Field("Potential, φ", "choice"),
     "numerics.elements.c": Field("Concentrations, c", "choice"),
     "numerics.elements.u": Field("Velocity, u", "choice"),

@@ -311,6 +311,9 @@ def _model_options(
         "pressure_order": pressure_order,
         "stabilisation": document.numerics.stabilisation,
     }
+    if not candidates["log_variables"]:
+        # Off, the key is left out, so a case that never sets it keeps its solve key.
+        del candidates["log_variables"]
     declared = declaration(physics.model).options
     return {key: value for key, value in candidates.items() if key in declared}
 

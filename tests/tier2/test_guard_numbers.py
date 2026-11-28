@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import dataclasses
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -10,8 +9,6 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 from nanopnp import Case, Session, Store
-from nanopnp.pipeline.case import resolve
-from nanopnp.pipeline.run import run_document
 from nanopnp.solve.state import DESCRIPTOR_ENTRY, STATE_KEY
 from nanopnp.validation import stability
 
@@ -58,25 +55,6 @@ def _run(store: Store, workspace: Path, edits: Mapping[str, FieldValue]) -> RunR
     return Session(store, workspace=workspace, write=False).run(case)
 
 
-def _run_log(store: Store, workspace: Path) -> RunResult:
-    case = Case.load(CASE).with_(SINGLE_RUNG)
-    source = case.source
-    resolved = resolve(case, base=source.base)
-    resolved = dataclasses.replace(
-        resolved, model_options={**resolved.model_options, "log_variables": True}
-    )
-    return run_document(
-        case,
-        case_text=source.text,
-        case_path=source.path,
-        base=source.base,
-        store=store,
-        workspace=workspace,
-        write=False,
-        resolved=resolved,
-    )
-
-
 def _solved(result: RunResult) -> dict[str, Any]:
     import numpy as np
 
@@ -115,8 +93,9 @@ def test_ver80_dielectric_gradient_forces_hold_their_numbers(
 def test_ver80_the_log_branch_holds_its_numbers(
     store: Store, tmp_path: Path, number_stability: NumberStability
 ) -> None:
-    result = _run_log(store, tmp_path)
+    result = _run(store, tmp_path, {**SINGLE_RUNG, "numerics.log_variables": True})
     _check_model(result, {"log_variables": True}, "none")
+    assert "numerics.log_variables" in {deviation.path for deviation in result.manifest.deviations}
     number_stability("guard-log", _mesh_hash(result), result.quantities)
 
 
