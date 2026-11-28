@@ -2,57 +2,53 @@
 
 ## Step
 
-Plan, first helper of two: the draft is committed and three decisions are with the author. No PR is open.
+Plan, second helper of two: the plan is committed with the author's three rulings and its self-check is run. The
+build has not started.
 
 ## Done
 
-- `74503c2` `docs: WP6.11 plan draft`: `docs/plans/phase-6/wp6.11-switches-as-data-and-the-forces.md`, every
-  section drafted on the recommended answers.
+- `74503c2` `docs: WP6.11 plan draft` (the first helper).
+- `6e98ccf` `docs: WP6.11 implementation plan`: the plan at **planned, not started**; the record
+  `specification/history/63-wp611s-plan-switches-as-data-and-the-forces.md` (§8.2.63 BM1 to BM3), its lines in the
+  history's index and `holds-now.yaml`; the Phase 6 plan's WP6.11 entry and open decision 20, with the entry as it
+  read in `phase-6-record.md`; `docs/plans/current.md`; the decisions page and the plans' index.
 
 ## Measured
 
-- The plan: 3,153 words; 1,651 outside Grounding and Implementation details (cap 1,650); 750 in Implementation
-  details; 271 in the In brief.
-- The forces through the kernel's densities against today's `post/forces.py`, on six variants: at most
-  6.4 × 10⁻¹⁶ relative.
-- `tests/tier2/test_force_routes.py` with `tests/tier1/test_forces.py` and `test_manifest.py`: 55 passed in 19 s.
+- The plan: 3,203 words; 1,643 outside Grounding and Implementation details (at most 1,650); 773 in Implementation
+  details (at most 1,100); 266 in the In brief (at most 275).
+- The Phase 6 plan without its report: 2,729 words (at most 2,750). `docs/plans/current.md`: 700 (at most 700).
+- `uv run .claude/scripts/links.py`: 0 broken paths.
 
 ## Decided
 
-- The planning model: Fable 5.2 at high (the author, at the carry's start).
-- No clause is amended in the plan's commit: each amendment is written in the item that builds it, as WP6.10 did.
+- The author's answers, each the recommended one: the key is `numerics.log_variables` (BM1, D2); the ladder refuses
+  it (BM2, D5); the workbench's Equations tool shows it (BM3, D7).
+- The self-check moved four things in the draft, each now in the plan:
+  - *Grounding* D4: `tests/tier1/test_physics_models.py` matches one refusal of the model, by "log branch", not
+    two. The exclusion's message keeps those words, and the model's written refusal stays until item 2's record.
+  - *Grounding* D5: `tests/tier1/test_case_schema.py` holds a kept test of the ladder's refusal, on the four
+    switches. It gains the key, with a row in *Verification*, and the file is in items 1 and 2.
+  - The row "An unset key moves no key" asked for two documents that are equal by construction. It asks for the
+    key's absence from the parameters and for a hash recorded on the unedited tree.
+  - *Out of scope*: the ladder carrying the log branch names Phase 7's speed-up (BC24) as the one that may reopen it.
+- The package's pull request is #230, `feat: WP6.11 — switches as data and the forces`, opened at `155c38f`; the
+  land brings it to the plan's commits. Its gate box is unticked until that land.
 
 ## Open
 
-Put to the author in the `ASK` hand-back, each with its recommendation first:
-
-1. "Where in a case file should the new setting live that makes a run solve for the logarithm of each ion
-   concentration? Today no case file can turn this on: only a script can, and the run's record does not name it.
-   You ruled that it becomes a case setting (BL7) and left its place to this plan. Both places behave the same;
-   they differ in what the setting is filed as: a way of computing, or a part of the physical model." Options:
-   "With the numerical settings (Recommended)", "With the physics switches". It feeds D2.
-2. "Should a run on the logarithm be allowed with the stepwise start (the continuation ladder, the default way a
-   hard case is reached)? Today the ladder fixes the model's on-off settings itself, and a case that sets one
-   differently beside it is refused and told to run as a single direct solve. The stored reference run on the
-   logarithm is such a single solve. Neither the specification nor the phase plan says what the new setting does
-   beside the ladder. The second option is the more general one: it lets the logarithm reach cases that a single
-   solve cannot." Options: "Refused beside the ladder (Recommended)", "The ladder carries it". It feeds D5.
-3. "Should the workbench show the new setting? Today its Equations tool lists the model's four on-off settings
-   from a list written in the code. This package reads that list from the records, so a fifth appears unless it
-   is held back. The phase plan says only that the kernel changes no screen, and the workbench is rebuilt in
-   Phase 8." Options: "Shown with the other switches (Recommended)", "Case file only for now". It feeds D7.
+None.
 
 ## Next
 
-1. Read `helper.md`, `np-plan/SKILL.md`, the core, `wp.md`, `rulings.md` and `review.md`, then the draft.
-2. Record the three answers as `rulings.md` says: a new record
-   `specification/history/63-wp611s-plan-switches-as-data-and-the-forces.md` (§8.2.63, BM1 to BM3), its line in
-   `specification/history/index.md`, and a line a ruling in `holds-now.yaml`.
-3. In the draft, set D2, D5 and D7 to "Ruled by the author" with the answer. Where an answer is not the
-   recommended one, change what follows from it in every section; the ladder carrying the branch adds a stored
-   walk and widens the package, so check the caps and BL2. Set the status to **planned, not started**, the In
-   brief's *Your call* to the approval alone and *Open questions* to "None".
-4. Update `docs/plans/current.md` and the Phase 6 plan's open decision 20.
-5. Run *The self-check*, then `uv run .claude/scripts/decisions.py` and
-   `uv run .claude/scripts/index_records.py`; commit `docs: WP6.11 implementation plan`; open the PR
-   `WP6.11 — Switches as data and the forces` if `origin/<head>` exists; hand back `DONE`, `land: yes`.
+1. The main session puts the manager's summary of the `DONE` hand-back to the author and waits for the approval.
+2. The helper that follows runs `/np-implement wp 6.11`: it reads `.claude/workflow/helper.md`,
+   `.claude/skills/np-implement/SKILL.md` and `wp.md`, then
+   `docs/plans/phase-6/wp6.11-switches-as-data-and-the-forces.md`, and starts at work item 1,
+   `src/nanopnp/io/switches.py` with four records.
+3. Before item 2's first edit it records `CaseArtefact(VALIDATED_DEFAULT_CASE).hash`, the literal of the row "An
+   unset key moves no key":
+
+   ```bash
+   uv run python -c "from nanopnp.io.artefact import CaseArtefact; from nanopnp.io.defaults import VALIDATED_DEFAULT_CASE; print(CaseArtefact(VALIDATED_DEFAULT_CASE).hash)"
+   ```
