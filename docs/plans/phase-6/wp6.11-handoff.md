@@ -1,27 +1,35 @@
-# WP6.11 hand-off, ship (the pulled-in items)
+# WP6.11 hand-off, ship (the pulled-in items fixed)
 
 ## Step
 
-Ship, after the review was recorded and landed at 957e96a (PR #230). CI on that head not yet read. The author pulled in
-REV-303 and REV-302 (`np-ship/wp.md` §4, item 1; §8.2.56 BF5).
+Ship, after the two items the author pulled in (REV-303, REV-302) were fixed on PR #230. Their review comes next.
 
 ## Done
 
-- 957e96a docs: WP6.11 review recorded (before this step).
-- This step: this note only.
+- 1f720ee fix: PHY-23's terms and NUM-28's split take a permittivity wall fit's gradient (REV-303 fixed).
+- a84efce perf: the kernel compiles each slot's integrand (REV-302 fixed).
+- This note.
 
 ## Measured
 
-Cost so far (carry): 1 session, 9 sub-agents, 2.2 agent hours, 4 touches.
+- REV-302, 118-element cylinder, one thread, after 1f720ee: one `Apply` and one `AssembleLinearization` under PHY-23,
+  39.8 s (`reference`) and 19.1 s (`supg`) before; 0.38 s and 0.28 s after. Without PHY-23, uncompiled: 0.73 s and
+  0.40 s.
+- `supg` streamline slot, Na+: 8.2 s; the decrement's drift dropped from the lagged wind 2.6 s, from the trial wind
+  4.5 s; `Freeze()` on the lagged state 8.2 s.
+- Compiled against uncompiled, twelve variants: residual 0 difference, Jacobian at most 1.3e-17 relative.
+- REV-303: VER-81's force split with a permittivity wall fit holds to 1e-12 relative; without the `d` part it misses
+  by 1.7e-16 N on a 2.5e-12 N total (two variants fail).
+- Tests run: `tests/tier1/test_forces.py`, `tests/tier1/test_nernst_planck.py` (pass); the commit hook's Tier 1 on
+  both commits (pass).
 
 ## Decided
 
-- REV-303: the author ruled "Write the wall term", against the reviewer's recommendation to refuse. The permittivity
-  gradient takes the wall fit's `dε/dd ∇d`, so PHY-23's force and NUM-28's split include it, with a check against the
-  Maxwell stress.
-- REV-302: "Pull it in". A builder measures first which side (lagged or trial) dominates, tries the cheaper fix, stays
-  out of the terms (§5.4.1).
-- Not pulled in: REV-294, REV-295, REV-299 (process), REV-301 (WP6.14).
+- REV-303 also takes the wall part in the Nernst–Planck decrement's gradient of `∂ε~_r/∂c~_i` (`state_gradient` serves
+  both), and PHY-22's check admits a wall fit alone as something for PHY-23's switch to switch.
+- A wall distance given as a composite coefficient (not a number or a grid function) now raises from `ngs.grad` where
+  the permittivity varies and the force or decrement is built; the pipeline always passes a grid function.
+- REV-302 compiles every slot (all models), not only the stabilisation's.
 
 ## Open
 
@@ -29,8 +37,6 @@ None.
 
 ## Next
 
-1. `np-builder` fixes REV-303 (one commit, `fix:`), then REV-302 (a second commit, `perf:`/`fix:`), and sets each row
-   `fixed` in `docs/project/review-findings.md` and `review-items.md` in its commit (§8.4.6).
-2. After the land, hand back `REVIEW` (`np-reviewer`, `effort: medium`) on the diff of the two fix commits alone.
-3. Then update the PR #230 body (Deliberately not done: drop REV-302 and REV-303), hand back `WAIT, land: yes`, and read
-   CI on the landed head (`np-ship/wp.md` §5).
+1. The main session hands `np-reviewer` (`effort: medium`) the diff `c598dcd..a84efce` alone (§8.2.56 BF8).
+2. Then update the PR #230 body (Deliberately not done: drop REV-302 and REV-303), hand back `WAIT, land: yes`, and
+   read CI on the landed head (`np-ship/wp.md` §5).
