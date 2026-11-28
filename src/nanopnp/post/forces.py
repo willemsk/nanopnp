@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 from nanopnp.core.typing import (
@@ -24,8 +24,9 @@ from nanopnp.io.vocabulary import (
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
 from nanopnp.numerics.measures import Measures, require_boundary
 from nanopnp.physics.coefficients import NondimensionalCoefficients
+from nanopnp.physics.coupled import BODY_FORCE, DIELECTRIC_FORCE, term
 from nanopnp.physics.distance import wall_distance
-from nanopnp.physics.flow import permittivity_gradient
+from nanopnp.physics.kernel import Context, force_density
 from nanopnp.physics.models import (
     ModelSolution,
     TransportModel,
@@ -409,42 +410,56 @@ def _coupled(solution: ModelSolution) -> TransportModel:
 class _Integrands:
     model: TransportModel
     mesh: Mesh
-    coefficients: NondimensionalCoefficients
+    context: Context
     potential_gradient: Expression
-    velocity: Expression
     velocity_gradient: Expression
     pressure: Expression
+    viscosity: Expression
     permittivity: Expression
     medium_permittivity: Expression
-    viscosity: Expression
-    body_force: Expression
-    korteweg_force: Expression | None
-    mass_density: Expression
-    reynolds: float
 
-    def korteweg(self) -> Expression:
-        if self.korteweg_force is None:
-            raise NotImplementedError(
-                "the NUM-28 electromagnetic force is not implemented for the NUM-02 log branch "
-                "with an active permittivity correction: the Korteweg-Helmholtz consistency term "
-                "needs d(eps~_r)/d(c~_i) and the symbolic derivative would come back in w_i"
-            )
-        return self.korteweg_force
+    @property
+    def coefficients(self) -> NondimensionalCoefficients:
+        return self.context.trial.coefficients
+
+    def work(self, density: Expression | None, extension: GridFunction, what: str) -> float:
+        import ngsolve as ngs
+
+        if density is None:
+            return 0.0
+        return self.context.measures.integrate(
+            ngs.InnerProduct(density, extension),
+            self.mesh,
+            definedon=self.context.fluid,
+            what=what,
+        )
+
+    def omits_the_dielectric_force(self) -> bool:
+        return all(each.name != DIELECTRIC_FORCE for each in self.context.terms)
 
 
-def _integrands(solution: ModelSolution, wall_distance_nm: Expression | None) -> _Integrands:
+def _integrands(
+    solution: ModelSolution, measures: Measures, wall_distance_nm: Expression | None
+) -> _Integrands:
     import ngsolve as ngs
 
     model = _coupled(solution)
     mesh = solution.space.mesh
-    distance = solution.wall_distance_nm if wall_distance_nm is None else wall_distance_nm
     functions = {field.name: solution.component(field.name) for field in model.fields}
-    variables = model.concentration_variables(functions)
-    coefficients = model.coefficients(variables, distance)
-
-    field = ngs.grad(functions[POTENTIAL])
-    permittivity = coefficients.relative_permittivity()
+    distance = solution.wall_distance_nm if wall_distance_nm is None else wall_distance_nm
+    context = model.context(
+        mesh,
+        measures,
+        trial=functions,
+        wall_distance_nm=distance,
+        solid_fraction=solution.solid_fraction,
+        solid_fraction_gradient=solution.solid_fraction_gradient,
+    )
+    # The force blends wherever a solid fraction is given, the dielectric switch on or off.
     solid = model.solid_blend(mesh, solution.solid_fraction, solution.solid_fraction_gradient)
+    context = replace(context, inputs=replace(context.inputs, solid=solid))
+    coefficients = context.trial.coefficients
+    permittivity = coefficients.relative_permittivity()
     # The Maxwell stress takes the permittivity Poisson was solved with: the blend where a
     # solid fraction reaches into the electrolyte. Any other leaves a force the split omits.
     medium = (
@@ -452,42 +467,25 @@ def _integrands(solution: ModelSolution, wall_distance_nm: Expression | None) ->
         if solid is None
         else model.permittivity(mesh, coefficients, solid_fraction=solution.solid_fraction)
     )
-    # f_ion = rho_ion E = -S (sum_i z_i c~_i) grad(phi~), the Poisson source's own charge (PHY-08).
-    body_force = -coefficients.screening * coefficients.ionic_charge_density() * field
-
-    korteweg: Expression | None
-    if model.electrolyte.switches.permittivity.model == "none" and solid is None:
-        # grad(eps) = 0, so the Korteweg-Helmholtz force is too and the chain rule is skipped.
-        korteweg = ngs.CF((0.0, 0.0))
-    elif variables.logarithmic and model.electrolyte.switches.permittivity.model != "none":
-        # d(eps~_r)/d(c~_i) would come back in w_i; see _Integrands.korteweg.
-        korteweg = None
-    else:
-        gradient = permittivity_gradient(coefficients, variables, solid=solid)
-        # None where the fit is selected with its concentration part off and no blend is given.
-        korteweg = (
-            ngs.CF((0.0, 0.0))
-            if gradient is None
-            else -0.5 * ngs.InnerProduct(field, field) * gradient
-        )
-
     velocity = functions[VELOCITY]
     return _Integrands(
         model=model,
         mesh=mesh,
-        coefficients=coefficients,
-        potential_gradient=field,
-        velocity=velocity,
+        context=context,
+        potential_gradient=ngs.grad(functions[POTENTIAL]),
         velocity_gradient=ngs.grad(velocity),
         pressure=functions[PRESSURE],
+        viscosity=coefficients.viscosity(),
         permittivity=permittivity,
         medium_permittivity=medium,
-        viscosity=coefficients.viscosity(),
-        body_force=body_force,
-        korteweg_force=korteweg,
-        mass_density=coefficients.mass_density() if model.variable_density else 1.0,
-        reynolds=coefficients.reynolds,
     )
+
+
+def _density(name: str, context: Context) -> Expression | None:
+    force = term(name).force
+    if force is None:
+        raise RuntimeError(f"the term {name!r} states no force density")
+    return force(context, context.trial)
 
 
 def domain_force(
@@ -498,64 +496,52 @@ def domain_force(
     wall_distance_nm: Expression | None = None,
 ) -> ForceComponents:
     """Return the force on the body from the domain route, in newtons."""
-    return _domain_force(_integrands(solution, wall_distance_nm), measures, extension)[0]
+    return _domain_force(_integrands(solution, measures, wall_distance_nm), extension)[0]
 
 
-def _korteweg_work(terms: _Integrands, measures: Measures, extension: GridFunction) -> float:
-    import ngsolve as ngs
-
-    return measures.integrate(
-        ngs.InnerProduct(terms.korteweg(), extension),
-        terms.mesh,
-        definedon=terms.mesh.Materials(terms.model.fluid),
-        what="the dielectric-gradient consistency term",
+def _dielectric_work(terms: _Integrands, extension: GridFunction) -> float:
+    return terms.work(
+        _density(DIELECTRIC_FORCE, terms.context),
+        extension,
+        "the dielectric-gradient consistency term",
     )
 
 
-def _domain_force(
-    terms: _Integrands, measures: Measures, extension: GridFunction
-) -> tuple[ForceComponents, float]:
+def _domain_force(terms: _Integrands, extension: GridFunction) -> tuple[ForceComponents, float]:
     import ngsolve as ngs
 
-    mesh, model = terms.mesh, terms.model
-    fluid = mesh.Materials(model.fluid)
-    gradient = ngs.grad(extension)
+    mesh, model, context = terms.mesh, terms.model, terms.context
     scale = TWO_PI * model.scales.force_N
 
-    def integrate(integrand: Expression, what: str) -> float:
-        return measures.integrate(integrand, mesh, definedon=fluid, what=what)
-
-    hydro = hydrodynamic_stress(terms.velocity_gradient, terms.pressure, terms.viscosity)
-    ionic_work = integrate(
-        ngs.InnerProduct(terms.body_force, extension), "the ionic body-force consistency term"
+    ionic_work = terms.work(
+        _density(BODY_FORCE, context), extension, "the ionic body-force consistency term"
     )
-    korteweg_work = _korteweg_work(terms, measures, extension)
-
+    dielectric_work = _dielectric_work(terms, extension)
     em_N = electrostatic_domain_force(
         mesh,
         terms.potential_gradient,
         terms.medium_permittivity,
         extension,
-        measures,
+        context.measures,
         force_N=model.scales.force_N,
         fluid=model.fluid,
     )
-    em_N -= scale * (ionic_work + korteweg_work)
+    em_N -= scale * (ionic_work + dielectric_work)
 
-    hd = -integrate(ngs.InnerProduct(hydro, gradient), "the hydrodynamic stress work")
-    hd += ionic_work
-    if model.dielectric_gradient_forces:
-        # f_total = f_ion + f_KH here, so the consistency terms cancel in the sum.
-        hd += korteweg_work
-    if model.inertia:
-        convective = ngs.InnerProduct(terms.velocity_gradient * terms.velocity, extension)
-        hd -= terms.reynolds * integrate(
-            terms.mass_density * convective, "the inertial consistency term"
-        )
+    hydro = hydrodynamic_stress(terms.velocity_gradient, terms.pressure, terms.viscosity)
+    hd = -context.measures.integrate(
+        ngs.InnerProduct(hydro, ngs.grad(extension)),
+        mesh,
+        definedon=context.fluid,
+        what="the hydrodynamic stress work",
+    )
+    hd += terms.work(
+        force_density(context, context.trial), extension, "the body-force consistency term"
+    )
 
     forces = ForceComponents(em_N=em_N, hd_N=scale * hd)
     logger.debug("domain force (pN): %s", {k: v * 1e12 for k, v in forces.summary().items()})
-    return forces, korteweg_work
+    return forces, dielectric_work
 
 
 def dielectric_gradient_residual(
@@ -567,21 +553,17 @@ def dielectric_gradient_residual(
 ) -> float:
     """Return the dielectric-gradient term the model omits, in newtons; zero if enabled."""
     return _dielectric_gradient_residual(
-        _integrands(solution, wall_distance_nm), measures, extension
+        _integrands(solution, measures, wall_distance_nm), extension
     )
 
 
 def _dielectric_gradient_residual(
-    terms: _Integrands,
-    measures: Measures,
-    extension: GridFunction,
-    *,
-    work: float | None = None,
+    terms: _Integrands, extension: GridFunction, *, work: float | None = None
 ) -> float:
-    if terms.model.dielectric_gradient_forces:
+    if not terms.omits_the_dielectric_force():
         return 0.0
     if work is None:
-        work = _korteweg_work(terms, measures, extension)
+        work = _dielectric_work(terms, extension)
     return -TWO_PI * terms.model.scales.force_N * work
 
 
@@ -593,13 +575,13 @@ def surface_force(
     wall_distance_nm: Expression | None = None,
 ) -> ForceComponents:
     """Return the traction integral over the body's surface, in newtons."""
-    return _surface_force(_integrands(solution, wall_distance_nm), measures, boundary)
+    return _surface_force(_integrands(solution, measures, wall_distance_nm), boundary)
 
 
-def _surface_force(terms: _Integrands, measures: Measures, boundary: str) -> ForceComponents:
+def _surface_force(terms: _Integrands, boundary: str) -> ForceComponents:
     import ngsolve as ngs
 
-    mesh, model = terms.mesh, terms.model
+    mesh, model, measures = terms.mesh, terms.model, terms.context.measures
     region, arc = _boundary_region(mesh, boundary)
 
     lift = ngs.BoundaryFromVolumeCF
@@ -839,14 +821,14 @@ def extract(  # noqa: PLR0913
     if data is not None:
         check_force_surface(data, boundary)
     # One rebuild of the coefficients for all three routes.
-    terms = _integrands(solution, wall_distance_nm)
-    forces, korteweg_work = _domain_force(terms, measures, extension)
-    residual = _dielectric_gradient_residual(terms, measures, extension, work=korteweg_work)
+    terms = _integrands(solution, measures, wall_distance_nm)
+    forces, dielectric_work = _domain_force(terms, extension)
+    residual = _dielectric_gradient_residual(terms, extension, work=dielectric_work)
 
     agreement: ForceAgreement | None = None
     if check_routes:
         # Compared uncorrected: each route carries its own tensor's divergence.
-        surface = _surface_force(terms, measures, boundary)
+        surface = _surface_force(terms, boundary)
         agreement = ForceAgreement(
             domain=forces,
             surface=surface,

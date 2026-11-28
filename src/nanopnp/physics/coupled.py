@@ -25,13 +25,18 @@ from nanopnp.physics.stabilisation import (
 from nanopnp.physics.terms import EPNP_NS_TERMS, Term
 
 __all__ = [
+    "BODY_FORCE",
     "COUPLED_TERMS",
+    "DIELECTRIC_FORCE",
     "PRESSURE_CONSTRAINT",
     "SOURCES",
     "STABILISATION",
     "coupled_slots",
+    "term",
 ]
 
+BODY_FORCE = "Body force"
+DIELECTRIC_FORCE = "Dielectric-gradient force"
 PRESSURE_CONSTRAINT = "Pressure constraint"
 STABILISATION = "Stabilisation"
 SOURCES = "Sources"
@@ -260,11 +265,11 @@ COUPLED_TERMS: tuple[KernelTerm, ...] = (
         (Contribution("continuity", flow.continuity),),
     ),
     KernelTerm("Variable density", "NUM-04", _display("Variable density")),
-    KernelTerm("Body force", "PHY-08", _display("Body force"), force=flow.ionic_force),
+    KernelTerm(BODY_FORCE, "PHY-08", _display(BODY_FORCE), force=flow.ionic_force),
     KernelTerm(
-        "Dielectric-gradient force",
+        DIELECTRIC_FORCE,
         "PHY-23",
-        _display("Dielectric-gradient force"),
+        _display(DIELECTRIC_FORCE),
         force=flow.dielectric_force,
     ),
     KernelTerm("Corrections", "PHY-10", _display("Corrections")),
@@ -287,3 +292,12 @@ COUPLED_TERMS: tuple[KernelTerm, ...] = (
     KernelTerm(SOURCES, "VER-18", contributions=(Contribution("source", _source),)),
 )
 """The coupled models' terms: ``EPNP_NS_TERMS``' records in order, then three of the kernel's."""
+
+
+def term(name: str) -> KernelTerm:
+    """Return the coupled term named ``name``; KeyError naming the terms otherwise."""
+    for each in COUPLED_TERMS:
+        if each.name == name:
+            return each
+    known = ", ".join(each.name for each in COUPLED_TERMS)
+    raise KeyError(f"no coupled term {name!r}; the terms are {known}")
