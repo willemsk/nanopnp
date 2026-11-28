@@ -1,6 +1,6 @@
 # WP6.11 — Switches as data and the forces
 
-**Status: in progress, items 1 to 3 of 6 done.** Written 28 November 2026 by Fable 5.2 at high effort, on the code at `e42272a`.
+**Status: in progress, items 1 to 4 of 6 done.** Written 28 November 2026 by Fable 5.2 at high effort, on the code at `e42272a`.
 Inherits §8.2.62 BL1, BL2 and BL7, §8.2.63 BM1 to BM3, [the kernel's design](../../design/kernel.md),
 [WP6.10](wp6.10-the-composition.md)'s kernel, REV-298 and the test scope (§8.2.13 N1). Its last commit on `main`
 takes `v0.7.0-alpha.11` (§8.4.1).
@@ -249,7 +249,7 @@ uv run pytest --slow tests/tier2/test_guard_numbers.py tests/tier2/test_force_co
   `tests/tier1/test_switches.py`, `test_case_leaves.py`, `test_case_schema.py`, `test_case_json_schema.py`,
   `test_gui_screens.py` and `test_model_interface.py`, no hash re-recorded, pass. **Executor:** main
 - [x] 3. Compaction checkpoint. **Executor:** main
-- [ ] 4. The stored forces, then `post/forces.py`, `physics/coupled.py`, `tests/tier1/test_forces.py` and VER-81's
+- [x] 4. 40a24a5 The stored forces, then `post/forces.py`, `physics/coupled.py`, `tests/tier1/test_forces.py` and VER-81's
   row (D8, D9, D11); done when the eight variants are stored from the unedited tree and equal after within
   10⁻¹², and `tests/tier1/test_forces.py` and `tests/tier2/test_force_routes.py` pass. The Outcome lists each
   difference. **Executor:** main

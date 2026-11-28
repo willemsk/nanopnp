@@ -2,42 +2,38 @@
 
 ## Step
 
-Implement, at the compaction checkpoint: items 1 to 3 are done and ticked; item 4, the forces, is next.
+Implement: items 1 to 4 are done and ticked; item 5, the run, is handed back as `RUN`; item 6, the records, is next.
 
 ## Done
 
 - `cd0d299` `feat: the switch records, every list of switches derived` (item 1).
 - `0dd7ec9` `feat: numerics.log_variables, the log branch's case key` (item 2).
-- This commit: `docs: WP6.11 hand-off, implement`, ticking items 2 and 3 and correcting item 1's tick.
+- `eba39c4` `docs: WP6.11 hand-off, implement` (item 3, the checkpoint).
+- `40a24a5` `feat: the force split reads the kernel's force densities` (item 4).
+- This commit: `docs: WP6.11 hand-off, implement`, ticking item 4.
 
 ## Measured
 
-- `CaseArtefact(VALIDATED_DEFAULT_CASE).hash` on the unedited tree, `9ca84ad`:
-  `fddada5f03d5e951e54a95804e19f2006f056412c4b4a7d9ae86d08d9fed071c`; unchanged after items 1 and 2, and pinned in
-  `tests/tier1/test_switches.py` as `DEFAULT_CASE_HASH`.
-- Item 1's done-criterion files: 172 passed in 14.7 s (`-n auto`). Item 2's: 181 passed, 142 skipped (no browser
-  for Playwright here) in 28 s. The commit hook's Tier 1: 1,650 passed in 121 s.
-- `tests/tier1/test_model_interface.py`'s `SOLVE_HASHES` and `RUNG_HASHES` hold unchanged.
+- For the PR's Measured, as the main session gave them: plan, 1 session, 2 sub-agents, 1.1 agent hours, 3 touches;
+  claude-fable-5-2 0.18 M out, 30 M cached; claude-opus-5-5 0.01 M out, 2 M cached. Implement, first helper,
+  1 session, 1 sub-agent, 0.4 agent hours, 0 touches; claude-opus-5-5 0.06 M out, 15 M cached. Reading of the
+  first window: 10,577 words of project text before the first edit; 13,286 tokens at the start, 104,626 at the edit.
+- `CaseArtefact(VALIDATED_DEFAULT_CASE).hash`, pinned as `DEFAULT_CASE_HASH`:
+  `fddada5f03d5e951e54a95804e19f2006f056412c4b4a7d9ae86d08d9fed071c`, unchanged since `9ca84ad`.
+- Item 4: the eight variants' forces move by 2.6 × 10⁻¹⁶ of the larger half at most (the plan's Outcome holds
+  each). The item's files (`test_forces.py`, `test_force_routes.py`, `test_kernel.py`, `test_maxwell_sphere.py`):
+  47 passed in 14 s (`-n auto`). The new test's five cases: 0.9 s.
 
 ## Decided
 
-- A conflict's refusal at the case check is one generic message from the record: `<path> is true, but <other> is
-  false. <why>. <remedy>`, the remedy from `declared.switches` as before; an exclusion reads `<path> is true, and so
-  is <other>`. The model's refusal is `"; ".join(str(conflict))`, `Conflict.__str__` being
-  `<switch> <kind> <other>: <why>`. The log record's `why` holds "NUM-02 log branch", which
-  `test_physics_models.py` matches.
-- The ladder's refusal names the paths of `away(...)` and lists every record's default.
-- `dumps_case` writes the full dump, so a written case and the manifest's `case_text` now hold
-  `log_variables: false`; only the artefact's parameters and `model_options` drop it (D6). That broke
-  `tests/tier1/test_variables.py::test_ver62_a_case_without_variables_writes_what_it_did`, a substring check for
-  "variables"; it now asserts the top-level key of the parsed YAML. Not a weakened test: the key is what it guards.
-- D10's refusal sits at the head of `pipeline/checks.py:_check_outputs`, after the ladder check, and has no test: a
-  refusal that is not a numerical gate (§8.2.13 N1).
-- The PHY-23 state test of `test_switches.py` builds `test_kernel.py`'s smooth state on a coarser cylinder
-  (`maxh_nm=0.8`).
-- Records left for item 6: `CHANGELOG.md` (the new key; `physics.models.SWITCHES` removed; `Term`'s `switches` field
-  now a property), Appendix A's FR-40 row (VER-82), and `docs/design/kernel.md`'s switch table, which predates
-  `Variable density` under `flow` and the exclusion's move to the log record.
+- `_Integrands` holds the kernel context, with `inputs.solid` set to the blend wherever a solid fraction is given;
+  the surface route reads `terms.context.measures`. The private `_domain_force`, `_surface_force` and
+  `_dielectric_gradient_residual` lost their `measures` argument; no public signature moved.
+- The item-4 script sits uncommitted in `.git/wp6.11/forces.py`, its stored values in `.git/wp6.11/forces.json`.
+- Records for item 6, from the first helper: `CHANGELOG.md` (the new key `numerics.log_variables`;
+  `physics.models.SWITCHES` removed; `Term`'s `switches` field now a property; `physics.coupled` exports
+  `BODY_FORCE`, `DIELECTRIC_FORCE` and `term`), Appendix A's FR-40 row (VER-82), and `docs/design/kernel.md`'s
+  switch table, which predates `Variable density` under `flow` and the exclusion's move to the log record.
 
 ## Open
 
@@ -45,15 +41,9 @@ None.
 
 ## Next
 
-Item 4 of `docs/plans/phase-6/wp6.11-switches-as-data-and-the-forces.md`. `post/forces.py`, `physics/flow.py` and
-`physics/coupled.py` are unedited, so the tree at `HEAD` is the unedited one for the forces. First action: write the
-script its *Implementation details* describe to `"$(git rev-parse --git-dir)/wp6.11/forces.py"` and run it before
-any edit of item 4:
-
-```bash
-mkdir -p "$(git rev-parse --git-dir)/wp6.11"
-uv run python "$(git rev-parse --git-dir)/wp6.11/forces.py" --store "$(git rev-parse --git-dir)/wp6.11/forces.json"
-```
-
-The log variant now builds with `CoupledModel(log_variables=True, ...)` and the permittivity model `none`, as the plan
-says.
+Item 5 ran as the `RUN` this hand-back names. First action: read the log the prompt gives (the run wrote
+`.git/wp6.11/run.log`) and check it shows the six guard walks of `tests/tier2/test_guard_numbers.py` and the tests
+of `tests/tier2/test_force_convergence.py`, none failed or skipped. If any failed, stop at that failure and fix it
+(never a tolerance). If it passed, tick item 5 (`[x]` with no sha: it made no commit) and its run's numbers as an
+Outcome in `docs/plans/phase-6/wp6.11-switches-as-data-and-the-forces.md`, then start item 6, the records, in that
+plan's list, reading `.claude/skills/np-implement/finish.md` when the last item is done.
