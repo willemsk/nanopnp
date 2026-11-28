@@ -48,8 +48,9 @@ by default and owned by the physics model's file. It is a switch record (§5.4.4
 switch, whose terms differentiate the permittivity in `c~_i`, so a case or a model with both is refused;
 on, it is a deviation in the FR-25 manifest. Off, the key is left out of the case artefact's parameters
 and of `model_options`, so a case that never sets it keeps its keys. A case asking for `analyte_force`
-beside it is refused at resolution where the permittivity's concentration fit applies, the force
-differentiating that fit in `c~_i`.
+beside it is refused at resolution where a fit of the permittivity applies, its concentration or its
+wall part: either makes `eps~_r` vary with the state, and the force's gradient of it is not given on the
+branch.
 
 **NUM-03.** The velocity–pressure element pair SHALL be configurable. Equal-order P1/P1 SHALL be
 selectable only together with the flow stabilisation of §6.4.2. The element degree of every field

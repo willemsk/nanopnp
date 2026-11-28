@@ -27,7 +27,7 @@ from nanopnp.gui.web.screens import CORRECTED, Tool, field_control
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import FIELDS, _Pane, _value_of, current_name
 from nanopnp.io.models import Kind, owner_of
-from nanopnp.io.switches import SWITCHES, governing, switch_at
+from nanopnp.io.switches import SWITCHES, Conflict, Switch, conflicts, governing, switch, switch_at
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.mesh.ingest import SOLID_MATERIALS
 from nanopnp.mesh.primitives import PERMITTIVITY_EXEMPT
@@ -48,9 +48,6 @@ CONCENTRATION = "electrolyte.concentration_M"
 SPECIES = "electrolyte.species"
 PERMITTIVITIES = "physics.solid_permittivities"
 VARIABLE_DENSITY = "physics.variable_density"
-FLOW = "physics.flow"
-DIELECTRIC = "physics.dielectric_gradient_forces"
-NEEDS_FLOW = "Dielectric forces need the flow."
 DENSITY_CORRECTION = "electrolyte.corrections.density.model"
 WALL_CHARGE = "boundary_conditions.wall_charge_C_m2"
 LATER = ", later"
@@ -272,13 +269,13 @@ class _PhysicsPane(_Pane[PhysicsModel]):
             elif len(honoured) == 1:
                 with self.rows[path]:
                     ui.label(f"{name} needs {_label(path).lower()} {state}.").classes("field-hint")
-            elif path == DIELECTRIC and not model.shown(FLOW):
-                # PHY-23 adds the force and each ion's term together, and the force needs a flow.
+            elif (conflict := _conflict_on(record, model)) is not None:
+                # A switch the others refuse on is held off; one on beside them says why.
                 if not model.shown(path):
-                    why = NEEDS_FLOW
+                    why = _conflict_text(record, conflict)
                 else:
                     with self.rows[path]:
-                        ui.label(NEEDS_FLOW).classes("field-hint")
+                        ui.label(_conflict_text(record, conflict)).classes("field-hint")
         elif any(path == leaf or leaf.startswith(f"{path}.") for leaf in declared.unread):
             where = "above" if self.tool.id == "equations" else "in Equations"
             why = f"{name} does not read this value. Choose another model {where}."
@@ -364,8 +361,14 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 ]
                 if turns:
                     return f"Turn {' and '.join(turns)}. {name} cannot run otherwise."
-            if path == DIELECTRIC and not self.model.shown(FLOW):
-                return "Turn dielectric forces off, or turn the flow on."
+            conflict = _conflict_on(record, self.model)
+            if conflict is not None:
+                other = _other(record, conflict)
+                state = "on" if conflict.kind == "requires" else "off"
+                return (
+                    f"Turn {_label(record.path).lower()} off, or turn "
+                    f"{_label(other.path).lower()} {state}."
+                )
         if path is not None and path.startswith(f"{PERMITTIVITIES}."):
             solid = path.rpartition(".")[2]
             return f"Type the relative permittivity of the {solid}. It has no default."
@@ -884,6 +887,26 @@ ELEMENTS = {"h1": "Lagrange, scalar", "vector_h1": "Lagrange, vector"}
 
 def _label(path: str) -> str:
     return FIELDS[path].label if path in FIELDS else path
+
+
+def _conflict_on(record: Switch, model: PhysicsModel) -> Conflict | None:
+    # The first relation of the records that refuses the switch on beside the others as shown.
+    values = {each.name: bool(model.shown(each.path)) for each in SWITCHES}
+    values[record.name] = True
+    return next(
+        (found for found in conflicts(values) if record.name in (found.switch, found.other)),
+        None,
+    )
+
+
+def _other(record: Switch, conflict: Conflict) -> Switch:
+    return switch(conflict.other if conflict.switch == record.name else conflict.switch)
+
+
+def _conflict_text(record: Switch, conflict: Conflict) -> str:
+    other = _other(record, conflict)
+    state = "off" if conflict.kind == "requires" else "on"
+    return f"With {_label(other.path).lower()} {state}, {_label(record.path).lower()} cannot be on."
 
 
 def _field_tex(name: str) -> str:
