@@ -4,18 +4,18 @@ Updated 28 November 2026. Navigation; `SPECIFICATION.md` governs; an unmerged br
 
 ## In brief
 
-**What changes.** The second of three packages that rebuild the model's equations is built and waits for its
-review: each on-off setting is one record that every part of the program reads, a case file can ask for the
+**What changes.** The second of three packages that rebuild the model's equations is built, reviewed and waits for
+its merge: each on-off setting is one record that every part of the program reads, a case file can ask for the
 logarithm of the concentrations and its run record says so, and a particle's force is read from the equations' own
 statements. A user notices nothing at the defaults: no stored number moved.
 
-**Cost.** This package: 2 sessions so far; the rest of the phase about 18 sessions, 15 to 26 agent hours and 28
+**Cost.** This package: 1 session carried, 2.2 agent hours, 4 touches; the rest of the phase about 18 sessions, 15 to 26 agent hours and 28
 times you act, the 3D pore's machine time unmeasured.
 
-**What could go wrong.** The review may find a record that brings in the wrong piece; a test checks every
-combination of settings, and the stored runs repeated to round-off.
+**What could go wrong.** The review fixed five small faults and left one doubt (REV-303): a wall fit of the solvent's
+permittivity is not in a particle's force, and no shipped case has one.
 
-**Your call.** None until the review is done; then merge the pull request and tag it.
+**Your call.** Merge the pull request and tag it; say whether REV-303's refusal is wanted.
 
 ## Position
 

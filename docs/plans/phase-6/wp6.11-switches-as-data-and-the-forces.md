@@ -317,6 +317,11 @@ Rows 1 to 4 are `tests/tier1/test_switches.py`; a document is `VALIDATED_DEFAULT
 uv run pytest tests/tier1/test_switches.py tests/tier1/test_forces.py tests/tier2/test_force_routes.py -q
 ```
 
+> **Outcome — the package's cost.** Measured, to the review: 1 session, 9 sub-agents, 2.2 agent hours, 4 touches
+> (the estimate: about 3 sessions, 2 to 4 agent hours, 5 touches); claude-fable-5-2 0.18 M out, claude-opus-5-5
+> 0.22 M out. The review ([CODE_REVIEW_103](../../code_reviews/CODE_REVIEW_103.md)) fixed five findings and left one,
+> REV-303.
+
 ### Out of scope
 
 - The ladder carrying the log branch: ruled out (BM2); Phase 7's speed-up compares the branch (BC24) and may
