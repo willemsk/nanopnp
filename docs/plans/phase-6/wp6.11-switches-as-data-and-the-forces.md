@@ -253,6 +253,15 @@ uv run pytest --slow tests/tier2/test_guard_numbers.py tests/tier2/test_force_co
   row (D8, D9, D11); done when the eight variants are stored from the unedited tree and equal after within
   10⁻¹², and `tests/tier1/test_forces.py` and `tests/tier2/test_force_routes.py` pass. The Outcome lists each
   difference. **Executor:** main
+
+  > **Outcome — no force moved.** The eight variants on *Grounding* D8's mesh (383 elements), stored from
+  > `847704e` and compared after the edit, relative to the larger half: the hydrodynamic half moves by 2.6 × 10⁻¹⁶
+  > without the variable density and on the log branch, and by 1.3 × 10⁻¹⁶ under `pnp-ns`; every other number,
+  > the omitted term included, is equal bit for bit. The state is `test_kernel.py`'s with the `r²` factors of the
+  > concentrations at 0.005 for 0.05, so that both stay positive out to 12 nm and the log branch takes their
+  > logarithm. There the inertia moves the hydrodynamic half by 1.6 × 10⁻⁵ and the omitted term is 1.1 × 10⁻³ of
+  > the electromagnetic half. The log branch with a varying permittivity now raises `flow.py`'s
+  > `NotImplementedError` from the dielectric density, where `_Integrands.korteweg` raised its own.
 - [ ] 5. The run, a `RUN` hand-back with no commit (D9); done when the log shows the six guard walks and the
   force tests, none failed or skipped. **Executor:** main, the run by the main session
 - [ ] 6. The records: `CHANGELOG.md`, `specification/a-traceability-matrix.md`, `docs/design/kernel.md`,

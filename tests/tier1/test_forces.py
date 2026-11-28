@@ -8,6 +8,7 @@ import pytest
 from nanopnp.core.scaling import Scales
 from nanopnp.geometry.analyte import AnalyteInBoxGeometry, PoreWithAnalyte, SphereBody
 from nanopnp.geometry.pore import CylinderPore
+from nanopnp.io.vocabulary import POTENTIAL, PRESSURE, VELOCITY
 from nanopnp.mesh.adapter import MeshData
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, mesh_cylinder_pore, mesh_pore_with_analyte
 from nanopnp.numerics.measures import AXISYMMETRIC
@@ -306,3 +307,140 @@ def test_num29_a_force_surface_meeting_two_materials_is_refused() -> None:
     assert "analyte | membrane" in message and "analyte | electrolyte" in message
     with pytest.raises(ForceSurfaceError, match="no boundary matching"):
         check_force_surface(one_fluid, "wall")
+
+
+FLUID_BOUNDARIES = "analyte|outer"
+SPLIT_VARIANTS: dict[str, tuple[dict[str, bool], bool]] = {
+    "default": ({}, False),
+    "no inertia": ({"inertia": False}, False),
+    "dielectric switch": ({"dielectric_gradient_forces": True}, False),
+    "solid fraction, switch off": ({}, True),
+    "solid fraction, switch on": ({"dielectric_gradient_forces": True}, True),
+}
+
+
+@pytest.fixture(scope="module")
+def sphere_in_a_box() -> tuple[object, object, object]:
+    import ngsolve as ngs
+
+    geometry = AnalyteInBoxGeometry(SphereBody(radius_nm=2.0), outer_radius_nm=12.0)
+    mesh = geometry.generate(maxh_nm=1.5, wall_h_nm=0.4)
+    fraction = ngs.GridFunction(ngs.H1(mesh, order=2))
+    fraction.Set(0.4 * ngs.exp(-((ngs.x * ngs.x + ngs.y * ngs.y) / 16.0)))
+    return mesh, axial_extension(mesh, inner_nm=1.0, outer_nm=4.0), fraction
+
+
+def _smooth_solution(mesh: object, solid: object, **options: bool) -> ModelSolution:
+    import ngsolve as ngs
+
+    from nanopnp.mesh.primitives import CoupledBoundaries
+
+    model = models.create(
+        "epnp-ns", concentration_M=0.1, solid_permittivities={"analyte": 20.0}, **options
+    )
+    boundaries = CoupledBoundaries(
+        potential=FLUID_BOUNDARIES,
+        concentration=FLUID_BOUNDARIES,
+        velocity=FLUID_BOUNDARIES,
+        velocity_axis="axis",
+    )
+    space = model.space(mesh, boundaries)
+    state = ngs.GridFunction(space)
+    r, z = ngs.x, ngs.y
+    values = {
+        POTENTIAL: 0.3 * ngs.sin(0.7 * z) * (1.0 + 0.1 * r * r),
+        "c_Na+": 1.0 + 0.2 * ngs.cos(0.5 * z) * (1.0 - 0.005 * r * r),
+        "c_Cl-": 1.0 - 0.15 * ngs.sin(0.4 * z) * (1.0 + 0.005 * r * r),
+        VELOCITY: ngs.CF((0.02 * r * ngs.cos(0.3 * z), 0.04 * (1.0 - 0.1 * r * r))),
+        PRESSURE: 0.01 * ngs.sin(0.6 * z) * (1.0 + 0.2 * r * r),
+    }
+    for field, component in zip(model.fields, state.components, strict=True):
+        component.Set(values[field.name])
+    return ModelSolution(
+        model=model,
+        space=space,
+        state=state,
+        solid_fraction=solid,
+        solid_fraction_gradient=None if solid is None else ngs.grad(solid),
+    )
+
+
+@pytest.mark.parametrize("variant", list(SPLIT_VARIANTS))
+def test_ver81_the_force_split_reads_each_density_in_force(
+    sphere_in_a_box: tuple[object, object, object], variant: str
+) -> None:
+    import ngsolve as ngs
+
+    from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
+    from nanopnp.post.forces import dielectric_gradient_residual, domain_force
+
+    mesh, extension, fraction = sphere_in_a_box
+    options, solid = SPLIT_VARIANTS[variant]
+    solution = _smooth_solution(mesh, fraction if solid else None, **options)
+    model = solution.model
+    functions = {field.name: solution.component(field.name) for field in model.fields}
+    variables = model.concentration_variables(functions)
+    coefficients = model.coefficients(variables, SATURATED_WALL_DISTANCE_NM)
+    velocity, field = functions[VELOCITY], ngs.grad(functions[POTENTIAL])
+
+    # PHY-08, PHY-23 and the inertia written here, from the coefficients alone.
+    charge = sum(
+        (
+            float(coefficients.electrolyte.ion(name).valence) * variables.values[name]
+            for name in model.species
+        ),
+        ngs.CF(0.0),
+    )
+    fluid_permittivity = coefficients.relative_permittivity()
+    fluid_gradient = sum(
+        (
+            fluid_permittivity.Diff(variables.variables[name]) * variables.gradients[name]
+            for name in variables.values
+        ),
+        ngs.CF((0.0, 0.0)),
+    )
+    if solid:
+        blend = model.solid_blend(mesh, fraction, ngs.grad(fraction))
+        permittivity_gradient = (1.0 - fraction) * fluid_gradient + (
+            blend.solid_permittivity - fluid_permittivity
+        ) * ngs.grad(fraction)
+    else:
+        permittivity_gradient = fluid_gradient
+    densities = {
+        "inertia": -coefficients.reynolds
+        * coefficients.mass_density()
+        * (ngs.grad(velocity) * velocity),
+        "ionic": -coefficients.screening * charge * field,
+        "dielectric": -0.5 * ngs.InnerProduct(field, field) * permittivity_gradient,
+    }
+    in_force = {
+        "inertia": model.inertia,
+        "ionic": True,
+        "dielectric": model.dielectric_gradient_forces,
+    }
+
+    fluid = mesh.Materials(model.fluid)
+    scale = 2.0 * math.pi * model.scales.force_N
+
+    def work(integrand: object) -> float:
+        return scale * AXISYMMETRIC.integrate(integrand, mesh, definedon=fluid, what="a work")
+
+    works = {name: work(ngs.InnerProduct(f, extension)) for name, f in densities.items()}
+    viscous = hydrodynamic_stress(ngs.grad(velocity), functions[PRESSURE], coefficients.viscosity())
+    stress_work = -work(ngs.InnerProduct(viscous, ngs.grad(extension)))
+    medium = model.relative_permittivity(solution)
+    maxwell = -work(ngs.InnerProduct(maxwell_stress(field, medium), ngs.grad(extension)))
+
+    forces = domain_force(solution, AXISYMMETRIC, extension)
+    omitted = dielectric_gradient_residual(solution, AXISYMMETRIC, extension)
+    hd = stress_work + sum(works[name] for name in works if in_force[name])
+    em = maxwell - works["ionic"] - works["dielectric"]
+    assert abs(forces.hd_N - hd) <= 1e-12 * abs(hd)
+    assert abs(forces.em_N - em) <= 1e-12 * abs(em)
+    if model.dielectric_gradient_forces:
+        assert omitted == 0.0
+    else:
+        assert abs(omitted + works["dielectric"]) <= 1e-12 * abs(works["dielectric"])
+    # Each density must move its half, or the agreements above would hold without it.
+    assert abs(works["inertia"]) > 1e-9 * abs(hd)
+    assert abs(works["dielectric"]) > 1e-9 * abs(em)
