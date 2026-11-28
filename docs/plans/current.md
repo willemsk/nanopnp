@@ -9,13 +9,15 @@ its merge: each on-off setting is one record that every part of the program read
 logarithm of the concentrations and its run record says so, and a particle's force is read from the equations' own
 statements. A user notices nothing at the defaults: no stored number moved.
 
-**Cost.** This package: 1 session carried, 2.2 agent hours, 4 touches; the rest of the phase about 18 sessions, 15 to 26 agent hours and 28
+**Cost.** This package: 1 session carried, 3.0 agent hours, 6 touches; the rest of the phase about 18 sessions, 15 to 26 agent hours and 28
 times you act, the 3D pore's machine time unmeasured.
 
-**What could go wrong.** The review fixed five small faults and left one doubt (REV-303): a wall fit of the solvent's
-permittivity is not in a particle's force, and no shipped case has one.
+**What could go wrong.** Two reviews fixed their faults and you pulled in the two doubts they left: a wall fit of the
+solvent's permittivity is now in a particle's force, and the model's equations assemble about a hundred times faster
+under the dielectric forces. The compiled assembly changes every model, and the six nightly guard walks were last run
+before it.
 
-**Your call.** Merge the pull request and tag it; say whether REV-303's refusal is wanted.
+**Your call.** Merge the pull request and tag it; say whether the guard walks run on the compiled assembly first.
 
 ## Position
 
@@ -23,9 +25,9 @@ permittivity is not in a particle's force, and no shipped case has one.
 - **Phase 6 in flight** ([the plan](phase-6/phase-6-library-foundations.md)), `v0.7`: **WP6.01 to WP6.10 merged**,
   tagged to `v0.7.0-alpha.10`. **The kernel's design is ruled** (§8.2.62; [the design](../design/kernel.md)).
 - **WP6.11, switches as data and the forces, is implemented**
-  ([the plan](phase-6/wp6.11-switches-as-data-and-the-forces.md); VER-82; REV-298 fixed; §8.2.63), its pull request
-  open for review; it takes `v0.7.0-alpha.11` once merged. **By scope:** WP6.12 to WP6.16 and the close.
-- **Next:** `/np-ship wp 6.11` reviews it (Sonnet 5.5, medium), within `/np-carry wp 6.11`; then `/np-plan wp 6.12`.
+  ([the plan](phase-6/wp6.11-switches-as-data-and-the-forces.md); VER-82; REV-298, REV-302, REV-303 fixed; §8.2.63),
+  reviewed twice, its pull request waiting on CI and its merge; it takes `v0.7.0-alpha.11` once merged. **By scope:** WP6.12 to WP6.16 and the close.
+- **Next:** CI and the merge of WP6.11 (`/np-ship wp 6.11`); then `/np-plan wp 6.12`.
 
 ## Not to be re-decided
 

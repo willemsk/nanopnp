@@ -317,10 +317,11 @@ Rows 1 to 4 are `tests/tier1/test_switches.py`; a document is `VALIDATED_DEFAULT
 uv run pytest tests/tier1/test_switches.py tests/tier1/test_forces.py tests/tier2/test_force_routes.py -q
 ```
 
-> **Outcome — the package's cost.** Measured, to the review: 1 session, 9 sub-agents, 2.2 agent hours, 4 touches
-> (the estimate: about 3 sessions, 2 to 4 agent hours, 5 touches); claude-fable-5-2 0.18 M out, claude-opus-5-5
-> 0.22 M out. The review ([CODE_REVIEW_103](../../code_reviews/CODE_REVIEW_103.md)) fixed five findings and left one,
-> REV-303.
+> **Outcome — the package's cost.** Measured, to the second review: 1 session, 13 sub-agents, 3.0 agent hours, 6
+> touches (the estimate: about 3 sessions, 2 to 4 agent hours, 5 touches); claude-fable-5-2 0.18 M out, claude-opus-5-5
+> 0.34 M out, claude-sonnet-5-5 0.01 M out. The review ([CODE_REVIEW_103](../../code_reviews/CODE_REVIEW_103.md)) fixed
+> five findings and left one, REV-303, which the author pulled in with REV-302; both were fixed at the ship, and
+> [CODE_REVIEW_104](../../code_reviews/CODE_REVIEW_104.md) reviewed them and fixed two small gaps.
 
 ### Out of scope
 
