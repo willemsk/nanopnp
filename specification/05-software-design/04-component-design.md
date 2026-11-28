@@ -18,7 +18,7 @@ and within `physics/` no module that holds a term imports it; VER-65 checks both
 |---|---|
 | `FunctionSpace`, product spaces | The model's field set, which the kernel's context is built on |
 | `TrialFn`, `TestFn` | The context: the trial, test and lagged functions |
-| `grad`, the products, the elementary functions, the element size | The context's operators |
+| `grad`, the products, the elementary functions, the element size, the compile of a slot's integrand | The context's operators |
 | The coordinates, the dimension, the axial direction, the identity | The context's geometry |
 | `dx_axi`, the axisymmetric measure; `ds`, boundary measures | `Measures`, and the slot's domain and rule |
 | `Coefficient` | The coefficients of each side (§5.4.2) |
